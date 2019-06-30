@@ -1,0 +1,29 @@
+{
+  // Use IntelliSense para saber los atributos posibles.
+  // Mantenga el puntero para ver las descripciones de los existentes atributos
+  // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    /*{
+      "type": "node",
+      "request": "launch",
+      "name": "debug index",
+      "protocol": "inspector",
+      "cwd": "${workspaceRoot}",
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+      "args": ["${workspaceRoot}/src/index.ts"],
+      "restart": true
+    },*/
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug",
+      "args": ["${workspaceRoot}/src/index.ts"],
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
+      "sourceMaps": true,
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector",
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+    }
+  ]
+}
