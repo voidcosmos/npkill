@@ -9,7 +9,7 @@ import {
   CURSOR_SIMBOL,
   ROW_RESULTS_START,
   TARGET_FOLDER,
-  UI_POSITIONS
+  UI_POSITIONS,
 } from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
@@ -70,14 +70,14 @@ export class Controller {
       this.nodeFolders.push({
         path: folder,
         size: 0,
-        deleted: false
+        deleted: false,
       });
       this.setCursorAt([3, ROW_RESULTS_START + this.folderNewRow]);
       this.print(folder);
       // getFolderSize(folder, [90, ROW_RESULTS_START + i]);
       this.drawFolderSize(folder, [
         this.stdout.columns - 20,
-        ROW_RESULTS_START + this.folderNewRow
+        ROW_RESULTS_START + this.folderNewRow,
       ]);
       this.folderNewRow++;
     } else {
@@ -91,7 +91,7 @@ export class Controller {
     delete: this.delete.bind(this),
     execute: function(command: string, params: string[]) {
       return this[command](params);
-    }
+    },
   };
 
   private setupKeysListener() {
@@ -107,7 +107,7 @@ export class Controller {
       if (name == 'delete') {
         this.KEYS.execute(name, {
           nodeFolder: this.nodeFolders[this.cursorPosY - ROW_RESULTS_START],
-          position: [3, this.cursorPosY]
+          position: [3, this.cursorPosY],
         });
       } else {
         this.KEYS.execute(name);
