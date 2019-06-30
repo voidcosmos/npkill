@@ -86,8 +86,8 @@ export class Controller {
   }
 
   private KEYS: { [key: string]: any } = {
-    up: () => this.cursorPosY--,
-    down: () => this.cursorPosY++,
+    up: this.moveCursorUp.bind(this),
+    down: this.moveCursorDown.bind(this),
     delete: this.delete.bind(this),
     execute: function(command: string, params: string[]) {
       return this[command](params);
@@ -121,6 +121,14 @@ export class Controller {
     });
   }
 
+  private isCursorInLowerTextLimit(positionY: number) {
+    return positionY < this.nodeFolders.length;
+  }
+
+  private isCursorInUpperTextLimit(positionY: number) {
+    return positionY > ROW_RESULTS_START;
+  }
+
   private drawFolderSize(folder: string, position: [number, number]) {
     fileService.getFolderSize(folder).then(data => {
       this.setCursorAt(position);
@@ -137,6 +145,14 @@ export class Controller {
         });
       });
     });
+  }
+
+  private moveCursorUp() {
+    if (this.isCursorInUpperTextLimit(this.cursorPosY)) this.cursorPosY--;
+  }
+
+  private moveCursorDown() {
+    if (this.isCursorInLowerTextLimit(this.cursorPosY)) this.cursorPosY++;
   }
 
   private delete({ nodeFolder, position }) {
