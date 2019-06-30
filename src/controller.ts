@@ -4,7 +4,13 @@ import * as fs from 'fs';
 import * as keypress from 'keypress';
 
 // https://itnext.io/step-by-step-building-and-publishing-an-npm-typescript-package-44fe7164964c
-import { BANNER, CURSOR_SIMBOL, ROW_RESULTS_START, TARGET_FOLDER, UI_POSITIONS } from './constants/main.constants';
+import {
+  BANNER,
+  CURSOR_SIMBOL,
+  ROW_RESULTS_START,
+  TARGET_FOLDER,
+  UI_POSITIONS
+} from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
 import { ConsoleService } from './services/console.service';
@@ -69,34 +75,49 @@ export class Controller {
       this.setCursorAt([3, ROW_RESULTS_START + this.folderNewRow]);
       this.print(folder);
       // getFolderSize(folder, [90, ROW_RESULTS_START + i]);
-      this.drawFolderSize(folder, [this.stdout.columns - 20, ROW_RESULTS_START + this.folderNewRow]);
+      this.drawFolderSize(folder, [
+        this.stdout.columns - 20,
+        ROW_RESULTS_START + this.folderNewRow
+      ]);
       this.folderNewRow++;
     } else {
       this.jobQueue.push(folder);
     }
   }
+
+  private KEYS: { [key: string]: any } = {
+    up: () => this.cursorPosY--,
+    down: () => this.cursorPosY++,
+    delete: this.delete.bind(this),
+    execute: function(command: string, params: string[]) {
+      return this[command](params);
+    }
+  };
+
   private setupKeysListener() {
     process.stdin.on('keypress', (ch, key) => {
       const previusCursorPosY = this.cursorPosY;
-      if (key.name == 'up') {
-        this.cursorPosY--;
+      const { name, ctrl } = key;
+
+      if (this.isQuitKey(key, ctrl, name)) {
+        this.clear();
+        process.exit();
       }
-      if (key.name == 'down') {
-        this.cursorPosY++;
+
+      if (name == 'delete') {
+        this.KEYS.execute(name, {
+          nodeFolder: this.nodeFolders[this.cursorPosY - ROW_RESULTS_START],
+          position: [3, this.cursorPosY]
+        });
+      } else {
+        this.KEYS.execute(name);
       }
-      if (key.name == 'delete') {
-        this.deleteFolder(this.nodeFolders[this.cursorPosY - ROW_RESULTS_START]);
-        this.drawFolderDeleted(this.nodeFolders[this.cursorPosY - ROW_RESULTS_START], [3, this.cursorPosY]);
-      }
+
       this.setCursorAt([1, previusCursorPosY]);
       this.print('  ');
       this.setCursorAt([1, this.cursorPosY]);
       this.print(colors.cyan(CURSOR_SIMBOL));
       this.setCursorAt([-1, -1]);
-      if (key && key.ctrl && key.name == 'c') {
-        this.clear();
-        process.exit();
-      }
     });
   }
 
@@ -118,6 +139,11 @@ export class Controller {
     });
   }
 
+  private delete({ nodeFolder, position }) {
+    this.deleteFolder(nodeFolder);
+    this.drawFolderDeleted(nodeFolder, position);
+  }
+
   private deleteFolder(nodeFolder) {
     if (nodeFolder) {
       fileService.removeDir(nodeFolder.path);
@@ -130,17 +156,24 @@ export class Controller {
     this.print(colors.green('[DELETED] ') + nodeFolder.path);
   }
 
-  print(text: string) {
+  private print(text: string) {
     process.stdout.write.bind(process.stdout)(text);
   }
-  clear() {
+
+  private clear() {
     this.print(ansiEscapes.clearScreen);
   }
-  clearLine(row: number) {
+
+  private clearLine(row: number) {
     this.setCursorAt([0, row]);
     this.print(ansiEscapes.eraseLine);
   }
-  setCursorAt(position: [number, number]) {
+
+  private setCursorAt(position: [number, number]) {
     this.print(ansiEscapes.cursorTo(position[0], position[1]));
+  }
+
+  private isQuitKey(key, ctrl, name) {
+    return key && ctrl && name == 'c';
   }
 }
