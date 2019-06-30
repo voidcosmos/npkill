@@ -99,7 +99,7 @@ export class Controller {
       const previusCursorPosY = this.cursorPosY;
       const { name, ctrl } = key;
 
-      if (key && ctrl && name == 'c') {
+      if (this.isQuitKey(key, ctrl, name)) {
         this.clear();
         process.exit();
       }
@@ -171,5 +171,9 @@ export class Controller {
 
   private setCursorAt(position: [number, number]) {
     this.print(ansiEscapes.cursorTo(position[0], position[1]));
+  }
+
+  private isQuitKey(key, ctrl, name) {
+    return key && ctrl && name == 'c';
   }
 }
