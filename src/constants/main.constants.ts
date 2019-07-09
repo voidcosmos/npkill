@@ -1,12 +1,12 @@
-import { IuiPosition } from "../interfaces/ui-positions.interface";
+import { IuiPosition } from '../interfaces/ui-positions.interface';
 
-export const TARGET_FOLDER = "node_modules";
+export const TARGET_FOLDER = 'node_modules';
 //export const ROW_SEARCHING_FOLDER = 7;
 export const ROW_RESULTS_START = 8;
-export const CURSOR_SIMBOL = "~>";
+export const CURSOR_SIMBOL = '~>';
 
 export const UI_POSITIONS: IuiPosition = {
-  TUTORIAL_TIP: [4, 7]
+  TUTORIAL_TIP: [4, 7],
 };
 
 export const BANNER = `-----                    __   .__.__  .__   
