@@ -175,8 +175,20 @@ export class Controller {
   }
 
   private deleteFolder(nodeFolder) {
-    fileService.removeDir(nodeFolder.path);
-    nodeFolder.delete = true;
+    try {
+      fileService.removeDir(nodeFolder.path);
+      nodeFolder.delete = true;
+    } catch (error) {
+      this.printError(error.message);
+    }
+  }
+
+  private printError(error: string) {
+    this.setCursorAt({
+      x: 3,
+      y: this.nodeFolders.length + ROW_RESULTS_START + 2,
+    });
+    this.print(colors.red(error));
   }
 
   private drawFolderDeleted(nodeFolder, position: Position) {
