@@ -10,12 +10,13 @@ import {
   ROW_RESULTS_START,
   TARGET_FOLDER,
   UI_POSITIONS,
+  MIN_CLI_COLUMNS_SIZE,
 } from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
-import { HELP_MSGS } from './constants/messages.constants';
+import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { Observable } from 'rxjs';
 import { Position } from './interfaces/ui-positions.interface';
 import { VALID_KEYS } from './constants/main.constants';
@@ -47,6 +48,11 @@ export class Controller {
   }
 
   private prepareScreen() {
+    if (this.isTerminalTooSmall()) {
+      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
+      process.exit();
+    }
+
     this.stdin.setRawMode(true);
     process.stdin.resume();
     this.clear();
@@ -206,5 +212,9 @@ export class Controller {
 
   private isQuitKey(ctrl, name) {
     return ctrl && name == 'c';
+  }
+
+  private isTerminalTooSmall() {
+    return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 }
