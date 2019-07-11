@@ -15,29 +15,32 @@ export class FileService {
 
   removeDir(dir, rmSelf = true) {
     if (!this.isDirectorySafeToDelete(dir)) {
-      return false;
+      throw new Error('Directory not safe to delete!');
     }
-    let files;
+
+    const files = this.getDirectoryFiles(dir);
+
     dir = dir + '/';
-    try {
-      files = fs.readdirSync(dir);
-    } catch (e) {
-      console.log('Directory not exist.');
-      return;
-    }
-    if (files.length > 0) {
-      files.forEach((x, i) => {
-        if (fs.statSync(dir + x).isDirectory()) {
-          this.removeDir(dir + x);
-        } else {
-          fs.unlinkSync(dir + x);
-        }
-      });
-    }
+    this.removeDirectoryFiles(dir, files);
+
     if (rmSelf) {
       // check if user want to delete the directory ir just the files in this directory
       fs.rmdirSync(dir);
     }
+  }
+
+  private getDirectoryFiles(dir: string) {
+    return fs.readdirSync(dir);
+  }
+
+  private removeDirectoryFiles(dir: string, files: Array<string>) {
+    files.map(file => {
+      if (fs.statSync(dir + file).isDirectory()) {
+        this.removeDir(dir + file);
+      } else {
+        fs.unlinkSync(dir + file);
+      }
+    });
   }
 
   private isDirectorySafeToDelete(path) {
