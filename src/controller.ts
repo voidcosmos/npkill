@@ -17,6 +17,7 @@ import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
 import { HELP_MSGS } from './constants/messages.constants';
 import { Observable } from 'rxjs';
+import { Position } from './interfaces/ui-positions.interface';
 import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
@@ -50,7 +51,7 @@ export class Controller {
     process.stdin.resume();
     this.clear();
     // TODO print logo and build the UI
-    this.setCursorAt([0, 0]);
+    this.setCursorAt({ x: 0, y: 0 });
     this.print(BANNER);
     this.setCursorAt(UI_POSITIONS.TUTORIAL_TIP);
     this.print(colors.yellow(emoji.emojify(HELP_MSGS.BASIC_USAGE)));
@@ -74,13 +75,13 @@ export class Controller {
         size: 0,
         deleted: false,
       });
-      this.setCursorAt([3, ROW_RESULTS_START + this.folderNewRow]);
+      this.setCursorAt({ x: 3, y: ROW_RESULTS_START + this.folderNewRow });
       this.print(folder);
       // getFolderSize(folder, [90, ROW_RESULTS_START + i]);
-      this.drawFolderSize(folder, [
-        this.stdout.columns - 20,
-        ROW_RESULTS_START + this.folderNewRow,
-      ]);
+      this.drawFolderSize(folder, {
+        x: this.stdout.columns - 20,
+        y: ROW_RESULTS_START + this.folderNewRow,
+      });
       this.folderNewRow++;
     } else {
       this.jobQueue.push(folder);
@@ -98,7 +99,7 @@ export class Controller {
 
   private setupKeysListener() {
     process.stdin.on('keypress', (ch, key) => {
-      const previusCursorPosY = this.cursorPosY;
+      const previousCursorPosY = this.cursorPosY;
       const { name, ctrl } = key;
 
       if (this.isQuitKey(ctrl, name)) {
@@ -111,11 +112,11 @@ export class Controller {
         this.KEYS.execute(name);
       }
 
-      this.setCursorAt([1, previusCursorPosY]);
+      this.setCursorAt({ x: 1, y: previousCursorPosY });
       this.print('  ');
-      this.setCursorAt([1, this.cursorPosY]);
+      this.setCursorAt({ x: 1, y: this.cursorPosY });
       this.print(colors.cyan(CURSOR_SIMBOL));
-      this.setCursorAt([-1, -1]);
+      this.setCursorAt({ x: -1, y: -1 });
     });
   }
 
@@ -128,7 +129,7 @@ export class Controller {
     process.exit();
   }
 
-  private drawFolderSize(folder: string, position: [number, number]) {
+  private drawFolderSize(folder: string, position: Position) {
     fileService.getFolderSize(folder).then(data => {
       this.setCursorAt(position);
       this.print(data + ' mb');
@@ -167,10 +168,10 @@ export class Controller {
 
   private delete() {
     const nodeFolder = this.nodeFolders[this.cursorPosY - ROW_RESULTS_START];
-    //const position = [3, this.cursorPosY];
+    const position = { x: 3, y: this.cursorPosY };
 
     this.deleteFolder(nodeFolder);
-    this.drawFolderDeleted(nodeFolder, [3, this.cursorPosY]);
+    this.drawFolderDeleted(nodeFolder, position);
   }
 
   private deleteFolder(nodeFolder) {
@@ -180,7 +181,7 @@ export class Controller {
     }
   }
 
-  private drawFolderDeleted(nodeFolder, position: [number, number]) {
+  private drawFolderDeleted(nodeFolder, position: Position) {
     this.setCursorAt(position);
     this.print(colors.green('[DELETED] ') + nodeFolder.path);
   }
@@ -194,12 +195,13 @@ export class Controller {
   }
 
   private clearLine(row: number) {
-    this.setCursorAt([0, row]);
+    this.setCursorAt({ x: 0, y: row });
     this.print(ansiEscapes.eraseLine);
   }
 
-  private setCursorAt(position: [number, number]) {
-    this.print(ansiEscapes.cursorTo(position[0], position[1]));
+  private setCursorAt(position: Position) {
+    const { x, y } = position;
+    this.print(ansiEscapes.cursorTo(x, y));
   }
 
   private isQuitKey(ctrl, name) {

@@ -6,7 +6,7 @@ export const ROW_RESULTS_START = 8;
 export const CURSOR_SIMBOL = '~>';
 
 export const UI_POSITIONS: IuiPosition = {
-  TUTORIAL_TIP: [4, 7],
+  TUTORIAL_TIP: { x: 4, y: 7 },
 };
 
 export const VALID_KEYS: Array<string> = ['up', 'down', 'delete', 'c'];
