@@ -120,7 +120,7 @@ export class Controller {
   }
 
   private getCommand(keyName: string) {
-    return VALID_KEYS.find(({ name }) => name === keyName);
+    return VALID_KEYS.find(name => name === keyName);
   }
 
   private quit() {
