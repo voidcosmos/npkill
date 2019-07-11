@@ -14,19 +14,19 @@
 //
 
 //  Work
-function newResult(result) {
-  console.log(result);
-}
-
-const fg = require('fast-glob');
-
-const stream = fg.stream(['../**/[node_modules]/'], {
-  onlyDirectories: true,
-  matchBase: true,
-});
-
-stream.on('data', newResult);
-stream.once('error', console.log);
+//    function newResult(result) {
+//      console.log(result);
+//    }
+//
+//    const fg = require('fast-glob');
+//
+//    const stream = fg.stream(['../**/[node_modules]/'], {
+//      onlyDirectories: true,
+//      matchBase: true,
+//    });
+//
+//    stream.on('data', newResult);
+//    stream.once('error', console.log);
 
 /*---------------
 const { lstatSync, readdirSync } = require("fs");
