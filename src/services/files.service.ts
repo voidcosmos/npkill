@@ -26,7 +26,7 @@ export class FileService {
       return;
     }
     if (files.length > 0) {
-      files.forEach((x, i) => {
+      files.forEach(x => {
         if (fs.statSync(dir + x).isDirectory()) {
           this.removeDir(dir + x);
         } else {
