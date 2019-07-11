@@ -37,14 +37,18 @@ export class Controller {
   private cursorPosY: number = ROW_RESULTS_START;
 
   constructor() {
-    //this.folderRoot = process.cwd();
-    this.folderRoot = '/home/nya/Programming';
-    //this.folderRoot = "A:/Users/Juanimi/Documents/DAW21/"; //ONLY FOR DEV
-    this.jobQueue = [this.folderRoot];
-
     keypress(process.stdin);
+    this.getArguments();
     this.prepareScreen();
+
+    this.jobQueue = [this.folderRoot];
     this.assignJob();
+  }
+
+  private getArguments() {
+    const options = consoleService.getParameters(process.argv);
+
+    this.folderRoot = options['root'] ? options['root'] : process.cwd();
   }
 
   private prepareScreen() {
