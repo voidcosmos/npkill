@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "run": "ts-node ./src/index.ts",
-    "test": "jest --config jestconfig.json"
+    "test": "jest --config jestconfig.json",
+    "test:watch": "jest --config jestconfig.json --watch"
   },
   "bin": {
     "npkill": "lib/index.js"
