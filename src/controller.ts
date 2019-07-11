@@ -17,6 +17,7 @@ import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
 import { HELP_MSGS } from './constants/messages.constants';
 import { Observable } from 'rxjs';
+import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
 
@@ -34,7 +35,8 @@ export class Controller {
   private cursorPosY: number = ROW_RESULTS_START;
 
   constructor() {
-    this.folderRoot = process.cwd();
+    //this.folderRoot = process.cwd();
+    this.folderRoot = '/home/nya/Programming';
     //this.folderRoot = "A:/Users/Juanimi/Documents/DAW21/"; //ONLY FOR DEV
     this.jobQueue = [this.folderRoot];
 
@@ -99,17 +101,13 @@ export class Controller {
       const previusCursorPosY = this.cursorPosY;
       const { name, ctrl } = key;
 
-      if (this.isQuitKey(key, ctrl, name)) {
-        this.clear();
-        process.exit();
+      if (this.isQuitKey(ctrl, name)) {
+        this.quit();
       }
 
-      if (name == 'delete') {
-        this.KEYS.execute(name, {
-          nodeFolder: this.nodeFolders[this.cursorPosY - ROW_RESULTS_START],
-          position: [3, this.cursorPosY],
-        });
-      } else {
+      const command = this.getCommand(name);
+
+      if (command) {
         this.KEYS.execute(name);
       }
 
@@ -121,12 +119,13 @@ export class Controller {
     });
   }
 
-  private isCursorInLowerTextLimit(positionY: number) {
-    return positionY < this.nodeFolders.length;
+  private getCommand(keyName: string) {
+    return VALID_KEYS.find(({ name }) => name === keyName);
   }
 
-  private isCursorInUpperTextLimit(positionY: number) {
-    return positionY > ROW_RESULTS_START;
+  private quit() {
+    this.clear();
+    process.exit();
   }
 
   private drawFolderSize(folder: string, position: [number, number]) {
@@ -139,12 +138,23 @@ export class Controller {
   private listDir(path: string): Observable<any> {
     return Observable.create(observer => {
       fs.readdir(path, (err, files) => {
+        if (err) {
+          return;
+        }
         files.forEach(file => {
           this.assignJob();
           observer.next(resolve(path, file));
         });
       });
     });
+  }
+
+  private isCursorInLowerTextLimit(positionY: number) {
+    return positionY < this.nodeFolders.length - 1 + ROW_RESULTS_START;
+  }
+
+  private isCursorInUpperTextLimit(positionY: number) {
+    return positionY > ROW_RESULTS_START;
   }
 
   private moveCursorUp() {
@@ -155,9 +165,12 @@ export class Controller {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) this.cursorPosY++;
   }
 
-  private delete({ nodeFolder, position }) {
+  private delete() {
+    const nodeFolder = this.nodeFolders[this.cursorPosY - ROW_RESULTS_START];
+    //const position = [3, this.cursorPosY];
+
     this.deleteFolder(nodeFolder);
-    this.drawFolderDeleted(nodeFolder, position);
+    this.drawFolderDeleted(nodeFolder, [3, this.cursorPosY]);
   }
 
   private deleteFolder(nodeFolder) {
@@ -189,7 +202,7 @@ export class Controller {
     this.print(ansiEscapes.cursorTo(position[0], position[1]));
   }
 
-  private isQuitKey(key, ctrl, name) {
-    return key && ctrl && name == 'c';
+  private isQuitKey(ctrl, name) {
+    return ctrl && name == 'c';
   }
 }
