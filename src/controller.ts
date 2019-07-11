@@ -181,10 +181,8 @@ export class Controller {
   }
 
   private deleteFolder(nodeFolder) {
-    if (nodeFolder) {
-      fileService.removeDir(nodeFolder.path);
-      nodeFolder.delete = true;
-    }
+    fileService.removeDir(nodeFolder.path);
+    nodeFolder.delete = true;
   }
 
   private drawFolderDeleted(nodeFolder, position: Position) {

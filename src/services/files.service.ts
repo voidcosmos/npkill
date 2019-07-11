@@ -41,10 +41,6 @@ export class FileService {
   }
 
   private isDirectorySafeToDelete(path) {
-    if (path === '/') {
-      return false;
-    }
-
-    return true;
+    return path !== '/';
   }
 }
