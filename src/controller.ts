@@ -64,7 +64,9 @@ export class Controller {
     this.setCursorAt({ x: 0, y: 0 });
     this.print(BANNER);
     this.setCursorAt(UI_POSITIONS.TUTORIAL_TIP);
-    this.print(colors.yellow(emoji.emojify(HELP_MSGS.BASIC_USAGE)));
+    this.print(
+      colors.yellow(colors.inverse(emoji.emojify(HELP_MSGS.BASIC_USAGE))),
+    );
     this.setupKeysListener();
   }
 
