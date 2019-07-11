@@ -42,4 +42,37 @@ describe('Console Service', () => {
       expect(result['full']).not.toBeFalsy();
     });*/
   });
+
+  describe('#splitStringIntoArrayByCharactersWidth', () => {
+    it('should get array with text according to width', () => {
+      const cases = [
+        {
+          text:
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris faucibus sit amet libero non vestibulum. Morbi ac tellus dolor. Duis consectetur eget lectus sed ullamcorper.',
+          width: 43,
+          expect: [
+            'Lorem ipsum dolor sit amet, consectetur',
+            'adipiscing elit. Mauris faucibus sit amet',
+            'libero non vestibulum. Morbi ac tellus',
+            'dolor. Duis consectetur eget lectus sed',
+            'ullamcorper.',
+          ],
+        },
+        /* {
+          text: 'Lorem ipsum dolor sit amet.',
+          width: 2,
+          expect: ['Lorem', 'ipsum', 'dolor', 'sit', 'amet.'],
+        }, */
+      ];
+
+      cases.forEach(cas => {
+        expect(
+          consoleService.splitStringIntoArrayByCharactersWidth(
+            cas.text,
+            cas.width,
+          ),
+        ).toEqual(cas.expect);
+      });
+    });
+  });
 });

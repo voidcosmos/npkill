@@ -34,4 +34,27 @@ export class ConsoleService {
     const object = OPTIONS.find(option => option.ARG.includes(arg));
     return object ? object.NAME : undefined;
   }
+
+  splitStringIntoArrayByCharactersWidth(
+    string: string,
+    width: number,
+  ): string[] {
+    const text = string.split(' ');
+
+    // Caotic. Improve in next commits
+    return text.reduce(
+      (acc: string[], line: string) => {
+        const indexLastLine = acc.length - 1;
+        const formingLine = acc[indexLastLine] ? acc[indexLastLine] : '';
+        const temp = !formingLine ? line : `${formingLine} ${line}`;
+        if (temp.length <= width) {
+          acc[indexLastLine] = temp;
+        } else {
+          acc = [...acc, line];
+        }
+        return line ? acc : [];
+      },
+      [''],
+    );
+  }
 }

@@ -8,7 +8,7 @@ export const OPTIONS = [
     ARG: ['-r', '--root'],
     NAME: 'root',
     DESCRIPTION:
-      'Set the root directory from which to start searching.\nBy default, the root is the directory from which this command is executed.',
+      'Set the root directory from which to start searching. By default, the root is the directory from which this command is executed.',
   },
   {
     ARG: ['-f', '--full'],

@@ -6,6 +6,12 @@ export const MIN_CLI_COLUMNS_SIZE = 60;
 export const ROW_RESULTS_START = 8;
 export const CURSOR_SIMBOL = '~>';
 
+export const UI_HELP = {
+  Y_OFFSET: 3,
+  X_COMMAND_OFFSET: 3,
+  X_DESCRIPTION_OFFSET: 25,
+};
+
 export const UI_POSITIONS: IuiPosition = {
   TUTORIAL_TIP: { x: 4, y: 7 },
 };

@@ -11,6 +11,7 @@ import {
   TARGET_FOLDER,
   UI_POSITIONS,
   MIN_CLI_COLUMNS_SIZE,
+  UI_HELP,
 } from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
@@ -22,6 +23,7 @@ import { Position } from './interfaces/ui-positions.interface';
 import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
+import { OPTIONS } from './constants/cli.constants';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -47,8 +49,38 @@ export class Controller {
 
   private getArguments() {
     const options = consoleService.getParameters(process.argv);
+    if (options['help']) {
+      this.showHelp();
+      process.exit();
+    }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
+  }
+  private showHelp() {
+    this.clear();
+    this.print(colors.inverse(INFO_MSGS.HELP_TITLE));
+
+    let lineCount = 0;
+    OPTIONS.map((option, index) => {
+      this.setCursorAt({
+        x: UI_HELP.X_COMMAND_OFFSET,
+        y: index + UI_HELP.Y_OFFSET + lineCount,
+      });
+      this.print(option.ARG.reduce((string, arg) => string + ', ' + arg));
+      const description = consoleService.splitStringIntoArrayByCharactersWidth(
+        option.DESCRIPTION,
+        this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
+      );
+
+      description.map(line => {
+        this.setCursorAt({
+          x: UI_HELP.X_DESCRIPTION_OFFSET,
+          y: index + UI_HELP.Y_OFFSET + lineCount,
+        });
+        this.print(line);
+        ++lineCount;
+      });
+    });
   }
 
   private prepareScreen() {
