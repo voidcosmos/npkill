@@ -1,5 +1,5 @@
-const getSize = require("get-folder-size");
-const fs = require("fs");
+const getSize = require('get-folder-size');
+const fs = require('fs');
 
 export class FileService {
   getFolderSize(path: string, printOn?: [number, number]) {
@@ -18,11 +18,11 @@ export class FileService {
       return false;
     }
     let files;
-    dir = dir + "/";
+    dir = dir + '/';
     try {
       files = fs.readdirSync(dir);
     } catch (e) {
-      console.log("Directory not exist.");
+      console.log('Directory not exist.');
       return;
     }
     if (files.length > 0) {
@@ -41,10 +41,6 @@ export class FileService {
   }
 
   private isDirectorySafeToDelete(path) {
-    if (path === "/") {
-      return false;
-    }
-
-    return true;
+    return path !== '/';
   }
 }
