@@ -6,6 +6,10 @@ export const MIN_CLI_COLUMNS_SIZE = 60;
 export const ROW_RESULTS_START = 8;
 export const CURSOR_SIMBOL = '~>';
 
+export const DEFAULT_CONFIG = {
+  deleteAll: false,
+};
+
 export const UI_HELP = {
   Y_OFFSET: 3,
   X_COMMAND_OFFSET: 3,

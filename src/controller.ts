@@ -12,6 +12,7 @@ import {
   UI_POSITIONS,
   MIN_CLI_COLUMNS_SIZE,
   UI_HELP,
+  DEFAULT_CONFIG,
 } from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
@@ -37,6 +38,7 @@ export class Controller {
   private nodeFolders: any[] = [];
   private folderNewRow: number = 0;
   private cursorPosY: number = ROW_RESULTS_START;
+  private config: any = DEFAULT_CONFIG;
 
   constructor() {
     keypress(process.stdin);
@@ -55,6 +57,8 @@ export class Controller {
     }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
+    if (options['delete-all']) this.config.deteleAll = true;
+    //this.config.deteleAll = !!options['delete-all'];
   }
   private showHelp() {
     this.clear();
@@ -217,7 +221,6 @@ export class Controller {
     this.deleteFolder(nodeFolder);
     this.drawFolderDeleted(nodeFolder, position);
   }
-
   private deleteFolder(nodeFolder) {
     try {
       fileService.removeDir(nodeFolder.path);
