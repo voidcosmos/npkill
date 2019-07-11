@@ -35,10 +35,11 @@ export class FileService {
 
   private removeDirectoryFiles(dir: string, files: Array<string>) {
     files.map(file => {
-      if (fs.statSync(dir + file).isDirectory()) {
-        this.removeDir(dir + file);
+      const path = dir + file;
+      if (fs.statSync(path).isDirectory()) {
+        this.removeDir(path);
       } else {
-        fs.unlinkSync(dir + file);
+        fs.unlinkSync(path);
       }
     });
   }
