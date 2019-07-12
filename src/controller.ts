@@ -27,6 +27,7 @@ import { Position } from './interfaces/ui-positions.interface';
 import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
+import { IFolder } from './interfaces/folder.interface';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -37,7 +38,7 @@ export class Controller {
   private stdout: any = process.stdout;
 
   private jobQueue: any[];
-  private nodeFolders: any[] = [];
+  private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private config: any = DEFAULT_CONFIG;
   private KEYS: { [key: string]: any } = {
@@ -65,8 +66,7 @@ export class Controller {
       process.exit();
     }
 
-    //this.folderRoot = options['root'] ? options['root'] : process.cwd();
-    this.folderRoot = '/home/nya/Desktop/2DAW/Clientes/JS/';
+    this.folderRoot = options['root'] ? options['root'] : process.cwd();
     if (options['delete-all']) this.config.deteleAll = true;
     //this.config.deteleAll = !!options['delete-all'];
   }
@@ -151,7 +151,7 @@ export class Controller {
 
   private newFolderFound(folder) {
     if (basename(folder) === TARGET_FOLDER) {
-      const nodeFolder = {
+      const nodeFolder: IFolder = {
         path: folder,
         size: 0,
         deleted: false,
@@ -168,7 +168,7 @@ export class Controller {
         OVERFLOW_CUT_FROM,
       );
       this.print(folderString);
-      this.drawFolderSize(folder, {
+      this.drawFolderSize(nodeFolder, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
       });
@@ -209,10 +209,12 @@ export class Controller {
     process.exit();
   }
 
-  private drawFolderSize(folder: string, position: Position) {
-    fileService.getFolderSize(folder).then(data => {
+  private drawFolderSize(folder: IFolder, position: Position) {
+    fileService.getFolderSize(folder.path).then((size: any) => {
       this.setCursorAt(position);
-      this.print(data + ' mb');
+      this.print(size + ' mb');
+      folder.size = +size;
+      this.printStats();
     });
   }
 
@@ -272,9 +274,44 @@ export class Controller {
     this.print(colors.red(error));
   }
 
-  private drawFolderDeleted(nodeFolder, position: Position) {
+  private drawFolderDeleted(nodeFolder: IFolder, position: Position) {
     this.setCursorAt(position);
     this.print(colors.green('[DELETED] ') + nodeFolder.path);
+  }
+
+  private printStats() {
+    const stats: any = this.getStats();
+
+    const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
+    const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
+    totalSpacePosition.x += INFO_MSGS.TOTAL_SPACE.length;
+
+    spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
+
+    this.setCursorAt(totalSpacePosition);
+    this.print(stats.totalSpace + ' mb');
+    this.setCursorAt(spaceReleasedPosition);
+    this.print(stats.spaceReleased + ' mb');
+  }
+
+  private getStats(): Object {
+    let spaceReleased: any = 0;
+
+    const totalSpace = this.nodeFolders.reduce((total, folder) => {
+      if (folder.deleted) spaceReleased += folder.size;
+
+      return total + folder.size;
+    }, 0);
+
+    return {
+      spaceReleased: this.round(spaceReleased, 2),
+      totalSpace: this.round(totalSpace, 2),
+    };
+  }
+
+  private round(number: number, decimals: number = 0) {
+    const toRound: any = number + 'e' + decimals;
+    return Number(Math.round(toRound) + 'e-' + decimals);
   }
 
   private print(text: string) {
