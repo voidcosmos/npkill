@@ -4,7 +4,7 @@ export const TARGET_FOLDER = 'node_modules';
 //export const ROW_SEARCHING_FOLDER = 7;
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';
-export const WIDTH_OVERFLOW = '[...]';
+export const WIDTH_OVERFLOW = '...';
 export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG = {

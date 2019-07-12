@@ -81,14 +81,14 @@ describe('Console Service', () => {
       const cases = [
         {
           text: '/sample/text/for/test how/service/split/this',
-          expect: '/sample/te[...]ervice/split/this',
+          expect: '/sample/te.../service/split/this',
           width: 32,
           cutFrom: 10,
         },
         {
           text: '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
-          expect: '/aaa/[...]/jjj/kkk',
-          width: 18,
+          expect: '/aaa/.../jjj/kkk',
+          width: 16,
           cutFrom: 5,
         },
         {
