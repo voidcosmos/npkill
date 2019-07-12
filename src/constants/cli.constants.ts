@@ -1,25 +1,25 @@
 export const OPTIONS = [
   {
-    ARG: ['-h', '--help', '?'],
-    NAME: 'help',
-    DESCRIPTION: 'Show this help page, with all options.',
+    arg: ['-h', '--help', '?'],
+    name: 'help',
+    description: 'Show this help page, with all options.',
   },
   {
-    ARG: ['-r', '--root'],
-    NAME: 'root',
-    DESCRIPTION:
+    arg: ['-r', '--root'],
+    name: 'root',
+    description:
       'Set the root directory from which to start searching. By default, the root is the directory from which this command is executed.',
   },
   {
-    ARG: ['-f', '--full'],
-    NAME: 'full',
-    DESCRIPTION:
+    arg: ['-f', '--full'],
+    name: 'full',
+    description:
       'Start searching from the highest level of the system (example: "/" in linux).',
   },
   {
-    ARG: ['-D', '--delete-all'],
-    NAME: 'delete-all',
-    DESCRIPTION:
+    arg: ['-D', '--delete-all'],
+    name: 'delete-all',
+    description:
       'Automatically delete all node_modules folders that are found.',
   },
 ];
