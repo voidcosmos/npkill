@@ -40,6 +40,14 @@ export class Controller {
   private nodeFolders: any[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private config: any = DEFAULT_CONFIG;
+  private KEYS: { [key: string]: any } = {
+    up: this.moveCursorUp.bind(this),
+    down: this.moveCursorDown.bind(this),
+    delete: this.delete.bind(this),
+    execute: function(command: string, params: string[]) {
+      return this[command](params);
+    },
+  };
 
   constructor() {
     keypress(process.stdin);
@@ -57,8 +65,8 @@ export class Controller {
       process.exit();
     }
 
-    this.folderRoot = options['root'] ? options['root'] : process.cwd();
-    //this.folderRoot = '/home/nya/Desktop/2DAW/Clientes/JS/';
+    //this.folderRoot = options['root'] ? options['root'] : process.cwd();
+    this.folderRoot = '/home/nya/Desktop/2DAW/Clientes/JS/';
     if (options['delete-all']) this.config.deteleAll = true;
     //this.config.deteleAll = !!options['delete-all'];
   }
@@ -72,9 +80,9 @@ export class Controller {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
-      this.print(option.ARG.reduce((string, arg) => string + ', ' + arg));
+      this.print(option.arg.reduce((string, arg) => string + ', ' + arg));
       const description = consoleService.splitStringIntoArrayByCharactersWidth(
-        option.DESCRIPTION,
+        option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
 
@@ -168,15 +176,6 @@ export class Controller {
       this.jobQueue.push(folder);
     }
   }
-
-  private KEYS: { [key: string]: any } = {
-    up: this.moveCursorUp.bind(this),
-    down: this.moveCursorDown.bind(this),
-    delete: this.delete.bind(this),
-    execute: function(command: string, params: string[]) {
-      return this[command](params);
-    },
-  };
 
   private setupKeysListener() {
     process.stdin.on('keypress', (ch, key) => {
