@@ -1,4 +1,6 @@
-export const OPTIONS = [
+import { CliOptions } from '../interfaces/cli-options.interface';
+
+export const OPTIONS: Array<CliOptions> = [
   {
     arg: ['-h', '--help', '?'],
     name: 'help',
