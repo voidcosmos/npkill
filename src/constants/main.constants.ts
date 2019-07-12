@@ -3,11 +3,19 @@ import { IuiPosition } from '../interfaces/ui-positions.interface';
 export const TARGET_FOLDER = 'node_modules';
 //export const ROW_SEARCHING_FOLDER = 7;
 export const MIN_CLI_COLUMNS_SIZE = 60;
-export const ROW_RESULTS_START = 8;
 export const CURSOR_SIMBOL = '~>';
+export const WIDTH_OVERFLOW = '[...]';
+export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG = {
   deleteAll: false,
+};
+
+export const MARGINS = {
+  ROW_RESULTS_START: 8,
+  FOLDER_SIZE_COLUMN: 20,
+  FOLDER_COLUMN_START: 3,
+  FOLDER_COLUMN_END: 26,
 };
 
 export const UI_HELP = {

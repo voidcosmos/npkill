@@ -7,12 +7,13 @@ import * as keypress from 'keypress';
 import {
   BANNER,
   CURSOR_SIMBOL,
-  ROW_RESULTS_START,
+  MARGINS,
   TARGET_FOLDER,
   UI_POSITIONS,
   MIN_CLI_COLUMNS_SIZE,
   UI_HELP,
   DEFAULT_CONFIG,
+  OVERFLOW_CUT_FROM,
 } from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
@@ -37,7 +38,7 @@ export class Controller {
   private jobQueue: any[];
   private nodeFolders: any[] = [];
   private folderNewRow: number = 0;
-  private cursorPosY: number = ROW_RESULTS_START;
+  private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private config: any = DEFAULT_CONFIG;
 
   constructor() {
@@ -118,17 +119,26 @@ export class Controller {
 
   private newFolderFound(folder) {
     if (basename(folder) === TARGET_FOLDER) {
-      this.nodeFolders.push({
+      const nodeFolder = {
         path: folder,
         size: 0,
         deleted: false,
+      };
+      this.nodeFolders.push(nodeFolder);
+
+      this.setCursorAt({
+        x: MARGINS.FOLDER_COLUMN_START,
+        y: MARGINS.ROW_RESULTS_START + this.folderNewRow,
       });
-      this.setCursorAt({ x: 3, y: ROW_RESULTS_START + this.folderNewRow });
-      this.print(folder);
-      // getFolderSize(folder, [90, ROW_RESULTS_START + i]);
+      const folderString = consoleService.shortenText(
+        folder,
+        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
+        OVERFLOW_CUT_FROM,
+      );
+      this.print(folderString);
       this.drawFolderSize(folder, {
-        x: this.stdout.columns - 20,
-        y: ROW_RESULTS_START + this.folderNewRow,
+        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+        y: MARGINS.ROW_RESULTS_START + this.folderNewRow,
       });
       this.folderNewRow++;
     } else {
@@ -199,11 +209,11 @@ export class Controller {
   }
 
   private isCursorInLowerTextLimit(positionY: number) {
-    return positionY < this.nodeFolders.length - 1 + ROW_RESULTS_START;
+    return positionY < this.nodeFolders.length - 1 + MARGINS.ROW_RESULTS_START;
   }
 
   private isCursorInUpperTextLimit(positionY: number) {
-    return positionY > ROW_RESULTS_START;
+    return positionY > MARGINS.ROW_RESULTS_START;
   }
 
   private moveCursorUp() {
@@ -215,7 +225,9 @@ export class Controller {
   }
 
   private delete() {
-    const nodeFolder = this.nodeFolders[this.cursorPosY - ROW_RESULTS_START];
+    const nodeFolder = this.nodeFolders[
+      this.cursorPosY - MARGINS.ROW_RESULTS_START
+    ];
     const position = { x: 3, y: this.cursorPosY };
 
     this.deleteFolder(nodeFolder);
@@ -233,7 +245,7 @@ export class Controller {
   private printError(error: string) {
     this.setCursorAt({
       x: 3,
-      y: this.nodeFolders.length + ROW_RESULTS_START + 2,
+      y: this.nodeFolders.length + MARGINS.ROW_RESULTS_START + 2,
     });
     this.print(colors.red(error));
   }

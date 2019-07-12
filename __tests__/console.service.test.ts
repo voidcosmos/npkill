@@ -76,41 +76,88 @@ describe('Console Service', () => {
     });
   });
 
-  xdescribe('#textShortener', () => {
+  describe('#shortenText', () => {
     it('should short text according parameters', () => {
       const cases = [
         {
           text: '/sample/text/for/test how/service/split/this',
+          expect: '/sample/te[...]ervice/split/this',
           width: 32,
           cutFrom: 10,
-          expect: '/sample/te[...]ervice/split/this',
         },
         {
           text: '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
-          width: 18,
-          cutFrom: 4,
           expect: '/aaa/[...]/jjj/kkk',
+          width: 18,
+          cutFrom: 5,
         },
         {
           text: '/neketaro/a:desktop/folder',
+          expect: '/neketaro/a:desktop/folder',
           width: 50,
           cutFrom: 3,
-          expect: '/neketaro/a:desktop/folder',
         },
       ];
 
       cases.forEach(cas => {
-        expect(true /*insert method*/).toEqual(cas.expect);
+        const result = consoleService.shortenText(
+          cas.text,
+          cas.width,
+          cas.cutFrom,
+        );
+        expect(result).toEqual(cas.expect);
       });
+    });
 
-      it('should no modify input if "cutFrom" > text length', () => {
-        const text = '/sample/text/';
-        const expectResult = '/sample/text/';
-      });
+    it('should no modify input if "cutFrom" > text length', () => {
+      const text = '/sample/text/';
+      const expectResult = '/sample/text/';
+      const width = 5;
+      const cutFrom = 50;
 
-      it('should ignore negative parameters', () => {
-        const text = '/sample/text/for/test how/service/split/this';
-        const expectResult = '/sample/text/for/test how/service/split/this';
+      const result = consoleService.shortenText(text, width, cutFrom);
+      expect(result).toEqual(expectResult);
+    });
+
+    it('should no modify input if "cutFrom" > width', () => {
+      const text = '/sample/text/';
+      const expectResult = '/sample/text/';
+      const width = 5;
+      const cutFrom = 7;
+
+      const result = consoleService.shortenText(text, width, cutFrom);
+      expect(result).toEqual(expectResult);
+    });
+
+    it('should ignore negative parameters', () => {
+      const cases = [
+        {
+          text: '/sample/text/for/test how/service/split/thisA',
+          expect: '/sample/text/for/test how/service/split/thisA',
+          width: 5,
+          cutFrom: -10,
+        },
+        {
+          text: '/sample/text/for/test how/service/split/thisB',
+          expect: '/sample/text/for/test how/service/split/thisB',
+          width: -10,
+          cutFrom: 10,
+        },
+        {
+          text: '/sample/text/for/test how/service/split/thisC',
+          expect: '/sample/text/for/test how/service/split/thisC',
+          width: -10,
+          cutFrom: -20,
+        },
+      ];
+
+      cases.forEach(cas => {
+        const result = consoleService.shortenText(
+          cas.text,
+          cas.width,
+          cas.cutFrom,
+        );
+        expect(result).toEqual(cas.expect);
       });
     });
   });

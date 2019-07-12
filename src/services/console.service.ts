@@ -1,4 +1,5 @@
 import { OPTIONS } from '../constants/cli.constants';
+import { WIDTH_OVERFLOW } from '../constants/main.constants';
 
 export class ConsoleService {
   constructor() {}
@@ -56,5 +57,18 @@ export class ConsoleService {
       },
       [''],
     );
+  }
+
+  shortenText(text: string, width: number, cutFrom: number = 0) {
+    if (text.length < width) return text;
+    if (!width || !cutFrom || width < 1 || cutFrom < 1 || cutFrom > width)
+      return text;
+    if (!cutFrom) cutFrom = width / 2;
+
+    const startPartB = text.length - (width - cutFrom - WIDTH_OVERFLOW.length);
+    const partA = text.substring(cutFrom, -1);
+    const partB = text.substring(startPartB, text.length);
+
+    return partA + WIDTH_OVERFLOW + partB;
   }
 }
