@@ -7,26 +7,26 @@ import * as keypress from 'keypress';
 import {
   BANNER,
   CURSOR_SIMBOL,
-  MARGINS,
-  TARGET_FOLDER,
-  UI_POSITIONS,
-  MIN_CLI_COLUMNS_SIZE,
-  UI_HELP,
   DEFAULT_CONFIG,
-  OVERFLOW_CUT_FROM,
   DEFAULT_SIZE,
+  MARGINS,
+  MIN_CLI_COLUMNS_SIZE,
+  OVERFLOW_CUT_FROM,
+  TARGET_FOLDER,
+  UI_HELP,
+  UI_POSITIONS,
 } from './constants/main.constants';
+import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
-import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
+import { OPTIONS } from './constants/cli.constants';
 import { Observable } from 'rxjs';
 import { Position } from './interfaces/ui-positions.interface';
 import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
-import { OPTIONS } from './constants/cli.constants';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -38,7 +38,6 @@ export class Controller {
 
   private jobQueue: any[];
   private nodeFolders: any[] = [];
-  private folderNewRow: number = 0;
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private config: any = DEFAULT_CONFIG;
 
@@ -59,6 +58,7 @@ export class Controller {
     }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
+    //this.folderRoot = '/home/nya/Desktop/2DAW/Clientes/JS/';
     if (options['delete-all']) this.config.deteleAll = true;
     //this.config.deteleAll = !!options['delete-all'];
   }
@@ -152,7 +152,7 @@ export class Controller {
 
       this.setCursorAt({
         x: MARGINS.FOLDER_COLUMN_START,
-        y: MARGINS.ROW_RESULTS_START + this.folderNewRow,
+        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
       });
       const folderString = consoleService.shortenText(
         folder,
@@ -162,9 +162,8 @@ export class Controller {
       this.print(folderString);
       this.drawFolderSize(folder, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-        y: MARGINS.ROW_RESULTS_START + this.folderNewRow,
+        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
       });
-      this.folderNewRow++;
     } else {
       this.jobQueue.push(folder);
     }
