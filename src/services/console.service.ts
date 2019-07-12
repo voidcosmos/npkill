@@ -9,21 +9,23 @@ export class ConsoleService {
     let options: Object = {};
 
     for (let i = 0; i < argv.length; ++i) {
-      const argName = this.getArgName(argv[i]);
+      const option = this.getOption(argv[i]);
 
-      if (!argName) {
+      if (!option) {
         continue;
       }
 
+      const { name } = option;
+
       if (!this.argHaveOption(argv[i + 1])) {
-        options[argName] = argv[i + 1] ? argv[i + 1] : true;
+        options[name] = argv[i + 1] ? argv[i + 1] : true;
         i++;
         continue;
       }
 
-      options[argName] = true;
+      options[name] = true;
 
-      // options[argName] = this.argHaveOption(argv[i + 1]) ? true : argv[i + 1];
+      // options[name] = this.argHaveOption(argv[i + 1]) ? true : argv[i + 1];
     }
     return options;
   }
@@ -31,9 +33,8 @@ export class ConsoleService {
   private argHaveOption(argv: string) {
     return !!argv && argv.charAt(0) === '-';
   }
-  private getArgName(arg: string) {
-    const object = OPTIONS.find(option => option.ARG.includes(arg));
-    return object ? object.NAME : undefined;
+  private getOption(arg: string) {
+    return OPTIONS.find(option => option.arg.includes(arg));
   }
 
   splitStringIntoArrayByCharactersWidth(
