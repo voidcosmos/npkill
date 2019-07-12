@@ -5,6 +5,7 @@ export const TARGET_FOLDER = 'node_modules';
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';
 export const WIDTH_OVERFLOW = '...';
+export const DEFAULT_SIZE = '0.00mb';
 export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG = {
@@ -25,7 +26,10 @@ export const UI_HELP = {
 };
 
 export const UI_POSITIONS: IuiPosition = {
+  INITIAL: { x: 0, y: 0 },
   TUTORIAL_TIP: { x: 4, y: 7 },
+  TOTAL_SPACE: { x: 50, y: 3 },
+  SPACE_RELEASED: { x: 50, y: 4 },
   FOLDER_SIZE_HEADER: { x: -1, y: 7 }, //x is calculated in controller
 };
 

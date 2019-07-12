@@ -14,6 +14,7 @@ import {
   UI_HELP,
   DEFAULT_CONFIG,
   OVERFLOW_CUT_FROM,
+  DEFAULT_SIZE,
 } from './constants/main.constants';
 import { basename, dirname, normalize, resolve } from 'path';
 
@@ -102,13 +103,17 @@ export class Controller {
   }
 
   private printUI() {
-    this.setCursorAt({ x: 0, y: 0 });
+    ///////////////////////////
+    // banner and tutorial
+    this.setCursorAt(UI_POSITIONS.INITIAL);
     this.print(BANNER);
     this.setCursorAt(UI_POSITIONS.TUTORIAL_TIP);
     this.print(
       colors.yellow(colors.inverse(emoji.emojify(HELP_MSGS.BASIC_USAGE))),
     );
 
+    ///////////////////////////
+    // folder size header
     this.setCursorAt({
       x:
         this.stdout.columns -
@@ -117,6 +122,13 @@ export class Controller {
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
     this.print(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN));
+
+    ///////////////////////////
+    // npkill stats
+    this.setCursorAt(UI_POSITIONS.TOTAL_SPACE);
+    this.print(colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE));
+    this.setCursorAt(UI_POSITIONS.SPACE_RELEASED);
+    this.print(colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE));
   }
 
   private assignJob() {

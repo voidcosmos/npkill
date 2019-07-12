@@ -8,6 +8,6 @@ export const INFO_MSGS = {
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, enlarge it (This will be fixed in future versions. Disclose the inconveniences)',
   HEADER_SIZE_COLUMN: 'folder size',
-  TOTAL_SPACE: 'Total node_modules size: ',
-  SPACE_RELEASE: 'Space saved: ',
+  TOTAL_SPACE: 'releasable space: ',
+  SPACE_RELEASED: 'space saved: ',
 };
