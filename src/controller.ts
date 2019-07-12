@@ -257,10 +257,11 @@ export class Controller {
     this.deleteFolder(nodeFolder);
     this.drawFolderDeleted(nodeFolder, position);
   }
-  private deleteFolder(nodeFolder) {
+  private deleteFolder(folder: IFolder) {
     try {
-      fileService.removeDir(nodeFolder.path);
-      nodeFolder.delete = true;
+      fileService.removeDir(folder.path);
+      folder.deleted = true;
+      this.printStats();
     } catch (error) {
       this.printError(error.message);
     }
