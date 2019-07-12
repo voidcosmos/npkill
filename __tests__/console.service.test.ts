@@ -75,4 +75,43 @@ describe('Console Service', () => {
       });
     });
   });
+
+  xdescribe('#textShortener', () => {
+    it('should short text according parameters', () => {
+      const cases = [
+        {
+          text: '/sample/text/for/test how/service/split/this',
+          width: 32,
+          cutFrom: 10,
+          expect: '/sample/te[...]ervice/split/this',
+        },
+        {
+          text: '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
+          width: 18,
+          cutFrom: 4,
+          expect: '/aaa/[...]/jjj/kkk',
+        },
+        {
+          text: '/neketaro/a:desktop/folder',
+          width: 50,
+          cutFrom: 3,
+          expect: '/neketaro/a:desktop/folder',
+        },
+      ];
+
+      cases.forEach(cas => {
+        expect(true /*insert method*/).toEqual(cas.expect);
+      });
+
+      it('should no modify input if "cutFrom" > text length', () => {
+        const text = '/sample/text/';
+        const expectResult = '/sample/text/';
+      });
+
+      it('should ignore negative parameters', () => {
+        const text = '/sample/text/for/test how/service/split/this';
+        const expectResult = '/sample/text/for/test how/service/split/this';
+      });
+    });
+  });
 });
