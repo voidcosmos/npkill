@@ -97,14 +97,26 @@ export class Controller {
     this.stdin.setRawMode(true);
     process.stdin.resume();
     this.clear();
-    // TODO print logo and build the UI
+    this.printUI();
+    this.setupKeysListener();
+  }
+
+  private printUI() {
     this.setCursorAt({ x: 0, y: 0 });
     this.print(BANNER);
     this.setCursorAt(UI_POSITIONS.TUTORIAL_TIP);
     this.print(
       colors.yellow(colors.inverse(emoji.emojify(HELP_MSGS.BASIC_USAGE))),
     );
-    this.setupKeysListener();
+
+    this.setCursorAt({
+      x:
+        this.stdout.columns -
+        (MARGINS.FOLDER_SIZE_COLUMN +
+          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
+      y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
+    });
+    this.print(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN));
   }
 
   private assignJob() {

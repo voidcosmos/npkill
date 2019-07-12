@@ -26,6 +26,7 @@ export const UI_HELP = {
 
 export const UI_POSITIONS: IuiPosition = {
   TUTORIAL_TIP: { x: 4, y: 7 },
+  FOLDER_SIZE_HEADER: { x: -1, y: 7 }, //x is calculated in controller
 };
 
 export const VALID_KEYS: Array<string> = ['up', 'down', 'delete', 'c'];
