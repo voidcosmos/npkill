@@ -1,3 +1,4 @@
+export const SPINNER_INTERVAL = 70;
 export const SPINNERS = {
   SPRING: [
     '⠈',

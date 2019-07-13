@@ -17,20 +17,23 @@ import {
   UI_POSITIONS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { basename, dirname, normalize, resolve } from 'path';
+import { basename, resolve } from 'path';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
 import { OPTIONS } from './constants/cli.constants';
-import { Observable } from 'rxjs';
+import { Observable, interval } from 'rxjs';
 import { Position } from './interfaces/ui-positions.interface';
 import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
 import { IFolder } from './interfaces/folder.interface';
+import { SpinnerService } from './services/spinner.service';
+import { SPINNER_INTERVAL, SPINNERS } from './constants/spinner.constants';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
+const spinnerService = new SpinnerService();
 
 export class Controller {
   private folderRoot: any;
@@ -108,6 +111,7 @@ export class Controller {
     this.clear();
     this.printUI();
     this.setupKeysListener();
+    this.print(ansiEscapes.cursorHide);
   }
 
   private printUI() {
@@ -137,6 +141,19 @@ export class Controller {
     this.print(colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE));
     this.setCursorAt(UI_POSITIONS.SPACE_RELEASED);
     this.print(colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE));
+
+    this.initializeLoadingStatus();
+  }
+
+  private initializeLoadingStatus() {
+    spinnerService.setSpinner(SPINNERS.SPRING);
+    interval(SPINNER_INTERVAL).subscribe(() => {
+      this.updateStatus('searching ' + spinnerService.nextFrame());
+    });
+  }
+  private updateStatus(text: string) {
+    this.setCursorAt(UI_POSITIONS.STATUS);
+    this.print(text);
   }
 
   private assignJob() {

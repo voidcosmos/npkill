@@ -10,4 +10,5 @@ export const INFO_MSGS = {
   HEADER_SIZE_COLUMN: 'folder size',
   TOTAL_SPACE: 'releasable space: ',
   SPACE_RELEASED: 'space saved: ',
+  SEARCHING: 'searching ',
 };

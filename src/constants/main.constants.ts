@@ -30,6 +30,7 @@ export const UI_POSITIONS: IuiPosition = {
   TUTORIAL_TIP: { x: 4, y: 7 },
   TOTAL_SPACE: { x: 50, y: 3 },
   SPACE_RELEASED: { x: 50, y: 4 },
+  STATUS: { x: 50, y: 5 },
   FOLDER_SIZE_HEADER: { x: -1, y: 7 }, //x is calculated in controller
 };
 
