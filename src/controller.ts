@@ -211,8 +211,8 @@ export class Controller {
         this.KEYS.execute(name);
       }
 
-      this.positionCursorAndPrint('  ', { x: 1, y: previousCursorPosY });
-      this.positionCursorAndPrint(colors.cyan(CURSOR_SIMBOL), {
+      this.printAt('  ', { x: 1, y: previousCursorPosY });
+      this.printAt(colors.cyan(CURSOR_SIMBOL), {
         x: 1,
         y: this.cursorPosY,
       });
@@ -228,11 +228,9 @@ export class Controller {
     process.exit();
   }
 
-  private printCursor() {}
-
   private drawFolderSize(folder: IFolder, position: Position) {
     fileService.getFolderSize(folder.path).then((size: any) => {
-      this.positionCursorAndPrint(size + ' mb', position);
+      this.printAt(size + ' mb', position);
       folder.size = +size;
       this.printStats();
     });
@@ -273,7 +271,7 @@ export class Controller {
     ];
 
     this.deleteFolder(nodeFolder);
-    this.positionCursorAndPrint(colors.green('[DELETED] ') + nodeFolder.path, {
+    this.printAt(colors.green('[DELETED] ') + nodeFolder.path, {
       x: 3,
       y: this.cursorPosY,
     });
@@ -289,13 +287,13 @@ export class Controller {
     }
   }
 
-  private positionCursorAndPrint(message: string, position: Position) {
+  private printAt(message: string, position: Position) {
     this.setCursorAt(position);
     this.print(message);
   }
 
   private printError(error: string) {
-    this.positionCursorAndPrint(colors.red(error), {
+    this.printAt(colors.red(error), {
       x: 3,
       y: this.nodeFolders.length + MARGINS.ROW_RESULTS_START + 2,
     });
@@ -310,11 +308,8 @@ export class Controller {
 
     spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
 
-    this.positionCursorAndPrint(stats.totalSpace + ' mb', totalSpacePosition);
-    this.positionCursorAndPrint(
-      stats.spaceReleased + ' mb',
-      spaceReleasedPosition,
-    );
+    this.printAt(stats.totalSpace + ' mb', totalSpacePosition);
+    this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
   }
 
   private getStats(): Object {
@@ -346,11 +341,10 @@ export class Controller {
   }
 
   private clearLine(row: number) {
-    this.positionCursorAndPrint(ansiEscapes.eraseLine, { x: 0, y: row });
+    this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
   }
 
   private setCursorAt({ x, y }: Position) {
-    //const { x, y } = position;
     this.print(ansiEscapes.cursorTo(x, y));
   }
 
