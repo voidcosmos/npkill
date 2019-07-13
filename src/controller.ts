@@ -70,6 +70,7 @@ export class Controller {
     }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
+    if (options['full-scan']) this.folderRoot = fileService.getSystemRootPath();
     if (options['delete-all']) this.config.deteleAll = true;
     //this.config.deteleAll = !!options['delete-all'];
   }
@@ -162,6 +163,7 @@ export class Controller {
         .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
         .subscribe(folder => {
           this.newFolderFound(folder);
+          this.assignJob();
         });
     }
   }
@@ -243,7 +245,6 @@ export class Controller {
           return;
         }
         files.forEach(file => {
-          this.assignJob();
           observer.next(resolve(path, file));
         });
       });
