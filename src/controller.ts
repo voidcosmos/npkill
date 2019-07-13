@@ -71,8 +71,8 @@ export class Controller {
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
     if (options['full-scan']) this.folderRoot = fileService.getSystemRootPath();
-    if (options['delete-all']) this.config.deteleAll = true;
-    //this.config.deteleAll = !!options['delete-all'];
+    if (options['delete-all']) this.config.deleteAll = true;
+    //this.config.deleteAll = !!options['delete-all'];
   }
   private showHelp() {
     this.clear();
@@ -80,22 +80,20 @@ export class Controller {
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
-      this.setCursorAt({
+      this.printAt(option.arg.reduce((string, arg) => string + ', ' + arg), {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
-      this.print(option.arg.reduce((string, arg) => string + ', ' + arg));
       const description = consoleService.splitStringIntoArrayByCharactersWidth(
         option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
 
       description.map(line => {
-        this.setCursorAt({
+        this.printAt(line, {
           x: UI_HELP.X_DESCRIPTION_OFFSET,
           y: index + UI_HELP.Y_OFFSET + lineCount,
         });
-        this.print(line);
         ++lineCount;
       });
     });
@@ -118,30 +116,32 @@ export class Controller {
   private printUI() {
     ///////////////////////////
     // banner and tutorial
-    this.setCursorAt(UI_POSITIONS.INITIAL);
-    this.print(BANNER);
-    this.setCursorAt(UI_POSITIONS.TUTORIAL_TIP);
-    this.print(
+    this.printAt(BANNER, UI_POSITIONS.INITIAL);
+    this.printAt(
       colors.yellow(colors.inverse(emoji.emojify(HELP_MSGS.BASIC_USAGE))),
+      UI_POSITIONS.TUTORIAL_TIP,
     );
 
     ///////////////////////////
     // folder size header
-    this.setCursorAt({
+    this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
       x:
         this.stdout.columns -
         (MARGINS.FOLDER_SIZE_COLUMN +
           Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
-    this.print(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN));
 
     ///////////////////////////
     // npkill stats
-    this.setCursorAt(UI_POSITIONS.TOTAL_SPACE);
-    this.print(colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE));
-    this.setCursorAt(UI_POSITIONS.SPACE_RELEASED);
-    this.print(colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE));
+    this.printAt(
+      colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
+      UI_POSITIONS.TOTAL_SPACE,
+    );
+    this.printAt(
+      colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
+      UI_POSITIONS.SPACE_RELEASED,
+    );
 
     this.initializeLoadingStatus();
   }
@@ -153,8 +153,7 @@ export class Controller {
     });
   }
   private updateStatus(text: string) {
-    this.setCursorAt(UI_POSITIONS.STATUS);
-    this.print(text);
+    this.printAt(text, UI_POSITIONS.STATUS);
   }
 
   private assignJob() {
@@ -177,16 +176,16 @@ export class Controller {
       };
       this.nodeFolders.push(nodeFolder);
 
-      this.setCursorAt({
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
-      });
       const folderString = consoleService.shortenText(
         folder,
         this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
         OVERFLOW_CUT_FROM,
       );
-      this.print(folderString);
+
+      this.printAt(folderString, {
+        x: MARGINS.FOLDER_COLUMN_START,
+        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length - 1,
+      });
       this.drawFolderSize(nodeFolder, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
