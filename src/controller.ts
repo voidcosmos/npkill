@@ -162,6 +162,7 @@ export class Controller {
         .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
         .subscribe(folder => {
           this.newFolderFound(folder);
+          this.assignJob();
         });
     }
   }
@@ -242,7 +243,6 @@ export class Controller {
           return;
         }
         files.forEach(file => {
-          this.assignJob();
           observer.next(resolve(path, file));
         });
       });
