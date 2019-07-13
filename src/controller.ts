@@ -17,19 +17,19 @@ import {
   UI_POSITIONS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
+import { Observable, interval } from 'rxjs';
+import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
+import { IFolder } from './interfaces/folder.interface';
 import { OPTIONS } from './constants/cli.constants';
-import { Observable, interval } from 'rxjs';
 import { Position } from './interfaces/ui-positions.interface';
+import { SpinnerService } from './services/spinner.service';
 import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
 import { filter } from 'rxjs/operators';
-import { IFolder } from './interfaces/folder.interface';
-import { SpinnerService } from './services/spinner.service';
-import { SPINNER_INTERVAL, SPINNERS } from './constants/spinner.constants';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -146,7 +146,7 @@ export class Controller {
   }
 
   private initializeLoadingStatus() {
-    spinnerService.setSpinner(SPINNERS.SPRING);
+    spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL).subscribe(() => {
       this.updateStatus('searching ' + spinnerService.nextFrame());
     });
@@ -209,11 +209,11 @@ export class Controller {
         this.KEYS.execute(name);
       }
 
-      this.setCursorAt({ x: 1, y: previousCursorPosY });
-      this.print('  ');
-      this.setCursorAt({ x: 1, y: this.cursorPosY });
-      this.print(colors.cyan(CURSOR_SIMBOL));
-      this.setCursorAt({ x: -1, y: -1 });
+      this.positionCursorAndPrint('  ', { x: 1, y: previousCursorPosY });
+      this.positionCursorAndPrint(colors.cyan(CURSOR_SIMBOL), {
+        x: 1,
+        y: this.cursorPosY,
+      });
     });
   }
 
@@ -226,10 +226,11 @@ export class Controller {
     process.exit();
   }
 
+  private printCursor() {}
+
   private drawFolderSize(folder: IFolder, position: Position) {
     fileService.getFolderSize(folder.path).then((size: any) => {
-      this.setCursorAt(position);
-      this.print(size + ' mb');
+      this.positionCursorAndPrint(size + ' mb', position);
       folder.size = +size;
       this.printStats();
     });
@@ -269,11 +270,14 @@ export class Controller {
     const nodeFolder = this.nodeFolders[
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
-    const position = { x: 3, y: this.cursorPosY };
 
     this.deleteFolder(nodeFolder);
-    this.drawFolderDeleted(nodeFolder, position);
+    this.positionCursorAndPrint(colors.green('[DELETED] ') + nodeFolder.path, {
+      x: 3,
+      y: this.cursorPosY,
+    });
   }
+
   private deleteFolder(folder: IFolder) {
     try {
       fileService.removeDir(folder.path);
@@ -284,17 +288,16 @@ export class Controller {
     }
   }
 
+  private positionCursorAndPrint(message: string, position: Position) {
+    this.setCursorAt(position);
+    this.print(message);
+  }
+
   private printError(error: string) {
-    this.setCursorAt({
+    this.positionCursorAndPrint(colors.red(error), {
       x: 3,
       y: this.nodeFolders.length + MARGINS.ROW_RESULTS_START + 2,
     });
-    this.print(colors.red(error));
-  }
-
-  private drawFolderDeleted(nodeFolder: IFolder, position: Position) {
-    this.setCursorAt(position);
-    this.print(colors.green('[DELETED] ') + nodeFolder.path);
   }
 
   private printStats() {
@@ -306,10 +309,11 @@ export class Controller {
 
     spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
 
-    this.setCursorAt(totalSpacePosition);
-    this.print(stats.totalSpace + ' mb');
-    this.setCursorAt(spaceReleasedPosition);
-    this.print(stats.spaceReleased + ' mb');
+    this.positionCursorAndPrint(stats.totalSpace + ' mb', totalSpacePosition);
+    this.positionCursorAndPrint(
+      stats.spaceReleased + ' mb',
+      spaceReleasedPosition,
+    );
   }
 
   private getStats(): Object {
@@ -341,12 +345,11 @@ export class Controller {
   }
 
   private clearLine(row: number) {
-    this.setCursorAt({ x: 0, y: row });
-    this.print(ansiEscapes.eraseLine);
+    this.positionCursorAndPrint(ansiEscapes.eraseLine, { x: 0, y: row });
   }
 
-  private setCursorAt(position: Position) {
-    const { x, y } = position;
+  private setCursorAt({ x, y }: Position) {
+    //const { x, y } = position;
     this.print(ansiEscapes.cursorTo(x, y));
   }
 
