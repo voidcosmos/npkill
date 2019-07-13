@@ -27,7 +27,7 @@ describe('Console Service', () => {
       expect(result['delete-all']).not.toBeFalsy();
       expect(result['lala']).toBeUndefined();
       expect(result['inexistent']).toBeUndefined();
-      expect(result['full']).not.toBeFalsy();
+      expect(result['full-scan']).not.toBeFalsy();
     });
     /*it('should get valid parameters 2', () => {
       const argvs = [

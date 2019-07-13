@@ -1,5 +1,6 @@
-const getSize = require('get-folder-size');
-const fs = require('fs');
+import * as getSize from 'get-folder-size';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class FileService {
   getFolderSize(path: string, printOn?: [number, number]) {
@@ -27,6 +28,10 @@ export class FileService {
       // check if user want to delete the directory ir just the files in this directory
       fs.rmdirSync(dir);
     }
+  }
+
+  getSystemRootPath() {
+    return path.parse(process.cwd()).root;
   }
 
   private getDirectoryFiles(dir: string) {

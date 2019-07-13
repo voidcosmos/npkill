@@ -70,6 +70,7 @@ export class Controller {
     }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
+    if (options['full-scan']) this.folderRoot = fileService.getSystemRootPath();
     if (options['delete-all']) this.config.deteleAll = true;
     //this.config.deteleAll = !!options['delete-all'];
   }
