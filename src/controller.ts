@@ -152,6 +152,7 @@ export class Controller {
       this.updateStatus('searching ' + spinnerService.nextFrame());
     });
   }
+
   private updateStatus(text: string) {
     this.printAt(text, UI_POSITIONS.STATUS);
   }
@@ -167,29 +168,16 @@ export class Controller {
     }
   }
 
-  private newFolderFound(folder) {
-    if (basename(folder) === TARGET_FOLDER) {
+  private newFolderFound(folder: string) {
+    if (this.isTargetFolder(folder)) {
       const nodeFolder: IFolder = {
         path: folder,
         size: 0,
         deleted: false,
       };
-      this.nodeFolders.push(nodeFolder);
 
-      const folderString = consoleService.shortenText(
-        folder,
-        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
-        OVERFLOW_CUT_FROM,
-      );
-
-      this.printAt(folderString, {
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length - 1,
-      });
-      this.drawFolderSize(nodeFolder, {
-        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
-      });
+      this.addNodeFolder(nodeFolder);
+      this.printNewFolder(nodeFolder);
     } else {
       this.jobQueue.push(folder);
     }
@@ -227,12 +215,16 @@ export class Controller {
     process.exit();
   }
 
-  private drawFolderSize(folder: IFolder, position: Position) {
+  private printFolderSize(folder: IFolder, position: Position) {
     fileService.getFolderSize(folder.path).then((size: any) => {
       this.printAt(size + ' mb', position);
       folder.size = +size;
       this.printStats();
     });
+  }
+
+  private addNodeFolder(nodeFolder: IFolder) {
+    this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
 
   private listDir(path: string): Observable<any> {
@@ -353,5 +345,28 @@ export class Controller {
 
   private isTerminalTooSmall() {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
+  }
+
+  private isTargetFolder(folder: string) {
+    return basename(folder) === TARGET_FOLDER;
+  }
+
+  private printNewFolder(nodeFolder: IFolder) {
+    const { path } = nodeFolder;
+
+    const folderString = consoleService.shortenText(
+      path,
+      this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
+      OVERFLOW_CUT_FROM,
+    );
+
+    this.printAt(folderString, {
+      x: MARGINS.FOLDER_COLUMN_START,
+      y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length - 1,
+    });
+    this.printFolderSize(nodeFolder, {
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+      y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
+    });
   }
 }
