@@ -375,13 +375,14 @@ export class Controller {
       OVERFLOW_CUT_FROM,
     );
 
+    const folderPositionY = MARGINS.ROW_RESULTS_START + this.nodeFolders.length;
     this.printAt(folderString, {
       x: MARGINS.FOLDER_COLUMN_START,
-      y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length - 1,
+      y: folderPositionY,
     });
     this.printFolderSize(nodeFolder, {
       x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-      y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
+      y: folderPositionY,
     });
   }
 }
