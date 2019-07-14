@@ -43,6 +43,7 @@ export class Controller {
   private jobQueue: any[];
   private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
+  private scroll: number = 0;
   private config: any = DEFAULT_CONFIG;
   private KEYS: { [key: string]: any } = {
     up: this.moveCursorUp.bind(this),
@@ -74,6 +75,7 @@ export class Controller {
     if (options['delete-all']) this.config.deleteAll = true;
     //this.config.deleteAll = !!options['delete-all'];
   }
+
   private showHelp() {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE));
@@ -152,6 +154,7 @@ export class Controller {
       this.updateStatus('searching ' + spinnerService.nextFrame());
     });
   }
+
   private updateStatus(text: string) {
     this.printAt(text, UI_POSITIONS.STATUS);
   }
@@ -175,21 +178,11 @@ export class Controller {
         deleted: false,
       };
       this.nodeFolders.push(nodeFolder);
-
-      const folderString = consoleService.shortenText(
-        folder,
-        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
-        OVERFLOW_CUT_FROM,
-      );
-
-      this.printAt(folderString, {
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length - 1,
+      this.calculateFolderSize(nodeFolder).then(folder => {
+        this.printStats();
+        this.printFoldersSection();
       });
-      this.drawFolderSize(nodeFolder, {
-        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-        y: MARGINS.ROW_RESULTS_START + this.nodeFolders.length,
-      });
+      this.printFoldersSection();
     } else {
       this.jobQueue.push(folder);
     }
@@ -227,11 +220,15 @@ export class Controller {
     process.exit();
   }
 
-  private drawFolderSize(folder: IFolder, position: Position) {
-    fileService.getFolderSize(folder.path).then((size: any) => {
-      this.printAt(size + ' mb', position);
-      folder.size = +size;
-      this.printStats();
+  private calculateFolderSize(folder: IFolder): Promise<IFolder> {
+    return new Promise((resolve, reject) => {
+      fileService
+        .getFolderSize(folder.path)
+        .then((size: any) => {
+          folder.size = +size;
+          resolve(folder);
+        })
+        .catch(err => reject(err));
     });
   }
 
@@ -270,17 +267,14 @@ export class Controller {
     ];
 
     this.deleteFolder(nodeFolder);
-    this.printAt(colors.green('[DELETED] ') + nodeFolder.path, {
-      x: 3,
-      y: this.cursorPosY,
-    });
+    this.printStats();
+    this.printFoldersSection();
   }
 
   private deleteFolder(folder: IFolder) {
     try {
       fileService.removeDir(folder.path);
       folder.deleted = true;
-      this.printStats();
     } catch (error) {
       this.printError(error.message);
     }
@@ -309,6 +303,48 @@ export class Controller {
 
     this.printAt(stats.totalSpace + ' mb', totalSpacePosition);
     this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
+  }
+
+  private printFoldersSection() {
+    this.nodeFolders.map((folder: IFolder, index) => {
+      /* const cutFrom = !folder.deleted
+        ? OVERFLOW_CUT_FROM
+        : OVERFLOW_CUT_FROM + INFO_MSGS.DELETED_FOLDER.length; */
+
+      let cutFrom = OVERFLOW_CUT_FROM;
+      let folderTitle = folder.path;
+      if (folder.deleted) {
+        cutFrom += INFO_MSGS.DELETED_FOLDER.length;
+        folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
+      }
+
+      let folderString = consoleService.shortenText(
+        folderTitle,
+        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
+        cutFrom,
+      );
+
+      // This is necessary for the coloring of the text, since
+      // the shortener takes into ansi-scape codes invisible
+      // characters and can cause an error in the cli.
+      folderString = folderString.replace(
+        INFO_MSGS.DELETED_FOLDER,
+        colors.green(INFO_MSGS.DELETED_FOLDER),
+      );
+
+      //Folder name
+      this.printAt(folderString, {
+        x: MARGINS.FOLDER_COLUMN_START,
+        y: MARGINS.ROW_RESULTS_START + index,
+      });
+
+      //Folder size
+      const folderSizeText = folder.size ? folder.size + 'mb' : '--';
+      this.printAt(folderSizeText, {
+        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+        y: MARGINS.ROW_RESULTS_START + index,
+      });
+    });
   }
 
   private getStats(): Object {
