@@ -12,4 +12,5 @@ export const INFO_MSGS = {
   TOTAL_SPACE: 'releasable space: ',
   SPACE_RELEASED: 'space saved: ',
   SEARCHING: 'searching ',
+  SEARCH_COMPLETED: 'search completed ',
 };

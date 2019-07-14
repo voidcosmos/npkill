@@ -15,11 +15,13 @@ import {
   TARGET_FOLDER,
   UI_HELP,
   UI_POSITIONS,
+  VALID_KEYS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { Observable, interval } from 'rxjs';
+import { Observable, Subject, iif, interval, of } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
+import { filter, takeUntil, tap } from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
@@ -27,9 +29,7 @@ import { IFolder } from './interfaces/folder.interface';
 import { OPTIONS } from './constants/cli.constants';
 import { Position } from './interfaces/ui-positions.interface';
 import { SpinnerService } from './services/spinner.service';
-import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
-import { filter } from 'rxjs/operators';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -46,6 +46,7 @@ export class Controller {
   private previousCursorPosY: number = 0;
   private scroll: number = 0;
   private config: any = DEFAULT_CONFIG;
+  private finishSearching$: Subject<boolean> = new Subject<boolean>();
   private KEYS: { [key: string]: any } = {
     up: this.moveCursorUp.bind(this),
     down: this.moveCursorDown.bind(this),
@@ -58,9 +59,10 @@ export class Controller {
   constructor() {
     keypress(process.stdin);
     this.getArguments();
-    this.prepareScreen();
 
     this.jobQueue = [this.folderRoot];
+    this.prepareScreen();
+
     this.assignJob();
   }
 
@@ -151,9 +153,11 @@ export class Controller {
 
   private initializeLoadingStatus() {
     spinnerService.setSpinner(SPINNERS.W10);
-    interval(SPINNER_INTERVAL).subscribe(() => {
-      this.updateStatus('searching ' + spinnerService.nextFrame());
-    });
+    interval(SPINNER_INTERVAL)
+      .pipe(takeUntil(this.finishSearching$))
+      .subscribe(() =>
+        this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
+      );
   }
 
   private updateStatus(text: string) {
@@ -161,32 +165,43 @@ export class Controller {
   }
 
   private assignJob() {
-    if (this.jobQueue.length > 0) {
-      this.listDir(this.jobQueue.pop())
-        .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
-        .subscribe(folder => {
-          this.newFolderFound(folder);
-          this.assignJob();
-        });
+    if (!this.jobQueue.length) {
+      this.searchCompleted();
+      return;
     }
+    this.listDir(this.jobQueue.pop())
+      .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
+      .subscribe(folder => {
+        this.newFolderFound(folder);
+        this.assignJob();
+      });
   }
 
-  private newFolderFound(folder) {
-    if (basename(folder) === TARGET_FOLDER) {
-      const nodeFolder: IFolder = {
-        path: folder,
-        size: 0,
-        deleted: false,
-      };
-      this.nodeFolders.push(nodeFolder);
-      this.calculateFolderSize(nodeFolder).then(folder => {
-        this.printStats();
-        this.printFoldersSection();
-      });
-      this.printFoldersSection();
-    } else {
-      this.jobQueue.push(folder);
+  private searchCompleted() {
+    this.finishSearching$.next(true);
+    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
+  }
+
+  private newFolderFound(folder: string) {
+    if (!this.isTargetFolder(folder)) {
+      return this.jobQueue.push(folder);
     }
+
+    const nodeFolder: IFolder = {
+      path: folder,
+      size: 0,
+      deleted: false,
+    };
+
+    this.addNodeFolder(nodeFolder);
+    this.calculateFolderSize(nodeFolder).then(folder => {
+      this.printStats();
+      this.printFoldersSection();
+    });
+
+    this.printFoldersSection();
+
+    if (this.config.deleteAll) this.deleteFolder(nodeFolder);
   }
 
   private setupKeysListener() {
@@ -226,6 +241,10 @@ export class Controller {
         })
         .catch(err => reject(err));
     });
+  }
+
+  private addNodeFolder(nodeFolder: IFolder) {
+    this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
 
   private listDir(path: string): Observable<any> {
@@ -290,6 +309,7 @@ export class Controller {
       folder.deleted = true;
     } catch (error) {
       this.printError(error.message);
+      console.log(error.stack);
     }
   }
 
@@ -359,16 +379,17 @@ export class Controller {
       );
 
       //Folder name
+      const folderRow = MARGINS.ROW_RESULTS_START + index;
       this.printAt(folderString, {
         x: MARGINS.FOLDER_COLUMN_START,
-        y: MARGINS.ROW_RESULTS_START + index,
+        y: folderRow,
       });
 
       //Folder size
       const folderSizeText = folder.size ? folder.size + 'mb' : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-        y: MARGINS.ROW_RESULTS_START + index,
+        y: folderRow,
       });
 
       this.printFolderCursor();
@@ -421,5 +442,9 @@ export class Controller {
 
   private isTerminalTooSmall() {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
+  }
+
+  private isTargetFolder(folder: string) {
+    return basename(folder) === TARGET_FOLDER;
   }
 }
