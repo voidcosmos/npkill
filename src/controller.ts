@@ -43,6 +43,7 @@ export class Controller {
   private jobQueue: any[];
   private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
+  private previousCursorPosY: number = 0;
   private scroll: number = 0;
   private config: any = DEFAULT_CONFIG;
   private KEYS: { [key: string]: any } = {
@@ -190,7 +191,6 @@ export class Controller {
 
   private setupKeysListener() {
     process.stdin.on('keypress', (ch, key) => {
-      const previousCursorPosY = this.cursorPosY;
       const { name, ctrl } = key;
 
       if (this.isQuitKey(ctrl, name)) {
@@ -203,11 +203,7 @@ export class Controller {
         this.KEYS.execute(name);
       }
 
-      this.printAt('  ', { x: 1, y: previousCursorPosY });
-      this.printAt(colors.cyan(CURSOR_SIMBOL), {
-        x: 1,
-        y: this.cursorPosY,
-      });
+      this.printFoldersSection();
     });
   }
 
@@ -254,11 +250,28 @@ export class Controller {
   }
 
   private moveCursorUp() {
-    if (this.isCursorInUpperTextLimit(this.cursorPosY)) this.cursorPosY--;
+    if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
+      this.previousCursorPosY = this.cursorPosY - this.scroll;
+      this.cursorPosY--;
+      this.checkCursorScroll();
+    }
   }
 
   private moveCursorDown() {
-    if (this.isCursorInLowerTextLimit(this.cursorPosY)) this.cursorPosY++;
+    if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
+      this.previousCursorPosY = this.cursorPosY - this.scroll;
+      this.cursorPosY++;
+      this.checkCursorScroll();
+    }
+  }
+
+  private checkCursorScroll() {
+    if (this.cursorPosY > this.stdout.rows - 1 + this.scroll) {
+      this.scroll++;
+    }
+    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll) {
+      this.scroll--;
+    }
   }
 
   private delete() {
@@ -305,12 +318,25 @@ export class Controller {
     this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
   }
 
-  private printFoldersSection() {
-    this.nodeFolders.map((folder: IFolder, index) => {
-      /* const cutFrom = !folder.deleted
-        ? OVERFLOW_CUT_FROM
-        : OVERFLOW_CUT_FROM + INFO_MSGS.DELETED_FOLDER.length; */
+  private getStats(): Object {
+    let spaceReleased: any = 0;
 
+    const totalSpace = this.nodeFolders.reduce((total, folder) => {
+      if (folder.deleted) spaceReleased += folder.size;
+
+      return total + folder.size;
+    }, 0);
+
+    return {
+      spaceReleased: this.round(spaceReleased, 2),
+      totalSpace: this.round(totalSpace, 2),
+    };
+  }
+
+  private printFoldersSection() {
+    const visibleFolders = this.getVisibleScrollFolders();
+
+    visibleFolders.map((folder: IFolder, index) => {
       let cutFrom = OVERFLOW_CUT_FROM;
       let folderTitle = folder.path;
       if (folder.deleted) {
@@ -344,22 +370,24 @@ export class Controller {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: MARGINS.ROW_RESULTS_START + index,
       });
+
+      this.printFolderCursor();
     });
   }
 
-  private getStats(): Object {
-    let spaceReleased: any = 0;
+  private getVisibleScrollFolders(): IFolder[] {
+    return this.nodeFolders.slice(
+      this.scroll,
+      this.stdout.rows - MARGINS.ROW_RESULTS_START + this.scroll,
+    );
+  }
 
-    const totalSpace = this.nodeFolders.reduce((total, folder) => {
-      if (folder.deleted) spaceReleased += folder.size;
-
-      return total + folder.size;
-    }, 0);
-
-    return {
-      spaceReleased: this.round(spaceReleased, 2),
-      totalSpace: this.round(totalSpace, 2),
-    };
+  private printFolderCursor() {
+    this.printAt('  ', { x: 1, y: this.previousCursorPosY });
+    this.printAt(colors.cyan(CURSOR_SIMBOL), {
+      x: 1,
+      y: this.cursorPosY - this.scroll,
+    });
   }
 
   private round(number: number, decimals: number = 0) {
