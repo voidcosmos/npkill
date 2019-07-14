@@ -107,8 +107,8 @@ export class Controller {
       process.exit();
     }
 
-    //this.stdin.setRawMode(true);
-    //process.stdin.resume();
+    this.stdin.setRawMode(true);
+    process.stdin.resume();
     this.clear();
     this.printUI();
     this.setupKeysListener();
@@ -153,7 +153,7 @@ export class Controller {
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.finishSearching$))
       .subscribe(() =>
-        this.updateStatus('searching ' + spinnerService.nextFrame()),
+        this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
       );
   }
 
@@ -162,17 +162,22 @@ export class Controller {
   }
 
   private assignJob() {
-    if (this.jobQueue.length === 0) {
-      this.finishSearching$.next(true);
+    if (!this.jobQueue.length) {
+      this.searchCompleted();
+      return;
     }
-    if (this.jobQueue.length > 0) {
-      this.listDir(this.jobQueue.pop())
-        .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
-        .subscribe(folder => {
-          this.newFolderFound(folder);
-          this.assignJob();
-        });
-    }
+
+    this.listDir(this.jobQueue.pop())
+      .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
+      .subscribe(folder => {
+        this.newFolderFound(folder);
+        this.assignJob();
+      });
+  }
+
+  private searchCompleted() {
+    this.finishSearching$.next(true);
+    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
   }
 
   private newFolderFound(folder: string) {
