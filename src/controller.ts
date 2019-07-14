@@ -251,7 +251,7 @@ export class Controller {
 
   private moveCursorUp() {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
-      this.previousCursorPosY = this.cursorPosY - this.scroll;
+      this.previousCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
       this.checkCursorScroll();
     }
@@ -259,18 +259,18 @@ export class Controller {
 
   private moveCursorDown() {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
-      this.previousCursorPosY = this.cursorPosY - this.scroll;
+      this.previousCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
       this.checkCursorScroll();
     }
   }
 
   private checkCursorScroll() {
-    if (this.cursorPosY > this.stdout.rows - 1 + this.scroll) {
-      this.scroll++;
-    }
     if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll) {
       this.scroll--;
+    }
+    if (this.cursorPosY > this.stdout.rows + this.scroll - 1) {
+      this.scroll++;
     }
   }
 
@@ -386,8 +386,12 @@ export class Controller {
     this.printAt('  ', { x: 1, y: this.previousCursorPosY });
     this.printAt(colors.cyan(CURSOR_SIMBOL), {
       x: 1,
-      y: this.cursorPosY - this.scroll,
+      y: this.getRealCursorPosY(),
     });
+  }
+
+  private getRealCursorPosY(): number {
+    return this.cursorPosY - this.scroll;
   }
 
   private round(number: number, decimals: number = 0) {
