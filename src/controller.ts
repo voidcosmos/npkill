@@ -15,11 +15,13 @@ import {
   TARGET_FOLDER,
   UI_HELP,
   UI_POSITIONS,
+  VALID_KEYS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { Observable, interval } from 'rxjs';
+import { Observable, Subject, iif, interval, of } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
+import { filter, takeUntil, tap } from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
@@ -27,9 +29,7 @@ import { IFolder } from './interfaces/folder.interface';
 import { OPTIONS } from './constants/cli.constants';
 import { Position } from './interfaces/ui-positions.interface';
 import { SpinnerService } from './services/spinner.service';
-import { VALID_KEYS } from './constants/main.constants';
 import ansiEscapes from 'ansi-escapes';
-import { filter } from 'rxjs/operators';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -44,6 +44,7 @@ export class Controller {
   private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private config: any = DEFAULT_CONFIG;
+  private finishSearching$: Subject<boolean> = new Subject<boolean>();
   private KEYS: { [key: string]: any } = {
     up: this.moveCursorUp.bind(this),
     down: this.moveCursorDown.bind(this),
@@ -56,9 +57,10 @@ export class Controller {
   constructor() {
     keypress(process.stdin);
     this.getArguments();
-    this.prepareScreen();
 
     this.jobQueue = [this.folderRoot];
+    this.prepareScreen();
+
     this.assignJob();
   }
 
@@ -105,8 +107,8 @@ export class Controller {
       process.exit();
     }
 
-    this.stdin.setRawMode(true);
-    process.stdin.resume();
+    //this.stdin.setRawMode(true);
+    //process.stdin.resume();
     this.clear();
     this.printUI();
     this.setupKeysListener();
@@ -148,9 +150,11 @@ export class Controller {
 
   private initializeLoadingStatus() {
     spinnerService.setSpinner(SPINNERS.W10);
-    interval(SPINNER_INTERVAL).subscribe(() => {
-      this.updateStatus('searching ' + spinnerService.nextFrame());
-    });
+    interval(SPINNER_INTERVAL)
+      .pipe(takeUntil(this.finishSearching$))
+      .subscribe(() =>
+        this.updateStatus('searching ' + spinnerService.nextFrame()),
+      );
   }
 
   private updateStatus(text: string) {
@@ -158,6 +162,9 @@ export class Controller {
   }
 
   private assignJob() {
+    if (this.jobQueue.length === 0) {
+      this.finishSearching$.next(true);
+    }
     if (this.jobQueue.length > 0) {
       this.listDir(this.jobQueue.pop())
         .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
@@ -169,18 +176,20 @@ export class Controller {
   }
 
   private newFolderFound(folder: string) {
-    if (this.isTargetFolder(folder)) {
-      const nodeFolder: IFolder = {
-        path: folder,
-        size: 0,
-        deleted: false,
-      };
-
-      this.addNodeFolder(nodeFolder);
-      this.printNewFolder(nodeFolder);
-    } else {
-      this.jobQueue.push(folder);
+    if (!this.isTargetFolder(folder)) {
+      return this.jobQueue.push(folder);
     }
+
+    const nodeFolder: IFolder = {
+      path: folder,
+      size: 0,
+      deleted: false,
+    };
+
+    this.addNodeFolder(nodeFolder);
+    this.printNewFolder(nodeFolder);
+
+    if (this.config.deleteAll) this.deleteFolder(nodeFolder);
   }
 
   private setupKeysListener() {
@@ -262,10 +271,6 @@ export class Controller {
     ];
 
     this.deleteFolder(nodeFolder);
-    this.printAt(colors.green('[DELETED] ') + nodeFolder.path, {
-      x: 3,
-      y: this.cursorPosY,
-    });
   }
 
   private deleteFolder(folder: IFolder) {
@@ -273,8 +278,13 @@ export class Controller {
       fileService.removeDir(folder.path);
       folder.deleted = true;
       this.printStats();
+      this.printAt(colors.green('[DELETED] ') + folder.path, {
+        x: 3,
+        y: this.cursorPosY,
+      });
     } catch (error) {
       this.printError(error.message);
+      console.log(error.stack);
     }
   }
 
