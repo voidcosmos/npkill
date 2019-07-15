@@ -27,13 +27,25 @@
 $ npm i -g npkill
 ```
 
-(Some unix users may need run command with sudo)
+(Some unix users may need to run the command with sudo)
 
 ## Usage
 
-// TODO
+```bash
+npkill
+```
 
-// Parameters
+### Options
+
+| ARGUMENT          | DESCRIPTION                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| -h, --help, ?     | Show this help page, with all options                                                                                           |
+| -r, --root        | Set the root directory from which to start searching. By default, the root is the directory from which this command is executed |
+| -f, --full        | Start searching from the home of the user (example: "home/user" in linux).,                                                     |
+| -D, --delete-all  | Automatically delete all node_modules folders that are found                                                                    |
+| -e, --show-errors | It shows a brief error message in the lower part incase one occurred                                                            |
+
+##
 
 ## Support
 
