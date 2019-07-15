@@ -3,7 +3,6 @@ import * as emoji from 'node-emoji';
 import * as fs from 'fs';
 import * as keypress from 'keypress';
 
-// https://itnext.io/step-by-step-building-and-publishing-an-npm-typescript-package-44fe7164964c
 import {
   BANNER,
   CURSOR_SIMBOL,
@@ -21,7 +20,7 @@ import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { Observable, Subject, iif, interval, of } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
-import { filter, takeUntil, tap } from 'rxjs/operators';
+import { filter, takeUntil, tap, catchError } from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
@@ -168,7 +167,14 @@ export class Controller {
     }
 
     this.listDir(this.jobQueue.pop())
-      .pipe(filter((file: any) => fs.statSync(file).isDirectory()))
+      .pipe(
+        filter((file: any) => fs.statSync(file).isDirectory()),
+        catchError((err, source) => {
+          if (err) this.printError(err.message);
+          return source;
+        }),
+      )
+
       .subscribe(folder => {
         this.newFolderFound(folder);
         this.assignJob();
@@ -301,7 +307,7 @@ export class Controller {
   private printError(error: string) {
     this.printAt(colors.red(error), {
       x: 3,
-      y: this.nodeFolders.length + MARGINS.ROW_RESULTS_START + 2,
+      y: this.stdout.rows,
     });
   }
 
