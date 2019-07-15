@@ -105,6 +105,14 @@ export class Controller {
     });
   }
 
+  private clear() {
+    this.print(ansiEscapes.clearScreen);
+  }
+
+  private print(text: string) {
+    process.stdout.write.bind(process.stdout)(text);
+  }
+
   private prepareScreen() {
     if (this.isTerminalTooSmall()) {
       this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
@@ -116,6 +124,10 @@ export class Controller {
     this.printUI();
     this.setupKeysListener();
     this.hideCursor();
+  }
+
+  private isTerminalTooSmall() {
+    return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
   private setRawMode() {
@@ -154,6 +166,15 @@ export class Controller {
     );
 
     this.initializeLoadingStatus();
+  }
+
+  private printAt(message: string, position: Position) {
+    this.setCursorAt(position);
+    this.print(message);
+  }
+
+  private setCursorAt({ x, y }: Position) {
+    this.print(ansiEscapes.cursorTo(x, y));
   }
 
   private initializeLoadingStatus() {
@@ -380,11 +401,6 @@ export class Controller {
     }
   }
 
-  private printAt(message: string, position: Position) {
-    this.setCursorAt(position);
-    this.print(message);
-  }
-
   private printError(error: string) {
     if (!this.config.showErrors) return;
 
@@ -446,24 +462,8 @@ export class Controller {
     return Number(Math.round(toRound) + 'e-' + decimals);
   }
 
-  private print(text: string) {
-    process.stdout.write.bind(process.stdout)(text);
-  }
-
-  private clear() {
-    this.print(ansiEscapes.clearScreen);
-  }
-
   private clearLine(row: number) {
     this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
-  }
-
-  private setCursorAt({ x, y }: Position) {
-    this.print(ansiEscapes.cursorTo(x, y));
-  }
-
-  private isTerminalTooSmall() {
-    return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
   private isTargetFolder(folder: string) {
