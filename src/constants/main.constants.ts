@@ -10,6 +10,7 @@ export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG = {
   deleteAll: false,
+  showErrors: false,
 };
 
 export const MARGINS = {

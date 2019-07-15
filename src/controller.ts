@@ -73,6 +73,8 @@ export class Controller {
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
     if (options['full-scan']) this.folderRoot = fileService.getSystemRootPath();
     if (options['delete-all']) this.config.deleteAll = true;
+    if (options['show-errors']) this.config.showErrors = true;
+
     //this.config.deleteAll = !!options['delete-all'];
   }
   private showHelp() {
@@ -305,6 +307,8 @@ export class Controller {
   }
 
   private printError(error: string) {
+    if (!this.config.showErrors) return;
+
     this.printAt(colors.red(error), {
       x: 3,
       y: this.stdout.rows,

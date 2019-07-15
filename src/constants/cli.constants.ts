@@ -24,4 +24,10 @@ export const OPTIONS: Array<CliOptions> = [
     description:
       'Automatically delete all node_modules folders that are found.',
   },
+  {
+    arg: ['-e', '--show-errors'],
+    name: 'show-errors',
+    description:
+      'It shows a brief error message in the lower part in case one occurred.',
+  },
 ];
