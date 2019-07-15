@@ -20,7 +20,7 @@ import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { Observable, Subject, iif, interval, of } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
-import { filter, takeUntil, tap, catchError } from 'rxjs/operators';
+import { catchError, filter, takeUntil, tap } from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
@@ -73,7 +73,7 @@ export class Controller {
     }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
-    if (options['full-scan']) this.folderRoot = fileService.getSystemRootPath();
+    if (options['full-scan']) this.folderRoot = fileService.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
 
@@ -317,7 +317,6 @@ export class Controller {
       folder.deleted = true;
     } catch (error) {
       this.printError(error.message);
-      console.log(error.stack);
     }
   }
 

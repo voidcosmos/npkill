@@ -1,5 +1,5 @@
-import * as getSize from 'get-folder-size';
 import * as fs from 'fs';
+import * as getSize from 'get-folder-size';
 import * as path from 'path';
 
 export class FileService {
@@ -30,8 +30,8 @@ export class FileService {
     }
   }
 
-  getSystemRootPath() {
-    return path.parse(process.cwd()).root;
+  getUserHomePath() {
+    return require('os').homedir();
   }
 
   private getDirectoryFiles(dir: string) {

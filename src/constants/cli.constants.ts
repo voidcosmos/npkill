@@ -16,7 +16,7 @@ export const OPTIONS: Array<CliOptions> = [
     arg: ['-f', '--full'],
     name: 'full-scan',
     description:
-      'Start searching from the highest level of the system (example: "/" in linux).',
+      'Start searching from the home of the user (example: "/home/user" in linux).',
   },
   {
     arg: ['-D', '--delete-all'],
