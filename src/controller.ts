@@ -111,12 +111,16 @@ export class Controller {
       process.exit();
     }
 
-    this.stdin.setRawMode(true);
-    process.stdin.resume();
+    this.setRawMode();
     this.clear();
     this.printUI();
     this.setupKeysListener();
-    this.print(ansiEscapes.cursorHide);
+    this.hideCursor();
+  }
+
+  private setRawMode() {
+    this.stdin.setRawMode(true);
+    process.stdin.resume();
   }
 
   private printUI() {
@@ -166,8 +170,8 @@ export class Controller {
   }
 
   private assignJob() {
-    if (!this.jobQueue.length) {
-      this.searchCompleted();
+    if (this.jobQueue.length === 0) {
+      this.completeSearch();
       return;
     }
     this.listDir(this.jobQueue.pop())
@@ -185,7 +189,7 @@ export class Controller {
       });
   }
 
-  private searchCompleted() {
+  private completeSearch() {
     this.finishSearching$.next(true);
     this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
   }
@@ -276,6 +280,10 @@ export class Controller {
 
       this.printFoldersSection();
     });
+  }
+
+  private hideCursor() {
+    this.print(ansiEscapes.cursorHide);
   }
 
   private isQuitKey(ctrl, name) {
