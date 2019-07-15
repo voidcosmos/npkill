@@ -212,6 +212,54 @@ export class Controller {
     if (this.config.deleteAll) this.deleteFolder(nodeFolder);
   }
 
+  private printFoldersSection() {
+    const visibleFolders = this.getVisibleScrollFolders();
+
+    visibleFolders.map((folder: IFolder, index) => {
+      let cutFrom = OVERFLOW_CUT_FROM;
+      let folderTitle = folder.path;
+
+      if (folder.deleted) {
+        cutFrom += INFO_MSGS.DELETED_FOLDER.length;
+        folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
+      }
+
+      let folderString = consoleService.shortenText(
+        folderTitle,
+        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
+        cutFrom,
+      );
+
+      // This is necessary for the coloring of the text, since
+      // the shortener takes into ansi-scape codes invisible
+      // characters and can cause an error in the cli.
+      folderString = this.colorDeletedTextGreen(folderString);
+
+      //Folder name
+      const folderRow = MARGINS.ROW_RESULTS_START + index;
+      this.printAt(folderString, {
+        x: MARGINS.FOLDER_COLUMN_START,
+        y: folderRow,
+      });
+
+      //Folder size
+      const folderSizeText = folder.size ? folder.size + 'mb' : '--';
+      this.printAt(folderSizeText, {
+        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+        y: folderRow,
+      });
+
+      this.printFolderCursor();
+    });
+  }
+
+  private colorDeletedTextGreen(folderString: string) {
+    return folderString.replace(
+      INFO_MSGS.DELETED_FOLDER,
+      colors.green(INFO_MSGS.DELETED_FOLDER),
+    );
+  }
+
   private setupKeysListener() {
     process.stdin.on('keypress', (ch, key) => {
       const { name, ctrl } = key;
@@ -230,13 +278,17 @@ export class Controller {
     });
   }
 
-  private getCommand(keyName: string) {
-    return VALID_KEYS.find(name => name === keyName);
+  private isQuitKey(ctrl, name) {
+    return ctrl && name == 'c';
   }
 
   private quit() {
     this.clear();
     process.exit();
+  }
+
+  private getCommand(keyName: string) {
+    return VALID_KEYS.find(name => name === keyName);
   }
 
   private calculateFolderSize(folder: IFolder): Promise<IFolder> {
@@ -362,49 +414,6 @@ export class Controller {
     };
   }
 
-  private printFoldersSection() {
-    const visibleFolders = this.getVisibleScrollFolders();
-
-    visibleFolders.map((folder: IFolder, index) => {
-      let cutFrom = OVERFLOW_CUT_FROM;
-      let folderTitle = folder.path;
-      if (folder.deleted) {
-        cutFrom += INFO_MSGS.DELETED_FOLDER.length;
-        folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
-      }
-
-      let folderString = consoleService.shortenText(
-        folderTitle,
-        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
-        cutFrom,
-      );
-
-      // This is necessary for the coloring of the text, since
-      // the shortener takes into ansi-scape codes invisible
-      // characters and can cause an error in the cli.
-      folderString = folderString.replace(
-        INFO_MSGS.DELETED_FOLDER,
-        colors.green(INFO_MSGS.DELETED_FOLDER),
-      );
-
-      //Folder name
-      const folderRow = MARGINS.ROW_RESULTS_START + index;
-      this.printAt(folderString, {
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: folderRow,
-      });
-
-      //Folder size
-      const folderSizeText = folder.size ? folder.size + 'mb' : '--';
-      this.printAt(folderSizeText, {
-        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-        y: folderRow,
-      });
-
-      this.printFolderCursor();
-    });
-  }
-
   private getVisibleScrollFolders(): IFolder[] {
     return this.nodeFolders.slice(
       this.scroll,
@@ -443,10 +452,6 @@ export class Controller {
 
   private setCursorAt({ x, y }: Position) {
     this.print(ansiEscapes.cursorTo(x, y));
-  }
-
-  private isQuitKey(ctrl, name) {
-    return ctrl && name == 'c';
   }
 
   private isTerminalTooSmall() {
