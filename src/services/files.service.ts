@@ -3,7 +3,7 @@ import * as getSize from 'get-folder-size';
 import * as path from 'path';
 
 export class FileService {
-  getFolderSize(path: string, printOn?: [number, number]) {
+  getFolderSize(path: string) {
     return new Promise((resolve, reject) => {
       getSize(path, (err, size) => {
         if (err) {

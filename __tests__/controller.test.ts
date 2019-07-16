@@ -1,13 +1,13 @@
 import { Controller } from '../src/controller';
 
-describe('', () => {
+xdescribe('', () => {
   let controller;
 
   beforeEach(() => {
     controller = new Controller();
   });
 
-  xit('should prepare screen', () => {
+  it('should prepare screen', () => {
     // expect(Controller).toHaveBeenCalledTimes(1);
   });
 });

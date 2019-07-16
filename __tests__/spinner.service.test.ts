@@ -3,7 +3,7 @@ import { SpinnerService } from '../src/services/spinner.service';
 describe('Spinner Service', () => {
   let spinnerService: SpinnerService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     spinnerService = new SpinnerService();
   });
 
@@ -27,7 +27,13 @@ describe('Spinner Service', () => {
     });
   });
 
-  /* describe('#reset', () => {
-    it('should set count to -1', () => {});
-  }); */
+  describe('#reset', () => {
+    it('should set to first frame', () => {
+      spinnerService.setSpinner(['1', '2', '3']);
+      expect(spinnerService.nextFrame()).toBe('1');
+      expect(spinnerService.nextFrame()).toBe('2');
+      spinnerService.reset();
+      expect(spinnerService.nextFrame()).toBe('1');
+    });
+  });
 });

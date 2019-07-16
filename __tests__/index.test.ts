@@ -1,5 +1,12 @@
 import { Controller } from '../src/controller';
+//import { controller } from '../src/index';
+jest.mock('../src/controller');
 
-xit('should call Controller', () => {
-  expect(Controller).toHaveBeenCalledTimes(1);
+xdescribe('Index', () => {
+  let index;
+  beforeEach(() => {});
+
+  it('should call Controller', () => {
+    //    expect(controller).toBeInstanceOf(Controller);
+  });
 });
