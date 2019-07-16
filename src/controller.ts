@@ -20,7 +20,13 @@ import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { Observable, Subject, iif, interval, of } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
-import { catchError, filter, takeUntil, tap } from 'rxjs/operators';
+import {
+  catchError,
+  filter,
+  takeUntil,
+  tap,
+  debounceTime,
+} from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
@@ -192,27 +198,38 @@ export class Controller {
 
   private assignJob() {
     if (this.jobQueue.length === 0) {
-      this.completeSearch();
+      //    this.completeSearch();
       return;
     }
+
     this.listDir(this.jobQueue.pop())
       .pipe(
-        filter((file: any) => fs.statSync(file).isDirectory()),
         catchError((err, source) => {
           if (err) this.printError(err.message);
           return source;
         }),
       )
-
       .subscribe(folder => {
         this.newFolderFound(folder);
         this.assignJob();
       });
   }
 
-  private completeSearch() {
-    this.finishSearching$.next(true);
-    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
+  private listDir(path: string): Observable<any> {
+    return Observable.create(observer => {
+      fs.readdir(path, (err, files) => {
+        if (err) throw Error(err.message);
+
+        files.forEach(file => {
+          file = resolve(path, file);
+          fs.stat(file, (err, stat) => {
+            if (err) throw Error(err.message);
+
+            if (stat.isDirectory()) observer.next(file);
+          });
+        });
+      });
+    });
   }
 
   private newFolderFound(folder: string) {
@@ -235,6 +252,11 @@ export class Controller {
     this.printFoldersSection();
 
     if (this.config.deleteAll) this.deleteFolder(nodeFolder);
+  }
+
+  private completeSearch() {
+    this.finishSearching$.next(true);
+    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
   }
 
   private printFoldersSection() {
@@ -334,19 +356,6 @@ export class Controller {
 
   private addNodeFolder(nodeFolder: IFolder) {
     this.nodeFolders = [...this.nodeFolders, nodeFolder];
-  }
-
-  private listDir(path: string): Observable<any> {
-    return Observable.create(observer => {
-      fs.readdir(path, (err, files) => {
-        if (err) {
-          return;
-        }
-        files.forEach(file => {
-          observer.next(resolve(path, file));
-        });
-      });
-    });
   }
 
   private isCursorInLowerTextLimit(positionY: number) {
