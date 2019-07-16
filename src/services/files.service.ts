@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as getSize from 'get-folder-size';
-import * as path from 'path';
+import { resolve } from 'path';
+import { Observable } from 'rxjs';
 
 export class FileService {
   getFolderSize(path: string) {
@@ -32,6 +33,23 @@ export class FileService {
 
   getUserHomePath() {
     return require('os').homedir();
+  }
+
+  listDir(path: string): Observable<any> {
+    return Observable.create(observer => {
+      fs.readdir(path, (err, files) => {
+        if (err) throw Error(err.message);
+
+        files.forEach(file => {
+          file = resolve(path, file);
+          fs.stat(file, (err, stat) => {
+            if (err) throw Error(err.message);
+
+            if (stat.isDirectory()) observer.next(file);
+          });
+        });
+      });
+    });
   }
 
   private getDirectoryFiles(dir: string) {

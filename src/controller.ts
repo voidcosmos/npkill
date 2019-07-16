@@ -198,11 +198,12 @@ export class Controller {
 
   private assignJob() {
     if (this.jobQueue.length === 0) {
-      //    this.completeSearch();
+      this.completeSearch();
       return;
     }
 
-    this.listDir(this.jobQueue.pop())
+    fileService
+      .listDir(this.jobQueue.pop())
       .pipe(
         catchError((err, source) => {
           if (err) this.printError(err.message);
@@ -211,30 +212,14 @@ export class Controller {
       )
       .subscribe(folder => {
         this.newFolderFound(folder);
-        this.assignJob();
       });
-  }
-
-  private listDir(path: string): Observable<any> {
-    return Observable.create(observer => {
-      fs.readdir(path, (err, files) => {
-        if (err) throw Error(err.message);
-
-        files.forEach(file => {
-          file = resolve(path, file);
-          fs.stat(file, (err, stat) => {
-            if (err) throw Error(err.message);
-
-            if (stat.isDirectory()) observer.next(file);
-          });
-        });
-      });
-    });
   }
 
   private newFolderFound(folder: string) {
     if (!this.isTargetFolder(folder)) {
-      return this.jobQueue.push(folder);
+      this.jobQueue.push(folder);
+      this.assignJob();
+      return;
     }
 
     const nodeFolder: IFolder = {
