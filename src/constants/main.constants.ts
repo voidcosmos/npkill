@@ -11,6 +11,7 @@ export const OVERFLOW_CUT_FROM = 8;
 export const DEFAULT_CONFIG = {
   deleteAll: false,
   showErrors: false,
+  maxSimultaneousSearch: 6,
 };
 
 export const MARGINS = {

@@ -46,6 +46,8 @@ export class Controller {
   private stdout: any = process.stdout;
 
   private jobQueue: any[];
+  private jobsExecuting: number = 0;
+
   private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private previousCursorPosY: number = 0;
@@ -199,26 +201,26 @@ export class Controller {
   private assignJob() {
     if (this.jobQueue.length === 0) {
       this.completeSearch();
-      return;
+      return 1;
     }
 
-    fileService
-      .listDir(this.jobQueue.pop())
-      .pipe(
-        catchError((err, source) => {
-          if (err) this.printError(err.message);
-          return source;
-        }),
-      )
-      .subscribe(folder => {
+    fileService.listDir(this.jobQueue.pop()).subscribe(
+      folder => {
         this.newFolderFound(folder);
-      });
+      },
+      err => {
+        this.printError(err);
+        this.jobFinished();
+      },
+      () => {
+        this.jobFinished();
+      },
+    );
   }
 
   private newFolderFound(folder: string) {
     if (!this.isTargetFolder(folder)) {
       this.jobQueue.push(folder);
-      this.assignJob();
       return;
     }
 
@@ -237,6 +239,10 @@ export class Controller {
     this.printFoldersSection();
 
     if (this.config.deleteAll) this.deleteFolder(nodeFolder);
+  }
+
+  private jobFinished() {
+    this.assignJob();
   }
 
   private completeSearch() {

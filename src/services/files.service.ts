@@ -37,17 +37,35 @@ export class FileService {
 
   listDir(path: string): Observable<any> {
     return Observable.create(observer => {
-      fs.readdir(path, (err, files) => {
-        if (err) throw Error(err.message);
+      //TODO use #getDirectoryFiles and addapt this for async.
+      fs.readdir(path, (err, filesList) => {
+        if (err) {
+          /* Control errors */
+        }
+        let pending = filesList.length;
+        if (!pending) return observer.complete();
 
-        files.forEach(file => {
-          file = resolve(path, file);
-          fs.stat(file, (err, stat) => {
-            if (err) throw Error(err.message);
+        filesList.forEach(filePath => {
+          filePath = resolve(path, filePath);
+          this.getStats(filePath)
+            .then(stat => {
+              if (stat.isDirectory()) observer.next(filePath);
 
-            if (stat.isDirectory()) observer.next(file);
-          });
+              if (!--pending) observer.complete();
+            })
+            .catch(err => {
+              /* Control errors */
+            });
         });
+      });
+    });
+  }
+
+  private getStats(path: string): Promise<fs.Stats> {
+    return new Promise((resolve, reject) => {
+      fs.stat(path, (err, stat) => {
+        if (err) reject(err);
+        resolve(stat);
       });
     });
   }
