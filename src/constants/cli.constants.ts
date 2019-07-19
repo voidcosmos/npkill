@@ -12,10 +12,10 @@ export const OPTIONS: Array<CliOptions> = [
     description: 'Show version.',
   },
   {
-    arg: ['-r', '--root'],
-    name: 'root',
+    arg: ['-d', '--directory'],
+    name: 'directory',
     description:
-      'Set the root directory from which to start searching. By default, the root is the directory from which this command is executed.',
+      'Set directory from which to start searching. By default, starting-point is . ',
   },
   {
     arg: ['-f', '--full'],

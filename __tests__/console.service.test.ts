@@ -12,7 +12,7 @@ describe('Console Service', () => {
         '/usr/bin/ts-node',
         '/blablabla inexistent parameters',
         '-h',
-        '--root',
+        '--directory',
         '/sample/path',
         '-D',
         'lala',
@@ -23,7 +23,7 @@ describe('Console Service', () => {
       const result = consoleService.getParameters(argvs);
 
       expect(result['help']).not.toBeFalsy();
-      expect(result['root']).toBe('/sample/path');
+      expect(result['directory']).toBe('/sample/path');
       expect(result['delete-all']).not.toBeFalsy();
       expect(result['lala']).toBeUndefined();
       expect(result['inexistent']).toBeUndefined();
