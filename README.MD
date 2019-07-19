@@ -49,14 +49,14 @@ To exit, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
 
 ### Options
 
-| ARGUMENT          | DESCRIPTION                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| -h, --help, ?     | Show this help page and exit                                                          |
-| -v, --version     | Show npkill version                                                                   |
-| -d, --directory   | Set the starting-point from which to begin searching. By default, starting-point is . |
-| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)            |
-| -D, --delete-all  | Automatically delete all node_modules folders that are found                          |
-| -e, --show-errors | Show error messages if any                                                            |
+| ARGUMENT          | DESCRIPTION                                                                      |
+| ----------------- | -------------------------------------------------------------------------------- |
+| -h, --help, ?     | Show this help page and exit                                                     |
+| -v, --version     | Show npkill version                                                              |
+| -d, --directory   | Set the directory from which to begin searching. By default, starting-point is . |
+| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)       |
+| -D, --delete-all  | Automatically delete all node_modules folders that are found                     |
+| -e, --show-errors | Show error messages if any                                                       |
 
 **Warning:** _In future versions some commands may change_
 
