@@ -79,6 +79,10 @@ export class Controller {
       this.showHelp();
       process.exit();
     }
+    if (options['version']) {
+      this.showProgramVersion();
+      process.exit();
+    }
 
     this.folderRoot = options['root'] ? options['root'] : process.cwd();
     if (options['full-scan']) this.folderRoot = fileService.getUserHomePath();
@@ -111,6 +115,10 @@ export class Controller {
         ++lineCount;
       });
     });
+  }
+
+  private showProgramVersion() {
+    this.print('v' + require('../package.json').version);
   }
 
   private clear() {

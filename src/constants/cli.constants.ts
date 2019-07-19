@@ -7,6 +7,11 @@ export const OPTIONS: Array<CliOptions> = [
     description: 'Show this help page, with all options.',
   },
   {
+    arg: ['-v', '--version'],
+    name: 'version',
+    description: 'Show version.',
+  },
+  {
     arg: ['-r', '--root'],
     name: 'root',
     description:
