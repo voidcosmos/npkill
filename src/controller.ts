@@ -22,10 +22,10 @@ import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
 import {
   catchError,
+  debounceTime,
   filter,
   takeUntil,
   tap,
-  debounceTime,
 } from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
@@ -204,18 +204,22 @@ export class Controller {
       return 1;
     }
 
-    fileService.listDir(this.jobQueue.pop()).subscribe(
-      folder => {
-        this.newFolderFound(folder);
-      },
-      err => {
-        this.printError(err);
-        this.jobFinished();
-      },
-      () => {
-        this.jobFinished();
-      },
-    );
+    try {
+      fileService.listDir(this.jobQueue.pop()).subscribe(
+        folder => {
+          this.newFolderFound(folder);
+        },
+        err => {
+          this.printError(err);
+          this.jobFinished();
+        },
+        () => {
+          this.jobFinished();
+        },
+      );
+    } catch (e) {
+      this.printError(e);
+    }
   }
 
   private newFolderFound(folder: string) {
@@ -231,10 +235,14 @@ export class Controller {
     };
 
     this.addNodeFolder(nodeFolder);
-    this.calculateFolderSize(nodeFolder).then(folder => {
-      this.printStats();
-      this.printFoldersSection();
-    });
+    try {
+      this.calculateFolderSize(nodeFolder).then(folder => {
+        this.printStats();
+        this.printFoldersSection();
+      });
+    } catch (e) {
+      this.printError(e);
+    }
 
     this.printFoldersSection();
 
