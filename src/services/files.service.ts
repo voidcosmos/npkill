@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as getSize from 'get-folder-size';
-import { resolve } from 'path';
+
 import { Observable } from 'rxjs';
+import { resolve } from 'path';
 
 export class FileService {
   getFolderSize(path: string) {
@@ -40,7 +41,7 @@ export class FileService {
       //TODO use #getDirectoryFiles and addapt this for async.
       fs.readdir(path, (err, filesList) => {
         if (err) {
-          /* Control errors */
+          throw err;
         }
         let pending = filesList.length;
         if (!pending) return observer.complete();
@@ -54,7 +55,7 @@ export class FileService {
               if (!--pending) observer.complete();
             })
             .catch(err => {
-              /* Control errors */
+              throw err;
             });
         });
       });
