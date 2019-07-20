@@ -22,10 +22,10 @@ import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { basename, resolve } from 'path';
 import {
   catchError,
+  debounceTime,
   filter,
   takeUntil,
   tap,
-  debounceTime,
 } from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';

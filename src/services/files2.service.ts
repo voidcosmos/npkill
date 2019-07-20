@@ -18,6 +18,13 @@ export class FilesService2 {
   }
 
   public listDir(path: string) {
+    const stream = this.getStream(path);
+    stream.on('error', error => console.log(error));
+    stream.on('data', data => console.log(data));
+    stream.on('end', () => console.log('search completed :)'));
+  }
+
+  private getStream(path: string) {
     const child = spawn('find', [
       path,
       '-name',
@@ -27,10 +34,6 @@ export class FilesService2 {
       '-prune',
     ]);
     this.setEncoding(child);
-
-    child.on('error', function(err) {
-      console.log('Oh noez, teh errurz: ' + err);
-    });
     return child;
   }
 
@@ -48,7 +51,4 @@ export class FilesService2 {
 }
 
 const fs = new FilesService2();
-fs.listDir('/').stdout.on('data', data =>
-  console.log(data),
-); /* 
-fs.listDir('/').stderr.on('error', error => console.log(error)); */
+fs.listDir('/home/nya');
