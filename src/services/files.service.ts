@@ -27,7 +27,6 @@ export class FileService {
     this.removeDirectoryFiles(dir, files);
 
     if (rmSelf) {
-      // check if user want to delete the directory ir just the files in this directory
       fs.rmdirSync(dir);
     }
   }

@@ -59,6 +59,7 @@ export class Controller {
   constructor() {
     keypress(process.stdin);
     this.getArguments();
+    this.setEvents();
 
     this.jobQueue = [this.folderRoot];
     this.prepareScreen();
@@ -146,6 +147,12 @@ export class Controller {
     process.stdin.resume();
   }
 
+  private setEvents() {
+    // Handle uncontrollable system exceptions that can stop the
+    // process and are not controllable with try / cath.
+    process.on('uncaughtException', err => this.printError(err.message));
+  }
+
   private printUI() {
     ///////////////////////////
     // banner and tutorial
@@ -214,14 +221,15 @@ export class Controller {
         },
         err => {
           this.printError(err);
-          this.jobFinished();
+          this.finishJob();
         },
         () => {
-          this.jobFinished();
+          this.finishJob();
         },
       );
     } catch (e) {
       this.printError(e);
+      this.finishJob();
     }
   }
 
@@ -252,7 +260,7 @@ export class Controller {
     if (this.config.deleteAll) this.deleteFolder(nodeFolder);
   }
 
-  private jobFinished() {
+  private finishJob() {
     this.assignJob();
   }
 
