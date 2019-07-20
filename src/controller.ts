@@ -16,10 +16,8 @@ import {
   VALID_KEYS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { Subject, interval } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
-import { basename } from 'path';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, interval } from 'rxjs';
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
@@ -28,6 +26,8 @@ import { OPTIONS } from './constants/cli.constants';
 import { Position } from './interfaces/ui-positions.interface';
 import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
+import { basename } from 'path';
+import { takeUntil } from 'rxjs/operators';
 
 const fileService = new FileService();
 const consoleService = new ConsoleService();
@@ -150,7 +150,14 @@ export class Controller {
   private setEvents() {
     // Handle uncontrollable system exceptions that can stop the
     // process and are not controllable with try / cath.
-    process.on('uncaughtException', err => this.printError(err.message));
+    process.on('uncaughtException', err => {
+      this.printError(err.message);
+      this.finishJob();
+    });
+    process.on('unhandledRejection', (reason: any) => {
+      this.printError(reason.stack);
+      this.finishJob();
+    });
   }
 
   private printUI() {
