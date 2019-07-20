@@ -19,8 +19,9 @@ export class FilesService2 {
 
   public listDir(path: string) {
     const stream = this.getStream(path);
-    stream.on('error', error => console.log(error));
-    stream.on('data', data => console.log(data));
+    stream.stderr.on('error', error => console.log('Process ERROR', error));
+    stream.stdout.on('data', data => console.log(data));
+    stream.stderr.on('data', error => console.error(error));
     stream.on('end', () => console.log('search completed :)'));
   }
 
@@ -47,8 +48,9 @@ export class FilesService2 {
 
   private setEncoding(child: ChildProcessWithoutNullStreams) {
     child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
   }
 }
 
 const fs = new FilesService2();
-fs.listDir('/home/nya');
+fs.listDir('/');
