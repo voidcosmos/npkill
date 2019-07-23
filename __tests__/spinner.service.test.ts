@@ -8,7 +8,7 @@ describe('Spinner Service', () => {
   });
 
   describe('#setSpinner', () => {
-    //it('should set spinner passed by argument', () => {});
+    // it('should set spinner passed by argument', () => {});
 
     it('should reset count', () => {
       const resetFn = (spinnerService.reset = jest.fn());

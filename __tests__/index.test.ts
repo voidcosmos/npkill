@@ -1,10 +1,10 @@
 import { Controller } from '../src/controller';
-//import { controller } from '../src/index';
+// import { controller } from '../src/index';
 jest.mock('../src/controller');
 
 xdescribe('Index', () => {
-  let index;
-  beforeEach(() => {});
+  /* let index;
+  beforeEach(() => {}); */
 
   it('should call Controller', () => {
     //    expect(controller).toBeInstanceOf(Controller);

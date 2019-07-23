@@ -5,7 +5,9 @@
     "declaration": true,
     "outDir": "./lib",
     "strict": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "resolveJsonModule": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]

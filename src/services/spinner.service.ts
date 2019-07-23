@@ -1,24 +1,22 @@
 export class SpinnerService {
-  private spinner;
-  private count = -1;
+  private spinner: string[] = [];
+  private count: number = -1;
 
-  constructor() {}
-
-  setSpinner(spinner: string[]) {
+  setSpinner(spinner: string[]): void {
     this.spinner = spinner;
     this.reset();
   }
 
-  nextFrame() {
+  nextFrame(): string {
     this.updateCount();
     return this.spinner[this.count];
   }
 
-  reset() {
+  reset(): void {
     this.count = -1;
   }
 
-  private updateCount() {
+  private updateCount(): void {
     this.count = this.count === this.spinner.length - 1 ? 0 : ++this.count;
   }
 }

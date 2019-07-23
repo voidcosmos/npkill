@@ -1,7 +1,12 @@
+import ansiEscapes from 'ansi-escapes';
 import * as colors from 'colors';
-import * as emoji from 'node-emoji';
 import * as keypress from 'keypress';
-
+import * as emoji from 'node-emoji';
+import { basename } from 'path';
+import { interval, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { version } from '../package.json';
+import { OPTIONS } from './constants/cli.constants';
 import {
   BANNER,
   CURSOR_SIMBOL,
@@ -16,42 +21,37 @@ import {
   VALID_KEYS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { Subject, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
-import { basename } from 'path';
-import { takeUntil } from 'rxjs/operators';
-
+import { SPINNER_INTERVAL, SPINNERS } from './constants/spinner.constants';
+import { IConfig } from './interfaces/config.interface';
+import { IFolder } from './interfaces/folder.interface';
+import { IPosition } from './interfaces/ui-positions.interface';
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
-import { IFolder } from './interfaces/folder.interface';
-import { OPTIONS } from './constants/cli.constants';
-import { Position } from './interfaces/ui-positions.interface';
 import { SpinnerService } from './services/spinner.service';
-import ansiEscapes from 'ansi-escapes';
-
 const fileService = new FileService();
 const consoleService = new ConsoleService();
 const spinnerService = new SpinnerService();
 
 export class Controller {
-  private folderRoot: any;
-  private stdin: any = process.stdin;
-  private stdout: any = process.stdout;
+  private folderRoot: string = '';
+  private stdin: NodeJS.ReadStream = process.stdin;
+  private stdout: NodeJS.WriteStream = process.stdout;
 
-  private jobQueue: any[];
+  private jobQueue: string[];
   private jobsExecuting: number = 0;
 
   private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private previousCursorPosY: number = 0;
   private scroll: number = 0;
-  private config: any = DEFAULT_CONFIG;
+  private config: IConfig = DEFAULT_CONFIG;
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
   private KEYS: { [key: string]: any } = {
     up: this.moveCursorUp.bind(this),
+    // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
     delete: this.delete.bind(this),
-    execute: function(command: string, params: string[]) {
+    execute(command: string, params: string[]) {
       return this[command](params);
     },
   };
@@ -67,7 +67,7 @@ export class Controller {
     this.assignJob();
   }
 
-  private getArguments() {
+  private getArguments(): void {
     const options = consoleService.getParameters(process.argv);
     if (options['help']) {
       this.showHelp();
@@ -85,16 +85,16 @@ export class Controller {
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
 
-    //this.config.deleteAll = !!options['delete-all'];
+    // this.config.deleteAll = !!options['delete-all'];
   }
 
-  private showHelp() {
+  private showHelp(): void {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE));
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
-      this.printAt(option.arg.reduce((string, arg) => string + ', ' + arg), {
+      this.printAt(option.arg.reduce((text, arg) => text + ', ' + arg), {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
@@ -113,19 +113,19 @@ export class Controller {
     });
   }
 
-  private showProgramVersion() {
-    this.print('v' + require('../package.json').version);
+  private showProgramVersion(): void {
+    this.print('v' + version);
   }
 
-  private clear() {
+  private clear(): void {
     this.print(ansiEscapes.clearScreen);
   }
 
-  private print(text: string) {
+  private print(text: string): void {
     process.stdout.write.bind(process.stdout)(text);
   }
 
-  private prepareScreen() {
+  private prepareScreen(): void {
     if (this.isTerminalTooSmall()) {
       this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
       process.exit();
@@ -138,22 +138,22 @@ export class Controller {
     this.hideCursor();
   }
 
-  private isTerminalTooSmall() {
+  private isTerminalTooSmall(): boolean {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
-  private setRawMode() {
+  private setRawMode(): void {
     this.stdin.setRawMode(true);
     process.stdin.resume();
   }
 
-  private setEvents() {
+  private setEvents(): void {
     // Handle uncontrollable system exceptions that can stop the
     // process and are not controllable with try / cath.
     process.on('uncaughtException', err => this.printError(err.message));
   }
 
-  private printUI() {
+  private printUI(): void {
     ///////////////////////////
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
@@ -186,16 +186,16 @@ export class Controller {
     this.initializeLoadingStatus();
   }
 
-  private printAt(message: string, position: Position) {
+  private printAt(message: string, position: IPosition): void {
     this.setCursorAt(position);
     this.print(message);
   }
 
-  private setCursorAt({ x, y }: Position) {
+  private setCursorAt({ x, y }: IPosition): void {
     this.print(ansiEscapes.cursorTo(x, y));
   }
 
-  private initializeLoadingStatus() {
+  private initializeLoadingStatus(): void {
     spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.finishSearching$))
@@ -204,14 +204,14 @@ export class Controller {
       );
   }
 
-  private updateStatus(text: string) {
+  private updateStatus(text: string): void {
     this.printAt(text, UI_POSITIONS.STATUS);
   }
 
-  private assignJob() {
+  private assignJob(): void {
     if (this.jobQueue.length === 0) {
       this.completeSearch();
-      return 1;
+      return;
     }
 
     try {
@@ -233,16 +233,16 @@ export class Controller {
     }
   }
 
-  private newFolderFound(folder: string) {
+  private newFolderFound(folder: string): void {
     if (!this.isTargetFolder(folder)) {
       this.jobQueue.push(folder);
       return;
     }
 
     const nodeFolder: IFolder = {
+      deleted: false,
       path: folder,
       size: 0,
-      deleted: false,
     };
 
     this.addNodeFolder(nodeFolder);
@@ -260,16 +260,16 @@ export class Controller {
     if (this.config.deleteAll) this.deleteFolder(nodeFolder);
   }
 
-  private finishJob() {
+  private finishJob(): void {
     this.assignJob();
   }
 
-  private completeSearch() {
+  private completeSearch(): void {
     this.finishSearching$.next(true);
     this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
   }
 
-  private printFoldersSection() {
+  private printFoldersSection(): void {
     const visibleFolders = this.getVisibleScrollFolders();
 
     visibleFolders.map((folder: IFolder, index) => {
@@ -292,14 +292,14 @@ export class Controller {
       // characters and can cause an error in the cli.
       folderString = this.colorDeletedTextGreen(folderString);
 
-      //Folder name
+      // Folder name
       const folderRow = MARGINS.ROW_RESULTS_START + index;
       this.printAt(folderString, {
         x: MARGINS.FOLDER_COLUMN_START,
         y: folderRow,
       });
 
-      //Folder size
+      // Folder size
       const folderSizeText = folder.size ? folder.size + 'mb' : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
@@ -310,14 +310,14 @@ export class Controller {
     });
   }
 
-  private colorDeletedTextGreen(folderString: string) {
+  private colorDeletedTextGreen(folderString: string): string {
     return folderString.replace(
       INFO_MSGS.DELETED_FOLDER,
       colors.green(INFO_MSGS.DELETED_FOLDER),
     );
   }
 
-  private setupKeysListener() {
+  private setupKeysListener(): void {
     process.stdin.on('keypress', (ch, key) => {
       const { name, ctrl } = key;
 
@@ -335,20 +335,20 @@ export class Controller {
     });
   }
 
-  private hideCursor() {
+  private hideCursor(): void {
     this.print(ansiEscapes.cursorHide);
   }
 
-  private isQuitKey(ctrl, name) {
-    return ctrl && name == 'c';
+  private isQuitKey(ctrl, name): boolean {
+    return ctrl && name === 'c';
   }
 
-  private quit() {
+  private quit(): void {
     this.clear();
     process.exit();
   }
 
-  private getCommand(keyName: string) {
+  private getCommand(keyName: string): string {
     return VALID_KEYS.find(name => name === keyName);
   }
 
@@ -364,19 +364,19 @@ export class Controller {
     });
   }
 
-  private addNodeFolder(nodeFolder: IFolder) {
+  private addNodeFolder(nodeFolder: IFolder): void {
     this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
 
-  private isCursorInLowerTextLimit(positionY: number) {
+  private isCursorInLowerTextLimit(positionY: number): boolean {
     return positionY < this.nodeFolders.length - 1 + MARGINS.ROW_RESULTS_START;
   }
 
-  private isCursorInUpperTextLimit(positionY: number) {
+  private isCursorInUpperTextLimit(positionY: number): boolean {
     return positionY > MARGINS.ROW_RESULTS_START;
   }
 
-  private moveCursorUp() {
+  private moveCursorUp(): void {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
       this.previousCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
@@ -384,7 +384,7 @@ export class Controller {
     }
   }
 
-  private moveCursorDown() {
+  private moveCursorDown(): void {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
       this.previousCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
@@ -392,7 +392,7 @@ export class Controller {
     }
   }
 
-  private checkCursorScroll() {
+  private checkCursorScroll(): void {
     if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll) {
       this.scroll--;
     }
@@ -401,7 +401,7 @@ export class Controller {
     }
   }
 
-  private delete() {
+  private delete(): void {
     const nodeFolder = this.nodeFolders[
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
@@ -411,7 +411,7 @@ export class Controller {
     this.printFoldersSection();
   }
 
-  private deleteFolder(folder: IFolder) {
+  private deleteFolder(folder: IFolder): void {
     try {
       fileService.removeDir(folder.path);
       folder.deleted = true;
@@ -420,7 +420,7 @@ export class Controller {
     }
   }
 
-  private printError(error: string) {
+  private printError(error: string): void {
     if (!this.config.showErrors) return;
 
     this.printAt(colors.red(error), {
@@ -429,7 +429,7 @@ export class Controller {
     });
   }
 
-  private printStats() {
+  private printStats(): void {
     const stats: any = this.getStats();
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
@@ -442,7 +442,7 @@ export class Controller {
     this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
   }
 
-  private getStats(): Object {
+  private getStats(): object {
     let spaceReleased: any = 0;
 
     const totalSpace = this.nodeFolders.reduce((total, folder) => {
@@ -464,7 +464,7 @@ export class Controller {
     );
   }
 
-  private printFolderCursor() {
+  private printFolderCursor(): void {
     this.printAt('  ', { x: 1, y: this.previousCursorPosY });
     this.printAt(colors.cyan(CURSOR_SIMBOL), {
       x: 1,
@@ -476,16 +476,16 @@ export class Controller {
     return this.cursorPosY - this.scroll;
   }
 
-  private round(number: number, decimals: number = 0) {
-    const toRound: any = number + 'e' + decimals;
+  private round(numb: number, decimals: number = 0): number {
+    const toRound: any = numb + 'e' + decimals;
     return Number(Math.round(toRound) + 'e-' + decimals);
   }
 
-  private clearLine(row: number) {
+  private clearLine(row: number): void {
     this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
   }
 
-  private isTargetFolder(folder: string) {
+  private isTargetFolder(folder: string): boolean {
     return basename(folder) === TARGET_FOLDER;
   }
 }
