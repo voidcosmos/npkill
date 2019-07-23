@@ -4,20 +4,21 @@ import * as getSize from 'get-folder-size';
 import { homedir } from 'os';
 import { resolve } from 'path';
 import { Observable } from 'rxjs';
+import { DECIMALS_SIZE } from '../constants/main.constants';
 
 export class FileService {
-  getFolderSize(path: string) {
+  getFolderSize(path: string): Promise<number> {
     return new Promise((resolve, reject) => {
       getSize(path, (err, size) => {
         if (err) {
           throw err;
         }
-        resolve((size / 1024 / 1024).toFixed(2));
+        resolve(this.convertBToMb(size));
       });
     });
   }
 
-  removeDir(dir, rmSelf = true) {
+  removeDir(dir, rmSelf = true): void {
     if (!this.isDirectorySafeToDelete(dir)) {
       throw new Error('Directory not safe to delete!');
     }
@@ -32,7 +33,7 @@ export class FileService {
     }
   }
 
-  getUserHomePath() {
+  getUserHomePath(): string {
     return homedir();
   }
 
@@ -71,11 +72,16 @@ export class FileService {
     });
   }
 
+  private convertBToMb(bytes: number): number {
+    const factorBtoMb = 1048576;
+    return +(bytes / factorBtoMb).toFixed(DECIMALS_SIZE);
+  }
+
   private getDirectoryFiles(dir: string) {
     return fs.readdirSync(dir);
   }
 
-  private removeDirectoryFiles(dir: string, files: string[]) {
+  private removeDirectoryFiles(dir: string, files: string[]): void {
     files.map(file => {
       const path = dir + file;
       if (fs.statSync(path).isDirectory()) {
@@ -86,7 +92,7 @@ export class FileService {
     });
   }
 
-  private isDirectorySafeToDelete(path) {
+  private isDirectorySafeToDelete(path: string): boolean {
     return path !== '/';
   }
 }

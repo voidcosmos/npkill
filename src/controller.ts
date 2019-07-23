@@ -10,6 +10,7 @@ import { OPTIONS } from './constants/cli.constants';
 import {
   BANNER,
   CURSOR_SIMBOL,
+  DECIMALS_SIZE,
   DEFAULT_CONFIG,
   DEFAULT_SIZE,
   MARGINS,
@@ -22,31 +23,34 @@ import {
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { SPINNER_INTERVAL, SPINNERS } from './constants/spinner.constants';
+import { IKeysCommand } from './interfaces/command-keys.interface.js';
 import { IConfig } from './interfaces/config.interface';
 import { IFolder } from './interfaces/folder.interface';
+import { IStats } from './interfaces/stats.interface.js';
 import { IPosition } from './interfaces/ui-positions.interface';
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
 import { SpinnerService } from './services/spinner.service';
+
 const fileService = new FileService();
 const consoleService = new ConsoleService();
 const spinnerService = new SpinnerService();
 
 export class Controller {
-  private folderRoot: string = '';
+  private folderRoot: string;
   private stdin: NodeJS.ReadStream = process.stdin;
   private stdout: NodeJS.WriteStream = process.stdout;
 
   private jobQueue: string[];
-  private jobsExecuting: number = 0;
+  private jobsExecuting = 0;
 
   private nodeFolders: IFolder[] = [];
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
-  private previousCursorPosY: number = 0;
-  private scroll: number = 0;
+  private previousCursorPosY = 0;
+  private scroll = 0;
   private config: IConfig = DEFAULT_CONFIG;
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
-  private KEYS: { [key: string]: any } = {
+  private KEYS: IKeysCommand = {
     up: this.moveCursorUp.bind(this),
     // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
@@ -154,8 +158,8 @@ export class Controller {
       this.printError(err.message);
       this.finishJob();
     });
-    process.on('unhandledRejection', (reason: any) => {
-      this.printError(reason.stack);
+    process.on('unhandledRejection', (reason: {}) => {
+      this.printError(reason['stack']);
       this.finishJob();
     });
   }
@@ -171,11 +175,12 @@ export class Controller {
 
     ///////////////////////////
     // folder size header
+    const centerDesviation = 5;
     this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
       x:
         this.stdout.columns -
         (MARGINS.FOLDER_SIZE_COLUMN +
-          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
+          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / centerDesviation)),
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
@@ -346,7 +351,7 @@ export class Controller {
     this.print(ansiEscapes.cursorHide);
   }
 
-  private isQuitKey(ctrl, name): boolean {
+  private isQuitKey(ctrl: boolean, name: string): boolean {
     return ctrl && name === 'c';
   }
 
@@ -363,7 +368,7 @@ export class Controller {
     return new Promise((resolve, reject) => {
       fileService
         .getFolderSize(folder.path)
-        .then((size: any) => {
+        .then((size: number) => {
           folder.size = +size;
           resolve(folder);
         })
@@ -437,7 +442,7 @@ export class Controller {
   }
 
   private printStats(): void {
-    const stats: any = this.getStats();
+    const stats: IStats = this.getStats();
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
     const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
@@ -449,8 +454,8 @@ export class Controller {
     this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
   }
 
-  private getStats(): {} {
-    let spaceReleased: any = 0;
+  private getStats(): IStats {
+    let spaceReleased: number = 0;
 
     const totalSpace = this.nodeFolders.reduce((total, folder) => {
       if (folder.deleted) spaceReleased += folder.size;
@@ -459,8 +464,8 @@ export class Controller {
     }, 0);
 
     return {
-      spaceReleased: this.round(spaceReleased, 2),
-      totalSpace: this.round(totalSpace, 2),
+      spaceReleased: this.round(spaceReleased, DECIMALS_SIZE),
+      totalSpace: this.round(totalSpace, DECIMALS_SIZE),
     };
   }
 
@@ -483,8 +488,8 @@ export class Controller {
     return this.cursorPosY - this.scroll;
   }
 
-  private round(numb: number, decimals: number = 0): number {
-    const toRound: any = numb + 'e' + decimals;
+  private round(numb: number, decimals = 0): number {
+    const toRound: number = +(numb + 'e' + decimals);
     return Number(Math.round(toRound) + 'e-' + decimals);
   }
 

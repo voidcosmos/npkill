@@ -46,7 +46,9 @@ export class ConsoleService {
     );
   }
 
-  shortenText(text: string, width: number, cutFrom: number = 0): string {
+  shortenText(text: string, width: number, startCut = 0): string {
+    let cutFrom = startCut;
+
     if (text.length < width) return text;
 
     if (!width || !cutFrom || width < 1 || cutFrom < 1 || cutFrom > width)

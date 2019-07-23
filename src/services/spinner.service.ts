@@ -1,6 +1,6 @@
 export class SpinnerService {
   private spinner: string[] = [];
-  private count: number = -1;
+  private count = -1;
 
   setSpinner(spinner: string[]): void {
     this.spinner = spinner;

@@ -7,6 +7,7 @@ export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';
 export const WIDTH_OVERFLOW = '...';
 export const DEFAULT_SIZE = '0 mb';
+export const DECIMALS_SIZE = 2;
 export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG: IConfig = {
