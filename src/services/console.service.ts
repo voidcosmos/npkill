@@ -3,9 +3,9 @@ import { WIDTH_OVERFLOW } from '../constants/main.constants';
 import { ICliOptions } from '../interfaces/cli-options.interface';
 
 export class ConsoleService {
-  getParameters(rawArgv: string[]): object {
+  getParameters(rawArgv: string[]): {} {
     const argvs = rawArgv.slice(2); // The first two arguments represent cli env routes that are not necessary.
-    const options: object = {};
+    const options: {} = {};
 
     for (let i = 0; i < argvs.length; ++i) {
       const option = this.getOption(argvs[i]);

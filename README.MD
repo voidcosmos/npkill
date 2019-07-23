@@ -9,25 +9,25 @@
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
 </p>
 
-### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
+### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders
 
 <p align="center">
   <img src="./docs/npkill-alpha-demo.gif" alt="npkill demo" />
 </p>
 
-This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
+This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay! :sparkles:
 
 ## Table of Contents
 
-- [Installation](#Installation)
-- [Usage](#Usage)
-  - [Options](#Options)
-  - [Examples](#Examples)
-- [Roadmap](#Roadmap)
-- [Contributing](#Contributing)
-- [Known bugs](#Known-bugs)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Options](#options)
+  - [Examples](#examples)
+- [Roadmap](#roadmap)
+- [Known-bugs](#known-bugs)
+- [Contributing](#contributing)
 
-## Installation
+# Installation
 
 ```bash
 $ npm i -g npkill
@@ -35,7 +35,7 @@ $ npm i -g npkill
 
 _Unix users may need to run the command with sudo_
 
-## Usage
+# Usage
 
 ```bash
 npkill
@@ -47,7 +47,7 @@ Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd
 
 To exit, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
 
-### Options
+## Options
 
 | ARGUMENT          | DESCRIPTION                                                                      |
 | ----------------- | -------------------------------------------------------------------------------- |
@@ -60,7 +60,7 @@ To exit, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
 
 **Warning:** _In future versions some commands may change_
 
-### Examples
+## Examples
 
 - Search **node_modules** directories in your _projects_ directory:
 

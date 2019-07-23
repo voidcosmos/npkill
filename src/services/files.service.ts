@@ -50,19 +50,11 @@ export class FileService {
 
         filesList.forEach(filePath => {
           filePath = resolve(path, filePath);
-          this.getStats(filePath)
-            .then(stat => {
-              if (stat.isDirectory()) {
-                observer.next(filePath);
-              }
+          this.getStats(filePath).then(stat => {
+            if (stat.isDirectory()) observer.next(filePath);
 
-              if (!--pending) {
-                observer.complete();
-              }
-            })
-            .catch(err => {
-              throw err;
-            });
+            if (!--pending) observer.complete();
+          });
         });
       });
     });

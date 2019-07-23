@@ -150,7 +150,14 @@ export class Controller {
   private setEvents(): void {
     // Handle uncontrollable system exceptions that can stop the
     // process and are not controllable with try / cath.
-    process.on('uncaughtException', err => this.printError(err.message));
+    process.on('uncaughtException', err => {
+      this.printError(err.message);
+      this.finishJob();
+    });
+    process.on('unhandledRejection', (reason: any) => {
+      this.printError(reason.stack);
+      this.finishJob();
+    });
   }
 
   private printUI(): void {
@@ -442,7 +449,7 @@ export class Controller {
     this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
   }
 
-  private getStats(): object {
+  private getStats(): {} {
     let spaceReleased: any = 0;
 
     const totalSpace = this.nodeFolders.reduce((total, folder) => {
