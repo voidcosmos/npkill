@@ -1,0 +1,2 @@
+# npkill
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/67e6db07289b488f8e33fb997d008d52)](https://app.codacy.com/app/zaldih/npkill?utm_source=github.com&utm_medium=referral&utm_content=zaldih/npkill&utm_campaign=Badge_Grade_Settings)
