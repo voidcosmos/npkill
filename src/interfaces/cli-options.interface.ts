@@ -1,5 +1,5 @@
-export interface CliOptions {
-  arg: Array<string>;
+export interface ICliOptions {
+  arg: string[];
   name: string;
   description: string;
 }

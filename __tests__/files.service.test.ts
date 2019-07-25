@@ -1,6 +1,13 @@
-import { FileService } from '../src/services/files.service';
 import * as getSize from 'get-folder-size';
+import { FileService } from '../src/services/files.service';
 jest.mock('get-folder-size');
+
+const countDecimals = (numb: number): number => {
+  if (Math.floor(numb.valueOf()) === numb.valueOf()) {
+    return 0;
+  }
+  return numb.toString().split('.')[1].length || 0;
+};
 
 describe('File Service', () => {
   let fileService;
@@ -26,8 +33,3 @@ describe('File Service', () => {
     });
   });
 });
-
-function countDecimals(number) {
-  if (Math.floor(number.valueOf()) === number.valueOf()) return 0;
-  return number.toString().split('.')[1].length || 0;
-}

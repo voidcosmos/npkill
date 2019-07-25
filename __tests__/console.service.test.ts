@@ -12,7 +12,7 @@ describe('Console Service', () => {
         '/usr/bin/ts-node',
         '/blablabla inexistent parameters',
         '-h',
-        '--root',
+        '--directory',
         '/sample/path',
         '-D',
         'lala',
@@ -23,7 +23,7 @@ describe('Console Service', () => {
       const result = consoleService.getParameters(argvs);
 
       expect(result['help']).not.toBeFalsy();
-      expect(result['root']).toBe('/sample/path');
+      expect(result['directory']).toBe('/sample/path');
       expect(result['delete-all']).not.toBeFalsy();
       expect(result['lala']).toBeUndefined();
       expect(result['inexistent']).toBeUndefined();
@@ -47,9 +47,6 @@ describe('Console Service', () => {
     it('should get array with text according to width', () => {
       const cases = [
         {
-          text:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris faucibus sit amet libero non vestibulum. Morbi ac tellus dolor. Duis consectetur eget lectus sed ullamcorper.',
-          width: 43,
           expect: [
             'Lorem ipsum dolor sit amet, consectetur',
             'adipiscing elit. Mauris faucibus sit amet',
@@ -57,6 +54,9 @@ describe('Console Service', () => {
             'dolor. Duis consectetur eget lectus sed',
             'ullamcorper.',
           ],
+          text:
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris faucibus sit amet libero non vestibulum. Morbi ac tellus dolor. Duis consectetur eget lectus sed ullamcorper.',
+          width: 43,
         },
         /* {
           text: 'Lorem ipsum dolor sit amet.',
@@ -80,22 +80,22 @@ describe('Console Service', () => {
     it('should short text according parameters', () => {
       const cases = [
         {
-          text: '/sample/text/for/test how/service/split/this',
-          expect: '/sample/te.../service/split/this',
-          width: 32,
           cutFrom: 10,
+          expect: '/sample/te.../service/split/this',
+          text: '/sample/text/for/test how/service/split/this',
+          width: 32,
         },
         {
-          text: '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
-          expect: '/aaa/.../jjj/kkk',
-          width: 16,
           cutFrom: 5,
+          expect: '/aaa/.../jjj/kkk',
+          text: '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
+          width: 16,
         },
         {
-          text: '/neketaro/a:desktop/folder',
-          expect: '/neketaro/a:desktop/folder',
-          width: 50,
           cutFrom: 3,
+          expect: '/neketaro/a:desktop/folder',
+          text: '/neketaro/a:desktop/folder',
+          width: 50,
         },
       ];
 
@@ -132,22 +132,22 @@ describe('Console Service', () => {
     it('should ignore negative parameters', () => {
       const cases = [
         {
-          text: '/sample/text/for/test how/service/split/thisA',
-          expect: '/sample/text/for/test how/service/split/thisA',
-          width: 5,
           cutFrom: -10,
+          expect: '/sample/text/for/test how/service/split/thisA',
+          text: '/sample/text/for/test how/service/split/thisA',
+          width: 5,
         },
         {
-          text: '/sample/text/for/test how/service/split/thisB',
-          expect: '/sample/text/for/test how/service/split/thisB',
-          width: -10,
           cutFrom: 10,
+          expect: '/sample/text/for/test how/service/split/thisB',
+          text: '/sample/text/for/test how/service/split/thisB',
+          width: -10,
         },
         {
-          text: '/sample/text/for/test how/service/split/thisC',
-          expect: '/sample/text/for/test how/service/split/thisC',
-          width: -10,
           cutFrom: -20,
+          expect: '/sample/text/for/test how/service/split/thisC',
+          text: '/sample/text/for/test how/service/split/thisC',
+          width: -10,
         },
       ];
 

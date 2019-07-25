@@ -29,6 +29,7 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
+    "remark-lint": "^6.0.5",
     "rxjs": "^6.5.2",
     "typescript": "^3.4.5"
   },

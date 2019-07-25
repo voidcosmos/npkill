@@ -1,24 +1,21 @@
 import { OPTIONS } from '../constants/cli.constants';
 import { WIDTH_OVERFLOW } from '../constants/main.constants';
+import { ICliOptions } from '../interfaces/cli-options.interface';
 
 export class ConsoleService {
-  constructor() {}
+  getParameters(rawArgv: string[]): {} {
+    const argvs = rawArgv.slice(2); // The first two arguments represent cli env routes that are not necessary.
+    const options: {} = {};
 
-  getParameters(argv: string[]): Object {
-    argv = argv.slice(2); //The first two arguments represent cli env routes that are not necessary.
-    let options: Object = {};
+    for (let i = 0; i < argvs.length; ++i) {
+      const option = this.getOption(argvs[i]);
 
-    for (let i = 0; i < argv.length; ++i) {
-      const option = this.getOption(argv[i]);
-
-      if (!option) {
-        continue;
-      }
+      if (!option) continue;
 
       const { name } = option;
 
-      if (!this.argHaveOption(argv[i + 1])) {
-        options[name] = argv[i + 1] ? argv[i + 1] : true;
+      if (!this.argHaveOption(argvs[i + 1])) {
+        options[name] = argvs[i + 1] ? argvs[i + 1] : true;
         i++;
         continue;
       }
@@ -29,22 +26,11 @@ export class ConsoleService {
     }
     return options;
   }
-
-  private argHaveOption(argv: string) {
-    return !!argv && argv.charAt(0) === '-';
-  }
-  private getOption(arg: string) {
-    return OPTIONS.find(option => option.arg.includes(arg));
-  }
-
-  splitStringIntoArrayByCharactersWidth(
-    string: string,
-    width: number,
-  ): string[] {
-    const text = string.split(' ');
+  splitStringIntoArrayByCharactersWidth(text: string, width: number): string[] {
+    const splitedText = text.split(' ');
 
     // Caotic. Improve in next commits
-    return text.reduce(
+    return splitedText.reduce(
       (acc: string[], line: string) => {
         const indexLastLine = acc.length - 1;
         const formingLine = acc[indexLastLine] ? acc[indexLastLine] : '';
@@ -60,10 +46,14 @@ export class ConsoleService {
     );
   }
 
-  shortenText(text: string, width: number, cutFrom: number = 0) {
+  shortenText(text: string, width: number, startCut = 0): string {
+    let cutFrom = startCut;
+
     if (text.length < width) return text;
+
     if (!width || !cutFrom || width < 1 || cutFrom < 1 || cutFrom > width)
       return text;
+
     if (!cutFrom) cutFrom = width / 2;
 
     const startPartB = text.length - (width - cutFrom - WIDTH_OVERFLOW.length);
@@ -71,5 +61,12 @@ export class ConsoleService {
     const partB = text.substring(startPartB, text.length);
 
     return partA + WIDTH_OVERFLOW + partB;
+  }
+
+  private argHaveOption(argv: string): boolean {
+    return !!argv && argv.charAt(0) === '-';
+  }
+  private getOption(arg: string): ICliOptions | undefined {
+    return OPTIONS.find(option => option.arg.includes(arg));
   }
 }
