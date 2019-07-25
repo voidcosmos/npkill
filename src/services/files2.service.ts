@@ -9,7 +9,7 @@ export class FilesService2 {
   public folders: Array<String> = [];
 
   public getFolderSize(path: string): Observable<any> {
-    const du = spawn('du', ['-h', path, '--max-depth', '0']);
+    const du = spawn('du', ['-s', path, '--max-depth', '0']);
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);

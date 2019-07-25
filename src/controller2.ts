@@ -277,7 +277,7 @@ export class Controller {
         const paths = this.fileService.splitData(data);
         paths.map(path => {
           this.fileService.getFolderSize(path).subscribe(size => {
-            const nodeFolder = { path, deleted: false, size };
+            const nodeFolder = { path, deleted: false, size: +size };
             this.addNodeFolder(nodeFolder);
             this.printStats();
             this.printFoldersSection();
