@@ -24,6 +24,7 @@ import {
   catchError,
   debounceTime,
   filter,
+  switchMap,
   takeUntil,
   tap,
 } from 'rxjs/operators';
@@ -82,7 +83,9 @@ export class Controller {
       process.exit();
     }
 
-    this.folderRoot = options['root'] ? options['root'] : process.cwd();
+    this.folderRoot = options['directory']
+      ? options['directory']
+      : process.cwd();
     if (options['full-scan']) this.folderRoot = fileService.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
@@ -191,8 +194,11 @@ export class Controller {
     spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.finishSearching$))
-      .subscribe(() =>
-        this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
+      .subscribe(
+        () =>
+          this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
+        error => this.printError(error),
+        () => this.updateStatus('search complete'),
       );
   }
 
@@ -272,34 +278,40 @@ export class Controller {
 
   private scan() {
     const folders$ = this.fileService.listDir(this.folderRoot);
-    folders$.subscribe(
-      data => {
-        const paths = this.fileService.splitData(data);
-        paths.map(path => {
-          this.fileService.getFolderSize(path).subscribe(size => {
-            const nodeFolder = { path, deleted: false, size: +size };
-            this.addNodeFolder(nodeFolder);
-            this.printStats();
-            this.printFoldersSection();
+    folders$
+      .pipe(
+        switchMap(value => {
+          return of(value).pipe(
+            catchError((error: Error) => {
+              return of(error);
+            }),
+          );
+        }),
+      )
+      .subscribe(
+        data => {
+          if (data instanceof Error) {
+            this.printError(data.message);
+            return;
+          }
 
-            if (this.config.deleteAll) this.deleteFolder(nodeFolder);
+          const paths = this.fileService.splitData(data);
+          paths.map(path => {
+            this.fileService.getFolderSize(path).subscribe(size => {
+              const nodeFolder = { path, deleted: false, size: +size };
+              this.addNodeFolder(nodeFolder);
+              this.printStats();
+              this.printFoldersSection();
+
+              if (this.config.deleteAll) this.deleteFolder(nodeFolder);
+            });
           });
-        });
-      },
-      /* this.fileService.splitData(folders).map(async path => {
-        const nodeFolder = { path, deleted: false, size: 0 };
-        this.addNodeFolder(nodeFolder);
-
-        this.printStats();
-        this.printFoldersSection();
-
-        if (this.config.deleteAll) this.deleteFolder(nodeFolder);
-      } ),*/
-
-      error => {
-        this.printError(error);
-      },
-    );
+        },
+        error => {
+          this.printError(error);
+        },
+        () => this.finishSearching$.next(true),
+      );
   }
 
   private isQuitKey(ctrl, name) {

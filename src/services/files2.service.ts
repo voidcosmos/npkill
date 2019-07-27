@@ -1,15 +1,14 @@
 import * as getSize from 'get-folder-size';
 
 import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
-import { Observable, of } from 'rxjs';
-
-import { map } from 'rxjs/operators';
+import { Observable, from, observable, of, throwError } from 'rxjs';
+import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 
 export class FilesService2 {
   public folders: Array<String> = [];
 
   public getFolderSize(path: string): Observable<any> {
-    const du = spawn('du', ['-s', path, '--max-depth', '0']);
+    const du = spawn('du', ['-sm', path, '--max-depth', '0']);
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);
@@ -73,6 +72,7 @@ export class FilesService2 {
 
     return new Observable(observer => {
       const dataHandler = data => observer.next(data);
+      const bashErrorHandler = error => observer.next(new Error(error));
       const errorHandler = error => observer.error(error);
       const endHandler = () => observer.complete();
 
@@ -80,7 +80,7 @@ export class FilesService2 {
       stdout.addListener('error', errorHandler);
       stdout.addListener('end', endHandler);
 
-      stderr.addListener('data', errorHandler);
+      stderr.addListener('data', bashErrorHandler);
       stderr.addListener('error', errorHandler);
 
       return () => {
@@ -88,27 +88,38 @@ export class FilesService2 {
         stdout.removeListener('error', errorHandler);
         stdout.removeListener('end', endHandler);
 
-        stderr.removeListener('data', errorHandler);
+        stderr.removeListener('data', bashErrorHandler);
         stderr.removeListener('error', errorHandler);
       };
     });
   }
 }
+const fs = new FilesService2();
 
-/* const fs = new FilesService2();
-fs.listDir('/home').subscribe(
-  value => {
-    const folders = fs.splitData(value);
-    folders.map(folder => {
-      fs.getFolderSize(folder).subscribe(size =>
-        console.log('FOLDER', folder, 'SIZE', size),
+/* fs.listDir('/')
+  .pipe(
+    switchMap(value => {
+      return of(value).pipe(
+        catchError((error: Error) => {
+          return of(error);
+        }),
       );
-    });
-  },
-  error => {
-    console.log(error);
-  },
-  () => {
-    console.log('Search finished :)');
-  },
-); */
+    }),
+  )
+  .subscribe(
+    x => {
+      if (x instanceof Error) {
+        console.log('ERROR', x.message);
+      } else {
+        const folders = fs.splitData(x);
+        folders.map(folder =>
+          fs
+            .getFolderSize(folder)
+            .subscribe(size => console.log('FOLDER', folder, 'SIZE', size)),
+        );
+      }
+    },
+    x => console.log('ERROR', x, 'ERROR'),
+    () => console.log('Bitchez pls, complete'),
+  );
+ */
