@@ -8,7 +8,8 @@
     "arrow-parens": false,
     "no-shadowed-variable": false,
     "no-string-literal": false,
-    "curly": false
+    "curly": false,
+    "ordered-imports": false
   },
   "rulesDirectory": []
 }
