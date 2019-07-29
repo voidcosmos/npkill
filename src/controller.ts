@@ -65,7 +65,7 @@ export class Controller {
   ) {
     keypress(process.stdin);
     this.getArguments();
-    this.setEvents();
+    this.setErrorEvents();
 
     this.jobQueue = [this.folderRoot];
     this.prepareScreen();
@@ -91,8 +91,6 @@ export class Controller {
       this.folderRoot = this.fileService.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
-
-    // this.config.deleteAll = !!options['delete-all'];
   }
 
   private showHelp(): void {
@@ -154,9 +152,7 @@ export class Controller {
     process.stdin.resume();
   }
 
-  private setEvents(): void {
-    // Handle uncontrollable system exceptions that can stop the
-    // process and are not controllable with try / cath.
+  private setErrorEvents(): void {
     process.on('uncaughtException', err => {
       this.printError(err.message);
       this.finishJob();
@@ -168,7 +164,6 @@ export class Controller {
   }
 
   private printUI(): void {
-    ///////////////////////////
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
     this.printAt(
@@ -176,7 +171,6 @@ export class Controller {
       UI_POSITIONS.TUTORIAL_TIP,
     );
 
-    ///////////////////////////
     // folder size header
     const centerDesviation = 5;
     this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
@@ -187,7 +181,6 @@ export class Controller {
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
-    ///////////////////////////
     // npkill stats
     this.printAt(
       colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
