@@ -31,9 +31,9 @@ import {
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
-import { FilesService2 } from './services/files2.service';
 import { IFolder } from './interfaces/folder.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
+import { LinuxFilesService } from './services/linux-files.service';
 import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
@@ -65,7 +65,7 @@ export class Controller {
   };
 
   constructor(
-    private fileService: FilesService2,
+    private fileService: LinuxFilesService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
   ) {
@@ -278,40 +278,30 @@ export class Controller {
 
   private scan() {
     const folders$ = this.fileService.listDir(this.folderRoot);
-    folders$
-      .pipe(
-        switchMap(value => {
-          return of(value).pipe(
-            catchError((error: Error) => {
-              return of(error);
-            }),
-          );
-        }),
-      )
-      .subscribe(
-        data => {
-          if (data instanceof Error) {
-            this.printError(data.message);
-            return;
-          }
+    folders$.subscribe(
+      data => {
+        if (data instanceof Error) {
+          this.printError(data.message);
+          return;
+        }
 
-          const paths = this.fileService.splitData(data);
-          paths.map(path => {
-            this.fileService.getFolderSize(path).subscribe(size => {
-              const nodeFolder = { path, deleted: false, size: +size };
-              this.addNodeFolder(nodeFolder);
-              this.printStats();
-              this.printFoldersSection();
+        const paths = this.fileService.splitData(data);
+        paths.map(path => {
+          this.fileService.getFolderSize(path).subscribe(size => {
+            const nodeFolder = { path, deleted: false, size: +size };
+            this.addNodeFolder(nodeFolder);
+            this.printStats();
+            this.printFoldersSection();
 
-              if (this.config.deleteAll) this.deleteFolder(nodeFolder);
-            });
+            if (this.config.deleteAll) this.deleteFolder(nodeFolder);
           });
-        },
-        error => {
-          this.printError(error);
-        },
-        () => this.finishSearching$.next(true),
-      );
+        });
+      },
+      error => {
+        this.printError(error);
+      },
+      () => this.finishSearching$.next(true),
+    );
   }
 
   private isQuitKey(ctrl, name) {

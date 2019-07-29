@@ -4,7 +4,7 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
 import { Observable, from, observable, of, throwError } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 
-export class FilesService2 {
+export class LinuxFilesService {
   public folders: Array<String> = [];
 
   public getFolderSize(path: string): Observable<any> {
@@ -17,23 +17,8 @@ export class FilesService2 {
     return this.convertStream(cut);
   }
 
-  /*  public getFolderSize(path: string) {
-    return exec(`du -h ${path} --max-depth 0 | cut -f 1`);
-  } */
-
   public listDir(path: string): Observable<any> {
     const stream = this.getStream(path);
-    /* stream.stderr.on('error', error => console.log('Process ERROR', error));
-    stream.stdout.on('data', data => {
-      const folders = this.splitData(data);
-      folders.map(folder =>
-        this.getFolderSize(folder).stdout.on('data', size =>
-          console.log(folder, size),
-        ),
-      );
-    });
-    stream.stderr.on('data', error => error); */
-
     return this.convertStream(stream);
   }
 
@@ -56,10 +41,6 @@ export class FilesService2 {
 
   public getUserHomePath() {
     return require('os').homedir();
-  }
-
-  private isDirectorySafeToDelete(path) {
-    return path !== '/';
   }
 
   private setEncoding(child: ChildProcessWithoutNullStreams) {
@@ -94,7 +75,7 @@ export class FilesService2 {
     });
   }
 }
-const fs = new FilesService2();
+const fs = new LinuxFilesService();
 
 /* fs.listDir('/')
   .pipe(

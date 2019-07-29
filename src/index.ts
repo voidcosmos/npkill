@@ -2,11 +2,11 @@
 
 import { ConsoleService } from './services/console.service';
 import { Controller } from './controller2';
-import { FilesService2 } from './services/files2.service';
+import { LinuxFilesService } from './services/linux-files.service';
 import { SpinnerService } from './services/spinner.service';
 
 export const controller = new Controller(
-  new FilesService2(),
+  new LinuxFilesService(),
   new SpinnerService(),
   new ConsoleService(),
 );
