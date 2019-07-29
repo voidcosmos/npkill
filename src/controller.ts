@@ -1,12 +1,7 @@
-import ansiEscapes from 'ansi-escapes';
 import * as colors from 'colors';
-import * as keypress from 'keypress';
 import * as emoji from 'node-emoji';
-import { basename } from 'path';
-import { interval, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { version } from '../package.json';
-import { OPTIONS } from './constants/cli.constants';
+import * as keypress from 'keypress';
+
 import {
   BANNER,
   CURSOR_SIMBOL,
@@ -22,19 +17,22 @@ import {
   VALID_KEYS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { SPINNER_INTERVAL, SPINNERS } from './constants/spinner.constants';
-import { IKeysCommand } from './interfaces/command-keys.interface.js';
-import { IConfig } from './interfaces/config.interface';
-import { IFolder } from './interfaces/folder.interface';
-import { IStats } from './interfaces/stats.interface.js';
-import { IPosition } from './interfaces/ui-positions.interface';
+import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
+import { Subject, interval } from 'rxjs';
+
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
+import { IConfig } from './interfaces/config.interface';
+import { IFolder } from './interfaces/folder.interface';
+import { IKeysCommand } from './interfaces/command-keys.interface.js';
+import { IPosition } from './interfaces/ui-positions.interface';
+import { IStats } from './interfaces/stats.interface.js';
+import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
-
-const fileService = new FileService();
-const consoleService = new ConsoleService();
-const spinnerService = new SpinnerService();
+import ansiEscapes from 'ansi-escapes';
+import { basename } from 'path';
+import { takeUntil } from 'rxjs/operators';
+import { version } from '../package.json';
 
 export class Controller {
   private folderRoot: string;
@@ -60,7 +58,11 @@ export class Controller {
     },
   };
 
-  constructor() {
+  constructor(
+    private consoleService: ConsoleService,
+    private fileService: FileService,
+    private spinnerService: SpinnerService,
+  ) {
     keypress(process.stdin);
     this.getArguments();
     this.setEvents();
@@ -72,7 +74,7 @@ export class Controller {
   }
 
   private getArguments(): void {
-    const options = consoleService.getParameters(process.argv);
+    const options = this.consoleService.getParameters(process.argv);
     if (options['help']) {
       this.showHelp();
       process.exit();
@@ -85,7 +87,8 @@ export class Controller {
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
-    if (options['full-scan']) this.folderRoot = fileService.getUserHomePath();
+    if (options['full-scan'])
+      this.folderRoot = this.fileService.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
 
@@ -102,7 +105,7 @@ export class Controller {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
-      const description = consoleService.splitStringIntoArrayByCharactersWidth(
+      const description = this.consoleService.splitStringIntoArrayByCharactersWidth(
         option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
@@ -208,11 +211,13 @@ export class Controller {
   }
 
   private initializeLoadingStatus(): void {
-    spinnerService.setSpinner(SPINNERS.W10);
+    this.spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.finishSearching$))
       .subscribe(() =>
-        this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
+        this.updateStatus(
+          INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
+        ),
       );
   }
 
@@ -227,7 +232,7 @@ export class Controller {
     }
 
     try {
-      fileService.listDir(this.jobQueue.pop()).subscribe(
+      this.fileService.listDir(this.jobQueue.pop()).subscribe(
         folder => {
           this.newFolderFound(folder);
         },
@@ -293,7 +298,7 @@ export class Controller {
         folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
       }
 
-      let folderString = consoleService.shortenText(
+      let folderString = this.consoleService.shortenText(
         folderTitle,
         this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
         cutFrom,
@@ -366,7 +371,7 @@ export class Controller {
 
   private calculateFolderSize(folder: IFolder): Promise<IFolder> {
     return new Promise((resolve, reject) => {
-      fileService
+      this.fileService
         .getFolderSize(folder.path)
         .then((size: number) => {
           folder.size = +size;
@@ -425,7 +430,7 @@ export class Controller {
 
   private deleteFolder(folder: IFolder): void {
     try {
-      fileService.removeDir(folder.path);
+      this.fileService.removeDir(folder.path);
       folder.deleted = true;
     } catch (error) {
       this.printError(error.message);
