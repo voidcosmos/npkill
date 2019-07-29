@@ -1,21 +1,21 @@
 <p align="center">
-  <img src="./docs/npkill.svg" width="320" alt="npkill logo" />
-  <img src="./docs/npkill-scope-mono.svg" width="50" alt="npkill logo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-scope-mono.svg" width="50" alt="npkill logo" />
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
 <img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg">
-<img alt="npm bundle size" src="https://img.shields.io/bundlephobia/min/npkill.svg">
+<!-- <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/min/npkill.svg"> -->
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
 </p>
 
-### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders
+### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
 
 <p align="center">
-  <img src="./docs/npkill-alpha-demo.gif" alt="npkill demo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-alpha-demo.gif" alt="npkill demo" />
 </p>
 
-This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay! :sparkles:
+This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
 
 ## Table of Contents
 

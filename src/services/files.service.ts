@@ -7,6 +7,11 @@ import { Observable } from 'rxjs';
 import { DECIMALS_SIZE } from '../constants/main.constants';
 
 export class FileService {
+  getFileContentSync(path: string): string {
+    const encoding = 'utf8';
+    return fs.readFileSync(path, encoding);
+  }
+
   getFolderSize(path: string): Promise<number> {
     return new Promise((resolve, reject) => {
       getSize(path, (err, size) => {

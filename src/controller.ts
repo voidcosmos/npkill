@@ -1,6 +1,7 @@
 import * as colors from 'colors';
 import * as emoji from 'node-emoji';
 import * as keypress from 'keypress';
+import * as path from 'path';
 
 import {
   BANNER,
@@ -32,11 +33,6 @@ import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
 import { basename } from 'path';
 import { takeUntil } from 'rxjs/operators';
-import { version } from '../package.json';
-
-const fileService = new FileService();
-const consoleService = new ConsoleService();
-const spinnerService = new SpinnerService();
 
 export class Controller {
   private folderRoot: string;
@@ -62,10 +58,14 @@ export class Controller {
     },
   };
 
-  constructor() {
+  constructor(
+    private consoleService: ConsoleService,
+    private fileService: FileService,
+    private spinnerService: SpinnerService,
+  ) {
     keypress(process.stdin);
     this.getArguments();
-    this.setEvents();
+    this.setErrorEvents();
 
     this.jobQueue = [this.folderRoot];
     this.prepareScreen();
@@ -74,7 +74,7 @@ export class Controller {
   }
 
   private getArguments(): void {
-    const options = consoleService.getParameters(process.argv);
+    const options = this.consoleService.getParameters(process.argv);
     if (options['help']) {
       this.showHelp();
       process.exit();
@@ -87,11 +87,10 @@ export class Controller {
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
-    if (options['full-scan']) this.folderRoot = fileService.getUserHomePath();
+    if (options['full-scan'])
+      this.folderRoot = this.fileService.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
-
-    // this.config.deleteAll = !!options['delete-all'];
   }
 
   private showHelp(): void {
@@ -104,7 +103,7 @@ export class Controller {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
-      const description = consoleService.splitStringIntoArrayByCharactersWidth(
+      const description = this.consoleService.splitStringIntoArrayByCharactersWidth(
         option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
@@ -120,7 +119,12 @@ export class Controller {
   }
 
   private showProgramVersion(): void {
-    this.print('v' + version);
+    const packageJson = __dirname + '/../package.json';
+
+    const packageData = JSON.parse(
+      this.fileService.getFileContentSync(packageJson),
+    );
+    this.print('v' + packageData.version);
   }
 
   private clear(): void {
@@ -153,9 +157,7 @@ export class Controller {
     process.stdin.resume();
   }
 
-  private setEvents(): void {
-    // Handle uncontrollable system exceptions that can stop the
-    // process and are not controllable with try / cath.
+  private setErrorEvents(): void {
     process.on('uncaughtException', err => {
       this.printError(err.message);
       this.finishJob();
@@ -167,7 +169,6 @@ export class Controller {
   }
 
   private printUI(): void {
-    ///////////////////////////
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
     this.printAt(
@@ -175,7 +176,6 @@ export class Controller {
       UI_POSITIONS.TUTORIAL_TIP,
     );
 
-    ///////////////////////////
     // folder size header
     const centerDesviation = 5;
     this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
@@ -186,7 +186,6 @@ export class Controller {
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
-    ///////////////////////////
     // npkill stats
     this.printAt(
       colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
@@ -210,11 +209,13 @@ export class Controller {
   }
 
   private initializeLoadingStatus(): void {
-    spinnerService.setSpinner(SPINNERS.W10);
+    this.spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.finishSearching$))
       .subscribe(() =>
-        this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
+        this.updateStatus(
+          INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
+        ),
       );
   }
 
@@ -229,7 +230,7 @@ export class Controller {
     }
 
     try {
-      fileService.listDir(this.jobQueue.pop()).subscribe(
+      this.fileService.listDir(this.jobQueue.pop()).subscribe(
         folder => {
           this.newFolderFound(folder);
         },
@@ -295,7 +296,7 @@ export class Controller {
         folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
       }
 
-      let folderString = consoleService.shortenText(
+      let folderString = this.consoleService.shortenText(
         folderTitle,
         this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
         cutFrom,
@@ -368,7 +369,7 @@ export class Controller {
 
   private calculateFolderSize(folder: IFolder): Promise<IFolder> {
     return new Promise((resolve, reject) => {
-      fileService
+      this.fileService
         .getFolderSize(folder.path)
         .then((size: number) => {
           folder.size = +size;
@@ -427,7 +428,7 @@ export class Controller {
 
   private deleteFolder(folder: IFolder): void {
     try {
-      fileService.removeDir(folder.path);
+      this.fileService.removeDir(folder.path);
       folder.deleted = true;
     } catch (error) {
       this.printError(error.message);
