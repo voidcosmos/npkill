@@ -1,5 +1,6 @@
 import * as colors from 'colors';
 import * as emoji from 'node-emoji';
+import * as path from 'path';
 import * as keypress from 'keypress';
 
 import {
@@ -32,7 +33,6 @@ import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
 import { basename } from 'path';
 import { takeUntil } from 'rxjs/operators';
-import { version } from '../package.json';
 
 export class Controller {
   private folderRoot: string;
@@ -119,7 +119,12 @@ export class Controller {
   }
 
   private showProgramVersion(): void {
-    this.print('v' + version);
+    const packageJson = __dirname + '/../package.json';
+
+    const packageData = JSON.parse(
+      this.fileService.getFileContentSync(packageJson),
+    );
+    this.print('v' + packageData.version);
   }
 
   private clear(): void {
