@@ -354,7 +354,6 @@ export class Controller {
         this.KEYS.execute(name);
       }
 
-      this.clearFolderSection();
       this.printFoldersSection();
     });
   }
@@ -417,12 +416,16 @@ export class Controller {
   }
 
   private checkCursorScroll(): void {
-    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll) {
-      this.scroll--;
-    }
-    if (this.cursorPosY > this.stdout.rows + this.scroll - 1) {
-      this.scroll++;
-    }
+    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
+      this.scrollFolderResults(-1);
+
+    if (this.cursorPosY > this.stdout.rows + this.scroll - 1)
+      this.scrollFolderResults(1);
+  }
+
+  private scrollFolderResults(scrollAmount: number): void {
+    this.scroll += scrollAmount;
+    this.clearFolderSection();
   }
 
   private delete(): void {
