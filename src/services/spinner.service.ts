@@ -17,6 +17,11 @@ export class SpinnerService {
   }
 
   private updateCount(): void {
-    this.count = this.count === this.spinner.length - 1 ? 0 : ++this.count;
+    if (this.isLastFrame()) this.count = 0;
+    else ++this.count;
+  }
+
+  private isLastFrame(): boolean {
+    return this.count === this.spinner.length - 1;
   }
 }
