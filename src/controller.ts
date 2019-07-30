@@ -315,7 +315,7 @@ export class Controller {
       });
 
       // Folder size
-      const folderSizeText = folder.size ? folder.size + 'mb' : '--';
+      const folderSizeText = folder.size ? folder.size + ' mb' : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: folderRow,
@@ -323,6 +323,12 @@ export class Controller {
 
       this.printFolderCursor();
     });
+  }
+
+  private clearFolderSection(): void {
+    for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
+      this.clearLine(row);
+    }
   }
 
   private colorDeletedTextGreen(folderString: string): string {
@@ -346,6 +352,7 @@ export class Controller {
         this.KEYS.execute(name);
       }
 
+      this.clearFolderSection();
       this.printFoldersSection();
     });
   }
