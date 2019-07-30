@@ -315,7 +315,9 @@ export class Controller {
       });
 
       // Folder size
-      const folderSizeText = folder.size ? folder.size + ' mb' : '--';
+      const folderSizeText = folder.size
+        ? folder.size.toFixed(DECIMALS_SIZE) + ' mb'
+        : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: folderRow,
@@ -379,7 +381,7 @@ export class Controller {
       this.fileService
         .getFolderSize(folder.path)
         .then((size: number) => {
-          folder.size = +size;
+          folder.size = +size.toFixed(DECIMALS_SIZE);
           resolve(folder);
         })
         .catch(err => reject(err));
@@ -460,8 +462,11 @@ export class Controller {
 
     spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
 
-    this.printAt(stats.totalSpace + ' mb', totalSpacePosition);
-    this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
+    const totalSpace = stats.totalSpace.toFixed(DECIMALS_SIZE) + ' mb';
+    const spaceReleased = stats.spaceReleased.toFixed(DECIMALS_SIZE) + ' mb';
+
+    this.printAt(totalSpace, totalSpacePosition);
+    this.printAt(spaceReleased, spaceReleasedPosition);
   }
 
   private getStats(): IStats {
