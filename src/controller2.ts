@@ -36,6 +36,7 @@ import { IPosition } from './interfaces/ui-positions.interface';
 import { LinuxFilesService } from './services/linux-files.service';
 import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
+import { WindowsFilesService } from './services/windows-files.service';
 import ansiEscapes from 'ansi-escapes';
 
 const fileService = new FileService();
@@ -65,7 +66,7 @@ export class Controller {
   };
 
   constructor(
-    private fileService: LinuxFilesService,
+    private fileService: LinuxFilesService | WindowsFilesService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
   ) {

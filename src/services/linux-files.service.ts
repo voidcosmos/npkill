@@ -75,10 +75,10 @@ export class LinuxFilesService {
     });
   }
 }
-const fs = new LinuxFilesService();
+/* const fs = new LinuxFilesService();
 
 fs.listDir('/home/nya')
-  /* .pipe(
+  .pipe(
     switchMap(value => {
       return of(value).pipe(
         catchError((error: Error) => {
@@ -86,7 +86,7 @@ fs.listDir('/home/nya')
         }),
       );
     }),
-  ) */
+  )
   .subscribe(
     x => {
       if (x instanceof Error) {
@@ -102,4 +102,4 @@ fs.listDir('/home/nya')
     },
     x => console.log('ERROR', x, 'ERROR'),
     () => console.log('Bitchez pls, complete'),
-  );
+  ); */

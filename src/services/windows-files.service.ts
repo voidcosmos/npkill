@@ -61,7 +61,7 @@ export class WindowsFilesService {
   }
 }
 
-const w = new WindowsFilesService();
+/* const w = new WindowsFilesService();
 w.listDir('/').subscribe(
   data => {
     if (data instanceof Error) {
@@ -77,4 +77,4 @@ w.listDir('/').subscribe(
   },
   error => console.log('ERROR', error, 'ERROR'),
   () => console.log('Bitchez pls, complete'),
-);
+); */
