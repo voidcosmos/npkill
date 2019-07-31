@@ -79,7 +79,7 @@ export class FileService {
 
   private convertBToMb(bytes: number): number {
     const factorBtoMb = 1048576;
-    return +(bytes / factorBtoMb).toFixed(DECIMALS_SIZE);
+    return bytes / factorBtoMb;
   }
 
   private getDirectoryFiles(dir: string) {

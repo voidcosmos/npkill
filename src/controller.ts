@@ -315,7 +315,9 @@ export class Controller {
       });
 
       // Folder size
-      const folderSizeText = folder.size ? folder.size + 'mb' : '--';
+      const folderSizeText = folder.size
+        ? folder.size.toFixed(DECIMALS_SIZE) + ' mb'
+        : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: folderRow,
@@ -323,6 +325,12 @@ export class Controller {
 
       this.printFolderCursor();
     });
+  }
+
+  private clearFolderSection(): void {
+    for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
+      this.clearLine(row);
+    }
   }
 
   private colorDeletedTextGreen(folderString: string): string {
@@ -372,7 +380,7 @@ export class Controller {
       this.fileService
         .getFolderSize(folder.path)
         .then((size: number) => {
-          folder.size = +size;
+          folder.size = +size.toFixed(DECIMALS_SIZE);
           resolve(folder);
         })
         .catch(err => reject(err));
@@ -408,12 +416,16 @@ export class Controller {
   }
 
   private checkCursorScroll(): void {
-    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll) {
-      this.scroll--;
-    }
-    if (this.cursorPosY > this.stdout.rows + this.scroll - 1) {
-      this.scroll++;
-    }
+    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
+      this.scrollFolderResults(-1);
+
+    if (this.cursorPosY > this.stdout.rows + this.scroll - 1)
+      this.scrollFolderResults(1);
+  }
+
+  private scrollFolderResults(scrollAmount: number): void {
+    this.scroll += scrollAmount;
+    this.clearFolderSection();
   }
 
   private delete(): void {
@@ -453,8 +465,11 @@ export class Controller {
 
     spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
 
-    this.printAt(stats.totalSpace + ' mb', totalSpacePosition);
-    this.printAt(stats.spaceReleased + ' mb', spaceReleasedPosition);
+    const totalSpace = stats.totalSpace.toFixed(DECIMALS_SIZE) + ' mb';
+    const spaceReleased = stats.spaceReleased.toFixed(DECIMALS_SIZE) + ' mb';
+
+    this.printAt(totalSpace, totalSpacePosition);
+    this.printAt(spaceReleased, spaceReleasedPosition);
   }
 
   private getStats(): IStats {

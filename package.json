@@ -1,16 +1,10 @@
 {
   "name": "npkill",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
     "access": "public"
-  },
-  "scripts": {
-    "build": "tsc",
-    "start": "ts-node ./src/index.ts",
-    "test": "jest --config jestconfig.json",
-    "test:watch": "jest --config jestconfig.json --watch"
   },
   "bin": {
     "npkill": "lib/index.js"
@@ -21,14 +15,23 @@
     "url": "https://github.com/zaldih/npkill"
   },
   "license": "MIT",
+  "keywords": [
+    "cli",
+    "console",
+    "npm",
+    "node",
+    "module",
+    "clean",
+    "interactive"
+  ],
   "files": [
     "lib/**/*"
   ],
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged"
-    }
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node ./src/index.ts",
+    "test": "jest --config jestconfig.json",
+    "test:watch": "jest --config jestconfig.json --watch"
   },
   "dependencies": {
     "ansi-escapes": "^4.1.0",
@@ -36,23 +39,28 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
-    "remark-lint": "^6.0.5",
-    "rxjs": "^6.5.2",
-    "typescript": "^3.4.5"
+    "rxjs": "^6.5.2"
   },
   "devDependencies": {
+    "typescript": "^3.4.5",
+    "ts-node": "^8.3.0",
+    "commitlint": "^8.0.0",
     "@commitlint/config-conventional": "^8.0.0",
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.0",
-    "benchmark": "^2.1.4",
-    "commitlint": "^8.0.0",
     "husky": "^2.7.0",
     "jest": "^24.8.0",
     "lint-staged": "^8.2.1",
     "pre-commit": "^1.2.2",
     "prettier": "^1.18.2",
     "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0"
+    "remark-lint": "^6.0.5"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "lint-staged"
+    }
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [
