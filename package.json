@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "typescript": "^3.4.5",
+    "tslint": "^5.18.0",
     "ts-node": "^8.3.0",
     "commitlint": "^8.0.0",
     "@commitlint/config-conventional": "^8.0.0",
