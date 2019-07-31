@@ -1,16 +1,18 @@
 import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
 
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 export class WindowsFilesService {
   public getFolderSize(path: string): Observable<any> {
-    const du = spawn('du', ['-sm', path, '--max-depth', '0']);
+    /* const du = spawn('du', ['-sm', path, '--max-depth', '0']);
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);
     this.setEncoding(cut);
 
-    return this.streamToObservable(cut);
+    return this.streamToObservable(cut); */
+    // TODO
+    return of(10);
   }
 
   public listDir(path: string): Observable<any> {
@@ -19,7 +21,7 @@ export class WindowsFilesService {
   }
 
   private getStream(path: string) {
-    const child = spawn('./src/utils/windows-find', [path]);
+    const child = spawn(`${__dirname}/windows-find`, [path]);
     this.setEncoding(child);
     return child;
   }

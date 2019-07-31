@@ -15,6 +15,7 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
+  DECIMALS_SIZE,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { Observable, Subject, iif, interval, of } from 'rxjs';
@@ -287,16 +288,21 @@ export class Controller {
         }
 
         const paths = this.fileService.splitData(data);
-        paths.map(path => {
-          this.fileService.getFolderSize(path).subscribe(size => {
-            const nodeFolder = { path, deleted: false, size: +size };
+        paths
+          .filter(path => path)
+          .map(path => {
+            const nodeFolder = { path, deleted: false, size: 0 };
             this.addNodeFolder(nodeFolder);
-            this.printStats();
-            this.printFoldersSection();
 
-            if (this.config.deleteAll) this.deleteFolder(nodeFolder);
+            this.fileService
+              .getFolderSize(nodeFolder.path)
+              .subscribe((size: any) => {
+                nodeFolder.size = +size;
+                this.printStats();
+                this.printFoldersSection();
+              });
+            this.printFoldersSection();
           });
-        });
       },
       error => {
         this.printError(error);
