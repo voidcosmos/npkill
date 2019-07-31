@@ -77,8 +77,8 @@ export class LinuxFilesService {
 }
 const fs = new LinuxFilesService();
 
-/* fs.listDir('/')
-  .pipe(
+fs.listDir('/home/nya')
+  /* .pipe(
     switchMap(value => {
       return of(value).pipe(
         catchError((error: Error) => {
@@ -86,7 +86,7 @@ const fs = new LinuxFilesService();
         }),
       );
     }),
-  )
+  ) */
   .subscribe(
     x => {
       if (x instanceof Error) {
@@ -103,4 +103,3 @@ const fs = new LinuxFilesService();
     x => console.log('ERROR', x, 'ERROR'),
     () => console.log('Bitchez pls, complete'),
   );
- */
