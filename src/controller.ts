@@ -33,6 +33,7 @@ import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
 import { basename } from 'path';
 import { takeUntil } from 'rxjs/operators';
+import { UpdateService } from './services/update.service';
 
 export class Controller {
   private folderRoot: string;
@@ -62,6 +63,7 @@ export class Controller {
     private consoleService: ConsoleService,
     private fileService: FileService,
     private spinnerService: SpinnerService,
+    private updateService: UpdateService,
   ) {
     keypress(process.stdin);
     this.getArguments();
@@ -69,6 +71,7 @@ export class Controller {
 
     this.jobQueue = [this.folderRoot];
     this.prepareScreen();
+    this.checkVersion();
 
     this.assignJob();
   }
@@ -91,6 +94,19 @@ export class Controller {
       this.folderRoot = this.fileService.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
+  }
+
+  private async checkVersion(): Promise<void> {
+    this.updateService
+      .isUpdated(this.getVersion())
+      .then((isUpdated: boolean) => {
+        if (!isUpdated) this.showNewInfoMessage();
+      });
+  }
+
+  private showNewInfoMessage(): void {
+    const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
+    this.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
 
   private showHelp(): void {
@@ -119,12 +135,16 @@ export class Controller {
   }
 
   private showProgramVersion(): void {
+    this.print('v' + this.getVersion());
+  }
+
+  private getVersion(): string {
     const packageJson = __dirname + '/../package.json';
 
     const packageData = JSON.parse(
       this.fileService.getFileContentSync(packageJson),
     );
-    this.print('v' + packageData.version);
+    return packageData.version;
   }
 
   private clear(): void {

@@ -10,6 +10,7 @@ export const INFO_MSGS = {
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
     'enlarge it (This will be fixed in future versions. Disclose the inconveniences)',
+  NEW_UPDATE_FOUND: 'New version found! npm i -g npkill for update.',
   SEARCHING: 'searching ',
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
