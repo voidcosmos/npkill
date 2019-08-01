@@ -3,7 +3,7 @@
     "target": "es2015",
     "module": "commonjs",
     "sourceMap": false,
-    "declaration": true,
+    "declaration": false,
     "rootDir": "./src",
     "outDir": "./lib/",
     "strict": true,
