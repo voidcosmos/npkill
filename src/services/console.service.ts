@@ -1,9 +1,9 @@
+import { ICliOptions } from '../interfaces/cli-options.interface';
 import { OPTIONS } from '../constants/cli.constants';
 import { WIDTH_OVERFLOW } from '../constants/main.constants';
-import { ICliOptions } from '../interfaces/cli-options.interface';
 
 export class ConsoleService {
-  getParameters(rawArgv: string[]): {} {
+  public getParameters(rawArgv: string[]): {} {
     const argvs = rawArgv.slice(2); // The first two arguments represent cli env routes that are not necessary.
     const options: {} = {};
 
@@ -26,7 +26,10 @@ export class ConsoleService {
     }
     return options;
   }
-  splitStringIntoArrayByCharactersWidth(text: string, width: number): string[] {
+  public splitStringIntoArrayByCharactersWidth(
+    text: string,
+    width: number,
+  ): string[] {
     const splitedText = text.split(' ');
 
     // Caotic. Improve in next commits
@@ -46,7 +49,7 @@ export class ConsoleService {
     );
   }
 
-  shortenText(text: string, width: number, startCut = 0): string {
+  public shortenText(text: string, width: number, startCut = 0): string {
     let cutFrom = startCut;
 
     if (text.length < width) return text;
@@ -61,6 +64,10 @@ export class ConsoleService {
     const partB = text.substring(startPartB, text.length);
 
     return partA + WIDTH_OVERFLOW + partB;
+  }
+
+  public splitData(data: string) {
+    return data.split('\n');
   }
 
   private argHaveOption(argv: string): boolean {
