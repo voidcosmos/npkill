@@ -4,8 +4,6 @@ import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
 
 export class LinuxFilesService implements IFileService {
-  public folders: Array<String> = [];
-
   public constructor(private streamService: StreamService) {}
 
   public getFolderSize(path: string): Observable<{}> {
