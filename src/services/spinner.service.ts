@@ -2,17 +2,17 @@ export class SpinnerService {
   private spinner: string[] = [];
   private count = -1;
 
-  setSpinner(spinner: string[]): void {
+  public setSpinner(spinner: string[]): void {
     this.spinner = spinner;
     this.reset();
   }
 
-  nextFrame(): string {
+  public nextFrame(): string {
     this.updateCount();
     return this.spinner[this.count];
   }
 
-  reset(): void {
+  public reset(): void {
     this.count = -1;
   }
 
