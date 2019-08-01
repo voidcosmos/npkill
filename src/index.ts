@@ -6,10 +6,10 @@ import { IFileService } from './interfaces/file.interface';
 import { LinuxFilesService } from './services/linux-files.service';
 import { SpinnerService } from './services/spinner.service';
 import { StreamService } from './services/stream.service';
-import { WINDOWS } from './constants/main.constants';
+import { PLATFORMS } from './constants/main.constants';
 import { WindowsFilesService } from './services/windows-files.service';
 
-const isOSWindows = () => process.platform === WINDOWS;
+const isOSWindows = () => process.platform === PLATFORMS.WINDOWS;
 
 const streamService: StreamService = new StreamService();
 

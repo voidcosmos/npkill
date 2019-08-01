@@ -49,4 +49,6 @@ export const BANNER = `-----                    __   .__.__  .__
 `;
 
 export const STREAM_ENCODING = 'utf8';
-export const WINDOWS = 'win32';
+export const PLATFORMS = {
+  WINDOWS: 'win32',
+};
