@@ -4,9 +4,9 @@ import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
 
 export class LinuxFilesService implements IFileService {
-  public constructor(private streamService: StreamService) {}
+  constructor(private streamService: StreamService) {}
 
-  public getFolderSize(path: string): Observable<{}> {
+  getFolderSize(path: string): Observable<{}> {
     const du = spawn('du', ['-sm', path, '--max-depth', '0']);
     const cut = spawn('cut', ['-f', '1']);
 
@@ -15,7 +15,7 @@ export class LinuxFilesService implements IFileService {
     return this.streamService.getStream(cut);
   }
 
-  public listDir(path: string): Observable<{}> {
+  listDir(path: string): Observable<{}> {
     const child = spawn('find', [
       path,
       '-name',
@@ -27,7 +27,7 @@ export class LinuxFilesService implements IFileService {
     return this.streamService.getStream(child);
   }
 
-  public deleteDir(path: string): void {
+  deleteDir(path: string): void {
     spawn('rm', ['-rf', path]);
   }
 }

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { STREAM_ENCODING } from '../constants/main.constants';
 
 export class StreamService {
-  public streamToObservable(stream: ChildProcessWithoutNullStreams) {
+  streamToObservable(stream: ChildProcessWithoutNullStreams) {
     const { stdout, stderr } = stream;
 
     return new Observable(observer => {
@@ -31,7 +31,7 @@ export class StreamService {
     });
   }
 
-  public getStream(child: ChildProcessWithoutNullStreams): Observable<{}> {
+  getStream(child: ChildProcessWithoutNullStreams): Observable<{}> {
     this.setEncoding(child, STREAM_ENCODING);
     return this.streamToObservable(child);
   }

@@ -8,9 +8,9 @@ import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
 
 export class WindowsFilesService implements IFileService {
-  public constructor(private streamService: StreamService) {}
+  constructor(private streamService: StreamService) {}
 
-  public getFolderSize(path: string): Observable<any> {
+  getFolderSize(path: string): Observable<any> {
     return Observable.create(observer => {
       getSize(path, (err, size) => {
         if (err) {
@@ -22,13 +22,13 @@ export class WindowsFilesService implements IFileService {
     });
   }
 
-  public listDir(path: string): Observable<{}> {
+  listDir(path: string): Observable<{}> {
     const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
     const child = spawn(binPath, [path]);
     return this.streamService.getStream(child);
   }
 
-  public deleteDir(path: string) {
+  deleteDir(path: string) {
     const files = this.getDirectoryFiles(path);
 
     this.removeDirectoryFiles(path, files);
