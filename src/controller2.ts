@@ -6,6 +6,7 @@ import * as keypress from 'keypress';
 import {
   BANNER,
   CURSOR_SIMBOL,
+  DECIMALS_SIZE,
   DEFAULT_CONFIG,
   DEFAULT_SIZE,
   MARGINS,
@@ -15,7 +16,6 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-  DECIMALS_SIZE,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
 import { Observable, Subject, iif, interval, of } from 'rxjs';
@@ -32,6 +32,7 @@ import {
 
 import { ConsoleService } from './services/console.service';
 import { FileService } from './services/files.service';
+import { IFileService } from './interfaces/file.interface';
 import { IFolder } from './interfaces/folder.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
 import { LinuxFilesService } from './services/linux-files.service';
@@ -39,10 +40,6 @@ import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
 import { WindowsFilesService } from './services/windows-files.service';
 import ansiEscapes from 'ansi-escapes';
-
-const fileService = new FileService();
-const consoleService = new ConsoleService();
-const spinnerService = new SpinnerService();
 
 export class Controller {
   private folderRoot: string = '';
@@ -67,7 +64,7 @@ export class Controller {
   };
 
   constructor(
-    private fileService: LinuxFilesService | WindowsFilesService,
+    private fileService: IFileService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
   ) {
@@ -79,7 +76,7 @@ export class Controller {
   }
 
   private getArguments() {
-    const options = consoleService.getParameters(process.argv);
+    const options = this.consoleService.getParameters(process.argv);
     if (options['help']) {
       this.showHelp();
       process.exit();
@@ -88,7 +85,7 @@ export class Controller {
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
-    if (options['full-scan']) this.folderRoot = fileService.getUserHomePath();
+    if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
 
@@ -105,7 +102,7 @@ export class Controller {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
-      const description = consoleService.splitStringIntoArrayByCharactersWidth(
+      const description = this.consoleService.splitStringIntoArrayByCharactersWidth(
         option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
@@ -193,12 +190,14 @@ export class Controller {
   }
 
   private initializeLoadingStatus() {
-    spinnerService.setSpinner(SPINNERS.W10);
+    this.spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.finishSearching$))
       .subscribe(
         () =>
-          this.updateStatus(INFO_MSGS.SEARCHING + spinnerService.nextFrame()),
+          this.updateStatus(
+            INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
+          ),
         error => this.printError(error),
         () => this.updateStatus('search complete'),
       );
@@ -220,7 +219,7 @@ export class Controller {
         folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
       }
 
-      let folderString = consoleService.shortenText(
+      let folderString = this.consoleService.shortenText(
         folderTitle,
         this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
         cutFrom,
@@ -287,7 +286,7 @@ export class Controller {
           return;
         }
 
-        const paths = this.fileService.splitData(data);
+        const paths = this.splitData(data.toString());
         paths
           .filter(path => path)
           .map(path => {
@@ -369,7 +368,7 @@ export class Controller {
 
   private deleteFolder(folder: IFolder) {
     try {
-      fileService.removeDir(folder.path);
+      this.fileService.deleteDir(folder.path);
       folder.deleted = true;
     } catch (error) {
       this.printError(error.message);
@@ -447,5 +446,13 @@ export class Controller {
 
   private addNodeFolder(nodeFolder: IFolder) {
     this.nodeFolders = [...this.nodeFolders, nodeFolder];
+  }
+
+  public splitData(data: string) {
+    return data.split('\n');
+  }
+
+  public getUserHomePath() {
+    return require('os').homedir();
   }
 }

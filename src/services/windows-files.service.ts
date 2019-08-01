@@ -1,82 +1,48 @@
-import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
+import * as fs from 'fs';
 
 import { Observable, of } from 'rxjs';
 
-export class WindowsFilesService {
+import { IFileService } from '../interfaces/file.interface';
+import { StreamService } from './stream.service';
+import { spawn } from 'child_process';
+
+export class WindowsFilesService implements IFileService {
+  public constructor(private streamService: StreamService) {}
+
   public getFolderSize(path: string): Observable<any> {
-    /* const du = spawn('du', ['-sm', path, '--max-depth', '0']);
-    const cut = spawn('cut', ['-f', '1']);
-
-    du.stdout.pipe(cut.stdin);
-    this.setEncoding(cut);
-
-    return this.streamToObservable(cut); */
-    // TODO
-    return of(10);
+    return of();
   }
 
-  public listDir(path: string): Observable<any> {
-    const stream = this.getStream(path);
-    return this.streamToObservable(stream);
-  }
-
-  private getStream(path: string) {
+  public listDir(path: string): Observable<{}> {
     const child = spawn(`${__dirname}/windows-find`, [path]);
-    this.setEncoding(child);
-    return child;
+    return this.streamService.getStream(child);
   }
 
-  public splitData(data: string) {
-    return data.split('\n');
+  public deleteDir(path: string) {
+    const files = this.getDirectoryFiles(path);
+
+    this.removeDirectoryFiles(path, files);
+
+    fs.rmdirSync(path);
   }
 
-  private setEncoding(child: ChildProcessWithoutNullStreams) {
-    child.stdout.setEncoding('utf8');
-    child.stderr.setEncoding('utf8');
+  private convertBToMb(bytes: number): number {
+    const factorBtoMb = 1048576;
+    return bytes / factorBtoMb;
   }
 
-  private streamToObservable(stream: ChildProcessWithoutNullStreams) {
-    const { stdout, stderr } = stream;
+  private getDirectoryFiles(dir: string) {
+    return fs.readdirSync(dir);
+  }
 
-    return new Observable(observer => {
-      const dataHandler = data => observer.next(data);
-      const bashErrorHandler = error => observer.next(new Error(error));
-      const errorHandler = error => observer.error(error);
-      const endHandler = () => observer.complete();
-
-      stdout.addListener('data', dataHandler);
-      stdout.addListener('error', errorHandler);
-      stdout.addListener('end', endHandler);
-
-      stderr.addListener('data', bashErrorHandler);
-      stderr.addListener('error', errorHandler);
-
-      return () => {
-        stdout.removeListener('data', dataHandler);
-        stdout.removeListener('error', errorHandler);
-        stdout.removeListener('end', endHandler);
-
-        stderr.removeListener('data', bashErrorHandler);
-        stderr.removeListener('error', errorHandler);
-      };
+  private removeDirectoryFiles(dir: string, files: string[]): void {
+    files.map(file => {
+      const path = dir + file;
+      if (fs.statSync(path).isDirectory()) {
+        this.deleteDir(path);
+      } else {
+        fs.unlinkSync(path);
+      }
     });
   }
 }
-
-/* const w = new WindowsFilesService();
-w.listDir('/').subscribe(
-  data => {
-    if (data instanceof Error) {
-      console.log('ERROR', data.message);
-    } else {
-      const folders = w.splitData(data);
-      folders.map(folder =>
-        w
-          .getFolderSize(folder)
-          .subscribe(size => console.log('FOLDER', folder, 'SIZE', size)),
-      );
-    }
-  },
-  error => console.log('ERROR', error, 'ERROR'),
-  () => console.log('Bitchez pls, complete'),
-); */
