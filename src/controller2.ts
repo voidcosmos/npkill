@@ -21,6 +21,7 @@ import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { Subject, interval } from 'rxjs';
 
 import { ConsoleService } from './services/console.service';
+import { IConfig } from './interfaces/config.interface';
 import { IFileService } from './interfaces/file.interface';
 import { IFolder } from './interfaces/folder.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
@@ -34,7 +35,7 @@ export class Controller {
   private folderRoot: string = '';
   private stdin: any = process.stdin;
   private stdout: any = process.stdout;
-  private config: any = DEFAULT_CONFIG;
+  private config: IConfig = DEFAULT_CONFIG;
   private nodeFolders: IFolder[] = [];
 
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
@@ -276,7 +277,7 @@ export class Controller {
           return;
         }
 
-        const paths = this.splitData(data.toString());
+        const paths = this.consoleService.splitData(data.toString());
         paths
           .filter(path => path)
           .map(path => {
@@ -438,11 +439,7 @@ export class Controller {
     this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
 
-  public splitData(data: string) {
-    return data.split('\n');
-  }
-
-  public getUserHomePath() {
+  private getUserHomePath() {
     return require('os').homedir();
   }
 }
