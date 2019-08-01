@@ -30,6 +30,6 @@ export class LinuxFilesService implements IFileService {
   }
 
   public deleteDir(path: string): void {
-    const child = spawn('rm', ['-rf', path]);
+    spawn('rm', ['-rf', path]);
   }
 }

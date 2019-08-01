@@ -1,3 +1,4 @@
+import * as PATH from 'path';
 import * as fs from 'fs';
 
 import { Observable, of } from 'rxjs';
@@ -14,7 +15,8 @@ export class WindowsFilesService implements IFileService {
   }
 
   public listDir(path: string): Observable<{}> {
-    const child = spawn(`${__dirname}/windows-find`, [path]);
+    const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
+    const child = spawn(binPath, [path]);
     return this.streamService.getStream(child);
   }
 

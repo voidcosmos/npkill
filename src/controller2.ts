@@ -1,6 +1,5 @@
 import * as colors from 'colors';
 import * as emoji from 'node-emoji';
-import * as fs from 'fs';
 import * as keypress from 'keypress';
 
 import {
