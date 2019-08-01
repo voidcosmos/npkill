@@ -17,28 +17,18 @@ import {
   VALID_KEYS,
 } from './constants/main.constants';
 import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
-import { Observable, Subject, iif, interval, of } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
-import { basename, resolve } from 'path';
-import {
-  catchError,
-  debounceTime,
-  filter,
-  switchMap,
-  takeUntil,
-  tap,
-} from 'rxjs/operators';
+import { Subject, interval } from 'rxjs';
 
 import { ConsoleService } from './services/console.service';
-import { FileService } from './services/files.service';
 import { IFileService } from './interfaces/file.interface';
 import { IFolder } from './interfaces/folder.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
-import { LinuxFilesService } from './services/linux-files.service';
 import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
-import { WindowsFilesService } from './services/windows-files.service';
 import ansiEscapes from 'ansi-escapes';
+import { basename } from 'path';
+import { takeUntil } from 'rxjs/operators';
 
 export class Controller {
   private folderRoot: string = '';
