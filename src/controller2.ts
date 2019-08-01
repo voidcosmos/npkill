@@ -278,19 +278,14 @@ export class Controller {
         }
 
         const paths = this.consoleService.splitData(data.toString());
+
         paths
           .filter(path => path)
           .map(path => {
             const nodeFolder = { path, deleted: false, size: 0 };
             this.addNodeFolder(nodeFolder);
 
-            this.fileService
-              .getFolderSize(nodeFolder.path)
-              .subscribe((size: any) => {
-                nodeFolder.size = +size;
-                this.printStats();
-                this.printFoldersSection();
-              });
+            this.calculateFolderSize(nodeFolder);
             this.printFoldersSection();
           });
       },
@@ -299,6 +294,14 @@ export class Controller {
       },
       () => this.finishSearching$.next(true),
     );
+  }
+
+  private calculateFolderSize(nodeFolder: IFolder) {
+    this.fileService.getFolderSize(nodeFolder.path).subscribe((size: any) => {
+      nodeFolder.size = +size;
+      this.printStats();
+      this.printFoldersSection();
+    });
   }
 
   private isQuitKey(ctrl, name) {
