@@ -434,10 +434,6 @@ export class Controller {
     this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
   }
 
-  private isTargetFolder(folder: string) {
-    return basename(folder) === TARGET_FOLDER;
-  }
-
   private addNodeFolder(nodeFolder: IFolder) {
     this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
