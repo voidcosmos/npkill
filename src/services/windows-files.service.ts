@@ -1,10 +1,9 @@
-import * as getSize from 'get-folder-size';
 import * as PATH from 'path';
 import * as fs from 'fs';
-
-import { Observable, of } from 'rxjs';
+import * as getSize from 'get-folder-size';
 
 import { IFileService } from '../interfaces/file.interface';
+import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
 
