@@ -237,7 +237,8 @@ export class Controller {
       });
 
       //Folder size
-      const folderSizeText = folder.size ? folder.size + 'mb' : '--';
+      const folderSize = this.round(folder.size, DECIMALS_SIZE) + ' mb';
+      const folderSizeText = folder.size ? folderSize : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
         y: folderRow,

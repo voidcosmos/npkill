@@ -1,3 +1,4 @@
+import * as getSize from 'get-folder-size';
 import * as PATH from 'path';
 import * as fs from 'fs';
 
@@ -11,7 +12,15 @@ export class WindowsFilesService implements IFileService {
   public constructor(private streamService: StreamService) {}
 
   public getFolderSize(path: string): Observable<any> {
-    return of();
+    return Observable.create(observer => {
+      getSize(path, (err, size) => {
+        if (err) {
+          throw err;
+        }
+        observer.next(this.convertBToMb(size));
+        observer.complete();
+      });
+    });
   }
 
   public listDir(path: string): Observable<{}> {
