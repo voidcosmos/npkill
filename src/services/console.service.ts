@@ -3,7 +3,7 @@ import { OPTIONS } from '../constants/cli.constants';
 import { WIDTH_OVERFLOW } from '../constants/main.constants';
 
 export class ConsoleService {
-  public getParameters(rawArgv: string[]): {} {
+  getParameters(rawArgv: string[]): {} {
     const argvs = rawArgv.slice(2); // The first two arguments represent cli env routes that are not necessary.
     const options: {} = {};
 
@@ -26,7 +26,7 @@ export class ConsoleService {
     }
     return options;
   }
-  public splitStringIntoArrayByCharactersWidth(
+  splitStringIntoArrayByCharactersWidth(
     text: string,
     width: number,
   ): string[] {
@@ -49,7 +49,7 @@ export class ConsoleService {
     );
   }
 
-  public shortenText(text: string, width: number, startCut = 0): string {
+  shortenText(text: string, width: number, startCut = 0): string {
     let cutFrom = startCut;
 
     if (text.length < width) return text;
@@ -66,7 +66,7 @@ export class ConsoleService {
     return partA + WIDTH_OVERFLOW + partB;
   }
 
-  public splitData(data: string) {
+  splitData(data: string) {
     return data.split('\n');
   }
 
