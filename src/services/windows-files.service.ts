@@ -47,7 +47,7 @@ export class WindowsFilesService implements IFileService {
 
   private removeDirectoryFiles(dir: string, files: string[]): void {
     files.map(file => {
-      const path = dir + file;
+      const path = PATH.join(dir, file);
       if (fs.statSync(path).isDirectory()) {
         this.deleteDir(path);
       } else {
