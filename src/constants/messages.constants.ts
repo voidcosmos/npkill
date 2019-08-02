@@ -10,8 +10,13 @@ export const INFO_MSGS = {
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
     'enlarge it (This will be fixed in future versions. Disclose the inconveniences)',
+  NEW_UPDATE_FOUND: 'New version found! npm i -g npkill for update.',
   SEARCHING: 'searching ',
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
   TOTAL_SPACE: 'releasable space: ',
+};
+
+export const ERROR_MSG = {
+  CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
 };
