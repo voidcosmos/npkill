@@ -1,4 +1,4 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams } from 'child_process';
 
 import { Observable } from 'rxjs';
 import { STREAM_ENCODING } from '../constants/main.constants';
