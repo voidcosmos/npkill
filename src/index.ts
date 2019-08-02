@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { ConsoleService } from './services/console.service';
-import { Controller } from './controller2';
+import { Controller } from './controller';
 import { IFileService } from './interfaces/file.interface';
 import { LinuxFilesService } from './services/linux-files.service';
 import { SpinnerService } from './services/spinner.service';
