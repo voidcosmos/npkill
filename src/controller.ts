@@ -27,7 +27,6 @@ import { IPosition } from './interfaces/ui-positions.interface';
 import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
-import { basename } from 'path';
 import { takeUntil } from 'rxjs/operators';
 
 export class Controller {
