@@ -43,10 +43,13 @@
     "rxjs": "^6.5.2"
   },
   "devDependencies": {
+    "typescript": "^3.4.5",
+    "tslint": "^5.18.0",
+    "ts-node": "^8.3.0",
+    "commitlint": "^8.0.0",
     "@commitlint/config-conventional": "^8.0.0",
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.0",
-    "commitlint": "^8.0.0",
     "husky": "^2.7.0",
     "jest": "^24.8.0",
     "lint-staged": "^8.2.1",
@@ -54,9 +57,7 @@
     "pre-commit": "^1.2.2",
     "prettier": "^1.18.2",
     "remark-lint": "^6.0.5",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
-    "typescript": "^3.4.5"
+    "ts-jest": "^24.0.2"
   },
   "husky": {
     "hooks": {

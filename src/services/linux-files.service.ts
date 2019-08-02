@@ -1,10 +1,13 @@
-import { IFileService } from '../interfaces/file.interface';
+import { IFileService } from '../interfaces/file-service.interface';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
+import { FileService } from './files.service';
 
-export class LinuxFilesService implements IFileService {
-  constructor(private streamService: StreamService) {}
+export class LinuxFilesService extends FileService implements IFileService {
+  constructor(private streamService: StreamService) {
+    super();
+  }
 
   getFolderSize(path: string): Observable<{}> {
     const du = spawn('du', ['-sm', path, '--max-depth', '0']);
