@@ -16,3 +16,7 @@ export const INFO_MSGS = {
   SPACE_RELEASED: 'space saved: ',
   TOTAL_SPACE: 'releasable space: ',
 };
+
+export const ERROR_MSG = {
+  CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
+};

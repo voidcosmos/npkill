@@ -17,7 +17,11 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/main.constants';
-import { HELP_MSGS, INFO_MSGS } from './constants/messages.constants';
+import {
+  HELP_MSGS,
+  INFO_MSGS,
+  ERROR_MSG,
+} from './constants/messages.constants';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { Subject, interval } from 'rxjs';
 
@@ -101,6 +105,11 @@ export class Controller {
       .isUpdated(this.getVersion())
       .then((isUpdated: boolean) => {
         if (!isUpdated) this.showNewInfoMessage();
+      })
+      .catch(err => {
+        const errorMessage =
+          ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
+        this.printError(errorMessage);
       });
   }
 
