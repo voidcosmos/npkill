@@ -91,8 +91,6 @@ export class Controller {
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
-
-    //this.config.deleteAll = !!options['delete-all'];
   }
 
   private checkVersion(): void {
