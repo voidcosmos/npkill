@@ -33,6 +33,7 @@ import { SpinnerService } from './services/spinner.service';
 import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
 import { UpdateService } from './services/update.service';
+import { IKeysCommand } from './interfaces/command-keys.interface';
 
 export class Controller {
   private folderRoot: string = '';
@@ -47,11 +48,12 @@ export class Controller {
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
 
-  private KEYS: { [key: string]: any } = {
+  private KEYS: IKeysCommand = {
     up: this.moveCursorUp.bind(this),
+    // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
     delete: this.delete.bind(this),
-    execute: function(command: string, params: string[]) {
+    execute(command: string, params: string[]) {
       return this[command](params);
     },
   };
@@ -352,7 +354,7 @@ export class Controller {
   }
 
   private isQuitKey(ctrl, name): boolean {
-    return ctrl && name == 'c';
+    return ctrl && name === 'c';
   }
 
   private quit(): void {
@@ -477,8 +479,8 @@ export class Controller {
     return this.cursorPosY - this.scroll;
   }
 
-  private round(number: number, decimals: number = 0): number {
-    const toRound: any = number + 'e' + decimals;
+  private round(numb: number, decimals: number = 0): number {
+    const toRound: any = numb + 'e' + decimals;
     return Number(Math.round(toRound) + 'e-' + decimals);
   }
 

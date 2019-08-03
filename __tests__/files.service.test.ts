@@ -9,7 +9,7 @@ const countDecimals = (numb: number): number => {
   return numb.toString().split('.')[1].length || 0;
 };
 
-describe('File Service', () => {
+xdescribe('File Service', () => {
   let fileService;
   beforeEach(() => {
     fileService = new FileService();
