@@ -1,6 +1,6 @@
+import { ICliOptions } from '../interfaces/cli-options.interface';
 import { OPTIONS } from '../constants/cli.constants';
 import { WIDTH_OVERFLOW } from '../constants/main.constants';
-import { ICliOptions } from '../interfaces/cli-options.interface';
 
 export class ConsoleService {
   getParameters(rawArgv: string[]): {} {
@@ -26,7 +26,10 @@ export class ConsoleService {
     }
     return options;
   }
-  splitStringIntoArrayByCharactersWidth(text: string, width: number): string[] {
+  splitStringIntoArrayByCharactersWidth(
+    text: string,
+    width: number,
+  ): string[] {
     const splitedText = text.split(' ');
 
     // Caotic. Improve in next commits
@@ -61,6 +64,10 @@ export class ConsoleService {
     const partB = text.substring(startPartB, text.length);
 
     return partA + WIDTH_OVERFLOW + partB;
+  }
+
+  splitData(data: string) {
+    return data.split('\n');
   }
 
   private argHaveOption(argv: string): boolean {

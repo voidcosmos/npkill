@@ -48,3 +48,8 @@ export const BANNER = `-----                    __   .__.__  .__
 --        |___|  /   __/|__|_ \\__|____/____/
 -------        \\/|__|        \\/
 `;
+
+export const STREAM_ENCODING = 'utf8';
+export const PLATFORMS = {
+  WINDOWS: 'win32',
+};
