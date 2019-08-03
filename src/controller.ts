@@ -117,7 +117,7 @@ export class Controller {
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
-      this.printAt(option.arg.reduce((string, arg) => string + ', ' + arg), {
+      this.printAt(option.arg.reduce((text, arg) => text + ', ' + arg), {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
@@ -261,14 +261,14 @@ export class Controller {
       // characters and can cause an error in the cli.
       folderString = this.colorDeletedTextGreen(folderString);
 
-      //Folder name
+      // Folder name
       const folderRow = MARGINS.ROW_RESULTS_START + index;
       this.printAt(folderString, {
         x: MARGINS.FOLDER_COLUMN_START,
         y: folderRow,
       });
 
-      //Folder size
+      // Folder size
       const folderSize = this.round(folder.size, DECIMALS_SIZE) + ' mb';
       const folderSizeText = folder.size ? folderSize : '--';
       this.printAt(folderSizeText, {
