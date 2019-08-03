@@ -349,7 +349,7 @@ export class Controller {
     this.fileService
       .getFolderSize(nodeFolder.path)
       .subscribe((size: number) => {
-        nodeFolder.size = +this.round(size, DECIMALS_SIZE);
+        nodeFolder.size = +this.round(+size, DECIMALS_SIZE);
         this.printStats();
         this.printFoldersSection();
       });
