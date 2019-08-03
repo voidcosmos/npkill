@@ -34,11 +34,12 @@ import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
 import { UpdateService } from './services/update.service';
 import { IKeysCommand } from './interfaces/command-keys.interface';
+import { IStats } from './interfaces/stats.interface';
 
 export class Controller {
-  private folderRoot: string = '';
-  private stdin: any = process.stdin;
-  private stdout: any = process.stdout;
+  private folderRoot = '';
+  private stdin: NodeJS.ReadStream = process.stdin;
+  private stdout: NodeJS.WriteStream = process.stdout;
   private config: IConfig = DEFAULT_CONFIG;
   private nodeFolders: IFolder[] = [];
 
@@ -213,7 +214,7 @@ export class Controller {
     this.initializeLoadingStatus();
   }
 
-  private printAt(message: any, position: IPosition): void {
+  private printAt(message: string, position: IPosition): void {
     this.setCursorAt(position);
     this.print(message);
   }
@@ -232,7 +233,6 @@ export class Controller {
             INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
           ),
         error => this.printError(error),
-        () => this.updateStatus('search complete'),
       );
   }
 
@@ -320,37 +320,44 @@ export class Controller {
   private scan(): void {
     const folders$ = this.fileService.listDir(this.folderRoot);
     folders$.subscribe(
-      data => {
-        if (data instanceof Error) {
-          this.printError(data.message);
-          return;
-        }
-
-        const paths = this.consoleService.splitData(data.toString());
-
-        paths
-          .filter(path => path)
-          .map(path => {
-            const nodeFolder = { path, deleted: false, size: 0 };
-            this.addNodeFolder(nodeFolder);
-
-            this.calculateFolderSize(nodeFolder);
-            this.printFoldersSection();
-          });
-      },
+      this.newFolderfound.bind(this),
       error => {
         this.printError(error);
       },
-      () => this.finishSearching$.next(true),
+      this.completeSearch.bind(this),
     );
   }
 
+  private newFolderfound(dataFolder): void {
+    if (dataFolder instanceof Error) {
+      this.printError(dataFolder.message);
+      return;
+    }
+    const paths = this.consoleService.splitData(dataFolder.toString());
+    paths
+      .filter(path => path)
+      .map(path => {
+        const nodeFolder = { path, deleted: false, size: 0 };
+        this.addNodeFolder(nodeFolder);
+
+        this.calculateFolderSize(nodeFolder);
+        this.printFoldersSection();
+      });
+  }
+
   private calculateFolderSize(nodeFolder: IFolder): void {
-    this.fileService.getFolderSize(nodeFolder.path).subscribe((size: any) => {
-      nodeFolder.size = +this.round(size, DECIMALS_SIZE);
-      this.printStats();
-      this.printFoldersSection();
-    });
+    this.fileService
+      .getFolderSize(nodeFolder.path)
+      .subscribe((size: number) => {
+        nodeFolder.size = +this.round(size, DECIMALS_SIZE);
+        this.printStats();
+        this.printFoldersSection();
+      });
+  }
+
+  private completeSearch(): void {
+    this.finishSearching$.next(true);
+    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
   }
 
   private isQuitKey(ctrl, name): boolean {
@@ -432,7 +439,7 @@ export class Controller {
   }
 
   private printStats(): void {
-    const stats: any = this.getStats();
+    const stats: IStats = this.getStats();
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
     const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
@@ -445,8 +452,8 @@ export class Controller {
     this.printAt(spaceReleased, spaceReleasedPosition);
   }
 
-  private getStats(): Object {
-    let spaceReleased: any = 0;
+  private getStats(): IStats {
+    let spaceReleased = 0;
 
     const totalSpace = this.nodeFolders.reduce((total, folder) => {
       if (folder.deleted) spaceReleased += folder.size;
@@ -480,7 +487,7 @@ export class Controller {
   }
 
   private round(numb: number, decimals: number = 0): number {
-    const toRound: any = numb + 'e' + decimals;
+    const toRound = +(numb + 'e' + decimals);
     return Number(Math.round(toRound) + 'e-' + decimals);
   }
 

@@ -13,7 +13,7 @@ export class WindowsFilesService extends FileService implements IFileService {
     super();
   }
 
-  getFolderSize(path: string): Observable<any> {
+  getFolderSize(path: string): Observable<number> {
     return Observable.create(observer => {
       getSize(path, (err, size) => {
         if (err) {
