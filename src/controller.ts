@@ -95,7 +95,7 @@ export class Controller {
     //this.config.deleteAll = !!options['delete-all'];
   }
 
-  private async checkVersion(): Promise<void> {
+  private checkVersion(): void {
     this.updateService
       .isUpdated(this.getVersion())
       .then((isUpdated: boolean) => {
