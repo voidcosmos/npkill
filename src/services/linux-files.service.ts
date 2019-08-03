@@ -1,10 +1,9 @@
-import { IFileService } from '../interfaces/file-service.interface';
+import { FileService } from './files.service';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
-import { FileService } from './files.service';
 
-export class LinuxFilesService extends FileService implements IFileService {
+export class LinuxFilesService extends FileService {
   constructor(private streamService: StreamService) {
     super();
   }

@@ -16,25 +16,25 @@ import {
   VALID_KEYS,
 } from './constants/main.constants';
 import {
+  ERROR_MSG,
   HELP_MSGS,
   INFO_MSGS,
-  ERROR_MSG,
 } from './constants/messages.constants';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { Subject, interval } from 'rxjs';
 
 import { ConsoleService } from './services/console.service';
+import { FileService } from './services/files.service';
 import { IConfig } from './interfaces/config.interface';
-import { IFileService } from './interfaces/file-service.interface';
 import { IFolder } from './interfaces/folder.interface';
+import { IKeysCommand } from './interfaces/command-keys.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
+import { IStats } from './interfaces/stats.interface';
 import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
+import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
-import { UpdateService } from './services/update.service';
-import { IKeysCommand } from './interfaces/command-keys.interface';
-import { IStats } from './interfaces/stats.interface';
 
 export class Controller {
   private folderRoot = '';
@@ -60,7 +60,7 @@ export class Controller {
   };
 
   constructor(
-    private fileService: IFileService,
+    private fileService: FileService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
     private updateService: UpdateService,

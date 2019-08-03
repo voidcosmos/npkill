@@ -2,13 +2,12 @@ import * as PATH from 'path';
 import * as fs from 'fs';
 import * as getSize from 'get-folder-size';
 
-import { IFileService } from '../interfaces/file-service.interface';
+import { FileService } from './files.service';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
-import { FileService } from './files.service';
 
-export class WindowsFilesService extends FileService implements IFileService {
+export class WindowsFilesService extends FileService {
   constructor(private streamService: StreamService) {
     super();
   }

@@ -1,12 +1,11 @@
 import * as fs from 'fs';
-import * as getSize from 'get-folder-size';
 
-import { homedir } from 'os';
-import { resolve } from 'path';
-import { Observable } from 'rxjs';
-import { DECIMALS_SIZE } from '../constants/main.constants';
+import { IFileService } from '../interfaces/file-service.interface';
 
-export class FileService {
+export abstract class FileService implements IFileService {
+  abstract getFolderSize(path: string): import('rxjs').Observable<any>;
+  abstract listDir(path: string): import('rxjs').Observable<{}>;
+  abstract deleteDir(path: string): void;
   getFileContent(path: string): string {
     const encoding = 'utf8';
     return fs.readFileSync(path, encoding);
