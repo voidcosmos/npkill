@@ -66,7 +66,7 @@ To exit, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
 - Search **node_modules** directories in your _projects_ directory:
 
 ```bash
-npkill -r ~/projects
+npkill -d ~/projects
 
 # other alternative:
 cd ~/projects
@@ -76,7 +76,7 @@ npkill
 - Automatically delete all **node_modules** that have sneaked into your backups:
 
 ```bash
-npkill -r ~/backups/ --delete-all
+npkill -d ~/backups/ --delete-all
 ```
 
 # Roadmap
