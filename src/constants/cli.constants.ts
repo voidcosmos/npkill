@@ -14,7 +14,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-d', '--directory'],
     description:
-      'Set directory from which to start searching. By default, starting-point is . ',
+      'Set directory from which to start searching. By default, starting-point is .',
     name: 'directory',
   },
   {
