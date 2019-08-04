@@ -14,7 +14,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-d', '--directory'],
     description:
-      'Set directory from which to start searching. By default, starting-point is . ',
+      'Set directory from which to start searching. By default, starting-point is .',
     name: 'directory',
   },
   {
@@ -32,7 +32,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-e', '--show-errors'],
     description:
-      'It shows a brief error message in the lower part in case one occurred.',
+      'Show error messages if any.',
     name: 'show-errors',
   },
 ];

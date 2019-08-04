@@ -32,6 +32,7 @@ export const UI_HELP = {
 export const UI_POSITIONS: IUiPosition = {
   FOLDER_SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
   INITIAL: { x: 0, y: 0 },
+  NEW_UPDATE_FOUND: { x: 42, y: 0 },
   SPACE_RELEASED: { x: 50, y: 4 },
   STATUS: { x: 50, y: 5 },
   TOTAL_SPACE: { x: 50, y: 3 },
@@ -47,3 +48,8 @@ export const BANNER = `-----                    __   .__.__  .__
 --        |___|  /   __/|__|_ \\__|____/____/
 -------        \\/|__|        \\/
 `;
+
+export const STREAM_ENCODING = 'utf8';
+export const PLATFORMS = {
+  WINDOWS: 'win32',
+};

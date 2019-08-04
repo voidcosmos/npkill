@@ -4,7 +4,7 @@
   "jsRules": {},
   "rules": {
     "quotemark": [true, "single"],
-    "member-access": false,
+    "member-access": [true, "no-public"],
     "arrow-parens": false,
     "no-shadowed-variable": false,
     "no-string-literal": false,

@@ -43,7 +43,7 @@ describe('Console Service', () => {
     });*/
   });
 
-  describe('#splitStringIntoArrayByCharactersWidth', () => {
+  describe('#splitWordsByWidth', () => {
     it('should get array with text according to width', () => {
       const cases = [
         {
@@ -66,12 +66,9 @@ describe('Console Service', () => {
       ];
 
       cases.forEach(cas => {
-        expect(
-          consoleService.splitStringIntoArrayByCharactersWidth(
-            cas.text,
-            cas.width,
-          ),
-        ).toEqual(cas.expect);
+        expect(consoleService.splitWordsByWidth(cas.text, cas.width)).toEqual(
+          cas.expect,
+        );
       });
     });
   });
