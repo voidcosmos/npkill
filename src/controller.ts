@@ -121,7 +121,7 @@ export class Controller {
         x: UI_HELP.X_COMMAND_OFFSET,
         y: index + UI_HELP.Y_OFFSET + lineCount,
       });
-      const description = this.consoleService.splitStringIntoArrayByCharactersWidth(
+      const description = this.consoleService.splitWordsByWidth(
         option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
