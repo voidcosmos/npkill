@@ -328,7 +328,7 @@ export class Controller {
 
   private newFolderfound(dataFolder): void {
     if (dataFolder instanceof Error) {
-      this.printError(dataFolder.message);
+      this.printFolderError(dataFolder.message);
       return;
     }
     const paths = this.consoleService.splitData(dataFolder.toString());
@@ -341,6 +341,11 @@ export class Controller {
         this.calculateFolderSize(nodeFolder);
         this.printFoldersSection();
       });
+  }
+
+  private printFolderError(err: string) {
+    const messages = this.consoleService.splitData(err);
+    messages.map(msg => this.printError(msg));
   }
 
   private calculateFolderSize(nodeFolder: IFolder): void {
@@ -430,10 +435,21 @@ export class Controller {
   private printError(error: string): void {
     if (!this.config.showErrors) return;
 
-    this.printAt(colors.red(error), {
-      x: 3,
+    const errorText = this.prepareErrorMsg(error);
+
+    this.printAt(colors.red(errorText), {
+      x: 0,
       y: this.stdout.rows,
     });
+  }
+
+  private prepareErrorMsg(errMessage: string): string {
+    const margin = MARGINS.FOLDER_COLUMN_START;
+    return this.consoleService.shortenText(
+      errMessage,
+      this.stdout.columns - margin,
+      this.stdout.columns - margin,
+    );
   }
 
   private printStats(): void {
