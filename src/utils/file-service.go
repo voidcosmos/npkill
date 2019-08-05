@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 )
+
+var wg sync.WaitGroup
 
 func listDir(searchStart string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(searchStart)
@@ -13,9 +16,10 @@ func listDir(searchStart string) ([]os.FileInfo, error) {
 	}
 
 	for _, file := range files {
-		scanFile(searchStart, file)
+		go scanFile(searchStart, file)
 	}
 
+	wg.Done()
 	return files, nil
 }
 
@@ -30,7 +34,8 @@ func newDirFound(path string, dir os.FileInfo) {
 	if isNodeFolder(dirName) {
 		fmt.Println(path + "/" + dirName)
 	} else {
-		listDir(path + "/" + dirName)
+		wg.Add(1)
+		go listDir(path + "/" + dirName)
 	}
 }
 
@@ -39,5 +44,7 @@ func isNodeFolder(name string) bool {
 }
 
 func main() {
-	listDir(os.Args[1])
+	wg.Add(1)
+	go listDir(os.Args[1])
+	wg.Wait()
 }
