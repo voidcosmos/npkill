@@ -16,7 +16,7 @@ func listDir(searchStart string) ([]os.FileInfo, error) {
 	}
 
 	for _, file := range files {
-		go scanFile(searchStart, file)
+		scanFile(searchStart, file)
 	}
 
 	wg.Done()
