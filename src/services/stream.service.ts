@@ -1,7 +1,6 @@
 import { ChildProcessWithoutNullStreams } from 'child_process';
-
 import { Observable } from 'rxjs';
-import { STREAM_ENCODING } from '../constants/main.constants';
+import { STREAM_ENCODING } from '@constants/main.constants';
 
 export class StreamService {
   streamToObservable(stream: ChildProcessWithoutNullStreams) {

@@ -9,7 +9,13 @@
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": "./",
+    "paths": {
+      "@services/*": ["src/services/*"],
+      "@constants/*": ["src/constants/*"],
+      "@interfaces/*": ["src/interfaces/*"]
+    }
   },
   "include": ["src"]
 }

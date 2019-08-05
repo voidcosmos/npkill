@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
-import { ConsoleService } from './services/console.service';
+import {
+  ConsoleService,
+  HttpsService,
+  LinuxFilesService,
+  SpinnerService,
+  StreamService,
+  UpdateService,
+  WindowsFilesService,
+} from '@services/index';
+
 import { Controller } from './controller';
-import { HttpsService } from './services/https.service';
-import { IFileService } from './interfaces/file-service.interface';
-import { LinuxFilesService } from './services/linux-files.service';
-import { PLATFORMS } from './constants/main.constants';
-import { SpinnerService } from './services/spinner.service';
-import { StreamService } from './services/stream.service';
-import { UpdateService } from './services/update.service';
-import { WindowsFilesService } from './services/windows-files.service';
+import { IFileService } from '@interfaces/file-service.interface';
+import { PLATFORMS } from '@constants/main.constants';
 
 const isOSWindows = () => process.platform === PLATFORMS.WINDOWS;
 

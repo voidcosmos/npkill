@@ -14,25 +14,25 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-} from './constants/main.constants';
+} from '@constants/main.constants';
 import {
-  ERROR_MSG,
-  HELP_MSGS,
-  INFO_MSGS,
-} from './constants/messages.constants';
-import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
+  ConsoleService,
+  FileService,
+  SpinnerService,
+  UpdateService,
+} from '@services/index';
+import { ERROR_MSG, HELP_MSGS, INFO_MSGS } from '@constants/messages.constants';
+import {
+  IConfig,
+  IFolder,
+  IKeysCommand,
+  IPosition,
+  IStats,
+} from '@interfaces/index';
+import { SPINNERS, SPINNER_INTERVAL } from '@constants/spinner.constants';
 import { Subject, interval } from 'rxjs';
 
-import { ConsoleService } from './services/console.service';
-import { FileService } from './services/files.service';
-import { IConfig } from './interfaces/config.interface';
-import { IFolder } from './interfaces/folder.interface';
-import { IKeysCommand } from './interfaces/command-keys.interface';
-import { IPosition } from './interfaces/ui-positions.interface';
-import { IStats } from './interfaces/stats.interface';
-import { OPTIONS } from './constants/cli.constants';
-import { SpinnerService } from './services/spinner.service';
-import { UpdateService } from './services/update.service';
+import { OPTIONS } from '@constants/cli.constants';
 import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
 

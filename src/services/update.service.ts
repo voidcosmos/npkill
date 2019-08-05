@@ -1,9 +1,10 @@
-import { HttpsService } from './https.service';
 import {
   VERSION_CHECK_DIRECTION,
   VERSION_KEY,
-} from '../constants/update.constants';
-import { IVersion } from '../interfaces/version.interface';
+} from '@constants/update.constants';
+
+import { HttpsService } from './https.service';
+import { IVersion } from '@interfaces/version.interface';
 
 export class UpdateService {
   constructor(private httpsService: HttpsService) {}

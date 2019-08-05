@@ -1,5 +1,4 @@
-import { IConfig } from '../interfaces/config.interface';
-import { IUiPosition } from '../interfaces/ui-positions.interface';
+import { IConfig, IUiPosition } from '@interfaces/index';
 
 export const TARGET_FOLDER = 'node_modules';
 // export const ROW_SEARCHING_FOLDER = 7;

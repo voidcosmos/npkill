@@ -1,4 +1,4 @@
-import { ICliOptions } from '../interfaces/cli-options.interface';
+import { ICliOptions } from '@interfaces/cli-options.interface';
 
 export const OPTIONS: ICliOptions[] = [
   {
@@ -31,8 +31,7 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-e', '--show-errors'],
-    description:
-      'Show error messages if any.',
+    description: 'Show error messages if any.',
     name: 'show-errors',
   },
 ];

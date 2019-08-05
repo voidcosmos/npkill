@@ -2,6 +2,11 @@
   "transform": {
     "^.+\\.(t|j)sx?$": "ts-jest"
   },
+  "moduleNameMapper": {
+    "^@services/(.*)$": "<rootDir>/src/services/$1",
+    "^@interfaces/(.*)$": "<rootDir>/src/interfaces/$1",
+    "^@constants/(.*)$": "<rootDir>/src/constants/$1"
+  },
   "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
 }
