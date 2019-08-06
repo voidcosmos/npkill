@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://zaldih.tk/npkill/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
-  <img src="https://zaldih.tk/npkill/img/npkill-scope-mono.svg" width="50" alt="npkill logo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
@@ -13,7 +13,7 @@
 ### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
 
 <p align="center">
-  <img src="https://zaldih.tk/npkill/img/npkill-alpha-demo.gif" alt="npkill demo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-demo-0.2.0.gif" alt="npkill demo gif" />
 </p>
 
 This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
@@ -77,7 +77,7 @@ To exit, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
 - Search **node_modules** directories in your _projects_ directory:
 
 ```bash
-npkill -r ~/projects
+npkill -d ~/projects
 
 # other alternative:
 cd ~/projects
@@ -87,7 +87,7 @@ npkill
 - Automatically delete all **node_modules** that have sneaked into your backups:
 
 ```bash
-npkill -r ~/backups/ --delete-all
+npkill -d ~/backups/ --delete-all
 ```
 
 # Roadmap
