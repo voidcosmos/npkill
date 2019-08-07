@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://zaldih.tk/npkill/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
-  <img src="https://zaldih.tk/npkill/img/npkill-scope-mono.svg" width="50" alt="npkill logo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
@@ -13,13 +13,14 @@
 ### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
 
 <p align="center">
-  <img src="https://zaldih.tk/npkill/img/npkill-alpha-demo.gif" alt="npkill demo" />
+  <img src="https://zaldih.tk/npkill/img/npkill-demo-0.2.0.gif" alt="npkill demo gif" />
 </p>
 
 This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
 
 ## Table of Contents
 
+- [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Options](#options)
@@ -27,6 +28,16 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Roadmap](#roadmap)
 - [Known-bugs](#known-bugs)
 - [Contributing](#contributing)
+
+# Features
+
+- **Clear space:** Get rid of old and dusty node_modules cluttering up your machine.
+
+- **Very fast:** NPKILL is written in TypeScript, but the core of searches are performed at a low level to scan, for example, the system root in seconds.
+
+- **Easy to use:** Say goodbye to lengthy commands. Using npkill is as simple as reading a list of your node_modules, and pressing Del to get rid of them. Could it be any easier? ;)
+
+- **Minified:** It barely has dependencies.
 
 # Installation
 
@@ -82,19 +93,25 @@ npkill -d ~/backups/ --delete-all
 # Roadmap
 
 - [x] Release 0.1.0 !
-- [ ] Improve code
-  - [ ] Improve performance
+- [x] Improve code
+  - [x] Improve performance
+  - [ ] Improve performance even more!
 - [ ] Reduce dependencies to be a more minimalist module
 - [ ] Allow the search for other types of directories (targets)
 - [ ] Allow to filter by directories that have not been used in a period of time
+- [ ] Create option for displaying directories in tree format
+- [ ] Add some menus
 - [ ] Periodic and automatic cleaning (?)
 
 # Known-bugs
 
-- Performance issues when searching from high level directories (like / in linux).
-- Sometimes text collapses when updating the cli.
+- Sometimes, CLI is blocked while folder is deleting.
+- (SOLVED) Performance issues when searching from high level directories (like / in linux).
+- (SOLVED) Sometimes text collapses when updating the cli.
 - (SOLVED) Analyzing the size of the directories takes longer than it should.
 - (SOLVED) State "searching..." does not change even if search has been completed
+
+> If you find any bugs, don't hesitate and open an issue :)
 
 # Contributing
 
