@@ -1,0 +1,55 @@
+.window {
+  position: relative;
+  text-align: left;
+}
+
+.window:before {
+  height: 1.4em;
+  width: 100%;
+  background: #1f1f1f url('../img/window-btn.svg') no-repeat 0.3em 0.3em;
+  border-radius: 6px 6px 0 0;
+  content: '';
+  display: block;
+}
+.window.light:before {
+  background: #dbd9db url('../img/window-btn.svg') no-repeat 0.3em 0.3em;
+}
+
+.window pre {
+  padding: 0;
+}
+
+.window code {
+  height: 9em;
+  background-color: #3d3d3d;
+  color: white;
+  font-family: 'Consolas', 'monaco', monospace;
+  margin: 0;
+  padding: 1em;
+  display: block;
+  border-radius: 0 0 6px 6px;
+  overflow: auto;
+}
+
+.window.no-height code {
+  height: inherit;
+}
+
+.window code span {
+  color: white;
+  font-weight: 500;
+  margin: 0;
+  display: inline-block;
+}
+
+.window.light code span {
+  color: #1f1f1f;
+}
+
+.window .prompt-sign {
+  color: #cf9b00;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+}

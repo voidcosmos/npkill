@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="58px" height="14px" viewBox="0 0 58 14" version="1.1" 
+  xmlns="http://www.w3.org/2000/svg" 
+  xmlns:xlink="http://www.w3.org/1999/xlink" 
+  xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+  <title>colorful objects</title>
+  <g id="Middleman-v4---Landingv2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+    <g id="Draft-v2" sketch:type="MSArtboardGroup" transform="translate(-221.000000, -510.000000)">
+      <g id="Section---Hero" sketch:type="MSLayerGroup" transform="translate(-1.000000, 0.000000)">
+        <g id="Banner-Terminal" transform="translate(210.000000, 500.000000)" sketch:type="MSShapeGroup">
+          <g id="colorful-objects" transform="translate(13.000000, 10.000000)">
+            <ellipse id="object-2" fill="#D16868" cx="6.60457552" cy="6.93335974" rx="6.96456739" ry="6.8450857"></ellipse>
+            <path d="M27.9625822,13.7784454 C31.8090066,13.7784454 34.9271496,10.7137962 34.9271496,6.93335974 C34.9271496,3.1529233 31.8090066,0.0882740448 27.9625822,0.0882740448 C24.1161578,0.0882740448 20.9980148,3.1529233 20.9980148,6.93335974 C20.9980148,10.7137962 24.1161578,13.7784454 27.9625822,13.7784454 Z" id="object-2" fill="#D4C637"></path>
+            <ellipse id="object-2" fill="#5AB541" cx="49.3205889" cy="6.93335974" rx="6.96456739" ry="6.8450857"></ellipse>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

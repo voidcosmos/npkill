@@ -1,0 +1,26 @@
+.devs img {
+  border-radius: 13px;
+}
+
+.notification pre code {
+  background: #3d3d3d;
+}
+.notification .light pre code {
+  background: #f2f2f2;
+}
+.hero.is-primary.is-bold {
+  background-image: linear-gradient(141deg, #a44d6d 0, #ff3860 71%, #fe9194 100%);
+  /* background-image: linear-gradient(141deg, #0b8286 0%, #188eac 71%, #1686c8 100%); */
+}
+
+footer .npkill-title {
+  opacity: 0.7;
+  transition: 0.3s;
+}
+footer .npkill-title:hover {
+  opacity: 1;
+}
+
+.social-links .social-icon {
+  margin-right: 10px;
+}
