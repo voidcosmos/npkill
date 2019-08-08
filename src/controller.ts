@@ -318,11 +318,9 @@ export class Controller {
   private scan(): void {
     const folders$ = this.fileService.listDir(this.folderRoot);
     folders$.subscribe(
-      this.newFolderfound.bind(this),
-      error => {
-        this.printError(error);
-      },
-      this.completeSearch.bind(this),
+      folder => this.newFolderfound(folder),
+      error => this.printError(error),
+      () => this.completeSearch(),
     );
   }
 
@@ -344,6 +342,8 @@ export class Controller {
   }
 
   private printFolderError(err: string) {
+    if (!this.config.showErrors) return;
+
     const messages = this.consoleService.splitData(err);
     messages.map(msg => this.printError(msg));
   }
@@ -364,7 +364,7 @@ export class Controller {
   }
 
   private isQuitKey(ctrl, name): boolean {
-    return ctrl && name === 'c';
+    return (ctrl && name === 'c') || name === 'q';
   }
 
   private quit(): void {
@@ -433,8 +433,6 @@ export class Controller {
   }
 
   private printError(error: string): void {
-    if (!this.config.showErrors) return;
-
     const errorText = this.prepareErrorMsg(error);
 
     this.printAt(colors.red(errorText), {
