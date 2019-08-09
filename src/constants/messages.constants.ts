@@ -1,6 +1,6 @@
 export const HELP_MSGS = {
   BASIC_USAGE:
-    '> select with  :arrow_up:CURSORS:arrow_down: and press DEL key to delete :warning: <',
+    '> select with  :arrow_up:CURSORS:arrow_down: and press SPACE key to delete :warning: <',
 };
 
 export const INFO_MSGS = {
