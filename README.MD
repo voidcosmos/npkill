@@ -33,11 +33,11 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 - **Clear space:** Get rid of old and dusty node_modules cluttering up your machine.
 
-- **Very fast:** NPKILL is written in TypeScript, but the core of searches are performed at a low level to scan, for example, the system root in seconds.
+- **Very fast:** NPKILL is written in TypeScript, but searches are performed at a low level, improving performance greatly.
 
 - **Easy to use:** Say goodbye to lengthy commands. Using npkill is as simple as reading a list of your node_modules, and pressing Del to get rid of them. Could it be any easier? ;)
 
-- **Minified:** It barely has dependencies.
+- **Minified:** It barely has any dependencies.
 
 # Installation
 
