@@ -424,13 +424,15 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
-    const suscription$ = this.fileService.deleteDir(folder.path).subscribe(
+    let someErrorOcurred = false;
+    this.fileService.deleteDir(folder.path).subscribe(
       data => {
+        someErrorOcurred = true;
         this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
-        suscription$.unsubscribe();
       },
       err => this.printError(err.message),
       () => {
+        if (someErrorOcurred) return;
         folder.deleted = true;
         this.printStats();
         this.printFoldersSection();
