@@ -424,20 +424,25 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
-    let someErrorOcurred = false;
-    this.fileService.deleteDir(folder.path).subscribe(
+    /*  this.fileService.deleteDir(folder.path).subscribe(
       data => {
-        someErrorOcurred = true;
         this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
       },
       err => this.printError(err.message),
       () => {
-        if (someErrorOcurred) return;
         folder.deleted = true;
         this.printStats();
         this.printFoldersSection();
       },
-    );
+    ); */
+    this.fileService
+      .deleteDir(folder.path)
+      .then(response => {
+        folder.deleted = true;
+        this.printStats();
+        this.printFoldersSection();
+      })
+      .catch(error => this.printError(ERROR_MSG.CANT_DELETE_FOLDER));
   }
 
   private printError(error: string): void {
