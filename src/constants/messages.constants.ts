@@ -18,5 +18,7 @@ export const INFO_MSGS = {
 };
 
 export const ERROR_MSG = {
+  CANT_DELETE_FOLDER:
+    'The directory cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
 };

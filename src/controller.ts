@@ -419,17 +419,21 @@ export class Controller {
     ];
 
     this.deleteFolder(nodeFolder);
-    this.printStats();
-    this.printFoldersSection();
   }
 
   private deleteFolder(folder: IFolder): void {
-    try {
-      this.fileService.deleteDir(folder.path);
-      folder.deleted = true;
-    } catch (error) {
-      this.printError(error.message);
-    }
+    const suscription$ = this.fileService.deleteDir(folder.path).subscribe(
+      data => {
+        this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
+        suscription$.unsubscribe();
+      },
+      err => this.printError(err.message),
+      () => {
+        folder.deleted = true;
+        this.printStats();
+        this.printFoldersSection();
+      },
+    );
   }
 
   private printError(error: string): void {

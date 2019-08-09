@@ -29,7 +29,8 @@ export class LinuxFilesService extends FileService {
     return this.streamService.getStream(child);
   }
 
-  deleteDir(path: string): void {
-    spawn('rm', ['-rf', path]);
+  deleteDir(path: string): Observable<{}> {
+    const child = spawn('rm', ['-rf', path]);
+    return this.streamService.getStream(child);
   }
 }
