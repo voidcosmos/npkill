@@ -54,6 +54,8 @@ export class Controller {
     // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
     delete: this.delete.bind(this),
+    backspace: this.delete.bind(this),
+
     execute(command: string, params: string[]) {
       return this[command](params);
     },

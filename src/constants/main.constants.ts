@@ -39,7 +39,7 @@ export const UI_POSITIONS: IUiPosition = {
   TUTORIAL_TIP: { x: 4, y: 7 },
 };
 
-export const VALID_KEYS: string[] = ['up', 'down', 'delete', 'c'];
+export const VALID_KEYS: string[] = ['up', 'down', 'delete', 'backspace', 'c'];
 
 export const BANNER = `-----                    __   .__.__  .__
 -           ____ ______ |  | _|__|  | |  |
