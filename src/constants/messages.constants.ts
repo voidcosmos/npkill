@@ -1,6 +1,6 @@
 export const HELP_MSGS = {
   BASIC_USAGE:
-    '> select with  :arrow_up:CURSORS:arrow_down: and press DEL key to delete :warning: <',
+    '> select with  :arrow_up:CURSORS:arrow_down: and press SPACE key to delete :warning: <',
 };
 
 export const INFO_MSGS = {
@@ -18,5 +18,7 @@ export const INFO_MSGS = {
 };
 
 export const ERROR_MSG = {
+  CANT_DELETE_FOLDER:
+    'The directory cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
 };

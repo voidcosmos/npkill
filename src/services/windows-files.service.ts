@@ -30,12 +30,18 @@ export class WindowsFilesService extends FileService {
     return this.streamService.getStream(child);
   }
 
-  deleteDir(path: string) {
-    const files = this.getDirectoryFiles(path);
+  deleteDir(path: string): Promise<{}> {
+    return new Promise((resolve, reject) => {
+      const files = this.getDirectoryFiles(path);
 
-    this.removeDirectoryFiles(path, files);
-
-    fs.rmdirSync(path);
+      this.removeDirectoryFiles(path, files);
+      try {
+        fs.rmdirSync(path);
+      } catch (err) {
+        return reject(err);
+      }
+      resolve();
+    });
   }
 
   private convertBToMb(bytes: number): number {

@@ -53,7 +53,8 @@ export class Controller {
     up: this.moveCursorUp.bind(this),
     // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
-    delete: this.delete.bind(this),
+    space: this.delete.bind(this),
+
     execute(command: string, params: string[]) {
       return this[command](params);
     },
@@ -417,19 +418,19 @@ export class Controller {
     const nodeFolder = this.nodeFolders[
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
-
+    this.clearErrors();
     this.deleteFolder(nodeFolder);
-    this.printStats();
-    this.printFoldersSection();
   }
 
   private deleteFolder(folder: IFolder): void {
-    try {
-      this.fileService.deleteDir(folder.path);
-      folder.deleted = true;
-    } catch (error) {
-      this.printError(error.message);
-    }
+    this.fileService
+      .deleteDir(folder.path)
+      .then(response => {
+        folder.deleted = true;
+        this.printStats();
+        this.printFoldersSection();
+      })
+      .catch(error => this.printError(ERROR_MSG.CANT_DELETE_FOLDER));
   }
 
   private printError(error: string): void {
@@ -501,6 +502,11 @@ export class Controller {
   private round(numb: number, decimals: number = 0): number {
     const toRound = +(numb + 'e' + decimals);
     return Number(Math.round(toRound) + 'e-' + decimals);
+  }
+
+  private clearErrors(): void {
+    const lineOfErrors = this.stdout.rows;
+    this.clearLine(lineOfErrors);
   }
 
   private clearLine(row: number): void {

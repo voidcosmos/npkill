@@ -1,7 +1,8 @@
+import { exec, spawn } from 'child_process';
+
 import { FileService } from './files.service';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
-import { spawn } from 'child_process';
 
 export class LinuxFilesService extends FileService {
   constructor(private streamService: StreamService) {
@@ -29,7 +30,23 @@ export class LinuxFilesService extends FileService {
     return this.streamService.getStream(child);
   }
 
-  deleteDir(path: string): void {
-    spawn('rm', ['-rf', path]);
+  /* deleteDir(path: string): Observable<{}> {
+    const child = spawn('rm', ['-rf', path]);
+    return this.streamService.getStream(child);
+  } */
+
+  deleteDir(path: string): Promise<{}> {
+    return new Promise((resolve, reject) => {
+      exec('rm -rf ' + path, (error, stdout, stderr) => {
+        if (error) return reject(error);
+        if (stderr) return reject(stderr);
+        resolve(stdout);
+      });
+    });
   }
 }
+/* 
+const lf = new LinuxFilesService(new StreamService());
+
+lf.deleteDir('/home/nya/Programming/node_modules');
+ */

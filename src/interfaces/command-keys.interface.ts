@@ -1,6 +1,6 @@
 export interface IKeysCommand {
   up: () => void;
   down: () => void;
-  delete: () => void;
+  space: () => void;
   execute: (command: string, params?: string[]) => number;
 }
