@@ -418,22 +418,11 @@ export class Controller {
     const nodeFolder = this.nodeFolders[
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
-
+    this.clearErrors();
     this.deleteFolder(nodeFolder);
   }
 
   private deleteFolder(folder: IFolder): void {
-    /*  this.fileService.deleteDir(folder.path).subscribe(
-      data => {
-        this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
-      },
-      err => this.printError(err.message),
-      () => {
-        folder.deleted = true;
-        this.printStats();
-        this.printFoldersSection();
-      },
-    ); */
     this.fileService
       .deleteDir(folder.path)
       .then(response => {
@@ -513,6 +502,11 @@ export class Controller {
   private round(numb: number, decimals: number = 0): number {
     const toRound = +(numb + 'e' + decimals);
     return Number(Math.round(toRound) + 'e-' + decimals);
+  }
+
+  private clearErrors(): void {
+    const lineOfErrors = this.stdout.rows;
+    this.clearLine(lineOfErrors);
   }
 
   private clearLine(row: number): void {
