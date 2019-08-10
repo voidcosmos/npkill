@@ -37,7 +37,8 @@ export class LinuxFilesService extends FileService {
 
   deleteDir(path: string): Promise<{}> {
     return new Promise((resolve, reject) => {
-      exec('rm -rf ' + path, (error, stdout, stderr) => {
+      const command = `rm -rf "${path}"`;
+      exec(command, (error, stdout, stderr) => {
         if (error) return reject(error);
         if (stderr) return reject(stderr);
         resolve(stdout);
