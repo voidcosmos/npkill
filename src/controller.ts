@@ -339,6 +339,8 @@ export class Controller {
 
         this.calculateFolderSize(nodeFolder);
         this.printFoldersSection();
+
+        if (this.config.deleteAll) this.deleteFolder(nodeFolder);
       });
   }
 
