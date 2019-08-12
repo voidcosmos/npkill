@@ -425,6 +425,11 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
+    if (!this.fileService.isSafeToDelete(folder.path)) {
+      this.printError('Folder no safe to delete');
+      return;
+    }
+
     this.fileService
       .deleteDir(folder.path)
       .then(response => {
