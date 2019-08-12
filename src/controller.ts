@@ -4,7 +4,6 @@ import * as keypress from 'keypress';
 
 import {
   BANNER,
-  CURSOR_SIMBOL,
   DECIMALS_SIZE,
   DEFAULT_CONFIG,
   DEFAULT_SIZE,
@@ -15,6 +14,7 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/main.constants';
+import { COLORS, OPTIONS } from './constants/cli.constants';
 import {
   ERROR_MSG,
   HELP_MSGS,
@@ -30,7 +30,6 @@ import { IFolder } from './interfaces/folder.interface';
 import { IKeysCommand } from './interfaces/command-keys.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
 import { IStats } from './interfaces/stats.interface';
-import { OPTIONS } from './constants/cli.constants';
 import { SpinnerService } from './services/spinner.service';
 import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
@@ -46,6 +45,7 @@ export class Controller {
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private previousCursorPosY: number = 0;
   private scroll: number = 0;
+  private backgroundColor: string = 'bgCyan';
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
 
@@ -92,24 +92,7 @@ export class Controller {
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
-  }
-
-  private checkVersion(): void {
-    this.updateService
-      .isUpdated(this.getVersion())
-      .then((isUpdated: boolean) => {
-        if (!isUpdated) this.showNewInfoMessage();
-      })
-      .catch(err => {
-        const errorMessage =
-          ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
-        this.printError(errorMessage);
-      });
-  }
-
-  private showNewInfoMessage(): void {
-    const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
-    this.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
+    if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
   private showHelp(): void {
@@ -141,6 +124,14 @@ export class Controller {
     this.print('v' + this.getVersion());
   }
 
+  private setColor(color: string) {
+    if (this.isValidColor(color)) this.backgroundColor = COLORS[color];
+  }
+
+  private isValidColor(color: string) {
+    return Object.keys(COLORS).some(validColor => validColor === color);
+  }
+
   private getVersion(): string {
     const packageJson = __dirname + '/../package.json';
 
@@ -169,6 +160,24 @@ export class Controller {
     this.printUI();
     this.setupKeysListener();
     this.hideCursor();
+  }
+
+  private checkVersion(): void {
+    this.updateService
+      .isUpdated(this.getVersion())
+      .then((isUpdated: boolean) => {
+        if (!isUpdated) this.showNewInfoMessage();
+      })
+      .catch(err => {
+        const errorMessage =
+          ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
+        this.printError(errorMessage);
+      });
+  }
+
+  private showNewInfoMessage(): void {
+    const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
+    this.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
 
   private isTerminalTooSmall(): boolean {
@@ -239,32 +248,36 @@ export class Controller {
     this.printAt(text, UI_POSITIONS.STATUS);
   }
 
+  private getFolderPathText(folder: IFolder): string {
+    let cutFrom = OVERFLOW_CUT_FROM;
+    let text = folder.path;
+    if (folder.deleted) {
+      cutFrom += INFO_MSGS.DELETED_FOLDER.length;
+      text = INFO_MSGS.DELETED_FOLDER + text;
+    }
+    text = this.consoleService.shortenText(
+      text,
+      this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
+      cutFrom,
+    );
+
+    // This is necessary for the coloring of the text, since
+    // the shortener takes into ansi-scape codes invisible
+    // characters and can cause an error in the cli.
+    text = this.colorDeletedTextGreen(text);
+
+    return text;
+  }
+
   private printFoldersSection(): void {
     const visibleFolders = this.getVisibleScrollFolders();
 
     visibleFolders.map((folder: IFolder, index) => {
-      let cutFrom = OVERFLOW_CUT_FROM;
-      let folderTitle = folder.path;
-
-      if (folder.deleted) {
-        cutFrom += INFO_MSGS.DELETED_FOLDER.length;
-        folderTitle = INFO_MSGS.DELETED_FOLDER + folderTitle;
-      }
-
-      let folderString = this.consoleService.shortenText(
-        folderTitle,
-        this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
-        cutFrom,
-      );
-
-      // This is necessary for the coloring of the text, since
-      // the shortener takes into ansi-scape codes invisible
-      // characters and can cause an error in the cli.
-      folderString = this.colorDeletedTextGreen(folderString);
+      let folderTitle = this.getFolderPathText(folder);
 
       // Folder name
       const folderRow = MARGINS.ROW_RESULTS_START + index;
-      this.printAt(folderString, {
+      this.printAt(folderTitle, {
         x: MARGINS.FOLDER_COLUMN_START,
         y: folderRow,
       });
@@ -490,11 +503,19 @@ export class Controller {
   }
 
   private printFolderCursor(): void {
-    this.printAt('  ', { x: 1, y: this.previousCursorPosY });
-    this.printAt(colors.cyan(CURSOR_SIMBOL), {
-      x: 1,
-      y: this.getRealCursorPosY(),
-    });
+    this.printAt(
+      colors[this.backgroundColor](
+        colors.black(
+          this.getFolderPathText(
+            this.nodeFolders[this.cursorPosY - MARGINS.ROW_RESULTS_START],
+          ),
+        ),
+      ),
+      {
+        x: MARGINS.FOLDER_COLUMN_START,
+        y: this.getRealCursorPosY(),
+      },
+    );
   }
 
   private getRealCursorPosY(): number {
