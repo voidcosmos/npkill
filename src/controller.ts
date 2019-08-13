@@ -14,7 +14,7 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/main.constants';
-import { COLORS, OPTIONS } from './constants/cli.constants';
+import { COLORS, DEFAULT_COLOR, OPTIONS } from './constants/cli.constants';
 import {
   ERROR_MSG,
   HELP_MSGS,
@@ -45,7 +45,7 @@ export class Controller {
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
   private previousCursorPosY: number = 0;
   private scroll: number = 0;
-  private backgroundColor: string = 'bgCyan';
+  private backgroundColor: string = DEFAULT_COLOR;
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
 

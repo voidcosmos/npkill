@@ -42,8 +42,9 @@ export const OPTIONS: ICliOptions[] = [
   },
 ];
 
+export const DEFAULT_COLOR = 'bgBlue';
+
 export const COLORS = {
-  blue: 'bgBlack',
   cyan: 'bgCyan',
   magenta: 'bgMagenta',
   red: 'bgRed',
