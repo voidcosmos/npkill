@@ -26,13 +26,28 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-D', '--delete-all'],
     description:
-      'Automatically delete all node_modules folders that are found.',
+      'CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.',
     name: 'delete-all',
   },
   {
     arg: ['-e', '--show-errors'],
-    description:
-      'Show error messages if any.',
+    description: 'Show error messages if any.',
     name: 'show-errors',
   },
+  {
+    arg: ['-c', '--bg-color'],
+    description:
+      'Change row highlight color. Available colors are: blue, cyan, magenta, red, white and yellow. Default is blue.',
+    name: 'bg-color',
+  },
 ];
+
+export const DEFAULT_COLOR = 'bgBlue';
+
+export const COLORS = {
+  cyan: 'bgCyan',
+  magenta: 'bgMagenta',
+  red: 'bgRed',
+  white: 'bgWhite',
+  yellow: 'bgYellow',
+};

@@ -4,14 +4,16 @@ import { WIDTH_OVERFLOW } from '../constants/main.constants';
 
 export class ConsoleService {
   getParameters(rawArgv: string[]): {} {
+    // This needs a refactor, but fck, is a urgent update
     const argvs = this.removeSystemArgvs(rawArgv);
     const options = {};
 
-    const validArgvs = this.getValidArgvs(rawArgv);
-
-    validArgvs.map((argv, index) => {
+    argvs.map((argv, index) => {
+      if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
       const nextArgv = argvs[index + 1];
-      options[argv.name] = nextArgv ? nextArgv : true;
+      const optionName = this.getOption(argv).name;
+
+      options[optionName] = this.isArgHavingParams(nextArgv) ? nextArgv : true;
     });
 
     return options;
@@ -61,6 +63,15 @@ export class ConsoleService {
   private isArgOption(argv: string): boolean {
     return !!argv && argv.charAt(0) === '-';
   }
+
+  private isArgHavingParams(nextArgv: string): boolean {
+    return nextArgv && !this.isArgOption(nextArgv);
+  }
+
+  private isValidOption(arg: string): boolean {
+    return OPTIONS.some(option => option.arg.includes(arg));
+  }
+
   private getOption(arg: string): ICliOptions | undefined {
     return OPTIONS.find(option => option.arg.includes(arg));
   }

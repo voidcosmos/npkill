@@ -29,18 +29,22 @@ describe('Console Service', () => {
       expect(result['inexistent']).toBeUndefined();
       expect(result['full-scan']).not.toBeFalsy();
     });
-    /*it('should get valid parameters 2', () => {
+    it('should get valid parameters 2', () => {
       const argvs = [
         '/usr/bin/ts-node',
         '/blablabla inexistent parameters',
         '-f',
         'lala',
+        '-c',
+        'red',
       ];
 
       const result = consoleService.getParameters(argvs);
+
       expect(result['help']).toBeFalsy();
-      expect(result['full']).not.toBeFalsy();
-    });*/
+      expect(result['full-scan']).not.toBeFalsy();
+      expect(result['bg-color']).toBe('red');
+    });
   });
 
   describe('#splitWordsByWidth', () => {
