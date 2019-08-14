@@ -1,9 +1,9 @@
-import { HttpsService } from './https.service';
 import {
   VERSION_CHECK_DIRECTION,
   VERSION_KEY,
 } from '../constants/update.constants';
-import { IVersion } from '../interfaces/version.interface';
+
+import { HttpsService } from './https.service';
 
 export class UpdateService {
   constructor(private httpsService: HttpsService) {}
@@ -17,7 +17,7 @@ export class UpdateService {
     return this.compareVersions(local, remote);
   }
 
-  private compareVersions(local: IVersion, remote: IVersion): boolean {
+  private compareVersions(local: any, remote: any): boolean {
     return (
       this.isSameVersion(local, remote) ||
       this.isLocalVersionGreater(local, remote)
@@ -29,35 +29,17 @@ export class UpdateService {
     return response[VERSION_KEY];
   }
 
-  private splitVersion(version: string): IVersion {
+  private splitVersion(version: string): any {
     const versionSeparator = '.';
     const remoteSplited = version.split(versionSeparator);
-    return {
-      major: +remoteSplited[0],
-      minor: +remoteSplited[1],
-      patch: +remoteSplited[2],
-    };
+    return remoteSplited.join('');
   }
 
-  private isSameVersion(version1: IVersion, version2: IVersion): boolean {
-    return JSON.stringify(version1) === JSON.stringify(version2);
+  private isSameVersion(version1: any, version2: any): boolean {
+    return version1 === version2;
   }
 
-  private isLocalVersionGreater(local: IVersion, remote: IVersion): boolean {
-    return (
-      this.isMajorGreater(local.major, remote.major) ||
-      this.isMinorGreater(local.minor, remote.minor) ||
-      this.isPatchGreater(local.patch, remote.patch)
-    );
-  }
-
-  private isMajorGreater(localMajor: number, remoteMajor: number): boolean {
-    return localMajor > remoteMajor;
-  }
-  private isMinorGreater(localMinor: number, remoteMinor: number): boolean {
-    return localMinor > remoteMinor;
-  }
-  private isPatchGreater(localPatch: number, remotePatch: number): boolean {
-    return localPatch > remotePatch;
+  private isLocalVersionGreater(local: any, remote: any): boolean {
+    return local > remote;
   }
 }

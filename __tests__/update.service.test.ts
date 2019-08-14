@@ -1,5 +1,5 @@
-import { UpdateService } from '../src/services/update.service';
 import { HttpsService } from '../src/services/https.service';
+import { UpdateService } from '../src/services/update.service';
 
 describe('update Service', () => {
   let updateService: UpdateService;
@@ -13,6 +13,10 @@ describe('update Service', () => {
   describe('#isUpdated', () => {
     const localVersion = '2.3.6';
     const cases = [
+      {
+        isUpdated: false,
+        remoteVersion: '2.4.0',
+      },
       {
         isUpdated: true,
         remoteVersion: '2.3.6',
@@ -38,12 +42,12 @@ describe('update Service', () => {
         remoteVersion: '0.2.53',
       },
       {
-        isUpdated: true,
-        remoteVersion: '0.2.53',
-      },
-      {
         isUpdated: false,
         remoteVersion: '2.3.61',
+      },
+      {
+        isUpdated: true,
+        remoteVersion: '2.3.59',
       },
       {
         isUpdated: false,
