@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>npkill - main</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"
+    />
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/window.css" />
 
@@ -18,19 +21,25 @@
         <nav class="navbar">
           <div class="container">
             <div id="navbarMenuHeroA" class="navbar-menu">
+              <div class="navbar-start"></div>
               <div class="navbar-end">
                 <span class="navbar-item">
                   <a
                     class="github-button"
-                    href="https://github.com/zaldih/npkill"
+                    href="https://github.com/voidcosmos/npkill"
                     data-icon="octicon-star"
                     data-size="large"
-                    aria-label="Star zaldih/npkill on GitHub"
+                    data-show-count="true"
+                    aria-label="Star voidcosmos/npkill on GitHub"
                     >Star</a
                   >
                 </span>
                 <span class="navbar-item">
-                  <a href="https://github.com/zaldih/npkill" target="_blank" class="button is-info is-inverted">
+                  <a
+                    href="https://github.com/zaldih/npkill"
+                    target="_blank"
+                    class="button is-info is-inverted"
+                  >
                     <span class="icon">
                       <i class="fab fa-github"></i>
                     </span>
@@ -44,14 +53,26 @@
       </div>
       <div class="hero-body">
         <div class="container has-text-centered">
-          <img src="img/npkill-scope-2.svg" alt="npkill logo" class="is-inline-flex" />
+          <img
+            src="img/npkill-scope-2.svg"
+            alt="npkill logo"
+            class="is-inline-flex"
+          />
           <p class="title is-1">
             npkill
+            <img
+              style="position: absolute; margin-left: 10px"
+              alt="npm version"
+              src="https://img.shields.io/npm/v/npkill?label=%20&style=flat-square"
+            />
           </p>
+
           <div class="columns">
-            <p class="subtitle column is-half is-offset-one-quarter">
-              Easily find and remove old and heavy <b>node_modules</b> folders
-            </p>
+            <div class="subtitle column is-half is-offset-one-quarter">
+              <p>
+                Easily find and remove old and heavy <b>node_modules</b> folders
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -85,7 +106,8 @@
         <div class="column ">
           <h2 class="title">Installation</h2>
           <p>
-            Installation through npm is simple. Make sure you have installed node and npm and then run
+            Installation through npm is simple. Make sure you have installed
+            node and npm and then run
             <span>npm i -g npkill</span>
           </p>
         </div>
@@ -96,10 +118,14 @@
       <div class="columns is-vcentered">
         <div class="column ">
           <h2 class="title">First Steps</h2>
-          <p>Simply go from the terminal to the directory from which you want to search and type <span>npkill</span>.</p>
           <p>
-            This will start the search <img src="./img/Blocks-loading.svg" style="height: 1.3em;" /> and will show the
-            node_modules directories next to their size.
+            Simply go from the terminal to the directory from which you want to
+            search and type <span>npkill</span>.
+          </p>
+          <p>
+            This will start the search
+            <img src="./img/Blocks-loading.svg" style="height: 1.3em;" /> and
+            will show the node_modules directories next to their size.
           </p>
         </div>
         <div class="column is-two-fifths">
@@ -115,10 +141,14 @@
         <div class="column ">
           <h2 class="title">Use</h2>
           <p>
-            You can use the cursor arrows to move <i class="fas fa-arrow-up"></i> up or down<i class="fas fa-arrow-down"></i
+            You can use the cursor arrows to move
+            <i class="fas fa-arrow-up"></i> up or down<i
+              class="fas fa-arrow-down"
+            ></i
             >. <br />
-            Pressing the <kbd>Del</kbd> (<kbd>Supr</kbd> in spanish keyboards.) key will erase the directory in which the
-            haye cursor is, freeing up that valuable space.
+            Pressing the <kbd>Del</kbd> (<kbd>Supr</kbd> in spanish keyboards.)
+            key will erase the directory in which the haye cursor is, freeing up
+            that valuable space.
           </p>
         </div>
         <div class="column is-two-fifths">
@@ -133,7 +163,9 @@
       <div class="columns">
         <div class="column">
           <h2 class="title">Options</h2>
-          <table class="table is-fullwidth is-striped is-narrow is-hoverable is-bordered ">
+          <table
+            class="table is-fullwidth is-striped is-narrow is-hoverable is-bordered "
+          >
             <thead>
               <tr>
                 <th>Arg</th>
@@ -159,13 +191,19 @@
               </tr>
               <tr>
                 <td>-f, --full</td>
-                <td>Start searching from the home of the user (example: "/home/user" in linux)</td>
+                <td>
+                  Start searching from the home of the user (example:
+                  "/home/user" in linux)
+                </td>
                 <td>false</td>
               </tr>
               <tr>
-                <td>-D, --delete-all</td>
-                <td>Automatically delete all node_modules folders that are found</td>
-                <td>false</td>
+                <td>-c, --bg-color</td>
+                <td>
+                  Change row highlight color. Available: blue, cyan, magenta,
+                  white, red and yellow
+                </td>
+                <td>blue</td>
               </tr>
               <tr>
                 <td>-e, --show-errors</td>
@@ -199,7 +237,8 @@
         <div class="tile is-parent">
           <article class="tile is-child notification is-info">
             <p class="subtitle">
-              Automatically delete all node_modules that have sneaked into your backups:
+              Automatically delete all node_modules that have sneaked into your
+              backups:
             </p>
             <div class="window light">
               <pre><code><span class="prompt-sign">$ </span><span>npkill -d ~/backups/ --delete-all</span></code></pre>
@@ -210,10 +249,18 @@
     </section>
 
     <section class="section has-text-centered">
-      <a href="https://github.com/zaldih/npkill" target="_blank" class="button is-large">
+      <a
+        href="https://github.com/zaldih/npkill"
+        target="_blank"
+        class="button is-large"
+      >
         View on GitHub
       </a>
-      <a href="https://www.npmjs.com/package/npkill" target="_blank" class="button is-large">
+      <a
+        href="https://www.npmjs.com/package/npkill"
+        target="_blank"
+        class="button is-large"
+      >
         View on npm
       </a>
     </section>
@@ -221,7 +268,9 @@
     <hr />
 
     <section class="section container">
-      <h2 class="title is-2">Main devs <span class="tag is-info">Under construction</span></h2>
+      <h2 class="title is-2">
+        Main devs <span class="tag is-info">Under construction</span>
+      </h2>
 
       <div class="devs columns">
         <div class="column">
@@ -245,10 +294,16 @@
                       Full stack developer. I love code!
                     </p>-->
                 <div class="social-links">
-                  <a href="https://twitter.com/NyaBlk" target="_blank" class="button is-dark"
+                  <a
+                    href="https://twitter.com/NyaBlk"
+                    target="_blank"
+                    class="button is-dark"
                     ><i class="fab fa-twitter social-icon"></i> Twitter</a
                   >
-                  <a href="https://github.com/NyaGarcia" target="_blank" class="button is-dark"
+                  <a
+                    href="https://github.com/NyaGarcia"
+                    target="_blank"
+                    class="button is-dark"
                     ><i class="fab fa-github social-icon"></i> GitHub</a
                   >
                 </div>
@@ -278,10 +333,16 @@
                   Full stack developer. I love code!
                 </p>-->
                 <div class="social-links">
-                  <a href="https://twitter.com/juaniman99" target="_blank" class="button is-dark"
+                  <a
+                    href="https://twitter.com/juaniman99"
+                    target="_blank"
+                    class="button is-dark"
                     ><i class="fab fa-twitter social-icon"></i> Twitter</a
                   >
-                  <a href="https://github.com/zaldih" target="_blank" class="button is-dark"
+                  <a
+                    href="https://github.com/zaldih"
+                    target="_blank"
+                    class="button is-dark"
                     ><i class="fab fa-github social-icon"></i> GitHub</a
                   >
                 </div>
@@ -294,14 +355,21 @@
 
     <footer class="footer">
       <div class="content has-text-centered">
-        <img class="npkill-title" src="https://zaldih.tk/npkill/img/npkill-text-clean.svg" />
+        <img
+          class="npkill-title"
+          src="https://zaldih.tk/npkill/img/npkill-text-clean.svg"
+        />
         <p>
           <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg" />
           <a
             href="https://www.codacy.com/app/zaldih/npkill?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zaldih/npkill&amp;utm_campaign=Badge_Grade"
-            ><img src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"
+            ><img
+              src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"
           /></a>
-          <img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg" />
+          <img
+            alt="npm version"
+            src="https://img.shields.io/npm/v/npkill.svg"
+          />
           <!-- <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/min/npkill.svg"> -->
           <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg" />
         </p>
