@@ -15,6 +15,7 @@ export const INFO_MSGS = {
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
   TOTAL_SPACE: 'releasable space: ',
+  DISABLED: '--delete-all has been disabled until future versions',
 };
 
 export const ERROR_MSG = {
