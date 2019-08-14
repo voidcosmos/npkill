@@ -241,6 +241,18 @@
         <div class="tile is-parent">
           <article class="tile is-child notification is-info">
             <p class="subtitle">
+              Delete all node_modules that have sneaked into your backups, and
+              show errors if any occur:
+            </p>
+            <div class="window light">
+              <pre><code><span class="prompt-sign">$ </span><span>npkill -d ~/backups/ -e</span></code></pre>
+            </div>
+          </article>
+        </div>
+
+        <!-- <div class="tile is-parent">
+          <article class="tile is-child notification is-info">
+            <p class="subtitle">
               Automatically delete all node_modules that have sneaked into your
               backups:
             </p>
@@ -248,7 +260,7 @@
               <pre><code><span class="prompt-sign">$ </span><span>npkill -d ~/backups/ --delete-all</span></code></pre>
             </div>
           </article>
-        </div>
+        </div> -->
       </div>
     </section>
 
