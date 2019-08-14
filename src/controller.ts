@@ -85,12 +85,15 @@ export class Controller {
       this.showProgramVersion();
       process.exit();
     }
+    if (options['delete-all']) {
+      this.showObsoleteMessage();
+      process.exit();
+    }
 
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
-    if (options['delete-all']) this.config.deleteAll = true;
     if (options['show-errors']) this.config.showErrors = true;
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
@@ -122,6 +125,10 @@ export class Controller {
 
   private showProgramVersion(): void {
     this.print('v' + this.getVersion());
+  }
+
+  private showObsoleteMessage(): void {
+    this.print(INFO_MSGS.DISABLED);
   }
 
   private setColor(color: string) {
@@ -352,8 +359,6 @@ export class Controller {
 
         this.calculateFolderSize(nodeFolder);
         this.printFoldersSection();
-
-        if (this.config.deleteAll) this.deleteFolder(nodeFolder);
       });
   }
 

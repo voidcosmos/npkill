@@ -9,7 +9,7 @@ export class ConsoleService {
     const options = {};
 
     argvs.map((argv, index) => {
-      if (!this.isArgOption(argv)) return;
+      if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
       const nextArgv = argvs[index + 1];
       const optionName = this.getOption(argv).name;
 
@@ -66,6 +66,10 @@ export class ConsoleService {
 
   private isArgHavingParams(nextArgv: string): boolean {
     return nextArgv && !this.isArgOption(nextArgv);
+  }
+
+  private isValidOption(arg: string): boolean {
+    return OPTIONS.some(option => option.arg.includes(arg));
   }
 
   private getOption(arg: string): ICliOptions | undefined {

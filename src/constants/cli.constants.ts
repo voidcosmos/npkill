@@ -26,7 +26,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-D', '--delete-all'],
     description:
-      'Automatically delete all node_modules folders that are found.',
+      'CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.',
     name: 'delete-all',
   },
   {
