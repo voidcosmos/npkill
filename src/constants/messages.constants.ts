@@ -15,7 +15,8 @@ export const INFO_MSGS = {
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
   TOTAL_SPACE: 'releasable space: ',
-  DISABLED: '--delete-all has been disabled until future versions',
+  DISABLED:
+    '[-D, --delete-all] option has been disabled until future versions. Please restart npkill without this option.',
 };
 
 export const ERROR_MSG = {
