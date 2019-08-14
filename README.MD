@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://zaldih.tk/npkill/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
-  <img src="https://zaldih.tk/npkill/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
+  <img src="https://npkill.js.org/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
+  <img src="https://npkill.js.org/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
@@ -12,7 +12,7 @@
 ### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
 
 <p align="center">
-  <img src="https://voidcosmos.github.io/npkill/img/npkill-demo-0.3.0.gif" alt="npkill demo gif" />
+  <img src="https://npkill.js.org/img/npkill-demo-0.3.0.gif" alt="npkill demo gif" />
 </p>
 
 This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
