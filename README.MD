@@ -6,14 +6,13 @@
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
 <a href="https://www.codacy.com/app/zaldih/npkill?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zaldih/npkill&amp;utm_campaign=Badge_Grade"><img src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"/></a>
 <img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg">
-<!-- <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/min/npkill.svg"> -->
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
 </p>
 
 ### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
 
 <p align="center">
-  <img src="https://zaldih.tk/npkill/img/npkill-demo-0.2.0.gif" alt="npkill demo gif" />
+  <img src="https://voidcosmos.github.io/npkill/img/npkill-demo-0.3.0.gif" alt="npkill demo gif" />
 </p>
 
 This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
@@ -50,7 +49,7 @@ _Unix users may need to run the command with sudo_
 # Usage
 
 ```bash
-npkill
+$ npkill
 ```
 
 By default, npkill will scan for node_modules starting at the path where `npkill` command is executed.
@@ -61,14 +60,14 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 ## Options
 
-| ARGUMENT          | DESCRIPTION                                                                      |
-| ----------------- | -------------------------------------------------------------------------------- |
-| -h, --help, ?     | Show this help page and exit                                                     |
-| -v, --version     | Show npkill version                                                              |
-| -d, --directory   | Set the directory from which to begin searching. By default, starting-point is . |
-| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)       |
-| -D, --delete-all  | Automatically delete all node_modules folders that are found                     |
-| -e, --show-errors | Show error messages if any                                                       |
+| ARGUMENT          | DESCRIPTION                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| -h, --help, ?     | Show this help page and exit                                                              |
+| -v, --version     | Show npkill version                                                                       |
+| -d, --directory   | Set the directory from which to begin searching. By default, starting-point is .          |
+| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)                |
+| -c, --bg-color    | Change row highlight color. *(Available: **blue**, cyan, magenta, white, red and yellow)* |
+| -e, --show-errors | Show error messages related to the search if any                                          |
 
 **Warning:** _In future versions some commands may change_
 
