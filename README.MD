@@ -62,12 +62,13 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 | ARGUMENT          | DESCRIPTION                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------- |
+| -c, --bg-color    | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_ |
+| -d, --directory   | Set the directory from which to begin searching. By default, starting-point is .          |
+| -D, --delete-all  | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.         |
+| -e, --show-errors | Show error messages related to the search if any                                          |
+| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)                |
 | -h, --help, ?     | Show this help page and exit                                                              |
 | -v, --version     | Show npkill version                                                                       |
-| -d, --directory   | Set the directory from which to begin searching. By default, starting-point is .          |
-| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)                |
-| -c, --bg-color    | Change row highlight color. *(Available: **blue**, cyan, magenta, white, red and yellow)* |
-| -e, --show-errors | Show error messages related to the search if any                                          |
 
 **Warning:** _In future versions some commands may change_
 
@@ -83,10 +84,10 @@ cd ~/projects
 npkill
 ```
 
-- Automatically delete all **node_modules** that have sneaked into your backups:
+- Delete all **node_modules** that have sneaked into your backups, and show errors if any occur:
 
 ```bash
-npkill -d ~/backups/ --delete-all
+npkill -d ~/backups/ -e
 ```
 
 # Roadmap
