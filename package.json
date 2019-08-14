@@ -1,6 +1,6 @@
 {
   "name": "npkill",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
