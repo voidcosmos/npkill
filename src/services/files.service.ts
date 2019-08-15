@@ -9,6 +9,16 @@ export abstract class FileService implements IFileService {
   abstract listDir(path: string): Observable<{}>;
   abstract deleteDir(path: string): Promise<{}>;
 
+  convertBToMb(bytes: number): number {
+    const factorBtoMb = 1048576;
+    return bytes / factorBtoMb;
+  }
+
+  convertMbToGb(mb: number): number {
+    const factorMbtoGb = 1000;
+    return mb / factorMbtoGb;
+  }
+
   getFileContent(path: string): string {
     const encoding = 'utf8';
     return fs.readFileSync(path, encoding);

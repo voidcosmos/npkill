@@ -481,8 +481,13 @@ export class Controller {
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
     const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
-    const totalSpace = stats.totalSpace.toFixed(DECIMALS_SIZE) + ' mb';
-    const spaceReleased = stats.spaceReleased.toFixed(DECIMALS_SIZE) + ' mb';
+    const totalSpace =
+      this.fileService.convertMbToGb(stats.totalSpace).toFixed(DECIMALS_SIZE) +
+      ' gb';
+    const spaceReleased =
+      this.fileService
+        .convertMbToGb(stats.spaceReleased)
+        .toFixed(DECIMALS_SIZE) + ' gb';
     totalSpacePosition.x += INFO_MSGS.TOTAL_SPACE.length;
     spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
 
