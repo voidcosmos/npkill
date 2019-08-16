@@ -67,6 +67,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -D, --delete-all  | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.         |
 | -e, --show-errors | Show error messages related to the search if any                                          |
 | -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)                |
+| -gb               | Show folders in Gigabytes instead of Megabytes.                                           |
 | -h, --help, ?     | Show this help page and exit                                                              |
 | -v, --version     | Show npkill version                                                                       |
 
