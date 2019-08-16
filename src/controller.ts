@@ -388,7 +388,7 @@ export class Controller {
   }
 
   private transformFolderSize(size: string): number {
-    return this.fileService.convertBToGb(+size);
+    return this.fileService.convertKbToGb(+size);
   }
 
   private completeSearch(): void {
