@@ -11,7 +11,12 @@ export abstract class FileService implements IFileService {
   abstract deleteDir(path: string): Promise<{}>;
 
   convertKbToGb(bytes: number): number {
-    const factorBtoGb = 1048576;
+    const factorKbtoGb = 1048576;
+    return bytes / factorKbtoGb;
+  }
+
+  convertBToKb(bytes: number): number {
+    const factorBtoGb = 1024;
     return bytes / factorBtoGb;
   }
 

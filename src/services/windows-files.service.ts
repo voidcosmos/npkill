@@ -18,7 +18,7 @@ export class WindowsFilesService extends FileService {
         if (err) {
           throw err;
         }
-        observer.next(super.convertKbToGb(size));
+        observer.next(super.convertBToKb(size));
         observer.complete();
       });
     });
