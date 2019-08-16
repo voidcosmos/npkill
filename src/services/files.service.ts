@@ -1,22 +1,23 @@
 import * as fs from 'fs';
 
+import { DECIMALS_SIZE, TARGET_FOLDER } from '../constants/main.constants';
+
 import { IFileService } from '../interfaces/file-service.interface';
 import { Observable } from 'rxjs';
-import { TARGET_FOLDER } from '../constants/main.constants';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
   abstract listDir(path: string): Observable<{}>;
   abstract deleteDir(path: string): Promise<{}>;
 
-  convertBToMb(bytes: number): number {
-    const factorBtoMb = 1048576;
-    return bytes / factorBtoMb;
+  convertBToGb(bytes: number): number {
+    const factorBtoGb = 1048576;
+    return bytes / factorBtoGb;
   }
 
-  convertMbToGb(mb: number): number {
-    const factorMbtoGb = 1000;
-    return mb / factorMbtoGb;
+  convertGbToMb(gb: number) {
+    const factorGbtoMb = 1024;
+    return gb * factorGbtoMb;
   }
 
   getFileContent(path: string): string {

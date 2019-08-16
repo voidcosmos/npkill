@@ -1,4 +1,4 @@
 export interface IStats {
-  spaceReleased: number;
-  totalSpace: number;
+  spaceReleased: any;
+  totalSpace: any;
 }

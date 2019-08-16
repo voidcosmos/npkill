@@ -10,7 +10,7 @@ export class LinuxFilesService extends FileService {
   }
 
   getFolderSize(path: string): Observable<{}> {
-    const du = spawn('du', ['-sm', path, '--max-depth', '0']);
+    const du = spawn('du', ['-s', path]);
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);

@@ -14,7 +14,7 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/main.constants';
-import { COLORS, DEFAULT_COLOR, OPTIONS } from './constants/cli.constants';
+import { COLORS, OPTIONS } from './constants/cli.constants';
 import {
   ERROR_MSG,
   HELP_MSGS,
@@ -43,9 +43,7 @@ export class Controller {
   private nodeFolders: IFolder[] = [];
 
   private cursorPosY: number = MARGINS.ROW_RESULTS_START;
-  private previousCursorPosY: number = 0;
   private scroll: number = 0;
-  private backgroundColor: string = DEFAULT_COLOR;
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
 
@@ -95,6 +93,7 @@ export class Controller {
       : process.cwd();
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['show-errors']) this.config.showErrors = true;
+    if (options['gb']) this.config.folderSizeInGb = true;
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
@@ -132,7 +131,7 @@ export class Controller {
   }
 
   private setColor(color: string) {
-    if (this.isValidColor(color)) this.backgroundColor = COLORS[color];
+    if (this.isValidColor(color)) this.config.backgroundColor = COLORS[color];
   }
 
   private isValidColor(color: string) {
@@ -290,7 +289,15 @@ export class Controller {
       });
 
       // Folder size
-      const folderSize = this.round(folder.size, DECIMALS_SIZE) + ' mb';
+      let folderSize = `${this.round(folder.size, 3)} gb`;
+
+      if (!this.config.folderSizeInGb) {
+        folderSize = `${this.round(
+          this.fileService.convertGbToMb(folder.size),
+          DECIMALS_SIZE,
+        )} mb`;
+      }
+
       const folderSizeText = folder.size ? folderSize : '--';
       this.printAt(folderSizeText, {
         x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
@@ -357,7 +364,7 @@ export class Controller {
         const nodeFolder = { path, deleted: false, size: 0 };
         this.addNodeFolder(nodeFolder);
 
-        this.calculateFolderSize(nodeFolder);
+        this.calculateFolderStats(nodeFolder);
         this.printFoldersSection();
       });
   }
@@ -369,14 +376,19 @@ export class Controller {
     messages.map(msg => this.printError(msg));
   }
 
-  private calculateFolderSize(nodeFolder: IFolder): void {
+  private calculateFolderStats(nodeFolder: IFolder): void {
     this.fileService
       .getFolderSize(nodeFolder.path)
-      .subscribe((size: number) => {
-        nodeFolder.size = +this.round(+size, DECIMALS_SIZE);
+      .subscribe((size: string) => {
+        nodeFolder.size = this.transformFolderSize(size);
+
         this.printStats();
         this.printFoldersSection();
       });
+  }
+
+  private transformFolderSize(size: string): number {
+    return this.fileService.convertBToGb(+size);
   }
 
   private completeSearch(): void {
@@ -407,7 +419,6 @@ export class Controller {
 
   private moveCursorUp(): void {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
-      this.previousCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
       this.checkCursorScroll();
     }
@@ -415,7 +426,6 @@ export class Controller {
 
   private moveCursorDown(): void {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
-      this.previousCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
       this.checkCursorScroll();
     }
@@ -477,17 +487,11 @@ export class Controller {
   }
 
   private printStats(): void {
-    const stats: IStats = this.getStats();
+    const { totalSpace, spaceReleased } = this.getStats();
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
     const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
-    const totalSpace =
-      this.fileService.convertMbToGb(stats.totalSpace).toFixed(DECIMALS_SIZE) +
-      ' gb';
-    const spaceReleased =
-      this.fileService
-        .convertMbToGb(stats.spaceReleased)
-        .toFixed(DECIMALS_SIZE) + ' gb';
+
     totalSpacePosition.x += INFO_MSGS.TOTAL_SPACE.length;
     spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
 
@@ -505,8 +509,8 @@ export class Controller {
     }, 0);
 
     return {
-      spaceReleased: this.round(spaceReleased, 2),
-      totalSpace: this.round(totalSpace, 2),
+      spaceReleased: `${this.round(spaceReleased, 2)} gb`,
+      totalSpace: `${this.round(totalSpace, 2)} gb`,
     };
   }
 
@@ -519,7 +523,7 @@ export class Controller {
 
   private printFolderCursor(): void {
     this.printAt(
-      colors[this.backgroundColor](
+      colors[this.config.backgroundColor](
         colors.black(
           this.getFolderPathText(
             this.nodeFolders[this.cursorPosY - MARGINS.ROW_RESULTS_START],
