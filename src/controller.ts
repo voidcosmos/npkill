@@ -150,7 +150,7 @@ export class Controller {
   }
 
   private clear(): void {
-    this.print(ansiEscapes.clearScreen);
+    this.print(ansiEscapes.clearTerminal);
   }
 
   private print(text: string): void {
@@ -192,8 +192,8 @@ export class Controller {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
-  private setRawMode(): void {
-    this.stdin.setRawMode(true);
+  private setRawMode(set = true): void {
+    this.stdin.setRawMode(set);
     process.stdin.resume();
   }
 
@@ -374,6 +374,10 @@ export class Controller {
     this.print(ansiEscapes.cursorHide);
   }
 
+  private showCursor(): void {
+    this.print(ansiEscapes.cursorShow);
+  }
+
   private scan(): void {
     const folders$ = this.fileService.listDir(this.folderRoot);
     folders$.subscribe(
@@ -432,8 +436,16 @@ export class Controller {
   }
 
   private quit(): void {
+    this.setRawMode(false);
     this.clear();
+    this.printExitMessage();
+    this.showCursor();
     process.exit();
+  }
+
+  private printExitMessage(): void {
+    const exitMessage = `Space released: ${this.getStats().spaceReleased}\n`;
+    this.print(exitMessage);
   }
 
   private getCommand(keyName: string): string {
