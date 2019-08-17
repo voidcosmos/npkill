@@ -462,7 +462,7 @@ export class Controller {
 
   private moveCursorUp(): void {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
-      this.previusCursorPosY = this.cursorPosY;
+      this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
       this.checkCursorScroll();
     }
@@ -470,7 +470,7 @@ export class Controller {
 
   private moveCursorDown(): void {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
-      this.previusCursorPosY = this.cursorPosY;
+      this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
       this.checkCursorScroll();
     }
