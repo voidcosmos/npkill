@@ -148,7 +148,7 @@ export class Controller {
   }
 
   private clear(): void {
-    this.print(ansiEscapes.clearScreen);
+    this.print(ansiEscapes.clearTerminal);
   }
 
   private print(text: string): void {
