@@ -43,7 +43,7 @@ export class Controller {
   private nodeFolders: IFolder[] = [];
 
   private cursorPosY = MARGINS.ROW_RESULTS_START;
-  private previusCursorPosY = 0;
+  private previusCursorPosY = MARGINS.ROW_RESULTS_START;
 
   private scroll: number = 0;
 
