@@ -42,7 +42,9 @@ export class Controller {
   private config: IConfig = DEFAULT_CONFIG;
   private nodeFolders: IFolder[] = [];
 
-  private cursorPosY: number = MARGINS.ROW_RESULTS_START;
+  private cursorPosY = MARGINS.ROW_RESULTS_START;
+  private previusCursorPosY = 0;
+
   private scroll: number = 0;
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
@@ -254,6 +256,68 @@ export class Controller {
     this.printAt(text, UI_POSITIONS.STATUS);
   }
 
+  private printFoldersSection(): void {
+    const visibleFolders = this.getVisibleScrollFolders();
+    this.clearLine(this.previusCursorPosY);
+
+    visibleFolders.map((folder: IFolder, index: number) => {
+      const folderRow = MARGINS.ROW_RESULTS_START + index;
+      this.printFolderRow(folder, folderRow);
+    });
+  }
+
+  private printFolderRow(folder: IFolder, row: number) {
+    let { path, size } = this.getFolderTexts(folder);
+
+    if (row === this.getRealCursorPosY()) {
+      path = colors[this.config.backgroundColor](path);
+      size = colors[this.config.backgroundColor](size);
+      this.paintBgRow(row);
+    }
+
+    this.printAt(path, {
+      x: MARGINS.FOLDER_COLUMN_START,
+      y: row,
+    });
+
+    this.printAt(size, {
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+      y: row,
+    });
+  }
+
+  private getFolderTexts(folder: IFolder): { path: string; size: string } {
+    const folderText = this.getFolderPathText(folder);
+    let folderSize = `${this.round(folder.size, 3)} gb`;
+
+    if (!this.config.folderSizeInGb) {
+      const size = this.fileService.convertGbToMb(folder.size);
+      folderSize = `${this.round(size, DECIMALS_SIZE)} mb`;
+    }
+
+    const folderSizeText = folder.size ? folderSize : '--';
+
+    return {
+      path: folderText,
+      size: folderSizeText,
+    };
+  }
+
+  private paintBgRow(row: number) {
+    const startPaint = MARGINS.FOLDER_COLUMN_START;
+    const endPaint = this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN;
+    let paintSpaces = '';
+
+    for (let i = startPaint; i < endPaint; ++i) {
+      paintSpaces += ' ';
+    }
+
+    this.printAt(colors[this.config.backgroundColor](paintSpaces), {
+      x: startPaint,
+      y: row,
+    });
+  }
+
   private getFolderPathText(folder: IFolder): string {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
@@ -273,39 +337,6 @@ export class Controller {
     text = this.colorDeletedTextGreen(text);
 
     return text;
-  }
-
-  private printFoldersSection(): void {
-    const visibleFolders = this.getVisibleScrollFolders();
-
-    visibleFolders.map((folder: IFolder, index) => {
-      let folderTitle = this.getFolderPathText(folder);
-
-      // Folder name
-      const folderRow = MARGINS.ROW_RESULTS_START + index;
-      this.printAt(folderTitle, {
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: folderRow,
-      });
-
-      // Folder size
-      let folderSize = `${this.round(folder.size, 3)} gb`;
-
-      if (!this.config.folderSizeInGb) {
-        folderSize = `${this.round(
-          this.fileService.convertGbToMb(folder.size),
-          DECIMALS_SIZE,
-        )} mb`;
-      }
-
-      const folderSizeText = folder.size ? folderSize : '--';
-      this.printAt(folderSizeText, {
-        x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-        y: folderRow,
-      });
-
-      this.printFolderCursor();
-    });
   }
 
   private clearFolderSection(): void {
@@ -431,6 +462,7 @@ export class Controller {
 
   private moveCursorUp(): void {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
+      this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
       this.checkCursorScroll();
     }
@@ -438,6 +470,7 @@ export class Controller {
 
   private moveCursorDown(): void {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
+      this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
       this.checkCursorScroll();
     }
@@ -530,22 +563,6 @@ export class Controller {
     return this.nodeFolders.slice(
       this.scroll,
       this.stdout.rows - MARGINS.ROW_RESULTS_START + this.scroll,
-    );
-  }
-
-  private printFolderCursor(): void {
-    this.printAt(
-      colors[this.config.backgroundColor](
-        colors.black(
-          this.getFolderPathText(
-            this.nodeFolders[this.cursorPosY - MARGINS.ROW_RESULTS_START],
-          ),
-        ),
-      ),
-      {
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: this.getRealCursorPosY(),
-      },
     );
   }
 
