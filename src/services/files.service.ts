@@ -10,9 +10,9 @@ export abstract class FileService implements IFileService {
   abstract listDir(path: string): Observable<{}>;
   abstract deleteDir(path: string): Promise<{}>;
 
-  convertKbToGb(bytes: number): number {
+  convertKbToGb(kb: number): number {
     const factorKbtoGb = 1048576;
-    return bytes / factorKbtoGb;
+    return kb / factorKbtoGb;
   }
 
   convertBToKb(bytes: number): number {
