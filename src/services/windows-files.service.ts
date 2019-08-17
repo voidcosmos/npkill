@@ -18,7 +18,7 @@ export class WindowsFilesService extends FileService {
         if (err) {
           throw err;
         }
-        observer.next(this.convertBToMb(size));
+        observer.next(super.convertBToKb(size));
         observer.complete();
       });
     });
@@ -42,11 +42,6 @@ export class WindowsFilesService extends FileService {
       }
       resolve();
     });
-  }
-
-  private convertBToMb(bytes: number): number {
-    const factorBtoMb = 1048576;
-    return bytes / factorBtoMb;
   }
 
   private getDirectoryFiles(dir: string) {
