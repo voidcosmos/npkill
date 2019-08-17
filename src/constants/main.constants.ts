@@ -11,7 +11,9 @@ export const DECIMALS_SIZE = 2;
 export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG: IConfig = {
+  backgroundColor: 'bgBlue',
   deleteAll: false,
+  folderSizeInGb: false,
   maxSimultaneousSearch: 6,
   showErrors: false,
 };
