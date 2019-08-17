@@ -254,6 +254,68 @@ export class Controller {
     this.printAt(text, UI_POSITIONS.STATUS);
   }
 
+  private printFoldersSection(): void {
+    const visibleFolders = this.getVisibleScrollFolders();
+    this.clearFolderSection();
+
+    visibleFolders.map((folder: IFolder, index: number) => {
+      const folderRow = MARGINS.ROW_RESULTS_START + index;
+      this.printFolderRow(folder, folderRow);
+    });
+  }
+
+  private printFolderRow(folder: IFolder, row: number) {
+    let { path, size } = this.getFolderTexts(folder);
+
+    if (row === this.getRealCursorPosY()) {
+      path = colors[this.config.backgroundColor](path);
+      size = colors[this.config.backgroundColor](size);
+      this.paintBgRow(row);
+    }
+
+    this.printAt(path, {
+      x: MARGINS.FOLDER_COLUMN_START,
+      y: row,
+    });
+
+    this.printAt(size, {
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+      y: row,
+    });
+  }
+
+  private getFolderTexts(folder: IFolder): { path: string; size: string } {
+    const folderText = this.getFolderPathText(folder);
+    let folderSize = `${this.round(folder.size, 3)} gb`;
+
+    if (!this.config.folderSizeInGb) {
+      const size = this.fileService.convertGbToMb(folder.size);
+      folderSize = `${this.round(size, DECIMALS_SIZE)} mb`;
+    }
+
+    const folderSizeText = folder.size ? folderSize : '--';
+
+    return {
+      path: folderText,
+      size: folderSizeText,
+    };
+  }
+
+  private paintBgRow(row: number) {
+    const startPaint = MARGINS.FOLDER_COLUMN_START;
+    const endPaint = this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN;
+    let paintSpaces = '';
+
+    for (let i = startPaint; i < endPaint; ++i) {
+      paintSpaces += ' ';
+    }
+
+    this.printAt(colors[this.config.backgroundColor](paintSpaces), {
+      x: startPaint,
+      y: row,
+    });
+  }
+
   private getFolderPathText(folder: IFolder): string {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
@@ -274,75 +336,6 @@ export class Controller {
 
     return text;
   }
-
-  private printFoldersSection(): void {
-    const visibleFolders = this.getVisibleScrollFolders();
-    this.clearFolderSection();
-
-    visibleFolders.map((folder: IFolder, index: number) => {
-      const folderRow = MARGINS.ROW_RESULTS_START + index;
-      this.printFolderRow(folder, folderRow);
-    });
-  }
-
-  private printFolderRow(folder: IFolder, row: number) {
-    let folderText = this.getFolderPathText(folder);
-    let folderSize = `${this.round(folder.size, 3)} gb`;
-
-    if (!this.config.folderSizeInGb) {
-      const size = this.fileService.convertGbToMb(folder.size);
-      folderSize = `${this.round(size, DECIMALS_SIZE)} mb`;
-    }
-
-    let folderSizeText = folder.size ? folderSize : '--';
-
-    if (row === this.getRealCursorPosY()) {
-      folderText = colors[this.config.backgroundColor](folderText);
-      folderSizeText = colors[this.config.backgroundColor](folderSizeText);
-      this.paintBgRow(row);
-    }
-
-    this.printAt(folderText, {
-      x: MARGINS.FOLDER_COLUMN_START,
-      y: row,
-    });
-
-    this.printAt(folderSizeText, {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-      y: row,
-    });
-  }
-
-  private paintBgRow(row: number) {
-    const startPaint = MARGINS.FOLDER_COLUMN_START;
-    const endPaint = this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN;
-    let paintSpaces = '';
-
-    for (let i = startPaint; i < endPaint; ++i) {
-      paintSpaces += ' ';
-    }
-
-    this.printAt(colors[this.config.backgroundColor](paintSpaces), {
-      x: startPaint,
-      y: row,
-    });
-  }
-
-  /* private printFolderCursor(): void {
-    this.printAt(
-      colors[this.config.backgroundColor](
-        colors.black(
-          this.getFolderPathText(
-            this.nodeFolders[this.cursorPosY - MARGINS.ROW_RESULTS_START],
-          ),
-        ),
-      ),
-      {
-        x: MARGINS.FOLDER_COLUMN_START,
-        y: this.getRealCursorPosY(),
-      },
-    );
-  } */
 
   private clearFolderSection(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
