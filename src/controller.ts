@@ -42,7 +42,9 @@ export class Controller {
   private config: IConfig = DEFAULT_CONFIG;
   private nodeFolders: IFolder[] = [];
 
-  private cursorPosY: number = MARGINS.ROW_RESULTS_START;
+  private cursorPosY = MARGINS.ROW_RESULTS_START;
+  private previusCursorPosY = 0;
+
   private scroll: number = 0;
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
@@ -256,7 +258,7 @@ export class Controller {
 
   private printFoldersSection(): void {
     const visibleFolders = this.getVisibleScrollFolders();
-    this.clearFolderSection();
+    this.clearLine(this.previusCursorPosY);
 
     visibleFolders.map((folder: IFolder, index: number) => {
       const folderRow = MARGINS.ROW_RESULTS_START + index;
@@ -448,6 +450,7 @@ export class Controller {
 
   private moveCursorUp(): void {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
+      this.previusCursorPosY = this.cursorPosY;
       this.cursorPosY--;
       this.checkCursorScroll();
     }
@@ -455,6 +458,7 @@ export class Controller {
 
   private moveCursorDown(): void {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
+      this.previusCursorPosY = this.cursorPosY;
       this.cursorPosY++;
       this.checkCursorScroll();
     }
