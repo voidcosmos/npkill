@@ -19,14 +19,14 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 ## Table of Contents
 
-- [Features](#features)
-- [Installation ](#installation)
-- [Usage](#usage)
-  - [Options](#options)
-  - [Examples](#examples)
-- [Roadmap](#roadmap)
-- [Known-bugs](#known-bugs)
-- [Contributing](#contributing)
+- [Features :heavy_check_mark:](#features)
+- [Installation :cloud: ](#installation)
+- [Usage :clipboard:](#usage)
+  - [Options :baby_chick:](#options)
+  - [Examples :cat:](#examples)
+- [Roadmap :crystal_ball:](#roadmap)
+- [Known-bugs :bug:](#known-bugs)
+- [Contributing :revolving_hearts:](#contributing)
 
 <a name="features"></a>
 
