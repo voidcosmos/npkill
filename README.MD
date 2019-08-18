@@ -20,7 +20,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 ## Table of Contents
 
 - [Features](#features)
-- [Installation](#installation)
+- [Installation ](#installation)
 - [Usage](#usage)
   - [Options](#options)
   - [Examples](#examples)
@@ -28,7 +28,9 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Known-bugs](#known-bugs)
 - [Contributing](#contributing)
 
-# Features
+<a name="features"></a>
+
+# :heavy_check_mark: Features
 
 - **Clear space:** Get rid of old and dusty node_modules cluttering up your machine.
 
@@ -38,7 +40,9 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 - **Minified:** It barely has any dependencies.
 
-# Installation
+<a name="installation"></a>
+
+# :cloud: Installation
 
 ```bash
 $ npm i -g npkill
@@ -46,7 +50,9 @@ $ npm i -g npkill
 
 _Unix users may need to run the command with sudo_
 
-# Usage
+<a name="usage"></a>
+
+# :clipboard: Usage
 
 ```bash
 $ npkill
@@ -58,7 +64,9 @@ Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd
 
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
-## Options
+<a name="options"></a>
+
+## :baby_chick: Options
 
 | ARGUMENT          | DESCRIPTION                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------- |
@@ -73,7 +81,9 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 **Warning:** _In future versions some commands may change_
 
-## Examples
+<a name="examples"></a>
+
+## :cat: Examples
 
 - Search **node_modules** directories in your _projects_ directory:
 
@@ -91,7 +101,9 @@ npkill
 npkill -d ~/backups/ -e
 ```
 
-# Roadmap
+<a name="roadmap"></a>
+
+# :crystal_ball: Roadmap
 
 - [x] Release 0.1.0 !
 - [x] Improve code
@@ -104,7 +116,9 @@ npkill -d ~/backups/ -e
 - [ ] Add some menus
 - [ ] Periodic and automatic cleaning (?)
 
-# Known-bugs
+<a name="known-bugs"></a>
+
+# :bug: Known bugs :bug:
 
 - Sometimes, CLI is blocked while folder is deleting.
 - (SOLVED) Performance issues when searching from high level directories (like / in linux).
@@ -114,7 +128,9 @@ npkill -d ~/backups/ -e
 
 > If you find any bugs, don't hesitate and open an issue :)
 
-# Contributing
+<a name="contributing"></a>
+
+# :revolving_hearts: Contributing
 
 Available soon
 
