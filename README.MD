@@ -19,15 +19,15 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 ## Table of Contents
 
-- [Features](#heavycheckmark-features)
-- [Installation](#cloud-installation)
-- [Usage](#clipboard-usage)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
   - [Options](#options)
   - [Examples](#examples)
-- [Roadmap](#crystalball-roadmap)
-- [Known bugs](#bug-known-bugs-bug)
-- [Contributing](#revolvinghearts-contributing)
-- [License](#scroll-license)
+- [Roadmap](#roadmap)
+- [Known bugs](#known-bugs)
+- [Contributing](#contributing)
+- [License](#license)
 
 <a name="features"></a>
 
@@ -134,6 +134,8 @@ npkill -d ~/backups/ -e
 # :revolving_hearts: Contributing
 
 Available soon
+
+<a name="license"></a>
 
 # :scroll: License
 
