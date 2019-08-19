@@ -25,10 +25,13 @@ This tool allows you to list any _node_modules_ directories in your system, as w
   - [Options](#options)
   - [Examples](#examples)
 - [Roadmap](#roadmap)
-- [Known-bugs](#known-bugs)
+- [Known bugs](#known-bugs)
 - [Contributing](#contributing)
+- [License](#license)
 
-# Features
+<a name="features"></a>
+
+# :heavy_check_mark: Features
 
 - **Clear space:** Get rid of old and dusty node_modules cluttering up your machine.
 
@@ -38,7 +41,9 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 - **Minified:** It barely has any dependencies.
 
-# Installation
+<a name="installation"></a>
+
+# :cloud: Installation
 
 ```bash
 $ npm i -g npkill
@@ -46,7 +51,9 @@ $ npm i -g npkill
 
 _Unix users may need to run the command with sudo_
 
-# Usage
+<a name="usage"></a>
+
+# :clipboard: Usage
 
 ```bash
 $ npkill
@@ -57,6 +64,8 @@ By default, npkill will scan for node_modules starting at the path where `npkill
 Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> to delete the selected folder (v0.2.2 and below the key was <kbd>Del</kbd>).
 
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
+
+<a name="options"></a>
 
 ## Options
 
@@ -72,6 +81,8 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -v, --version     | Show npkill version                                                                       |
 
 **Warning:** _In future versions some commands may change_
+
+<a name="examples"></a>
 
 ## Examples
 
@@ -91,7 +102,9 @@ npkill
 npkill -d ~/backups/ -e
 ```
 
-# Roadmap
+<a name="roadmap"></a>
+
+# :crystal_ball: Roadmap
 
 - [x] Release 0.1.0 !
 - [x] Improve code
@@ -104,7 +117,9 @@ npkill -d ~/backups/ -e
 - [ ] Add some menus
 - [ ] Periodic and automatic cleaning (?)
 
-# Known-bugs
+<a name="known-bugs"></a>
+
+# :bug: Known bugs :bug:
 
 - Sometimes, CLI is blocked while folder is deleting.
 - (SOLVED) Performance issues when searching from high level directories (like / in linux).
@@ -114,8 +129,18 @@ npkill -d ~/backups/ -e
 
 > If you find any bugs, don't hesitate and open an issue :)
 
-# Contributing
+<a name="contributing"></a>
+
+# :revolving_hearts: Contributing
 
 Available soon
+
+<a name="license"></a>
+
+# :scroll: License
+
+MIT © [Nya García Gallardo](https://github.com/NyaGarcia) and [Juan Torres Gómez](https://github.com/zaldih)
+
+:cat::baby_chick:
 
 ---
