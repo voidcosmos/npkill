@@ -19,14 +19,15 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 ## Table of Contents
 
-- [Features :heavy_check_mark:](#features)
-- [Installation :cloud: ](#installation)
-- [Usage :clipboard:](#usage)
-  - [Options :baby_chick:](#options)
-  - [Examples :cat:](#examples)
-- [Roadmap :crystal_ball:](#roadmap)
-- [Known-bugs :bug:](#known-bugs)
-- [Contributing :revolving_hearts:](#contributing)
+- [Features](#heavycheckmark-features)
+- [Installation](#cloud-installation)
+- [Usage](#clipboard-usage)
+  - [Options](#options)
+  - [Examples](#examples)
+- [Roadmap](#crystalball-roadmap)
+- [Known bugs](#bug-known-bugs-bug)
+- [Contributing](#revolvinghearts-contributing)
+- [License](#scroll-license)
 
 <a name="features"></a>
 
@@ -66,7 +67,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 <a name="options"></a>
 
-## :baby_chick: Options
+## Options
 
 | ARGUMENT          | DESCRIPTION                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------- |
@@ -83,7 +84,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 <a name="examples"></a>
 
-## :cat: Examples
+## Examples
 
 - Search **node_modules** directories in your _projects_ directory:
 
@@ -133,5 +134,11 @@ npkill -d ~/backups/ -e
 # :revolving_hearts: Contributing
 
 Available soon
+
+# :scroll: License
+
+MIT © [Nya García Gallardo](https://github.com/NyaGarcia) and [Juan Torres Gómez](https://github.com/zaldih)
+
+:cat::baby_chick:
 
 ---
