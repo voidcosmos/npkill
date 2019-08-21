@@ -1,5 +1,6 @@
 export interface IConfig {
   backgroundColor: string;
+  checkUpdates: boolean;
   deleteAll: boolean;
   folderSizeInGb: boolean;
   maxSimultaneousSearch: number;

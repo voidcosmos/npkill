@@ -66,11 +66,14 @@ export class Controller {
     private consoleService: ConsoleService,
     private updateService: UpdateService,
   ) {
-    keypress(process.stdin);
+    this.init();
+  }
 
+  private init(): void {
+    keypress(process.stdin);
     this.getArguments();
     this.prepareScreen();
-    this.checkVersion();
+    if (this.config.checkUpdates) this.checkVersion();
 
     this.scan();
   }
@@ -96,6 +99,7 @@ export class Controller {
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
+    if (options['no-check-updates']) this.config.checkUpdates = false;
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
@@ -158,16 +162,23 @@ export class Controller {
   }
 
   private prepareScreen(): void {
-    if (this.isTerminalTooSmall()) {
-      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
-      process.exit();
-    }
-
+    this.checkScreenRequirements();
     this.setRawMode();
     this.clear();
     this.printUI();
     this.setupKeysListener();
     this.hideCursor();
+  }
+
+  private checkScreenRequirements(): void {
+    if (this.isTerminalTooSmall()) {
+      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
+      process.exit();
+    }
+    if (!this.stdout.isTTY) {
+      this.print(INFO_MSGS.NO_TTY);
+      process.exit();
+    }
   }
 
   private checkVersion(): void {

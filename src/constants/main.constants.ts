@@ -12,6 +12,7 @@ export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG: IConfig = {
   backgroundColor: 'bgBlue',
+  checkUpdates: true,
   deleteAll: false,
   folderSizeInGb: false,
   maxSimultaneousSearch: 6,
@@ -27,7 +28,7 @@ export const MARGINS = {
 
 export const UI_HELP = {
   X_COMMAND_OFFSET: 3,
-  X_DESCRIPTION_OFFSET: 25,
+  X_DESCRIPTION_OFFSET: 27,
   Y_OFFSET: 2,
 };
 

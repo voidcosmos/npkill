@@ -49,7 +49,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 $ npm i -g npkill
 ```
 
-_Unix users may need to run the command with sudo_
+_Unix users may need to run the command with sudo. Go carefully_
 
 <a name="usage"></a>
 
@@ -69,16 +69,17 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 ## Options
 
-| ARGUMENT          | DESCRIPTION                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| -c, --bg-color    | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_ |
-| -d, --directory   | Set the directory from which to begin searching. By default, starting-point is .          |
-| -D, --delete-all  | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.         |
-| -e, --show-errors | Show error messages related to the search if any                                          |
-| -f, --full        | Start searching from the home of the user (example: "/home/user" in linux)                |
-| -gb               | Show folders in Gigabytes instead of Megabytes.                                           |
-| -h, --help, ?     | Show this help page and exit                                                              |
-| -v, --version     | Show npkill version                                                                       |
+| ARGUMENT               | DESCRIPTION                                                                               |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| -c, --bg-color         | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_ |
+| -d, --directory        | Set the directory from which to begin searching. By default, starting-point is .          |
+| -D, --delete-all       | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.         |
+| -e, --show-errors      | Show error messages related to the search if any                                          |
+| -f, --full             | Start searching from the home of the user (example: "/home/user" in linux)                |
+| -gb                    | Show folders in Gigabytes instead of Megabytes.                                           |
+| -h, --help, ?          | Show this help page and exit                                                              |
+| -nu, --no-check-update | Dont check for updates on startup.                                                        |
+| -v, --version          | Show npkill version                                                                       |
 
 **Warning:** _In future versions some commands may change_
 
@@ -110,6 +111,7 @@ npkill -d ~/backups/ -e
 - [x] Improve code
   - [x] Improve performance
   - [ ] Improve performance even more!
+- [ ] Sort results by size and path
 - [ ] Reduce dependencies to be a more minimalist module
 - [ ] Allow the search for other types of directories (targets)
 - [ ] Allow to filter by directories that have not been used in a period of time
@@ -122,10 +124,10 @@ npkill -d ~/backups/ -e
 # :bug: Known bugs :bug:
 
 - Sometimes, CLI is blocked while folder is deleting.
+- Some terminals that do not use TTY (like git bash in windows) do not work.
 - (SOLVED) Performance issues when searching from high level directories (like / in linux).
 - (SOLVED) Sometimes text collapses when updating the cli.
 - (SOLVED) Analyzing the size of the directories takes longer than it should.
-- (SOLVED) State "searching..." does not change even if search has been completed
 
 > If you find any bugs, don't hesitate and open an issue :)
 
