@@ -66,8 +66,11 @@ export class Controller {
     private consoleService: ConsoleService,
     private updateService: UpdateService,
   ) {
-    keypress(process.stdin);
+    this.init();
+  }
 
+  private init(): void {
+    keypress(process.stdin);
     this.getArguments();
     this.prepareScreen();
     if (this.config.checkUpdates) this.checkVersion();
