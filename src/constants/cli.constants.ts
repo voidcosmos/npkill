@@ -41,6 +41,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'help',
   },
   {
+    arg: ['-nu', '--no-check-update'],
+    description: 'Dont check for updates on startup.',
+    name: 'no-check-updates',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',

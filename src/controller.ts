@@ -70,7 +70,7 @@ export class Controller {
 
     this.getArguments();
     this.prepareScreen();
-    this.checkVersion();
+    if (this.config.checkUpdates) this.checkVersion();
 
     this.scan();
   }
@@ -96,6 +96,7 @@ export class Controller {
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
+    if (options['no-check-updates']) this.config.checkUpdates = false;
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
