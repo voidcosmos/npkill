@@ -159,16 +159,23 @@ export class Controller {
   }
 
   private prepareScreen(): void {
-    if (this.isTerminalTooSmall()) {
-      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
-      process.exit();
-    }
-
+    this.checkScreenRequirements();
     this.setRawMode();
     this.clear();
     this.printUI();
     this.setupKeysListener();
     this.hideCursor();
+  }
+
+  private checkScreenRequirements(): void {
+    if (this.isTerminalTooSmall()) {
+      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
+      process.exit();
+    }
+    if (!this.stdout.isTTY) {
+      this.print(INFO_MSGS.NO_TTY);
+      process.exit();
+    }
   }
 
   private checkVersion(): void {
