@@ -59,6 +59,7 @@ describe('Console Service', () => {
             'ullamcorper.',
           ],
           text:
+            // tslint:disable-next-line: max-line-length
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris faucibus sit amet libero non vestibulum. Morbi ac tellus dolor. Duis consectetur eget lectus sed ullamcorper.',
           width: 43,
         },

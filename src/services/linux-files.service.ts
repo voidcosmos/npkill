@@ -46,8 +46,3 @@ export class LinuxFilesService extends FileService {
     });
   }
 }
-/* 
-const lf = new LinuxFilesService(new StreamService());
-
-lf.deleteDir('/home/nya/Programming/node_modules');
- */
