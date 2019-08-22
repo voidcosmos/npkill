@@ -34,13 +34,13 @@ import { SpinnerService } from './services/spinner.service';
 import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
+import { ResultsService } from './services/results.service';
 
 export class Controller {
   private folderRoot = '';
   private stdin: NodeJS.ReadStream = process.stdin;
   private stdout: NodeJS.WriteStream = process.stdout;
   private config: IConfig = DEFAULT_CONFIG;
-  private nodeFolders: IFolder[] = [];
 
   private cursorPosY = MARGINS.ROW_RESULTS_START;
   private previusCursorPosY = MARGINS.ROW_RESULTS_START;
@@ -65,6 +65,7 @@ export class Controller {
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
     private updateService: UpdateService,
+    private resultsService: ResultsService,
   ) {
     keypress(process.stdin);
 
@@ -97,6 +98,7 @@ export class Controller {
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
     if (options['bg-color']) this.setColor(options['bg-color']);
+    if (options['sort-by']) this.config.sortBy = options['sort-by'];
   }
 
   private showHelp(): void {
@@ -397,7 +399,9 @@ export class Controller {
       .filter(path => path)
       .map(path => {
         const nodeFolder = { path, deleted: false, size: 0 };
-        this.addNodeFolder(nodeFolder);
+        this.resultsService.addResult(nodeFolder);
+        if (this.config.sortBy === 'path')
+          this.resultsService.sortResults(this.config.sortBy);
 
         this.calculateFolderStats(nodeFolder);
         this.printFoldersSection();
@@ -414,12 +418,16 @@ export class Controller {
   private calculateFolderStats(nodeFolder: IFolder): void {
     this.fileService
       .getFolderSize(nodeFolder.path)
-      .subscribe((size: string) => {
-        nodeFolder.size = this.transformFolderSize(size);
+      .subscribe((size: string) => this.finishFolderStats(nodeFolder, size));
+  }
 
-        this.printStats();
-        this.printFoldersSection();
-      });
+  private finishFolderStats(folder: IFolder, size: string): void {
+    folder.size = this.transformFolderSize(size);
+    if (this.config.sortBy === 'size')
+      this.resultsService.sortResults(this.config.sortBy);
+    this.printStats();
+    this.clearFolderSection();
+    this.printFoldersSection();
   }
 
   private transformFolderSize(size: string): number {
@@ -444,7 +452,8 @@ export class Controller {
   }
 
   private printExitMessage(): void {
-    const exitMessage = `Space released: ${this.getStats().spaceReleased}\n`;
+    const { spaceReleased } = this.resultsService.getStats();
+    const exitMessage = `Space released: ${spaceReleased}\n`;
     this.print(exitMessage);
   }
 
@@ -453,7 +462,8 @@ export class Controller {
   }
 
   private isCursorInLowerTextLimit(positionY: number): boolean {
-    return positionY < this.nodeFolders.length - 1 + MARGINS.ROW_RESULTS_START;
+    const foldersAmmount = this.resultsService.results.length;
+    return positionY < foldersAmmount - 1 + MARGINS.ROW_RESULTS_START;
   }
 
   private isCursorInUpperTextLimit(positionY: number): boolean {
@@ -490,7 +500,7 @@ export class Controller {
   }
 
   private delete(): void {
-    const nodeFolder = this.nodeFolders[
+    const nodeFolder = this.resultsService.results[
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
     this.clearErrors();
@@ -532,7 +542,7 @@ export class Controller {
   }
 
   private printStats(): void {
-    const { totalSpace, spaceReleased } = this.getStats();
+    const { totalSpace, spaceReleased } = this.resultsService.getStats();
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
     const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
@@ -544,23 +554,8 @@ export class Controller {
     this.printAt(spaceReleased, spaceReleasedPosition);
   }
 
-  private getStats(): IStats {
-    let spaceReleased = 0;
-
-    const totalSpace = this.nodeFolders.reduce((total, folder) => {
-      if (folder.deleted) spaceReleased += folder.size;
-
-      return total + folder.size;
-    }, 0);
-
-    return {
-      spaceReleased: `${this.round(spaceReleased, 2)} gb`,
-      totalSpace: `${this.round(totalSpace, 2)} gb`,
-    };
-  }
-
   private getVisibleScrollFolders(): IFolder[] {
-    return this.nodeFolders.slice(
+    return this.resultsService.results.slice(
       this.scroll,
       this.stdout.rows - MARGINS.ROW_RESULTS_START + this.scroll,
     );
@@ -582,10 +577,6 @@ export class Controller {
 
   private clearLine(row: number): void {
     this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
-  }
-
-  private addNodeFolder(nodeFolder: IFolder): void {
-    this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
 
   private getUserHomePath(): string {

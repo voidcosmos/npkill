@@ -41,6 +41,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'help',
   },
   {
+    arg: ['-s', '--sort'],
+    description: 'Sort results by: size or path',
+    name: 'sort-by',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',
