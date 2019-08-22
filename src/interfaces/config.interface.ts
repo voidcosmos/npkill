@@ -5,4 +5,5 @@ export interface IConfig {
   folderSizeInGb: boolean;
   maxSimultaneousSearch: number;
   showErrors: boolean;
+  targetFolder: string;
 }
