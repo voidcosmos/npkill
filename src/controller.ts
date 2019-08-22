@@ -100,6 +100,8 @@ export class Controller {
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
+    if (options['target-folder'])
+      this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
