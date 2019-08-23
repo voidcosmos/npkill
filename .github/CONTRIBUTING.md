@@ -11,6 +11,8 @@ Anyway, be welcome. I will try to explain the recommended guidelines to contribu
 
 - Following this protocol helps not work in vain. It would be a shame to dedicate hours to a pull request and have to reject it because there is already someone working on something similar.
 
+-Unless they are minor and fast moficications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
+
 - Touch only the right and necessary lines for your modification. This will help to avoid conflicts, and if there were any, it will be easier to solve them.
 
 - Make sure you have run `npm install`, because some development packages are meant to maintain harmony. Prettier for example makes sure that in each commit the files are well indented and commitlint that their messages follow the convention.
@@ -34,9 +36,17 @@ Yay! Green light to work!
 6. Write code and create commit regularly following the [recommended convention]()
 
 7. Create a PULL REQUEST using **DEVELOP as the base branch**.
-   As a title, use the same or similar to the one you used in the creation of the issue, and in the description, any information that you consider relevant next to the link of the issue (example: #issueNumber)
+   As a title, use the same or similar to the one you used in the creation of the issue, and in the description, any information that you consider relevant next to the link of the issue and "close" text (example: close #issueNumber) [more info](https://help.github.com/en/articles/closing-issues-using-keywords)
 
 # Conventions
+
+## git branch
+
+I recommend using the following nomenclature whenever possible:
+
+- feat/sort-results
+- fix/lstat-crash
+- docs/improve-readme
 
 ## git messages
 
@@ -68,3 +78,12 @@ All commits must use a convention similar to angular. [Here all the rules](https
   _[Some points extracted from Atom doc](https://github.com/atom/atom/blob/master/CONTRIBUTING.md#git-commit-messages)_
 
 ## code
+
+It is important to apply the principles of clean code.
+
+If you use VsCode, there are some add-ons that I recommend:
+-TSLint: Note in the code if something is breaking any rule (do not use var, use const if possible, if some type has not been defined etc)
+
+- CodeMetrics: Calculate the complexity of the methods, to ensure that your functions do only 1 thing. (green ok, yellow meh, red oh god)
+
+Probably in other editors they are also available.
