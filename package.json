@@ -88,16 +88,6 @@
       "node"
     ]
   },
-  "nodemonConfig": {
-    "watch": [
-      "src"
-    ],
-    "ext": "ts",
-    "ignore": [
-      "src/**/*.spec.ts"
-    ],
-    "exec": "ts-node ./src/index.ts"
-  },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [
       "prettier --write",
