@@ -12,7 +12,8 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
-          npm run build --if-present
+          npm run build
+          npm run build-go-bin
           npm test
         env:
           CI: true

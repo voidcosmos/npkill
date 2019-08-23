@@ -28,12 +28,13 @@
     "lib/**/*"
   ],
   "scripts": {
-    "build": "gulp",
-    "build-go-bin": "gulp buildGo",
+    "build": "tsc",
+    "build-go-bin": "env GOOS=windows GOARCH=amd64 go build -o './src/bin/windows-find.exe' './src/utils' ",
+    "build-go-bin-release": "env GOOS=windows GOARCH=amd64 go build -o './src/bin/windows-find.exe'  './src/utils' ",
     "start": "ts-node ./src/index.ts",
     "test": "jest --config jestconfig.json",
     "test:watch": "jest --config jestconfig.json --watch",
-    "release": "npm run build && np"
+    "release": "npm run build && npm run build-go-bin-release && np"
   },
   "dependencies": {
     "ansi-escapes": "^4.1.0",
@@ -48,9 +49,6 @@
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.0",
     "commitlint": "^8.0.0",
-    "del": "^5.0.0",
-    "gulp": "^4.0.2",
-    "gulp-typescript": "^5.0.1",
     "husky": "^2.7.0",
     "jest": "^24.8.0",
     "lint-staged": "^8.2.1",
