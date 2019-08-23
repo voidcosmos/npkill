@@ -45,23 +45,32 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 # :cloud: Installation
 
+You don't really need to install it to use it!
+Simply use the following command:
+
 ```bash
-$ npm i -g npkill
+$ npx npkill
 ```
 
-_Unix users may need to run the command with sudo. Go carefully_
+Or if for some reason you really want to install it:
+
+```bash
+$ npm i -g npkill
+# Unix users may need to run the command with sudo. Go carefully
+```
 
 <a name="usage"></a>
 
 # :clipboard: Usage
 
 ```bash
-$ npkill
+$ npx npkill
+# or just npkill if installed globally
 ```
 
 By default, npkill will scan for node_modules starting at the path where `npkill` command is executed.
 
-Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> to delete the selected folder (v0.2.2 and below the key was <kbd>Del</kbd>).
+Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> to delete the selected folder.
 
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
