@@ -71,6 +71,7 @@ export class Controller {
 
   private init(): void {
     keypress(process.stdin);
+    this.setErrorEvents();
     this.getArguments();
     this.prepareScreen();
     if (this.config.checkUpdates) this.checkVersion();
@@ -381,6 +382,15 @@ export class Controller {
     });
   }
 
+  private setErrorEvents(): void {
+    process.on('uncaughtException', err => {
+      this.printError(err.message);
+    });
+    process.on('unhandledRejection', (reason: {}) => {
+      this.printError(reason['stack']);
+    });
+  }
+
   private hideCursor(): void {
     this.print(ansiEscapes.cursorHide);
   }
@@ -510,7 +520,7 @@ export class Controller {
 
   private deleteFolder(folder: IFolder): void {
     if (!this.fileService.isSafeToDelete(folder.path)) {
-      this.printError('Folder no safe to delete');
+      this.printError('Folder not safe to delete');
       return;
     }
 
@@ -535,11 +545,8 @@ export class Controller {
 
   private prepareErrorMsg(errMessage: string): string {
     const margin = MARGINS.FOLDER_COLUMN_START;
-    return this.consoleService.shortenText(
-      errMessage,
-      this.stdout.columns - margin,
-      this.stdout.columns - margin,
-    );
+    const width = this.stdout.columns - margin - 3;
+    return this.consoleService.shortenText(errMessage, width, width);
   }
 
   private printStats(): void {
