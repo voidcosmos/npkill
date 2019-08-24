@@ -46,6 +46,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'no-check-updates',
   },
   {
+    arg: ['-t', '--target'],
+    description:
+      'Specify the name of the directories you want to search (by default, is node_modules)',
+    name: 'target-folder',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',

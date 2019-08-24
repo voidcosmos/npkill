@@ -102,6 +102,8 @@ export class Controller {
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
+    if (options['target-folder'])
+      this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
@@ -392,7 +394,8 @@ export class Controller {
   }
 
   private scan(): void {
-    const folders$ = this.fileService.listDir(this.folderRoot);
+    const target = this.config.targetFolder;
+    const folders$ = this.fileService.listDir(this.folderRoot, target);
     folders$.subscribe(
       folder => this.newFolderfound(folder),
       error => this.printError(error),
@@ -511,7 +514,11 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
-    if (!this.fileService.isSafeToDelete(folder.path)) {
+    const isSafeToDelete = this.fileService.isSafeToDelete(
+      folder.path,
+      this.config.targetFolder,
+    );
+    if (!isSafeToDelete) {
       this.printError('Folder no safe to delete');
       return;
     }

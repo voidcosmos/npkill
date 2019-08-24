@@ -24,9 +24,9 @@ export class WindowsFilesService extends FileService {
     });
   }
 
-  listDir(path: string): Observable<{}> {
+  listDir(path: string, target: string): Observable<{}> {
     const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
-    const child = spawn(binPath, [path]);
+    const child = spawn(binPath, [path, target]);
     return this.streamService.getStream(child);
   }
 

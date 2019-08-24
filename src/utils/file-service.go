@@ -8,6 +8,7 @@ import (
 )
 
 var wg sync.WaitGroup
+var targetFolder string
 
 func listDir(searchStart string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(searchStart)
@@ -40,11 +41,13 @@ func newDirFound(path string, dir os.FileInfo) {
 }
 
 func isNodeFolder(name string) bool {
-	return name == "node_modules"
+	return name == targetFolder
 }
 
 func main() {
 	wg.Add(1)
-	go listDir(os.Args[1])
+	mainPath := os.Args[1]
+	targetFolder = os.Args[2]
+	go listDir(mainPath)
 	wg.Wait()
 }

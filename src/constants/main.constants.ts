@@ -1,8 +1,6 @@
 import { IConfig } from '../interfaces/config.interface';
 import { IUiPosition } from '../interfaces/ui-positions.interface';
 
-export const TARGET_FOLDER = 'node_modules';
-// export const ROW_SEARCHING_FOLDER = 7;
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';
 export const WIDTH_OVERFLOW = '...';
@@ -17,6 +15,7 @@ export const DEFAULT_CONFIG: IConfig = {
   folderSizeInGb: false,
   maxSimultaneousSearch: 6,
   showErrors: false,
+  targetFolder: 'node_modules',
 };
 
 export const MARGINS = {
