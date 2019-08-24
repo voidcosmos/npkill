@@ -35,6 +35,7 @@ import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
 import { ResultsService } from './services/results.service';
+import { FOLDER_SORT } from './constants/sort.result';
 
 export class Controller {
   private folderRoot = '';
@@ -90,6 +91,13 @@ export class Controller {
       this.showObsoleteMessage();
       process.exit();
     }
+    if (options['sort-by']) {
+      if (!this.isValidSortParam(options['sort-by'])) {
+        this.print(INFO_MSGS.NO_VALID_SORT_NAME);
+        process.exit();
+      }
+      this.config.sortBy = options['sort-by'];
+    }
 
     this.folderRoot = options['directory']
       ? options['directory']
@@ -98,7 +106,6 @@ export class Controller {
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
     if (options['bg-color']) this.setColor(options['bg-color']);
-    if (options['sort-by']) this.config.sortBy = options['sort-by'];
   }
 
   private showHelp(): void {
@@ -140,6 +147,10 @@ export class Controller {
 
   private isValidColor(color: string) {
     return Object.keys(COLORS).some(validColor => validColor === color);
+  }
+
+  private isValidSortParam(sortName: string): boolean {
+    return Object.keys(FOLDER_SORT).includes(sortName);
   }
 
   private getVersion(): string {

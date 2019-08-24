@@ -1,12 +1,9 @@
 import { IFolder } from '../interfaces/folder.interface';
 import { IStats } from '../interfaces/stats.interface';
+import { FOLDER_SORT } from '../constants/sort.result';
 
 export class ResultsService {
   results: IFolder[] = [];
-  private SORT = {
-    path: (a, b) => (a.path < b.path ? 1 : -1),
-    size: (a, b) => (a.size < b.size ? 1 : -1),
-  };
 
   addResult(result: IFolder): void {
     const sorterdResults = [...this.results, result];
@@ -15,7 +12,7 @@ export class ResultsService {
   }
 
   sortResults(method: string): void {
-    this.results = this.results.sort(this.SORT[method]);
+    this.results = this.results.sort(FOLDER_SORT[method]);
   }
 
   getStats(): IStats {

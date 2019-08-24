@@ -11,10 +11,11 @@ export const INFO_MSGS = {
     'Oh no! The terminal is too narrow. Please, ' +
     'enlarge it (This will be fixed in future versions. Disclose the inconveniences)',
   NEW_UPDATE_FOUND: 'New version found! npm i -g npkill for update.',
+  NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size',
   SEARCHING: 'searching ',
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
-  TOTAL_SPACE: 'releasable space: ',
+  TOTAL_SPACE: 'releasa ble space: ',
   DISABLED:
     '[-D, --delete-all] option has been disabled until future versions. Please restart npkill without this option.',
 };
