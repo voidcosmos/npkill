@@ -15,7 +15,7 @@ export const INFO_MSGS = {
   SEARCHING: 'searching ',
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
-  TOTAL_SPACE: 'releasa ble space: ',
+  TOTAL_SPACE: 'releasable space: ',
   DISABLED:
     '[-D, --delete-all] option has been disabled until future versions. Please restart npkill without this option.',
 };
