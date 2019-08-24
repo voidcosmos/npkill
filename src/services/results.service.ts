@@ -6,9 +6,7 @@ export class ResultsService {
   results: IFolder[] = [];
 
   addResult(result: IFolder): void {
-    const sorterdResults = [...this.results, result];
-    // this.results = this.sortResults(sorterdResults);
-    this.results = sorterdResults;
+    this.results = [...this.results, result];
   }
 
   sortResults(method: string): void {
