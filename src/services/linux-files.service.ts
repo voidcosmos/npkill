@@ -18,11 +18,11 @@ export class LinuxFilesService extends FileService {
     return this.streamService.getStream(cut);
   }
 
-  listDir(path: string): Observable<{}> {
+  listDir(path: string, target: string): Observable<{}> {
     const child = spawn('find', [
       path,
       '-name',
-      'node_modules',
+      target,
       '-type',
       'd',
       '-prune',

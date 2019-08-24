@@ -1,6 +1,6 @@
 {
   "name": "npkill",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
@@ -31,8 +31,8 @@
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
     "start": "ts-node ./src/index.ts",
-    "test": "jest --config jestconfig.json",
-    "test:watch": "jest --config jestconfig.json --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "release": "npm run build && np"
   },
   "dependencies": {
@@ -68,6 +68,25 @@
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged"
     }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(t|j)sx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [
