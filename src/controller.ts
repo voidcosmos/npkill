@@ -55,6 +55,8 @@ export class Controller {
     // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
     space: this.delete.bind(this),
+    j: this.moveCursorDown.bind(this),
+    k: this.moveCursorUp.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);
@@ -68,11 +70,14 @@ export class Controller {
     private updateService: UpdateService,
     private resultsService: ResultsService,
   ) {
-    keypress(process.stdin);
+    this.init();
+  }
 
+  private init(): void {
+    keypress(process.stdin);
     this.getArguments();
     this.prepareScreen();
-    this.checkVersion();
+    if (this.config.checkUpdates) this.checkVersion();
 
     this.scan();
   }
@@ -105,6 +110,9 @@ export class Controller {
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
+    if (options['no-check-updates']) this.config.checkUpdates = false;
+    if (options['target-folder'])
+      this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
@@ -171,16 +179,23 @@ export class Controller {
   }
 
   private prepareScreen(): void {
-    if (this.isTerminalTooSmall()) {
-      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
-      process.exit();
-    }
-
+    this.checkScreenRequirements();
     this.setRawMode();
     this.clear();
     this.printUI();
     this.setupKeysListener();
     this.hideCursor();
+  }
+
+  private checkScreenRequirements(): void {
+    if (this.isTerminalTooSmall()) {
+      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
+      process.exit();
+    }
+    if (!this.stdout.isTTY) {
+      this.print(INFO_MSGS.NO_TTY);
+      process.exit();
+    }
   }
 
   private checkVersion(): void {
@@ -392,7 +407,8 @@ export class Controller {
   }
 
   private scan(): void {
-    const folders$ = this.fileService.listDir(this.folderRoot);
+    const target = this.config.targetFolder;
+    const folders$ = this.fileService.listDir(this.folderRoot, target);
     folders$.subscribe(
       folder => this.newFolderfound(folder),
       error => this.printError(error),
@@ -519,7 +535,11 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
-    if (!this.fileService.isSafeToDelete(folder.path)) {
+    const isSafeToDelete = this.fileService.isSafeToDelete(
+      folder.path,
+      this.config.targetFolder,
+    );
+    if (!isSafeToDelete) {
       this.printError('Folder no safe to delete');
       return;
     }
