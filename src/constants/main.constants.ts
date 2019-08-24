@@ -15,6 +15,7 @@ export const DEFAULT_CONFIG: IConfig = {
   folderSizeInGb: false,
   maxSimultaneousSearch: 6,
   showErrors: false,
+  sortBy: '',
   targetFolder: 'node_modules',
 };
 

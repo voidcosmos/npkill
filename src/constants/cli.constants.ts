@@ -46,6 +46,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'no-check-updates',
   },
   {
+    arg: ['-s', '--sort'],
+    description: 'Sort results by: size or path',
+    name: 'sort-by',
+  },
+  {
     arg: ['-t', '--target'],
     description:
       'Specify the name of the directories you want to search (by default, is node_modules)',
