@@ -427,8 +427,10 @@ export class Controller {
       .map(path => {
         const nodeFolder = { path, deleted: false, size: 0 };
         this.resultsService.addResult(nodeFolder);
-        if (this.config.sortBy === 'path')
+        if (this.config.sortBy === 'path') {
           this.resultsService.sortResults(this.config.sortBy);
+          this.clearFolderSection();
+        }
 
         this.calculateFolderStats(nodeFolder);
         this.printFoldersSection();
@@ -450,10 +452,11 @@ export class Controller {
 
   private finishFolderStats(folder: IFolder, size: string): void {
     folder.size = this.transformFolderSize(size);
-    if (this.config.sortBy === 'size')
+    if (this.config.sortBy === 'size') {
       this.resultsService.sortResults(this.config.sortBy);
+      this.clearFolderSection();
+    }
     this.printStats();
-    this.clearFolderSection();
     this.printFoldersSection();
   }
 
