@@ -155,7 +155,7 @@ Available soon
 
 # :coffee: Buy us a cofre
 
-<img align="right" width="300" src="docs/cat-donation-cup.png">
+<img align="right" width="300" src="https://npkill.js.org/img/cat-donation-cup.png">
 We have developed npkill in our free time, because we are passionate about the programming sector.
 Tomorrow we would like to dedicate ourselves to this, but first, we have a long way to go.
 
