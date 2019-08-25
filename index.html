@@ -108,7 +108,9 @@
           <p>
             Installation through npm is simple. Make sure you have installed
             node and npm and then run
-            <span>npm i -g npkill</span>
+            <b><span>npm i -g npkill</span></b> .<br />
+            You can also use it without installing it by running
+            <b><span>npx npkill</span></b>
           </p>
         </div>
       </div>
@@ -120,7 +122,7 @@
           <h2 class="title">First Steps</h2>
           <p>
             Simply go from the terminal to the directory from which you want to
-            search and type <span>npkill</span>.
+            search and type <b><span>npkill</span></b> .
           </p>
           <p>
             This will start the search
@@ -223,6 +225,21 @@
                 <td>-h, --help, ?</td>
                 <td>Show help</td>
                 <td>false</td>
+              </tr>
+              <tr>
+                <td>-nu, --no-check-update</td>
+                <td>Dont check for updates on startup</td>
+                <td>false</td>
+              </tr>
+              <tr>
+                <td>-s, --sort</td>
+                <td>Sort results by: size or path <i>[ beta ]</i></td>
+                <td>none</td>
+              </tr>
+              <tr>
+                <td>-t, --target</td>
+                <td>Specify the name of the directories you want to search</td>
+                <td>node_modules</td>
               </tr>
               <tr>
                 <td>-v, --version</td>
@@ -397,6 +414,14 @@
             ><img
               src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"
           /></a>
+          <a
+            href="https://github.com/voidcosmos/npkill#coffee-buy-us-a-coffee"
+            target="_black"
+            ><img
+              src="https://yourdonation.rocks/images/badge.svg"
+              alt="Donations Badge"
+          /></a>
+
           <img
             alt="npm version"
             src="https://img.shields.io/npm/v/npkill.svg"
