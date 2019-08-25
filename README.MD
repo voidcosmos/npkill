@@ -5,6 +5,7 @@
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
 <a href="https://www.codacy.com/app/zaldih/npkill?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zaldih/npkill&amp;utm_campaign=Badge_Grade"><img src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"/></a>
+<a href="#donations"><img  src="https://yourdonation.rocks/images/badge.svg" alt="Donations Badge"></a>
 <img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg">
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
 </p>
@@ -27,6 +28,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
+- [Buy us a coffee](#donations)
 - [License](#license)
 
 <a name="features"></a>
@@ -71,6 +73,7 @@ $ npx npkill
 By default, npkill will scan for node_modules starting at the path where `npkill` command is executed.
 
 Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> to delete the selected folder.
+You can also use <kbd>j</kbd> and <kbd>k</kbd> to move between the results
 
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
@@ -82,12 +85,14 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | ---------------------- | ----------------------------------------------------------------------------------------- |
 | -c, --bg-color         | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_ |
 | -d, --directory        | Set the directory from which to begin searching. By default, starting-point is .          |
-| -D, --delete-all       | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found.         |
+| -D, --delete-all       | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found          |
 | -e, --show-errors      | Show error messages related to the search if any                                          |
 | -f, --full             | Start searching from the home of the user (example: "/home/user" in linux)                |
 | -gb                    | Show folders in Gigabytes instead of Megabytes.                                           |
 | -h, --help, ?          | Show this help page and exit                                                              |
-| -nu, --no-check-update | Dont check for updates on startup.                                                        |
+| -nu, --no-check-update | Dont check for updates on startup                                                         |
+| -s, --sort             | Sort results by: size or path _[ beta ]_                                                  |
+| -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)      |
 | -v, --version          | Show npkill version                                                                       |
 
 **Warning:** _In future versions some commands may change_
@@ -120,9 +125,9 @@ npkill -d ~/backups/ -e
 - [x] Improve code
   - [x] Improve performance
   - [ ] Improve performance even more!
-- [ ] Sort results by size and path
+- [x] Sort results by size and path
+- [x] Allow the search for other types of directories (targets)
 - [ ] Reduce dependencies to be a more minimalist module
-- [ ] Allow the search for other types of directories (targets)
 - [ ] Allow to filter by directories that have not been used in a period of time
 - [ ] Create option for displaying directories in tree format
 - [ ] Add some menus
@@ -134,6 +139,7 @@ npkill -d ~/backups/ -e
 
 - Sometimes, CLI is blocked while folder is deleting.
 - Some terminals that do not use TTY (like git bash in windows) do not work.
+- Sorting, especially by routes, can slow down the terminal when there are many results at the same time.
 - (SOLVED) Performance issues when searching from high level directories (like / in linux).
 - (SOLVED) Sometimes text collapses when updating the cli.
 - (SOLVED) Analyzing the size of the directories takes longer than it should.
@@ -145,6 +151,19 @@ npkill -d ~/backups/ -e
 # :revolving_hearts: Contributing
 
 Available soon
+<a name="donations"></a>
+
+# :coffee: Buy us a coffee
+
+<img align="right" width="300" src="https://npkill.js.org/img/cat-donation-cup.png">
+We have developed npkill in our free time, because we are passionate about the programming sector.
+Tomorrow we would like to dedicate ourselves to this, but first, we have a long way to go.
+
+We will continue to do things anyway, but donations are one of the many ways to support what we do.
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/voidcosmos)
+
+## Thanks!!
 
 <a name="license"></a>
 
