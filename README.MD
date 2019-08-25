@@ -5,6 +5,7 @@
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
 <a href="https://www.codacy.com/app/zaldih/npkill?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zaldih/npkill&amp;utm_campaign=Badge_Grade"><img src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"/></a>
+<a href="#donations"><img  src="https://yourdonation.rocks/images/badge.svg" alt="Donations Badge"></a>
 <img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg">
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
 </p>
@@ -27,6 +28,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
+- [Buy us a cofre](#donations)
 - [License](#license)
 
 <a name="features"></a>
@@ -89,7 +91,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -gb                    | Show folders in Gigabytes instead of Megabytes.                                           |
 | -h, --help, ?          | Show this help page and exit                                                              |
 | -nu, --no-check-update | Dont check for updates on startup                                                         |
-| -s, --sort             | Sort results by: size or path                                                             |
+| -s, --sort             | Sort results by: size or path _[ beta ]_                                                  |
 | -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)      |
 | -v, --version          | Show npkill version                                                                       |
 
@@ -149,6 +151,19 @@ npkill -d ~/backups/ -e
 # :revolving_hearts: Contributing
 
 Available soon
+<a name="donations"></a>
+
+# :coffee: Buy us a cofre
+
+<img align="right" width="300" src="docs/cat-donation-cup.png">
+We have developed npkill in our free time, because we are passionate about the programming sector.
+Tomorrow we would like to dedicate ourselves to this, but first, we have a long way to go.
+
+We will continue to do things anyway, but donations are one of the many ways to support what we do.
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/voidcosmos)
+
+## Thanks!!
 
 <a name="license"></a>
 
