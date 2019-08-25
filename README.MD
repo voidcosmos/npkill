@@ -28,7 +28,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
-- [Buy us a cofre](#donations)
+- [Buy us a coffee](#donations)
 - [License](#license)
 
 <a name="features"></a>
@@ -153,7 +153,7 @@ npkill -d ~/backups/ -e
 Available soon
 <a name="donations"></a>
 
-# :coffee: Buy us a cofre
+# :coffee: Buy us a coffee
 
 <img align="right" width="300" src="https://npkill.js.org/img/cat-donation-cup.png">
 We have developed npkill in our free time, because we are passionate about the programming sector.
