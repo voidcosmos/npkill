@@ -161,7 +161,7 @@ Tomorrow we would like to dedicate ourselves to this, but first, we have a long 
 
 We will continue to do things anyway, but donations are one of the many ways to support what we do.
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/voidcosmos)
+<span class="badge-opencollective"><a href="https://opencollective.com/npkill/contribute" title="Donate to this project using Open Collective"><img src="https://img.shields.io/badge/open%20collective-donate-green.svg" alt="Open Collective donate button" /></a></span>
 
 ## Thanks!!
 
