@@ -25,6 +25,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Usage](#usage)
   - [Options](#options)
   - [Examples](#examples)
+- [Set Up Locally](#setup-locally)
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
@@ -116,6 +117,28 @@ npkill
 ```bash
 npkill -d ~/backups/ -e
 ```
+
+<a name="setup-locally"></a>
+
+# :pager: Set Up Locally
+```
+# -- First, clone the repository
+git clone https://github.com/voidcosmos/npkill.git
+
+# -- Navigate to the dir
+cd npkill
+
+# -- Install dependencies
+npm install
+
+# -- And run!
+npm run start
+
+
+# -- If you want to run it with some parameter, you will have to add "--" as in the following example:
+npm run start -- -f -e
+```
+
 
 <a name="roadmap"></a>
 
