@@ -191,7 +191,7 @@ We will continue to do things anyway, but donations are one of the many ways to 
 
 ## A huge thank you to our backers :heart:
 
-<a href="https://opencollective.com/npkill#backers" target="_blank"><img src="https://opencollective.com/npkill/tiers/backer.svg?width=585"></a>
+<a href="https://opencollective.com/npkill#backers" target="_blank"><img width="535" src="https://opencollective.com/npkill/tiers/backer.svg?width=535"></a>
 
 ---
 
