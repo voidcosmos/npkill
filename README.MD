@@ -121,6 +121,7 @@ npkill -d ~/backups/ -e
 <a name="setup-locally"></a>
 
 # :pager: Set Up Locally
+
 ```
 # -- First, clone the repository
 git clone https://github.com/voidcosmos/npkill.git
@@ -138,7 +139,6 @@ npm run start
 # -- If you want to run it with some parameter, you will have to add "--" as in the following example:
 npm run start -- -f -e
 ```
-
 
 <a name="roadmap"></a>
 
@@ -174,6 +174,7 @@ npm run start -- -f -e
 # :revolving_hearts: Contributing
 
 Available soon
+
 <a name="donations"></a>
 
 # :coffee: Buy us a coffee
@@ -186,7 +187,19 @@ We will continue to do things anyway, but donations are one of the many ways to 
 
 <span class="badge-opencollective"><a href="https://opencollective.com/npkill/contribute" title="Donate to this project using Open Collective"><img src="https://img.shields.io/badge/open%20collective-donate-green.svg" alt="Open Collective donate button" /></a></span>
 
-## Thanks!!
+### Thanks!!
+
+## A huge thank you to our backers :heart:
+
+<a href="https://opencollective.com/npkill#backers" target="_blank"><img src="https://opencollective.com/npkill/tiers/backer.svg?width=585"></a>
+
+---
+
+### Cripto alternative
+
+- btc: 1ML2DihUoFTqhoQnrWy4WLxKbVYkUXpMAX
+- bch: 1HVpaicQL5jWKkbChgPf6cvkH8nyktVnVk
+- eth: 0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259
 
 <a name="license"></a>
 
