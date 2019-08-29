@@ -122,7 +122,7 @@ npkill -d ~/backups/ -e
 
 # :pager: Set Up Locally
 
-```
+```bash
 # -- First, clone the repository
 git clone https://github.com/voidcosmos/npkill.git
 

@@ -27,6 +27,7 @@
   "files": [
     "lib/**/*"
   ],
+  "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
