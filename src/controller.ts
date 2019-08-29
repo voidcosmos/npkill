@@ -383,7 +383,7 @@ export class Controller {
 
   private setupKeysListener(): void {
     process.stdin.on('keypress', (ch, key) => {
-      if (key || key['name']) this.keyPress(key);
+      if (key && key['name']) this.keyPress(key);
     });
   }
 
