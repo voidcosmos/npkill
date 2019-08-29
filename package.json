@@ -1,6 +1,6 @@
 {
   "name": "npkill",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
@@ -27,6 +27,7 @@
   "files": [
     "lib/**/*"
   ],
+  "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",

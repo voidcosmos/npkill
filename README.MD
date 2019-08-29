@@ -25,6 +25,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 - [Usage](#usage)
   - [Options](#options)
   - [Examples](#examples)
+- [Set Up Locally](#setup-locally)
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
@@ -117,6 +118,28 @@ npkill
 npkill -d ~/backups/ -e
 ```
 
+<a name="setup-locally"></a>
+
+# :pager: Set Up Locally
+
+```bash
+# -- First, clone the repository
+git clone https://github.com/voidcosmos/npkill.git
+
+# -- Navigate to the dir
+cd npkill
+
+# -- Install dependencies
+npm install
+
+# -- And run!
+npm run start
+
+
+# -- If you want to run it with some parameter, you will have to add "--" as in the following example:
+npm run start -- -f -e
+```
+
 <a name="roadmap"></a>
 
 # :crystal_ball: Roadmap
@@ -151,6 +174,7 @@ npkill -d ~/backups/ -e
 # :revolving_hearts: Contributing
 
 Available soon
+
 <a name="donations"></a>
 
 # :coffee: Buy us a coffee
@@ -161,9 +185,21 @@ Tomorrow we would like to dedicate ourselves to this, but first, we have a long 
 
 We will continue to do things anyway, but donations are one of the many ways to support what we do.
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/voidcosmos)
+<span class="badge-opencollective"><a href="https://opencollective.com/npkill/contribute" title="Donate to this project using Open Collective"><img src="https://img.shields.io/badge/open%20collective-donate-green.svg" alt="Open Collective donate button" /></a></span>
 
-## Thanks!!
+### Thanks!!
+
+## A huge thank you to our backers :heart:
+
+<a href="https://opencollective.com/npkill#backers" target="_blank"><img width="535" src="https://opencollective.com/npkill/tiers/backer.svg?width=535"></a>
+
+---
+
+### Cripto alternative
+
+- btc: 1ML2DihUoFTqhoQnrWy4WLxKbVYkUXpMAX
+- bch: 1HVpaicQL5jWKkbChgPf6cvkH8nyktVnVk
+- eth: 0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259
 
 <a name="license"></a>
 
