@@ -383,20 +383,19 @@ export class Controller {
 
   private setupKeysListener(): void {
     process.stdin.on('keypress', (ch, key) => {
-      const { name, ctrl } = key;
-
-      if (this.isQuitKey(ctrl, name)) {
-        this.quit();
-      }
-
-      const command = this.getCommand(name);
-
-      if (command) {
-        this.KEYS.execute(name);
-      }
-
-      this.printFoldersSection();
+      if (key || key['name']) this.keyPress(key);
     });
+  }
+
+  private keyPress(key: any) {
+    const { name, ctrl } = key;
+
+    if (this.isQuitKey(ctrl, name)) this.quit();
+
+    const command = this.getCommand(name);
+    if (command) this.KEYS.execute(name);
+
+    this.printFoldersSection();
   }
 
   private setErrorEvents(): void {
