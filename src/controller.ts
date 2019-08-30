@@ -388,6 +388,7 @@ export class Controller {
     this.stdout.on('resize', () => {
       this.clear();
       this.printUI();
+      this.printStats();
       this.printFoldersSection();
     });
   }
