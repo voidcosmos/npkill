@@ -78,6 +78,8 @@ export class Controller {
     this.setErrorEvents();
     this.getArguments();
     this.prepareScreen();
+    this.setupEventsListener();
+    this.initializeLoadingStatus();
     if (this.config.checkUpdates) this.checkVersion();
 
     this.scan();
@@ -184,7 +186,6 @@ export class Controller {
     this.setRawMode();
     this.clear();
     this.printUI();
-    this.setupKeysListener();
     this.hideCursor();
   }
 
@@ -255,8 +256,6 @@ export class Controller {
       colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
       UI_POSITIONS.SPACE_RELEASED,
     );
-
-    this.initializeLoadingStatus();
   }
 
   private printAt(message: string, position: IPosition): void {
@@ -381,9 +380,15 @@ export class Controller {
     );
   }
 
-  private setupKeysListener(): void {
-    process.stdin.on('keypress', (ch, key) => {
+  private setupEventsListener(): void {
+    this.stdin.on('keypress', (ch, key) => {
       if (key && key['name']) this.keyPress(key);
+    });
+
+    this.stdout.on('resize', () => {
+      this.clear();
+      this.printUI();
+      this.printFoldersSection();
     });
   }
 
