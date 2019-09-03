@@ -273,11 +273,33 @@
         <div class="tile is-parent">
           <article class="tile is-child notification is-info">
             <p class="subtitle">
-              Delete all node_modules that have sneaked into your backups, and
-              show errors if any occur:
+              Displays the magenta color cursor... because I like magenta!
             </p>
             <div class="window light">
-              <pre><code><span class="prompt-sign">$ </span><span>npkill -d ~/backups/ -e</span></code></pre>
+              <pre><code><span class="prompt-sign">$ </span><span>npkill --color magenta</span></code></pre>
+            </div>
+          </article>
+        </div>
+      </div>
+      <div class="tile is-ancestor">
+        <div class="tile is-parent">
+          <article class="tile is-child notification is-info">
+            <p class="subtitle">
+              List directories called "dist" and and show errors if any occur:
+            </p>
+            <div class="window light">
+              <pre><code><span class="prompt-sign">$ </span><span>npkill --target dist -e</span></code></pre>
+            </div>
+          </article>
+        </div>
+
+        <div class="tile is-parent">
+          <article class="tile is-child notification is-info">
+            <p class="subtitle">
+              List vendor directories in your projects directory, sort by size, and show that in gb:
+            </p>
+            <div class="window light">
+              <pre><code><span class="prompt-sign">$ </span><span>npkill -d '~/more projects' -gb --sort size --target vendor</span></code></pre>
             </div>
           </article>
         </div>
