@@ -112,10 +112,29 @@ cd ~/projects
 npkill
 ```
 
-- Delete all **node_modules** that have sneaked into your backups, and show errors if any occur:
+- List directories called "dist" and and show errors if any occur:
 
 ```bash
-npkill -d ~/backups/ -e
+npkill --target dist -e
+```
+
+- Displays the magenta color cursor... because I like magenta!
+
+```bash
+npkill --color magenta
+```
+
+- List **vendor** directories in your _projects_ directory, sort by size, and show that in gb:
+
+```bash
+npkill -d '~/more projects' -gb --sort size --target vendor
+```
+
+- Automatically delete all node_modules that have sneaked into your backups:
+
+```bash
+# Disabled for security reasons (you can use it in version 0.2.4 at your risk)
+npkill -d ~/backups/ --delete-all
 ```
 
 <a name="setup-locally"></a>
