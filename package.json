@@ -1,7 +1,7 @@
 {
   "name": "npkill",
   "version": "0.5.1",
-  "description": "This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
+  "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
     "access": "public"
@@ -17,11 +17,14 @@
   "license": "MIT",
   "keywords": [
     "cli",
-    "console",
+    "free up space",
     "npm",
     "node",
-    "module",
+    "modules",
     "clean",
+    "tool",
+    "delete",
+    "find",
     "interactive"
   ],
   "files": [
@@ -42,14 +45,14 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
-    "rxjs": "^6.5.2"
+    "rxjs": "^6.5.3"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^8.0.0",
     "@types/jest": "^24.0.13",
-    "@types/node": "^12.0.0",
+    "@types/node": "^12.7.4",
     "commitlint": "^8.0.0",
-    "del": "^5.0.0",
+    "del": "^5.1.0",
     "gulp": "^4.0.2",
     "gulp-typescript": "^5.0.1",
     "husky": "^2.7.0",
@@ -62,7 +65,7 @@
     "ts-jest": "^24.0.2",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.6.2"
   },
   "husky": {
     "hooks": {
