@@ -59,8 +59,8 @@ export class LinuxFilesService extends FileService {
     const excludeDirs = exclude.map((dir: string) => [
       '-not',
       '(',
-      '-path',
-      `${path}/${dir}`,
+      '-name',
+      dir,
       '-prune',
       ')',
     ]);
