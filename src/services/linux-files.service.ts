@@ -55,7 +55,7 @@ export class LinuxFilesService extends FileService {
     return args;
   }
 
-  private prepareExcludeArgs(path, exclude: Array<string>): Array<string> {
+  private prepareExcludeArgs(exclude: Array<string>): Array<string> {
     const excludeDirs = exclude.map((dir: string) => [
       '-not',
       '(',
