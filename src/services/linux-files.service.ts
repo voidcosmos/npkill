@@ -47,7 +47,7 @@ export class LinuxFilesService extends FileService {
     let args: Array<string> = [path];
 
     if (exclude) {
-      args = [...args, this.prepareExcludeArgs(path, exclude)].flat();
+      args = [...args, this.prepareExcludeArgs(exclude)].flat();
     }
 
     args = [...args, '-name', target, '-type', 'd', '-prune'];
