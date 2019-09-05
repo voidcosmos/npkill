@@ -26,10 +26,14 @@ export class WindowsFilesService extends FileService {
   }
 
   listDir(params: IListDirParams): Observable<{}> {
-    const { path, target } = params;
+    const { path, target, exclude } = params;
+
+    const excludeWords = exclude ? exclude.join(' ') : '';
 
     const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
-    const child = spawn(binPath, [path, target]);
+    const args = [path, target, excludeWords];
+
+    const child = spawn(binPath, args);
     return this.streamService.getStream(child);
   }
 
