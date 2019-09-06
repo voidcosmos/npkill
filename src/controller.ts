@@ -24,18 +24,18 @@ import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { Subject, interval } from 'rxjs';
 
 import { ConsoleService } from './services/console.service';
+import { FOLDER_SORT } from './constants/sort.result';
 import { FileService } from './services/files.service';
 import { IConfig } from './interfaces/config.interface';
 import { IFolder } from './interfaces/folder.interface';
 import { IKeysCommand } from './interfaces/command-keys.interface';
+import { IListDirParams } from './interfaces/list-dir-params.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
-import { IStats } from './interfaces/stats.interface';
+import { ResultsService } from './services/results.service';
 import { SpinnerService } from './services/spinner.service';
 import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
 import { takeUntil } from 'rxjs/operators';
-import { ResultsService } from './services/results.service';
-import { FOLDER_SORT } from './constants/sort.result';
 
 export class Controller {
   private folderRoot = '';
@@ -105,6 +105,13 @@ export class Controller {
         process.exit();
       }
       this.config.sortBy = options['sort-by'];
+    }
+
+    if (options['exclude']) {
+      this.config.exclude = this.consoleService.splitData(
+        options['exclude'].replace('"', ''),
+        ' ',
+      );
     }
 
     this.folderRoot = options['directory']
@@ -422,13 +429,28 @@ export class Controller {
   }
 
   private scan(): void {
-    const target = this.config.targetFolder;
-    const folders$ = this.fileService.listDir(this.folderRoot, target);
+    const params: IListDirParams = this.prepareListDirParams();
+
+    const folders$ = this.fileService.listDir(params);
     folders$.subscribe(
       folder => this.newFolderfound(folder),
       error => this.printError(error),
       () => this.completeSearch(),
     );
+  }
+
+  private prepareListDirParams(): IListDirParams {
+    const target = this.config.targetFolder;
+    let params = {
+      path: this.folderRoot,
+      target,
+    };
+
+    if (this.config.exclude.length > 0) {
+      params['exclude'] = this.config.exclude;
+    }
+
+    return params;
   }
 
   private newFolderfound(dataFolder): void {

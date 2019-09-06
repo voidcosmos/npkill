@@ -25,6 +25,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'show-errors',
   },
   {
+    arg: ['-E', '--exclude'],
+    description: 'Exclude directories from search',
+    name: 'exclude',
+  },
+  {
     arg: ['-f', '--full'],
     description:
       'Start searching from the home of the user (example: "/home/user" in linux).',
