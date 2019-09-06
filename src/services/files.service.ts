@@ -1,11 +1,12 @@
 import * as fs from 'fs';
 
 import { IFileService } from '../interfaces/file-service.interface';
+import { IListDirParams } from '../interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
-  abstract listDir(path: string, target: string): Observable<{}>;
+  abstract listDir(params: IListDirParams): Observable<{}>;
   abstract deleteDir(path: string): Promise<{}>;
 
   convertKbToGb(kb: number): number {

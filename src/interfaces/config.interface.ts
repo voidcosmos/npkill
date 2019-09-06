@@ -7,4 +7,5 @@ export interface IConfig {
   showErrors: boolean;
   sortBy: string;
   targetFolder: string;
+  exclude: Array<string>;
 }
