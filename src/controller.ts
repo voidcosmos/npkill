@@ -108,10 +108,12 @@ export class Controller {
     }
 
     if (options['exclude']) {
-      this.config.exclude = this.consoleService.splitData(
-        options['exclude'].replace('"', ''),
-        ' ',
-      );
+      this.config.exclude = this.consoleService
+        .splitData(
+          this.consoleService.replaceString(options['exclude'], '"', ''),
+          ',',
+        )
+        .map(file => file.trim());
     }
 
     this.folderRoot = options['directory']
