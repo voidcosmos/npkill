@@ -25,7 +25,7 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 2. Then, open an issue explaining what you want to incorporate, and the files that you think you will need to modify a priori.
 
-3. Wait for the community to give a opinion, and for some member to approve your proposal (a decision that will be taken  into the community and future plans).
+3. Wait for the community to give a opinion, and for some member to approve your proposal (a decision that will be taken into the community and future plans).
 
 Yay! Green light to work!
 
@@ -57,23 +57,6 @@ All commits must use a convention similar to angular. [Here all the rules](https
 - Use the imperative mood ("move cursor to..." not "moves cursor to...")
 - Limit the first line to 72 characters or less
 - Reference issues and pull requests liberally after the first line
-- Consider starting the commit message with an applicable emoji:
-
-  - :art: `:art:` when improving the format/structure of the code
-  - :racehorse: `:racehorse:` when improving performance
-  - :non-potable_water: `:non-potable_water:` when plugging memory leaks
-  - :memo: `:memo:` when writing docs
-  - :penguin: `:penguin:` when fixing something on Linux
-  - :apple: `:apple:` when fixing something on macOS
-  - :checkered_flag: `:checkered_flag:` when fixing something on Windows
-  - :bug: `:bug:` when fixing a bug
-  - :fire: `:fire:` when removing code or files
-  - :green_heart: `:green_heart:` when fixing the CI build
-  - :white_check_mark: `:white_check_mark:` when adding tests
-  - :lock: `:lock:` when dealing with security
-  - :arrow_up: `:arrow_up:` when upgrading dependencies
-  - :arrow_down: `:arrow_down:` when downgrading dependencies
-  - :shirt: `:shirt:` when removing linter warnings
 
   _[Some points extracted from Atom doc](https://github.com/atom/atom/blob/master/CONTRIBUTING.md#git-commit-messages)_
 
@@ -82,7 +65,7 @@ All commits must use a convention similar to angular. [Here all the rules](https
 It is important to apply the principles of clean code.
 
 If you use VsCode, there are some add-ons that I recommend:
--TSLint: Let's you know if you are breaking any of the *coding rules* (do not use var, use const if possible, if some type has not been defined etc)
+-TSLint: Let's you know if you are breaking any of the _coding rules_ (do not use var, use const if possible, if some type has not been defined etc)
 
 - CodeMetrics: Calculates the complexity of the methods, to ensure that your functions do only 1 thing. (green is ok, yellow is meh, red is oh god why)
 
