@@ -192,7 +192,7 @@ npm run start -- -f -e
 
 # :revolving_hearts: Contributing
 
-Available soon
+If you want to contribute check the [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 <a name="donations"></a>
 
