@@ -113,7 +113,8 @@ export class Controller {
           this.consoleService.replaceString(options['exclude'], '"', ''),
           ',',
         )
-        .map(file => file.trim());
+        .map(file => file.trim())
+        .filter(Boolean);
     }
 
     this.folderRoot = options['directory']
