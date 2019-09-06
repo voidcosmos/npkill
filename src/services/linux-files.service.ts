@@ -1,6 +1,7 @@
 import { exec, spawn } from 'child_process';
 
 import { FileService } from './files.service';
+import { IListDirParams } from '../interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
 
@@ -18,15 +19,10 @@ export class LinuxFilesService extends FileService {
     return this.streamService.getStream(cut);
   }
 
-  listDir(path: string): Observable<{}> {
-    const child = spawn('find', [
-      path,
-      '-name',
-      'node_modules',
-      '-type',
-      'd',
-      '-prune',
-    ]);
+  listDir(params: IListDirParams): Observable<{}> {
+    const args = this.prepareFindArgs(params);
+
+    const child = spawn('find', args);
     return this.streamService.getStream(child);
   }
 
@@ -45,9 +41,29 @@ export class LinuxFilesService extends FileService {
       });
     });
   }
-}
-/* 
-const lf = new LinuxFilesService(new StreamService());
 
-lf.deleteDir('/home/nya/Programming/node_modules');
- */
+  private prepareFindArgs(params: IListDirParams): Array<string> {
+    const { path, target, exclude } = params;
+    let args: Array<string> = [path];
+
+    if (exclude) {
+      args = [...args, this.prepareExcludeArgs(exclude)].flat();
+    }
+
+    args = [...args, '-name', target, '-type', 'd', '-prune'];
+
+    return args;
+  }
+
+  private prepareExcludeArgs(exclude: Array<string>): Array<string> {
+    const excludeDirs = exclude.map((dir: string) => [
+      '-not',
+      '(',
+      '-name',
+      dir,
+      '-prune',
+      ')',
+    ]);
+    return excludeDirs.flat();
+  }
+}

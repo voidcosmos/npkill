@@ -24,12 +24,14 @@ import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
 import { Subject, interval } from 'rxjs';
 
 import { ConsoleService } from './services/console.service';
+import { FOLDER_SORT } from './constants/sort.result';
 import { FileService } from './services/files.service';
 import { IConfig } from './interfaces/config.interface';
 import { IFolder } from './interfaces/folder.interface';
 import { IKeysCommand } from './interfaces/command-keys.interface';
+import { IListDirParams } from './interfaces/list-dir-params.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
-import { IStats } from './interfaces/stats.interface';
+import { ResultsService } from './services/results.service';
 import { SpinnerService } from './services/spinner.service';
 import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
@@ -40,7 +42,6 @@ export class Controller {
   private stdin: NodeJS.ReadStream = process.stdin;
   private stdout: NodeJS.WriteStream = process.stdout;
   private config: IConfig = DEFAULT_CONFIG;
-  private nodeFolders: IFolder[] = [];
 
   private cursorPosY = MARGINS.ROW_RESULTS_START;
   private previusCursorPosY = MARGINS.ROW_RESULTS_START;
@@ -54,6 +55,8 @@ export class Controller {
     // tslint:disable-next-line: object-literal-sort-keys
     down: this.moveCursorDown.bind(this),
     space: this.delete.bind(this),
+    j: this.moveCursorDown.bind(this),
+    k: this.moveCursorUp.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);
@@ -65,14 +68,18 @@ export class Controller {
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
     private updateService: UpdateService,
+    private resultsService: ResultsService,
   ) {
     this.init();
   }
 
   private init(): void {
     keypress(process.stdin);
+    this.setErrorEvents();
     this.getArguments();
     this.prepareScreen();
+    this.setupEventsListener();
+    this.initializeLoadingStatus();
     if (this.config.checkUpdates) this.checkVersion();
 
     this.scan();
@@ -92,6 +99,20 @@ export class Controller {
       this.showObsoleteMessage();
       process.exit();
     }
+    if (options['sort-by']) {
+      if (!this.isValidSortParam(options['sort-by'])) {
+        this.print(INFO_MSGS.NO_VALID_SORT_NAME);
+        process.exit();
+      }
+      this.config.sortBy = options['sort-by'];
+    }
+
+    if (options['exclude']) {
+      this.config.exclude = this.consoleService.splitData(
+        options['exclude'].replace('"', ''),
+        ' ',
+      );
+    }
 
     this.folderRoot = options['directory']
       ? options['directory']
@@ -100,6 +121,8 @@ export class Controller {
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGb = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
+    if (options['target-folder'])
+      this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
   }
 
@@ -144,6 +167,10 @@ export class Controller {
     return Object.keys(COLORS).some(validColor => validColor === color);
   }
 
+  private isValidSortParam(sortName: string): boolean {
+    return Object.keys(FOLDER_SORT).includes(sortName);
+  }
+
   private getVersion(): string {
     const packageJson = __dirname + '/../package.json';
 
@@ -166,7 +193,6 @@ export class Controller {
     this.setRawMode();
     this.clear();
     this.printUI();
-    this.setupKeysListener();
     this.hideCursor();
   }
 
@@ -237,8 +263,6 @@ export class Controller {
       colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
       UI_POSITIONS.SPACE_RELEASED,
     );
-
-    this.initializeLoadingStatus();
   }
 
   private printAt(message: string, position: IPosition): void {
@@ -363,21 +387,36 @@ export class Controller {
     );
   }
 
-  private setupKeysListener(): void {
-    process.stdin.on('keypress', (ch, key) => {
-      const { name, ctrl } = key;
+  private setupEventsListener(): void {
+    this.stdin.on('keypress', (ch, key) => {
+      if (key && key['name']) this.keyPress(key);
+    });
 
-      if (this.isQuitKey(ctrl, name)) {
-        this.quit();
-      }
-
-      const command = this.getCommand(name);
-
-      if (command) {
-        this.KEYS.execute(name);
-      }
-
+    this.stdout.on('resize', () => {
+      this.clear();
+      this.printUI();
+      this.printStats();
       this.printFoldersSection();
+    });
+  }
+
+  private keyPress(key: any) {
+    const { name, ctrl } = key;
+
+    if (this.isQuitKey(ctrl, name)) this.quit();
+
+    const command = this.getCommand(name);
+    if (command) this.KEYS.execute(name);
+
+    this.printFoldersSection();
+  }
+
+  private setErrorEvents(): void {
+    process.on('uncaughtException', err => {
+      this.printError(err.message);
+    });
+    process.on('unhandledRejection', (reason: {}) => {
+      this.printError(reason['stack']);
     });
   }
 
@@ -390,12 +429,28 @@ export class Controller {
   }
 
   private scan(): void {
-    const folders$ = this.fileService.listDir(this.folderRoot);
+    const params: IListDirParams = this.prepareListDirParams();
+
+    const folders$ = this.fileService.listDir(params);
     folders$.subscribe(
       folder => this.newFolderfound(folder),
       error => this.printError(error),
       () => this.completeSearch(),
     );
+  }
+
+  private prepareListDirParams(): IListDirParams {
+    const target = this.config.targetFolder;
+    let params = {
+      path: this.folderRoot,
+      target,
+    };
+
+    if (this.config.exclude.length > 0) {
+      params['exclude'] = this.config.exclude;
+    }
+
+    return params;
   }
 
   private newFolderfound(dataFolder): void {
@@ -408,7 +463,11 @@ export class Controller {
       .filter(path => path)
       .map(path => {
         const nodeFolder = { path, deleted: false, size: 0 };
-        this.addNodeFolder(nodeFolder);
+        this.resultsService.addResult(nodeFolder);
+        if (this.config.sortBy === 'path') {
+          this.resultsService.sortResults(this.config.sortBy);
+          this.clearFolderSection();
+        }
 
         this.calculateFolderStats(nodeFolder);
         this.printFoldersSection();
@@ -425,12 +484,17 @@ export class Controller {
   private calculateFolderStats(nodeFolder: IFolder): void {
     this.fileService
       .getFolderSize(nodeFolder.path)
-      .subscribe((size: string) => {
-        nodeFolder.size = this.transformFolderSize(size);
+      .subscribe((size: string) => this.finishFolderStats(nodeFolder, size));
+  }
 
-        this.printStats();
-        this.printFoldersSection();
-      });
+  private finishFolderStats(folder: IFolder, size: string): void {
+    folder.size = this.transformFolderSize(size);
+    if (this.config.sortBy === 'size') {
+      this.resultsService.sortResults(this.config.sortBy);
+      this.clearFolderSection();
+    }
+    this.printStats();
+    this.printFoldersSection();
   }
 
   private transformFolderSize(size: string): number {
@@ -455,7 +519,8 @@ export class Controller {
   }
 
   private printExitMessage(): void {
-    const exitMessage = `Space released: ${this.getStats().spaceReleased}\n`;
+    const { spaceReleased } = this.resultsService.getStats();
+    const exitMessage = `Space released: ${spaceReleased}\n`;
     this.print(exitMessage);
   }
 
@@ -464,7 +529,8 @@ export class Controller {
   }
 
   private isCursorInLowerTextLimit(positionY: number): boolean {
-    return positionY < this.nodeFolders.length - 1 + MARGINS.ROW_RESULTS_START;
+    const foldersAmmount = this.resultsService.results.length;
+    return positionY < foldersAmmount - 1 + MARGINS.ROW_RESULTS_START;
   }
 
   private isCursorInUpperTextLimit(positionY: number): boolean {
@@ -501,7 +567,7 @@ export class Controller {
   }
 
   private delete(): void {
-    const nodeFolder = this.nodeFolders[
+    const nodeFolder = this.resultsService.results[
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
     this.clearErrors();
@@ -509,8 +575,12 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
-    if (!this.fileService.isSafeToDelete(folder.path)) {
-      this.printError('Folder no safe to delete');
+    const isSafeToDelete = this.fileService.isSafeToDelete(
+      folder.path,
+      this.config.targetFolder,
+    );
+    if (!isSafeToDelete) {
+      this.printError('Folder not safe to delete');
       return;
     }
 
@@ -535,15 +605,12 @@ export class Controller {
 
   private prepareErrorMsg(errMessage: string): string {
     const margin = MARGINS.FOLDER_COLUMN_START;
-    return this.consoleService.shortenText(
-      errMessage,
-      this.stdout.columns - margin,
-      this.stdout.columns - margin,
-    );
+    const width = this.stdout.columns - margin - 3;
+    return this.consoleService.shortenText(errMessage, width, width);
   }
 
   private printStats(): void {
-    const { totalSpace, spaceReleased } = this.getStats();
+    const { totalSpace, spaceReleased } = this.resultsService.getStats();
 
     const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
     const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
@@ -555,23 +622,8 @@ export class Controller {
     this.printAt(spaceReleased, spaceReleasedPosition);
   }
 
-  private getStats(): IStats {
-    let spaceReleased = 0;
-
-    const totalSpace = this.nodeFolders.reduce((total, folder) => {
-      if (folder.deleted) spaceReleased += folder.size;
-
-      return total + folder.size;
-    }, 0);
-
-    return {
-      spaceReleased: `${this.round(spaceReleased, 2)} gb`,
-      totalSpace: `${this.round(totalSpace, 2)} gb`,
-    };
-  }
-
   private getVisibleScrollFolders(): IFolder[] {
-    return this.nodeFolders.slice(
+    return this.resultsService.results.slice(
       this.scroll,
       this.stdout.rows - MARGINS.ROW_RESULTS_START + this.scroll,
     );
@@ -593,10 +645,6 @@ export class Controller {
 
   private clearLine(row: number): void {
     this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
-  }
-
-  private addNodeFolder(nodeFolder: IFolder): void {
-    this.nodeFolders = [...this.nodeFolders, nodeFolder];
   }
 
   private getUserHomePath(): string {

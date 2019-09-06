@@ -1,7 +1,7 @@
 {
   "name": "npkill",
-  "version": "0.4.2",
-  "description": "This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
+  "version": "0.5.2",
+  "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
     "access": "public"
@@ -17,22 +17,26 @@
   "license": "MIT",
   "keywords": [
     "cli",
-    "console",
+    "free up space",
     "npm",
     "node",
-    "module",
+    "modules",
     "clean",
+    "tool",
+    "delete",
+    "find",
     "interactive"
   ],
   "files": [
     "lib/**/*"
   ],
+  "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
     "start": "ts-node ./src/index.ts",
-    "test": "jest --config jestconfig.json",
-    "test:watch": "jest --config jestconfig.json --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "release": "npm run build && np"
   },
   "dependencies": {
@@ -41,14 +45,14 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
-    "rxjs": "^6.5.2"
+    "rxjs": "^6.5.3"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^8.0.0",
     "@types/jest": "^24.0.13",
-    "@types/node": "^12.0.0",
+    "@types/node": "^12.7.4",
     "commitlint": "^8.0.0",
-    "del": "^5.0.0",
+    "del": "^5.1.0",
     "gulp": "^4.0.2",
     "gulp-typescript": "^5.0.1",
     "husky": "^2.7.0",
@@ -61,13 +65,32 @@
     "ts-jest": "^24.0.2",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.6.2"
   },
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged"
     }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(t|j)sx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [

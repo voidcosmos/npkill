@@ -18,19 +18,21 @@ describe('File Service', () => {
   });
 
   describe('#isSafeToDelete', () => {
-    // TODO MOCK TARGET_FOLER
-    const mockConstants = {
-      TARGET_FOLDER: 'NODE_MODULES',
-    };
-    jest.mock('../src/constants/main.constants', () => mockConstants);
+    const target = 'node_modules';
 
     it('should get false if not is safe to delete ', () => {
-      expect(fileService.isSafeToDelete('/one/route')).toBe(false);
-      expect(fileService.isSafeToDelete('/one/node_/ro/modules')).toBe(false);
+      expect(fileService.isSafeToDelete('/one/route', target)).toBe(false);
+      expect(fileService.isSafeToDelete('/one/node_/ro/modules', target)).toBe(
+        false,
+      );
     });
     it('should get true if is safe to delete ', () => {
-      expect(fileService.isSafeToDelete('/one/route/node_modules')).toBe(true);
-      expect(fileService.isSafeToDelete('/one/route/node_modules/')).toBe(true);
+      expect(
+        fileService.isSafeToDelete('/one/route/node_modules', target),
+      ).toBe(true);
+      expect(
+        fileService.isSafeToDelete('/one/route/node_modules/', target),
+      ).toBe(true);
     });
   });
 });

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as getSize from 'get-folder-size';
 
 import { FileService } from './files.service';
+import { IListDirParams } from '../interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
@@ -24,9 +25,15 @@ export class WindowsFilesService extends FileService {
     });
   }
 
-  listDir(path: string): Observable<{}> {
+  listDir(params: IListDirParams): Observable<{}> {
+    const { path, target, exclude } = params;
+
+    const excludeWords = exclude ? exclude.join(' ') : '';
+
     const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
-    const child = spawn(binPath, [path]);
+    const args = [path, target, excludeWords];
+
+    const child = spawn(binPath, args);
     return this.streamService.getStream(child);
   }
 

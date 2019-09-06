@@ -10,6 +10,7 @@ import { SpinnerService } from './services/spinner.service';
 import { StreamService } from './services/stream.service';
 import { UpdateService } from './services/update.service';
 import { WindowsFilesService } from './services/windows-files.service';
+import { ResultsService } from './services/results.service';
 
 const isOSWindows = () => process.platform === PLATFORMS.WINDOWS;
 
@@ -24,4 +25,5 @@ export const controller = new Controller(
   new SpinnerService(),
   new ConsoleService(),
   new UpdateService(new HttpsService()),
+  new ResultsService(),
 );

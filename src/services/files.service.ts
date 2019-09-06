@@ -1,13 +1,12 @@
 import * as fs from 'fs';
 
-import { DECIMALS_SIZE, TARGET_FOLDER } from '../constants/main.constants';
-
 import { IFileService } from '../interfaces/file-service.interface';
+import { IListDirParams } from '../interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
-  abstract listDir(path: string): Observable<{}>;
+  abstract listDir(params: IListDirParams): Observable<{}>;
   abstract deleteDir(path: string): Promise<{}>;
 
   convertKbToGb(kb: number): number {
@@ -30,7 +29,7 @@ export abstract class FileService implements IFileService {
     return fs.readFileSync(path, encoding);
   }
 
-  isSafeToDelete(path: string): boolean {
-    return path.includes(TARGET_FOLDER);
+  isSafeToDelete(path: string, targetFolder: string): boolean {
+    return path.includes(targetFolder);
   }
 }
