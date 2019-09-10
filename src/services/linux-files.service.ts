@@ -26,11 +26,6 @@ export class LinuxFilesService extends FileService {
     return this.streamService.getStream(child);
   }
 
-  /* deleteDir(path: string): Observable<{}> {
-    const child = spawn('rm', ['-rf', path]);
-    return this.streamService.getStream(child);
-  } */
-
   deleteDir(path: string): Promise<{}> {
     return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;

@@ -24,12 +24,20 @@ export class ConsoleService {
       `(?![^\\n]{1,${width}}$)([^\\n]{1,${width}})\\s`,
       'g',
     );
-    const splitText = text.replace(splitRegex, '$1\n');
+    const splitText = this.replaceString(text, splitRegex, '$1\n');
     return this.splitData(splitText);
   }
 
   splitData(data: string, separator = '\n'): string[] {
     return data.split(separator);
+  }
+
+  replaceString(
+    string: string,
+    stringToReplace: string | RegExp,
+    replaceValue: string,
+  ) {
+    return string.replace(stringToReplace, replaceValue);
   }
 
   shortenText(text: string, width: number, startCut = 0): string {

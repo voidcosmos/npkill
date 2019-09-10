@@ -1,5 +1,4 @@
 import * as colors from 'colors';
-import * as emoji from 'node-emoji';
 import * as keypress from 'keypress';
 
 import {
@@ -108,10 +107,13 @@ export class Controller {
     }
 
     if (options['exclude']) {
-      this.config.exclude = this.consoleService.splitData(
-        options['exclude'].replace('"', ''),
-        ' ',
-      );
+      this.config.exclude = this.consoleService
+        .splitData(
+          this.consoleService.replaceString(options['exclude'], '"', ''),
+          ',',
+        )
+        .map(file => file.trim())
+        .filter(Boolean);
     }
 
     this.folderRoot = options['directory']
@@ -239,7 +241,7 @@ export class Controller {
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
     this.printAt(
-      colors.yellow(colors.inverse(emoji.emojify(HELP_MSGS.BASIC_USAGE))),
+      colors.yellow(colors.inverse(HELP_MSGS.BASIC_USAGE)),
       UI_POSITIONS.TUTORIAL_TIP,
     );
 

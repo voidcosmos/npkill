@@ -44,7 +44,6 @@
     "colors": "^1.3.3",
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
-    "node-emoji": "^1.10.0",
     "rxjs": "^6.5.3"
   },
   "devDependencies": {
