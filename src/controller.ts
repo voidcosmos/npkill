@@ -106,10 +106,12 @@ export class Controller {
       this.config.sortBy = options['sort-by'];
     }
 
-    if (options['exclude']) {
+    const exclude = options['exclude'];
+
+    if (exclude && typeof(exclude) === "string") {
       this.config.exclude = this.consoleService
         .splitData(
-          this.consoleService.replaceString(options['exclude'], '"', ''),
+          this.consoleService.replaceString(exclude, '"', ''),
           ',',
         )
         .map(file => file.trim())
