@@ -26,7 +26,7 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-E', '--exclude'],
-    description: 'Exclude directories from search',
+    description: 'Exclude directories from search (separated by , )',
     name: 'exclude',
   },
   {
