@@ -26,7 +26,8 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-E', '--exclude'],
-    description: 'Exclude directories from search (separated by , )',
+    description:
+      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1, ignore2"',
     name: 'exclude',
   },
   {
@@ -58,7 +59,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-t', '--target'],
     description:
-      'Specify the name of the directories you want to search (by default, is node_modules)',
+      "Specify the name of the directory you want to search for (by default, it's node_modules)",
     name: 'target-folder',
   },
   {
