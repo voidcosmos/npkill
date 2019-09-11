@@ -82,20 +82,20 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 ## Options
 
-| ARGUMENT               | DESCRIPTION                                                                               |
-| ---------------------- | ----------------------------------------------------------------------------------------- |
-| -c, --bg-color         | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_ |
-| -d, --directory        | Set the directory from which to begin searching. By default, starting-point is .          |
-| -D, --delete-all       | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found          |
-| -e, --show-errors      | Show error messages related to the search if any                                          |
-| -E, --exclude          | Exclude directories from search (separated by ',' )                                       |
-| -f, --full             | Start searching from the home of the user (example: "/home/user" in linux)                |
-| -gb                    | Show folders in Gigabytes instead of Megabytes.                                           |
-| -h, --help, ?          | Show this help page and exit                                                              |
-| -nu, --no-check-update | Dont check for updates on startup                                                         |
-| -s, --sort             | Sort results by: size or path _[ beta ]_                                                  |
-| -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)      |
-| -v, --version          | Show npkill version                                                                       |
+| ARGUMENT               | DESCRIPTION                                                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| -c, --bg-color         | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                      |
+| -d, --directory        | Set the directory from which to begin searching. By default, starting-point is .                                                               |
+| -D, --delete-all       | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found                                                               |
+| -e, --show-errors      | Show error messages related to the search if any                                                                                               |
+| -E, --exclude          | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2" |
+| -f, --full             | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
+| -gb                    | Show folders in Gigabytes instead of Megabytes.                                                                                                |
+| -h, --help, ?          | Show this help page and exit                                                                                                                   |
+| -nu, --no-check-update | Dont check for updates on startup                                                                                                              |
+| -s, --sort             | Sort results by: size or path _[ beta ]_                                                                                                       |
+| -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
+| -v, --version          | Show npkill version                                                                                                                            |
 
 **Warning:** _In future versions some commands may change_
 
@@ -113,7 +113,7 @@ cd ~/projects
 npkill
 ```
 
-- List directories called "dist" and and show errors if any occur:
+- List directories named "dist" and and show errors if any occur:
 
 ```bash
 npkill --target dist -e
@@ -125,10 +125,16 @@ npkill --target dist -e
 npkill --color magenta
 ```
 
-- List **vendor** directories in your _projects_ directory, sort by size, and show that in gb:
+- List **vendor** directories in your _projects_ directory, sort by size, and show size in gb:
 
 ```bash
 npkill -d '~/more projects' -gb --sort size --target vendor
+```
+
+- List **node_modules** in your _projects_ directory, excluding the ones in _progress_ and _ignore-this_ directories:
+
+```bash
+npkill -d 'projects' --exclude "progress, ignore-this"
 ```
 
 - Automatically delete all node_modules that have sneaked into your backups:
@@ -174,6 +180,7 @@ npm run start -- -f -e
 - [ ] Allow to filter by directories that have not been used in a period of time
 - [ ] Create option for displaying directories in tree format
 - [ ] Add some menus
+- [ ] Add log service
 - [ ] Periodic and automatic cleaning (?)
 
 <a name="known-bugs"></a>
@@ -183,6 +190,7 @@ npm run start -- -f -e
 - Sometimes, CLI is blocked while folder is deleting.
 - Some terminals that do not use TTY (like git bash in windows) do not work.
 - Sorting, especially by routes, can slow down the terminal when there are many results at the same time.
+- Sometimes, size calculations are higher than they should be.
 - (SOLVED) Performance issues when searching from high level directories (like / in linux).
 - (SOLVED) Sometimes text collapses when updating the cli.
 - (SOLVED) Analyzing the size of the directories takes longer than it should.
