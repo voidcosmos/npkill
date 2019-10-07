@@ -621,12 +621,6 @@ export class Controller {
 
     folder.status = 'deleting';
 
-    setTimeout(() => {
-      folder.status = Math.random() >= 0.5 ? 'deleted' : 'error-deleting';
-      this.printStats();
-      this.printFoldersSection();
-    }, 1400);
-    return; // TODO only for DEV
     this.fileService
       .deleteDir(folder.path)
       .then(response => {
