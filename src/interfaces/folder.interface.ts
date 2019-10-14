@@ -1,5 +1,9 @@
 export interface IFolder {
   path: string;
   size: number;
-  deleted: boolean;
+  status: 'live' | 'deleting' | 'error-deleting' | 'deleted';
 }
+
+/* interface IFolderStatus {
+  [key: string]: 'live' | 'deleting' | 'error-deleting' | 'deleted';
+} */

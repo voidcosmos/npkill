@@ -17,7 +17,7 @@ export class ResultsService {
     let spaceReleased = 0;
 
     const totalSpace = this.results.reduce((total, folder) => {
-      if (folder.deleted) spaceReleased += folder.size;
+      if (folder.status === 'deleted') spaceReleased += folder.size;
 
       return total + folder.size;
     }, 0);

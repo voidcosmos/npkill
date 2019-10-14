@@ -10,9 +10,9 @@ describe('Result Service', () => {
   describe('#addResult', () => {
     it('should add folder if that is the first', () => {
       const newResult: IFolder = {
-        deleted: false,
         path: 'path',
         size: 5,
+        status: 'live',
       };
       const resultExpected = [newResult];
       resultService.addResult(newResult);
@@ -21,19 +21,19 @@ describe('Result Service', () => {
     it('should add folders', () => {
       const newResults: IFolder[] = [
         {
-          deleted: false,
           path: 'path',
           size: 1,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'path2',
           size: 2,
+          status: 'deleted',
         },
         {
-          deleted: false,
           path: 'path3',
           size: 3,
+          status: 'live',
         },
       ];
 
@@ -49,34 +49,34 @@ describe('Result Service', () => {
     beforeEach(() => {
       mockResults = [
         {
-          deleted: false,
           path: 'pathd',
           size: 5,
+          status: 'live',
         },
         {
-          deleted: false,
           path: 'patha',
           size: 6,
+          status: 'live',
         },
         {
-          deleted: false,
           path: 'pathc',
           size: 16,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'pathcc',
           size: 0,
+          status: 'deleted',
         },
         {
-          deleted: true,
           path: 'pathb',
           size: 3,
+          status: 'deleted',
         },
         {
-          deleted: false,
           path: 'pathz',
           size: 8,
+          status: 'live',
         },
       ];
 
@@ -86,34 +86,34 @@ describe('Result Service', () => {
     it('should sort by path', () => {
       const expectResult = [
         {
-          deleted: false,
           path: 'patha',
           size: 6,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'pathb',
           size: 3,
+          status: 'deleted',
         },
         {
-          deleted: false,
           path: 'pathc',
           size: 16,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'pathcc',
           size: 0,
+          status: 'deleted',
         },
         {
-          deleted: false,
           path: 'pathd',
           size: 5,
+          status: 'live',
         },
         {
-          deleted: false,
           path: 'pathz',
           size: 8,
+          status: 'live',
         },
       ];
 
@@ -123,34 +123,34 @@ describe('Result Service', () => {
     it('should sort by size', () => {
       const expectResult = [
         {
-          deleted: false,
           path: 'pathc',
           size: 16,
+          status: 'live',
         },
         {
-          deleted: false,
           path: 'pathz',
           size: 8,
+          status: 'live',
         },
         {
-          deleted: false,
           path: 'patha',
           size: 6,
+          status: 'live',
         },
         {
-          deleted: false,
           path: 'pathd',
           size: 5,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'pathb',
           size: 3,
+          status: 'deleted',
         },
         {
-          deleted: true,
           path: 'pathcc',
           size: 0,
+          status: 'deleted',
         },
       ];
 
@@ -170,34 +170,34 @@ describe('Result Service', () => {
     beforeEach(() => {
       mockResults = [
         {
-          deleted: false,
           path: 'pathd',
           size: 5,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'patha',
           size: 6,
+          status: 'deleted',
         },
         {
-          deleted: false,
           path: 'pathc',
           size: 16,
+          status: 'live',
         },
         {
-          deleted: true,
           path: 'pathcc',
           size: 0,
+          status: 'deleted',
         },
         {
-          deleted: true,
           path: 'pathb',
           size: 3,
+          status: 'deleted',
         },
         {
-          deleted: false,
           path: 'pathz',
           size: 8,
+          status: 'live',
         },
       ];
 

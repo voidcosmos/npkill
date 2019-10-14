@@ -108,12 +108,9 @@ export class Controller {
 
     const exclude = options['exclude'];
 
-    if (exclude && typeof(exclude) === "string") {
+    if (exclude && typeof exclude === 'string') {
       this.config.exclude = this.consoleService
-        .splitData(
-          this.consoleService.replaceString(exclude, '"', ''),
-          ',',
-        )
+        .splitData(this.consoleService.replaceString(exclude, '"', ''), ',')
         .map(file => file.trim())
         .filter(Boolean);
     }
@@ -360,10 +357,25 @@ export class Controller {
   private getFolderPathText(folder: IFolder): string {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
-    if (folder.deleted) {
-      cutFrom += INFO_MSGS.DELETED_FOLDER.length;
-      text = INFO_MSGS.DELETED_FOLDER + text;
-    }
+    const ACTIONS = {
+      // tslint:disable-next-line: object-literal-key-quotes
+      deleted: () => {
+        cutFrom += INFO_MSGS.DELETED_FOLDER.length;
+        text = INFO_MSGS.DELETED_FOLDER + text;
+      },
+      // tslint:disable-next-line: object-literal-key-quotes
+      deleting: () => {
+        cutFrom += INFO_MSGS.DELETING_FOLDER.length;
+        text = INFO_MSGS.DELETING_FOLDER + text;
+      },
+      'error-deleting': () => {
+        cutFrom += INFO_MSGS.ERROR_DELETING_FOLDER.length;
+        text = INFO_MSGS.ERROR_DELETING_FOLDER + text;
+      },
+    };
+
+    if (ACTIONS[folder.status]) ACTIONS[folder.status]();
+
     text = this.consoleService.shortenText(
       text,
       this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
@@ -373,22 +385,41 @@ export class Controller {
     // This is necessary for the coloring of the text, since
     // the shortener takes into ansi-scape codes invisible
     // characters and can cause an error in the cli.
-    text = this.colorDeletedTextGreen(text);
+    text = this.paintStatusFolderPath(text, folder.status);
 
     return text;
+  }
+
+  private paintStatusFolderPath(folderString: string, action: string): string {
+    const TRANSFORMATIONS = {
+      // tslint:disable-next-line: object-literal-key-quotes
+      deleted: text =>
+        text.replace(
+          INFO_MSGS.DELETED_FOLDER,
+          colors.green(INFO_MSGS.DELETED_FOLDER),
+        ),
+      // tslint:disable-next-line: object-literal-key-quotes
+      deleting: text =>
+        text.replace(
+          INFO_MSGS.DELETING_FOLDER,
+          colors.yellow(INFO_MSGS.DELETING_FOLDER),
+        ),
+      'error-deleting': text =>
+        text.replace(
+          INFO_MSGS.ERROR_DELETING_FOLDER,
+          colors.red(INFO_MSGS.ERROR_DELETING_FOLDER),
+        ),
+    };
+
+    return TRANSFORMATIONS[action]
+      ? TRANSFORMATIONS[action](folderString)
+      : folderString;
   }
 
   private clearFolderSection(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
       this.clearLine(row);
     }
-  }
-
-  private colorDeletedTextGreen(folderString: string): string {
-    return folderString.replace(
-      INFO_MSGS.DELETED_FOLDER,
-      colors.green(INFO_MSGS.DELETED_FOLDER),
-    );
   }
 
   private setupEventsListener(): void {
@@ -445,7 +476,7 @@ export class Controller {
 
   private prepareListDirParams(): IListDirParams {
     const target = this.config.targetFolder;
-    let params = {
+    const params = {
       path: this.folderRoot,
       target,
     };
@@ -466,7 +497,7 @@ export class Controller {
     paths
       .filter(path => path)
       .map(path => {
-        const nodeFolder = { path, deleted: false, size: 0 };
+        const nodeFolder: IFolder = { path, size: 0, status: 'live' };
         this.resultsService.addResult(nodeFolder);
         if (this.config.sortBy === 'path') {
           this.resultsService.sortResults(this.config.sortBy);
@@ -588,14 +619,20 @@ export class Controller {
       return;
     }
 
+    folder.status = 'deleting';
+
     this.fileService
       .deleteDir(folder.path)
       .then(response => {
-        folder.deleted = true;
+        folder.status = 'deleted';
         this.printStats();
         this.printFoldersSection();
       })
-      .catch(error => this.printError(ERROR_MSG.CANT_DELETE_FOLDER));
+      .catch(error => {
+        folder.status = 'error-deleting';
+        this.printFoldersSection();
+        this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
+      });
   }
 
   private printError(error: string): void {
