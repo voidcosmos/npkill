@@ -11,7 +11,7 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 - Following this protocol helps to avoid working in vain. It would be a shame to dedicate hours to a pull request and have to reject it because there is already someone working on a similar issue.
 
--Unless they are minor and fast moficications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
+-Unless they are minor and fast modifications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
 
 - Change only the necessary lines for your modification. This will help to avoid conflicts, and in case of there being any, it will be easier to solve them.
 
@@ -25,7 +25,7 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 2. Then, open an issue explaining what you want to incorporate, and the files that you think you will need to modify a priori.
 
-3. Wait for the community to give a opinion, and for some member to approve your proposal (a decision that will be taken into the community and future plans).
+3. Wait for the community to give an opinion, and for some member to approve your proposal (a decision that will be taken into the community and future plans).
 
 Yay! Green light to work!
 
@@ -51,7 +51,7 @@ I recommend using the following nomenclature whenever possible:
 ## git messages
 
 Be sure to take your time thinking about the message for each commit.
-All commits must use a convention similar to angular. [Here all the rules](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional#type-enum)
+All commits must use a convention similar to `Angular`. [Here all the rules](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional#type-enum)
 
 - Use the present tense ("add feature" not "added feature")
 - Use the imperative mood ("move cursor to..." not "moves cursor to...")
@@ -64,8 +64,8 @@ All commits must use a convention similar to angular. [Here all the rules](https
 
 It is important to apply the principles of clean code.
 
-If you use VsCode, there are some add-ons that I recommend:
--TSLint: Let's you know if you are breaking any of the _coding rules_ (do not use var, use const if possible, if some type has not been defined etc)
+If you use `VS Code`, there are some add-ons that I recommend:
+-TSLint: Lets you know if you are breaking any of the _coding rules_ (do not use var, use const if possible, if some type has not been defined etc)
 
 - CodeMetrics: Calculates the complexity of the methods, to ensure that your functions do only 1 thing. (green is ok, yellow is meh, red is oh god why)
 
