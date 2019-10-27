@@ -11,7 +11,7 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 - Following this protocol helps to avoid working in vain. It would be a shame to dedicate hours to a pull request and have to reject it because there is already someone working on a similar issue.
 
--Unless they are minor and fast moficications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
+- Unless they are minor and fast modifications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
 
 - Change only the necessary lines for your modification. This will help to avoid conflicts, and in case of there being any, it will be easier to solve them.
 
@@ -25,7 +25,7 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 2. Then, open an issue explaining what you want to incorporate, and the files that you think you will need to modify a priori.
 
-3. Wait for the community to give a opinion, and for some member to approve your proposal (a decision that will be taken into the community and future plans).
+3. Wait for the community to give an opinion, and for some member to approve your proposal (a decision that will be taken into the community and future plans).
 
 Yay! Green light to work!
 
