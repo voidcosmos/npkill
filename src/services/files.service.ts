@@ -14,9 +14,9 @@ export abstract class FileService implements IFileService {
     return kb / factorKbtoGb;
   }
 
-  convertBToKb(bytes: number): number {
-    const factorBtoGb = 1024;
-    return bytes / factorBtoGb;
+  convertBytesToKb(bytes: number): number {
+    const factorBytestoKb = 1024;
+    return bytes / factorBytestoKb;
   }
 
   convertGbToMb(gb: number) {
