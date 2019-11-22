@@ -113,7 +113,7 @@ cd ~/projects
 npkill
 ```
 
-- List directories named "dist" and and show errors if any occur:
+- List directories named "dist" and show errors if any occur:
 
 ```bash
 npkill --target dist -e

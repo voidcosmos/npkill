@@ -150,6 +150,11 @@ export class Controller {
         ++lineCount;
       });
     });
+
+    this.printAt('', {
+      x: 0,
+      y: lineCount * 2 + 2,
+    });
   }
 
   private showProgramVersion(): void {
