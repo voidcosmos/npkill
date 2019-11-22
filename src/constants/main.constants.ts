@@ -12,12 +12,12 @@ export const DEFAULT_CONFIG: IConfig = {
   backgroundColor: 'bgBlue',
   checkUpdates: true,
   deleteAll: false,
+  exclude: [],
   folderSizeInGb: false,
   maxSimultaneousSearch: 6,
   showErrors: false,
   sortBy: '',
   targetFolder: 'node_modules',
-  exclude: [],
 };
 
 export const MARGINS = {
