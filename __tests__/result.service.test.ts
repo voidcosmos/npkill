@@ -206,8 +206,8 @@ describe('Result Service', () => {
 
     it('should get stats of results', () => {
       const expectResult = {
-        spaceReleased: '9 gb',
-        totalSpace: '38 gb',
+        spaceReleased: '9 GB',
+        totalSpace: '38 GB',
       };
 
       const stats = resultService.getStats();
