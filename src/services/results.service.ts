@@ -23,8 +23,8 @@ export class ResultsService {
     }, 0);
 
     return {
-      spaceReleased: `${this.round(spaceReleased, 2)} gb`,
-      totalSpace: `${this.round(totalSpace, 2)} gb`,
+      spaceReleased: `${this.round(spaceReleased, 2)} GB`,
+      totalSpace: `${this.round(totalSpace, 2)} GB`,
     };
   }
 

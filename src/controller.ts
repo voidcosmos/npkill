@@ -329,11 +329,11 @@ export class Controller {
 
   private getFolderTexts(folder: IFolder): { path: string; size: string } {
     const folderText = this.getFolderPathText(folder);
-    let folderSize = `${this.round(folder.size, 3)} gb`;
+    let folderSize = `${this.round(folder.size, 3)} GB`;
 
     if (!this.config.folderSizeInGb) {
       const size = this.fileService.convertGbToMb(folder.size);
-      folderSize = `${this.round(size, DECIMALS_SIZE)} mb`;
+      folderSize = `${this.round(size, DECIMALS_SIZE)} MB`;
     }
 
     const folderSizeText = folder.size ? folderSize : '--';
