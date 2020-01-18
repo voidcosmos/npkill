@@ -19,13 +19,13 @@ export class WindowsFilesService extends FileService {
         if (err) {
           throw err;
         }
-        observer.next(super.convertBytesToKb(size));
+        observer.next(super.convertBytesToKB(size));
         observer.complete();
       });
     });
   }
 
-  listDir(params: IListDirParams): Observable<{}> {
+  listDir(params: IListDirParams): Observable<Buffer> {
     const { path, target, exclude } = params;
 
     const excludeWords = exclude ? exclude.join(' ') : '';
