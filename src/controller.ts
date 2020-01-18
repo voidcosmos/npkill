@@ -19,8 +19,16 @@ import {
   HELP_MSGS,
   INFO_MSGS,
 } from './constants/messages.constants';
+import { Observable, Subject, from, interval } from 'rxjs';
 import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
-import { Subject, interval } from 'rxjs';
+import {
+  catchError,
+  filter,
+  map,
+  mergeMap,
+  takeUntil,
+  tap,
+} from 'rxjs/operators';
 
 import { ConsoleService } from './services/console.service';
 import { FOLDER_SORT } from './constants/sort.result';
@@ -34,7 +42,6 @@ import { ResultsService } from './services/results.service';
 import { SpinnerService } from './services/spinner.service';
 import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
-import { takeUntil } from 'rxjs/operators';
 
 export class Controller {
   private folderRoot = '';
@@ -120,7 +127,7 @@ export class Controller {
       : process.cwd();
     if (options['full-scan']) this.folderRoot = this.getUserHomePath();
     if (options['show-errors']) this.config.showErrors = true;
-    if (options['gb']) this.config.folderSizeInGb = true;
+    if (options['gb']) this.config.folderSizeInGB = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
     if (options['target-folder'])
       this.config.targetFolder = options['target-folder'];
@@ -331,8 +338,8 @@ export class Controller {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${this.round(folder.size, 3)} GB`;
 
-    if (!this.config.folderSizeInGb) {
-      const size = this.fileService.convertGbToMb(folder.size);
+    if (!this.config.folderSizeInGB) {
+      const size = this.fileService.convertGBToMB(folder.size);
       folderSize = `${this.round(size, DECIMALS_SIZE)} MB`;
     }
 
@@ -472,11 +479,37 @@ export class Controller {
     const params: IListDirParams = this.prepareListDirParams();
 
     const folders$ = this.fileService.listDir(params);
-    folders$.subscribe(
-      folder => this.newFolderfound(folder),
-      error => this.printError(error),
-      () => this.completeSearch(),
-    );
+    folders$
+      .pipe(
+        catchError((error, caught) => {
+          if (error.bash) {
+            this.printFolderError(error.message);
+
+            return caught;
+          }
+
+          throw error;
+        }),
+        mergeMap(dataFolder =>
+          from(this.consoleService.splitData(dataFolder.toString())),
+        ),
+        filter(path => !!path),
+        map<string, IFolder>(path => ({ path, size: 0, status: 'live' })),
+        tap(nodeFolder => {
+          this.resultsService.addResult(nodeFolder);
+
+          if (this.config.sortBy === 'path') {
+            this.resultsService.sortResults(this.config.sortBy);
+            this.clearFolderSection();
+          }
+        }),
+        mergeMap(nodeFolder => this.calculateFolderStats(nodeFolder), 4),
+      )
+      .subscribe(
+        () => this.printFoldersSection(),
+        error => this.printError(error),
+        () => this.completeSearch(),
+      );
   }
 
   private prepareListDirParams(): IListDirParams {
@@ -493,27 +526,6 @@ export class Controller {
     return params;
   }
 
-  private newFolderfound(dataFolder): void {
-    if (dataFolder instanceof Error) {
-      this.printFolderError(dataFolder.message);
-      return;
-    }
-    const paths = this.consoleService.splitData(dataFolder.toString());
-    paths
-      .filter(path => path)
-      .map(path => {
-        const nodeFolder: IFolder = { path, size: 0, status: 'live' };
-        this.resultsService.addResult(nodeFolder);
-        if (this.config.sortBy === 'path') {
-          this.resultsService.sortResults(this.config.sortBy);
-          this.clearFolderSection();
-        }
-
-        this.calculateFolderStats(nodeFolder);
-        this.printFoldersSection();
-      });
-  }
-
   private printFolderError(err: string) {
     if (!this.config.showErrors) return;
 
@@ -521,10 +533,10 @@ export class Controller {
     messages.map(msg => this.printError(msg));
   }
 
-  private calculateFolderStats(nodeFolder: IFolder): void {
-    this.fileService
+  private calculateFolderStats(nodeFolder: IFolder): Observable<any> {
+    return this.fileService
       .getFolderSize(nodeFolder.path)
-      .subscribe((size: string) => this.finishFolderStats(nodeFolder, size));
+      .pipe(tap(size => this.finishFolderStats(nodeFolder, size)));
   }
 
   private finishFolderStats(folder: IFolder, size: string): void {
@@ -538,7 +550,7 @@ export class Controller {
   }
 
   private transformFolderSize(size: string): number {
-    return this.fileService.convertKbToGb(+size);
+    return this.fileService.convertKbToGB(+size);
   }
 
   private completeSearch(): void {
@@ -628,12 +640,12 @@ export class Controller {
 
     this.fileService
       .deleteDir(folder.path)
-      .then(response => {
+      .then(() => {
         folder.status = 'deleted';
         this.printStats();
         this.printFoldersSection();
       })
-      .catch(error => {
+      .catch(() => {
         folder.status = 'error-deleting';
         this.printFoldersSection();
         this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
