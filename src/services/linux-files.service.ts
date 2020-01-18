@@ -19,13 +19,14 @@ export class LinuxFilesService extends FileService {
 
     return this.streamService
       .getStream(cut)
-      .pipe(map(size => super.convertBytesToKb(+size)));
+      .pipe(map(size => super.convertBytesToKB(+size)));
   }
 
-  listDir(params: IListDirParams): Observable<{}> {
+  listDir(params: IListDirParams): Observable<Buffer> {
     const args = this.prepareFindArgs(params);
 
     const child = spawn('find', args);
+
     return this.streamService.getStream(child);
   }
 
