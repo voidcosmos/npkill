@@ -136,21 +136,24 @@ export class Controller {
 
   private showHelp(): void {
     this.clear();
-    this.print(colors.inverse(INFO_MSGS.HELP_TITLE));
+    this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
-      this.printAt(option.arg.reduce((text, arg) => text + ', ' + arg), {
-        x: UI_HELP.X_COMMAND_OFFSET,
-        y: index + UI_HELP.Y_OFFSET + lineCount,
-      });
+      this.printAtHelp(
+        option.arg.reduce((text, arg) => text + ', ' + arg),
+        {
+          x: UI_HELP.X_COMMAND_OFFSET,
+          y: index + UI_HELP.Y_OFFSET + lineCount,
+        },
+      );
       const description = this.consoleService.splitWordsByWidth(
         option.description,
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
 
       description.map(line => {
-        this.printAt(line, {
+        this.printAtHelp(line, {
           x: UI_HELP.X_DESCRIPTION_OFFSET,
           y: index + UI_HELP.Y_OFFSET + lineCount,
         });
@@ -285,6 +288,18 @@ export class Controller {
 
   private setCursorAt({ x, y }: IPosition): void {
     this.print(ansiEscapes.cursorTo(x, y));
+  }
+
+  private printAtHelp(message: string, position: IPosition): void {
+    this.setCursorAtHelp(position);
+    this.print(message);
+    if (!/-[a-zA-Z]/.test(message.substring(0, 2)) && message !== '') {
+      this.print('\n\n');
+    }
+  }
+
+  private setCursorAtHelp({ x, y }: IPosition): void {
+    this.print(ansiEscapes.cursorTo(x));
   }
 
   private initializeLoadingStatus(): void {
