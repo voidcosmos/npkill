@@ -3,11 +3,11 @@ import { Observable } from 'rxjs';
 
 export interface IFileService {
   getFolderSize(path: string): Observable<any>;
-  listDir(params: IListDirParams): Observable<{}>;
+  listDir(params: IListDirParams): Observable<Buffer>;
   deleteDir(path: string): Promise<{}>;
-  convertKbToGb(kb: number): number;
-  convertBytesToKb(bytes: number): number;
-  convertGbToMb(gb: number): number;
+  convertKbToGB(kb: number): number;
+  convertBytesToKB(bytes: number): number;
+  convertGBToMB(gb: number): number;
   getFileContent(path: string): string;
   isSafeToDelete(path: string, targetFolder: string): boolean;
 }

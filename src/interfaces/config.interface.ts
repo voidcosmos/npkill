@@ -2,10 +2,10 @@ export interface IConfig {
   backgroundColor: string;
   checkUpdates: boolean;
   deleteAll: boolean;
-  folderSizeInGb: boolean;
+  folderSizeInGB: boolean;
   maxSimultaneousSearch: number;
   showErrors: boolean;
   sortBy: string;
   targetFolder: string;
-  exclude: Array<string>;
+  exclude: string[];
 }

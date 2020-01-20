@@ -4,6 +4,7 @@ import { FileService } from './files.service';
 import { IListDirParams } from '../interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
 import { StreamService } from './stream.service';
+import { map } from 'rxjs/operators';
 
 export class LinuxFilesService extends FileService {
   constructor(private streamService: StreamService) {
@@ -11,18 +12,21 @@ export class LinuxFilesService extends FileService {
   }
 
   getFolderSize(path: string): Observable<{}> {
-    const du = spawn('du', ['-s', path]);
+    const du = spawn('du', ['-s', '-b', path]);
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);
 
-    return this.streamService.getStream(cut);
+    return this.streamService
+      .getStream(cut)
+      .pipe(map(size => super.convertBytesToKB(+size)));
   }
 
-  listDir(params: IListDirParams): Observable<{}> {
+  listDir(params: IListDirParams): Observable<Buffer> {
     const args = this.prepareFindArgs(params);
 
     const child = spawn('find', args);
+
     return this.streamService.getStream(child);
   }
 
@@ -37,9 +41,9 @@ export class LinuxFilesService extends FileService {
     });
   }
 
-  private prepareFindArgs(params: IListDirParams): Array<string> {
+  private prepareFindArgs(params: IListDirParams): string[] {
     const { path, target, exclude } = params;
-    let args: Array<string> = [path];
+    let args: string[] = [path];
 
     if (exclude) {
       args = [...args, this.prepareExcludeArgs(exclude)].flat();
@@ -50,7 +54,7 @@ export class LinuxFilesService extends FileService {
     return args;
   }
 
-  private prepareExcludeArgs(exclude: Array<string>): Array<string> {
+  private prepareExcludeArgs(exclude: string[]): string[] {
     const excludeDirs = exclude.map((dir: string) => [
       '-not',
       '(',

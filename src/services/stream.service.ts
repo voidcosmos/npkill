@@ -1,15 +1,15 @@
 import { ChildProcessWithoutNullStreams } from 'child_process';
-
 import { Observable } from 'rxjs';
 import { STREAM_ENCODING } from '../constants/main.constants';
 
 export class StreamService {
-  streamToObservable(stream: ChildProcessWithoutNullStreams) {
+  streamToObservable<T>(stream: ChildProcessWithoutNullStreams) {
     const { stdout, stderr } = stream;
 
-    return new Observable(observer => {
+    return new Observable<T>(observer => {
       const dataHandler = data => observer.next(data);
-      const bashErrorHandler = error => observer.next(new Error(error));
+      const bashErrorHandler = error =>
+        observer.error({ ...error, bash: true });
       const errorHandler = error => observer.error(error);
       const endHandler = () => observer.complete();
 
@@ -25,15 +25,14 @@ export class StreamService {
         stdout.removeListener('error', errorHandler);
         stdout.removeListener('end', endHandler);
 
-        stderr.removeListener('data', bashErrorHandler);
         stderr.removeListener('error', errorHandler);
       };
     });
   }
 
-  getStream(child: ChildProcessWithoutNullStreams): Observable<{}> {
+  getStream<T>(child: ChildProcessWithoutNullStreams): Observable<T> {
     this.setEncoding(child, STREAM_ENCODING);
-    return this.streamToObservable(child);
+    return this.streamToObservable<T>(child);
   }
 
   private setEncoding(child: ChildProcessWithoutNullStreams, encoding: string) {

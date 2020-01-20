@@ -6,22 +6,22 @@ import { Observable } from 'rxjs';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
-  abstract listDir(params: IListDirParams): Observable<{}>;
+  abstract listDir(params: IListDirParams): Observable<Buffer>;
   abstract deleteDir(path: string): Promise<{}>;
 
-  convertKbToGb(kb: number): number {
-    const factorKbtoGb = 1048576;
-    return kb / factorKbtoGb;
+  convertKbToGB(kb: number): number {
+    const factorKBtoGB = 1048576;
+    return kb / factorKBtoGB;
   }
 
-  convertBytesToKb(bytes: number): number {
-    const factorBytestoKb = 1024;
-    return bytes / factorBytestoKb;
+  convertBytesToKB(bytes: number): number {
+    const factorBytestoKB = 1024;
+    return bytes / factorBytestoKB;
   }
 
-  convertGbToMb(gb: number) {
-    const factorGbtoMb = 1024;
-    return gb * factorGbtoMb;
+  convertGBToMB(gb: number) {
+    const factorGBtoMB = 1024;
+    return gb * factorGBtoMB;
   }
 
   getFileContent(path: string): string {
