@@ -38,7 +38,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
-    "release": "npm run build && np"
+  "release": "npm run build && np"
   },
   "dependencies": {
     "@types/colors": "^1.2.1",
@@ -71,7 +71,7 @@
     "ts-node": "^8.8.1",
     "tslint": "^5.20.1",
     "typescript": "^3.8.3"
-  },
+ },
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",

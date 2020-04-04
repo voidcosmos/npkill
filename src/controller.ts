@@ -35,7 +35,6 @@ import { FOLDER_SORT } from './constants/sort.result';
 import { FileService } from './services/files.service';
 import { IConfig } from './interfaces/config.interface';
 import { IFolder } from './interfaces/folder.interface';
-import { IKeyPress } from './interfaces/key-pressed.interface';
 import { IKeysCommand } from './interfaces/command-keys.interface';
 import { IListDirParams } from './interfaces/list-dir-params.interface';
 import { IPosition } from './interfaces/ui-positions.interface';
@@ -451,7 +450,7 @@ export class Controller {
   }
 
   private setupEventsListener(): void {
-    this.stdin.on('keypress', (_, key: IKeyPress) => {
+    this.stdin.on('keypress', (ch, key) => {
       if (key && key['name']) this.keyPress(key);
     });
 
@@ -463,7 +462,7 @@ export class Controller {
     });
   }
 
-  private keyPress(key: IKeyPress) {
+  private keyPress(key: any) {
     const { name, ctrl } = key;
 
     if (this.isQuitKey(ctrl, name)) this.quit();
