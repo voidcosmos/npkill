@@ -1,32 +1,10 @@
-#!/usr/bin/env node
+const tsConfig = require('./tsconfig.build.json');
+const tsConfigPaths = require('tsconfig-paths');
 
-import {
-  ConsoleService,
-  HttpsService,
-  LinuxFilesService,
-  ResultsService,
-  SpinnerService,
-  StreamService,
-  UpdateService,
-  WindowsFilesService,
-} from '@core/services';
+const baseUrl = __dirname;
+const cleanup = tsConfigPaths.register({
+  baseUrl,
+  paths: tsConfig.compilerOptions.paths,
+});
 
-import { Controller } from './controller';
-import { IFileService } from '@core/interfaces/file-service.interface';
-import { PLATFORMS } from '@core/constants/main.constants';
-
-const isOSWindows = () => process.platform === PLATFORMS.WINDOWS;
-
-const streamService: StreamService = new StreamService();
-
-const fileService: IFileService = isOSWindows()
-  ? new WindowsFilesService(streamService)
-  : new LinuxFilesService(streamService);
-
-export const controller = new Controller(
-  fileService,
-  new SpinnerService(),
-  new ConsoleService(),
-  new UpdateService(new HttpsService()),
-  new ResultsService(),
-);
+require('./main');

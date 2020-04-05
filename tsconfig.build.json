@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "sourceMap": false,
+    "declaration": false,
+    "rootDir": "./src",
+    "outDir": "./lib/",
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "resolveJsonModule": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@core/*": ["./*"],
+      "@services/*": ["./services/*"],
+      "@constants/*": ["./constants/*"],
+      "@interfaces/*": ["./interfaces/*"]
+    }
+  },
+  "include": ["./"]
+}
