@@ -17,7 +17,7 @@ export class UpdateService {
     return this.compareVersions(local, remote);
   }
 
-  private compareVersions(local: any, remote: any): boolean {
+  private compareVersions(local: string, remote: string): boolean {
     return (
       this.isSameVersion(local, remote) ||
       this.isLocalVersionGreater(local, remote)
@@ -29,17 +29,17 @@ export class UpdateService {
     return response[VERSION_KEY];
   }
 
-  private splitVersion(version: string): any {
+  private splitVersion(version: string): string {
     const versionSeparator = '.';
     const remoteSplited = version.split(versionSeparator);
     return remoteSplited.join('');
   }
 
-  private isSameVersion(version1: any, version2: any): boolean {
+  private isSameVersion(version1: string, version2: string): boolean {
     return version1 === version2;
   }
 
-  private isLocalVersionGreater(local: any, remote: any): boolean {
+  private isLocalVersionGreater(local: string, remote: string): boolean {
     return local > remote;
   }
 }

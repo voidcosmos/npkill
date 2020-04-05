@@ -466,7 +466,7 @@ export class Controller {
     });
   }
 
-  private keyPress(key: any) {
+  private keyPress(key: IKeyPress) {
     const { name, ctrl } = key;
 
     if (this.isQuitKey(ctrl, name)) this.quit();
