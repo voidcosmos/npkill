@@ -1,6 +1,6 @@
-import { IFolder } from '../interfaces/folder.interface';
-import { IStats } from '../interfaces/stats.interface';
-import { FOLDER_SORT } from '../constants/sort.result';
+import { IFolder, IStats } from '@interfaces/index';
+
+import { FOLDER_SORT } from '@core/constants/sort.result';
 
 export class ResultsService {
   results: IFolder[] = [];

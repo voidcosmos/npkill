@@ -1,5 +1,4 @@
-import { IConfig } from '../interfaces/config.interface';
-import { IUiPosition } from '../interfaces/ui-positions.interface';
+import { IConfig, IUiPosition } from '@core/interfaces';
 
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';

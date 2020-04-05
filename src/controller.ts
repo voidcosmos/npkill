@@ -12,15 +12,29 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-} from './constants/main.constants';
-import { COLORS, OPTIONS } from './constants/cli.constants';
+} from '@core/constants/main.constants';
+import { COLORS, OPTIONS } from '@core/constants/cli.constants';
+import {
+  ConsoleService,
+  FileService,
+  ResultsService,
+  SpinnerService,
+  UpdateService,
+} from '@core/services';
 import {
   ERROR_MSG,
   HELP_MSGS,
   INFO_MSGS,
-} from './constants/messages.constants';
+} from '@core/constants/messages.constants';
+import {
+  IConfig,
+  IFolder,
+  IKeysCommand,
+  IListDirParams,
+  IPosition,
+} from '@core/interfaces';
 import { Observable, Subject, from, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants';
+import { SPINNERS, SPINNER_INTERVAL } from '@core/constants/spinner.constants';
 import {
   catchError,
   filter,
@@ -30,17 +44,7 @@ import {
   tap,
 } from 'rxjs/operators';
 
-import { ConsoleService } from './services/console.service';
 import { FOLDER_SORT } from './constants/sort.result';
-import { FileService } from './services/files.service';
-import { IConfig } from './interfaces/config.interface';
-import { IFolder } from './interfaces/folder.interface';
-import { IKeysCommand } from './interfaces/command-keys.interface';
-import { IListDirParams } from './interfaces/list-dir-params.interface';
-import { IPosition } from './interfaces/ui-positions.interface';
-import { ResultsService } from './services/results.service';
-import { SpinnerService } from './services/spinner.service';
-import { UpdateService } from './services/update.service';
 import ansiEscapes from 'ansi-escapes';
 
 export class Controller {

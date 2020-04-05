@@ -34,11 +34,11 @@
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "ts-node ./src/index.ts",
+    "start": "ts-node -r tsconfig-paths/register ./src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
-  "release": "npm run build && np"
+    "release": "npm run build && np"
   },
   "dependencies": {
     "@types/colors": "^1.2.1",
@@ -69,9 +69,10 @@
     "remark-lint": "^6.0.6",
     "ts-jest": "^24.3.0",
     "ts-node": "^8.8.1",
+    "tsconfig-paths": "^3.9.0",
     "tslint": "^5.20.1",
     "typescript": "^3.8.3"
- },
+  },
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",

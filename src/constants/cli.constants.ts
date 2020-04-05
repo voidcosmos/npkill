@@ -1,4 +1,4 @@
-import { ICliOptions } from '../interfaces/cli-options.interface';
+import { ICliOptions } from '@core/interfaces';
 
 export const OPTIONS: ICliOptions[] = [
   {
@@ -59,7 +59,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-t', '--target'],
     description:
-      'Specify the name of the directory you want to search for (by default, it\'s node_modules)',
+      "Specify the name of the directory you want to search for (by default, it's node_modules)",
     name: 'target-folder',
   },
   {

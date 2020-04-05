@@ -1,9 +1,8 @@
+import { FileService, StreamService } from '@core/services';
 import { exec, spawn } from 'child_process';
 
-import { FileService } from './files.service';
-import { IListDirParams } from '../interfaces/list-dir-params.interface';
+import { IListDirParams } from '@core/interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
-import { StreamService } from './stream.service';
 import { map } from 'rxjs/operators';
 
 export class LinuxFilesService extends FileService {
