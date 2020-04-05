@@ -1,6 +1,6 @@
 {
   "name": "npkill",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
   "main": "lib/index.js",
   "publishConfig": {
@@ -37,19 +37,25 @@
     "start": "ts-node ./src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "release": "npm run build && np"
+    "test:mutant": "stryker run",
+  "release": "npm run build && np"
   },
   "dependencies": {
     "ansi-escapes": "^4.3.1",
     "colors": "^1.4.0",
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
+    "node-emoji": "^1.10.0",
     "rxjs": "^6.5.4"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
+    "@stryker-mutator/core": "^3.1.0",
+    "@stryker-mutator/jest-runner": "^3.1.0",
+    "@stryker-mutator/typescript": "^3.1.0",
     "@types/jest": "^25.1.4",
     "@types/node": "^13.9.8",
+    "@types/colors": "^1.2.1",
     "commitlint": "^8.3.5",
     "del": "^5.1.0",
     "gulp": "^4.0.2",
@@ -66,6 +72,7 @@
     "tslint": "^6.1.0",
     "typescript": "^3.8.3"
   },
+
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
