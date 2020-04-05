@@ -8,7 +8,7 @@ on: [push, pull_request, pull_request_review]
 jobs:
   testing:
 
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest,  macos-latest, windows-latest]
 
     strategy:
       matrix:
