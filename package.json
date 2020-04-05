@@ -46,15 +46,14 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
-    "rxjs": "^6.5.4"
+    "rxjs": "^6.5.4",
+    "tsconfig-paths": "^3.9.0"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
     "@stryker-mutator/core": "^3.1.0",
     "@stryker-mutator/jest-runner": "^3.1.0",
     "@stryker-mutator/typescript": "^3.1.0",
-    "@types/jest": "^24.9.1",
-    "@types/node": "^12.12.34",
     "@types/jest": "^25.1.4",
     "@types/node": "^13.9.8",
     "@types/colors": "^1.2.1",

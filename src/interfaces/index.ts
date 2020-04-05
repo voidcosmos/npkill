@@ -3,6 +3,7 @@ export * from './command-keys.interface';
 export * from './config.interface';
 export * from './file-service.interface';
 export * from './folder.interface';
+export * from './key-press.interface';
 export * from './list-dir-params.interface';
 export * from './stats.interface';
 export * from './ui-positions.interface';

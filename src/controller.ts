@@ -29,6 +29,7 @@ import {
 import {
   IConfig,
   IFolder,
+  IKeyPress,
   IKeysCommand,
   IListDirParams,
   IPosition,
@@ -122,7 +123,7 @@ export class Controller {
     if (exclude && typeof exclude === 'string') {
       this.config.exclude = this.consoleService
         .splitData(this.consoleService.replaceString(exclude, '"', ''), ',')
-        .map(file => file.trim())
+        .map((file) => file.trim())
         .filter(Boolean);
     }
 
@@ -156,7 +157,7 @@ export class Controller {
         this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
 
-      description.map(line => {
+      description.map((line) => {
         this.printAtHelp(line, {
           x: UI_HELP.X_DESCRIPTION_OFFSET,
           y: index + UI_HELP.Y_OFFSET + lineCount,
@@ -184,7 +185,7 @@ export class Controller {
   }
 
   private isValidColor(color: string) {
-    return Object.keys(COLORS).some(validColor => validColor === color);
+    return Object.keys(COLORS).some((validColor) => validColor === color);
   }
 
   private isValidSortParam(sortName: string): boolean {
@@ -233,7 +234,7 @@ export class Controller {
       .then((isUpdated: boolean) => {
         if (!isUpdated) this.showNewInfoMessage();
       })
-      .catch(err => {
+      .catch((err) => {
         const errorMessage =
           ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
         this.printError(errorMessage);
@@ -315,7 +316,7 @@ export class Controller {
           this.updateStatus(
             INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
           ),
-        error => this.printError(error),
+        (error) => this.printError(error),
       );
   }
 
@@ -424,18 +425,18 @@ export class Controller {
   private paintStatusFolderPath(folderString: string, action: string): string {
     const TRANSFORMATIONS = {
       // tslint:disable-next-line: object-literal-key-quotes
-      deleted: text =>
+      deleted: (text) =>
         text.replace(
           INFO_MSGS.DELETED_FOLDER,
           colors.green(INFO_MSGS.DELETED_FOLDER),
         ),
       // tslint:disable-next-line: object-literal-key-quotes
-      deleting: text =>
+      deleting: (text) =>
         text.replace(
           INFO_MSGS.DELETING_FOLDER,
           colors.yellow(INFO_MSGS.DELETING_FOLDER),
         ),
-      'error-deleting': text =>
+      'error-deleting': (text) =>
         text.replace(
           INFO_MSGS.ERROR_DELETING_FOLDER,
           colors.red(INFO_MSGS.ERROR_DELETING_FOLDER),
@@ -478,7 +479,7 @@ export class Controller {
   }
 
   private setErrorEvents(): void {
-    process.on('uncaughtException', err => {
+    process.on('uncaughtException', (err) => {
       this.printError(err.message);
     });
     process.on('unhandledRejection', (reason: {}) => {
@@ -509,12 +510,12 @@ export class Controller {
 
           throw error;
         }),
-        mergeMap(dataFolder =>
+        mergeMap((dataFolder) =>
           from(this.consoleService.splitData(dataFolder.toString())),
         ),
-        filter(path => !!path),
-        map<string, IFolder>(path => ({ path, size: 0, status: 'live' })),
-        tap(nodeFolder => {
+        filter((path) => !!path),
+        map<string, IFolder>((path) => ({ path, size: 0, status: 'live' })),
+        tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
 
           if (this.config.sortBy === 'path') {
@@ -522,11 +523,11 @@ export class Controller {
             this.clearFolderSection();
           }
         }),
-        mergeMap(nodeFolder => this.calculateFolderStats(nodeFolder), 4),
+        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 4),
       )
       .subscribe(
         () => this.printFoldersSection(),
-        error => this.printError(error),
+        (error) => this.printError(error),
         () => this.completeSearch(),
       );
   }
@@ -549,13 +550,13 @@ export class Controller {
     if (!this.config.showErrors) return;
 
     const messages = this.consoleService.splitData(err);
-    messages.map(msg => this.printError(msg));
+    messages.map((msg) => this.printError(msg));
   }
 
   private calculateFolderStats(nodeFolder: IFolder): Observable<any> {
     return this.fileService
       .getFolderSize(nodeFolder.path)
-      .pipe(tap(size => this.finishFolderStats(nodeFolder, size)));
+      .pipe(tap((size) => this.finishFolderStats(nodeFolder, size)));
   }
 
   private finishFolderStats(folder: IFolder, size: string): void {
@@ -596,7 +597,7 @@ export class Controller {
   }
 
   private getCommand(keyName: string): string {
-    return VALID_KEYS.find(name => name === keyName);
+    return VALID_KEYS.find((name) => name === keyName);
   }
 
   private isCursorInLowerTextLimit(positionY: number): boolean {
