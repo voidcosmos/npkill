@@ -11,14 +11,14 @@ export class LinuxFilesService extends FileService {
   }
 
   getFolderSize(path: string): Observable<{}> {
-    const du = spawn('du', ['-s', '-b', path]);
+    const du = spawn('du', ['-sk', path]);
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);
 
     return this.streamService
       .getStream(cut)
-      .pipe(map(size => super.convertBytesToKB(+size)));
+      .pipe(map(size => +size));
   }
 
   listDir(params: IListDirParams): Observable<Buffer> {
