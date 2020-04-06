@@ -34,11 +34,11 @@
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "ts-node ./src/index.ts",
+    "start": "ts-node -r tsconfig-paths/register ./src/main.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
-  "release": "npm run build && np"
+    "release": "npm run build && np"
   },
   "dependencies": {
     "ansi-escapes": "^4.3.1",
@@ -46,7 +46,8 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
-    "rxjs": "^6.5.4"
+    "rxjs": "^6.5.4",
+    "tsconfig-paths": "^3.9.0"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",

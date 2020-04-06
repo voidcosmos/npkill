@@ -1,7 +1,7 @@
 import {
   VERSION_CHECK_DIRECTION,
   VERSION_KEY,
-} from '../constants/update.constants';
+} from '@core/constants/update.constants';
 
 import { HttpsService } from './https.service';
 
