@@ -34,7 +34,7 @@
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "ts-node -r tsconfig-paths/register ./src/index.ts",
+    "start": "ts-node -r tsconfig-paths/register ./src/main.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
