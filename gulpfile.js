@@ -2,7 +2,6 @@
 
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
-const fs = require('fs');
 const del = require('del');
 const exec = require('child_process').exec;
 
@@ -23,14 +22,19 @@ function copyBin() {
   return gulp.src(files).pipe(gulp.dest('./lib/bin/'));
 }
 
+function copyTsConfig() {
+  const files = ['./tsconfig.build.json'];
+  return gulp.src(files).pipe(gulp.dest('./lib'));
+}
+
 function buildGo() {
   const env = 'env GOOS=windows GOARCH=amd64';
   const filePath = './src/utils';
   const dest = './src/bin/windows-find.exe';
   const command = `${env} go build -o ${dest} ${filePath}`;
 
-  return new Promise((resolve, reject) => {
-    const buildProcess = exec(command, (err, stdout, stderr) => {
+  return new Promise(resolve => {
+    const buildProcess = exec(command, err => {
       if (err) {
         throw err;
       }
@@ -41,7 +45,7 @@ function buildGo() {
   });
 }
 
-const buildAll = gulp.series(clean, typescript, copyBin);
+const buildAll = gulp.series(clean, typescript, copyBin, copyTsConfig);
 
 exports.default = buildAll;
 exports.buildGo = buildGo;

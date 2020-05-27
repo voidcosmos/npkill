@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 
-import { IFileService } from '../interfaces/file-service.interface';
-import { IListDirParams } from '../interfaces/list-dir-params.interface';
+import { IFileService, IListDirParams } from '@core/interfaces';
+
 import { Observable } from 'rxjs';
 
 export abstract class FileService implements IFileService {

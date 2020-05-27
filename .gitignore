@@ -2,4 +2,8 @@ node_modules
 lib
 out.txt
 package-lock.json
+# stryker temp files
+.stryker-tmp
+stryker.log
+reports
 stuff

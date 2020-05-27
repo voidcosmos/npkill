@@ -2,10 +2,10 @@ import * as PATH from 'path';
 import * as fs from 'fs';
 import * as getSize from 'get-folder-size';
 
-import { FileService } from './files.service';
-import { IListDirParams } from '../interfaces/list-dir-params.interface';
+import { FileService, StreamService } from '@core/services';
+
+import { IListDirParams } from '@core/interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
-import { StreamService } from './stream.service';
 import { spawn } from 'child_process';
 
 export class WindowsFilesService extends FileService {

@@ -10,13 +10,13 @@
     "noImplicitAny": false,
     "strictNullChecks": false,
     "resolveJsonModule": true,
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "paths": {
-      "@core/*": ["src/*"],
-      "@services/*": ["src/services/*"],
-      "@constants/*": ["src/constants/*"],
-      "@interfaces/*": ["src/interfaces/*"]
+      "@core/*": ["./*"],
+      "@services/*": ["./services/*"],
+      "@constants/*": ["./constants/*"],
+      "@interfaces/*": ["./interfaces/*"]
     }
   },
-  "include": ["src"]
+  "include": ["./"]
 }
