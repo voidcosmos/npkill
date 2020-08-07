@@ -5,10 +5,6 @@ import { map } from 'rxjs/operators';
 import { UnixFilesService } from './unix-files.service';
 
 export class MacFilesService extends UnixFilesService {
-  constructor(streamService: StreamService) {
-    super(streamService);
-  }
-
   getFolderSize(path: string): Observable<any> {
     const du = spawn('du', ['-sk', path]);
     /* stat -f %z | awk '{t+=$1}END{print t}' */

@@ -6,10 +6,6 @@ import { map } from 'rxjs/operators';
 import { UnixFilesService } from './unix-files.service';
 
 export class LinuxFilesService extends UnixFilesService {
-  constructor(streamService: StreamService) {
-    super(streamService);
-  }
-
   getFolderSize(path: string): Observable<{}> {
     const du = spawn('du', ['-s', '--apparent-size', '-k', path]);
     const cut = spawn('cut', ['-f', '1']);
