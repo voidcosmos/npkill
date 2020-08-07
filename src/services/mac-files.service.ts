@@ -1,6 +1,5 @@
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
-import { StreamService } from './stream.service';
 import { map } from 'rxjs/operators';
 import { UnixFilesService } from './unix-files.service';
 

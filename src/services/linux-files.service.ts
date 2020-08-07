@@ -1,4 +1,3 @@
-import { StreamService } from '@core/services';
 import { spawn } from 'child_process';
 
 import { Observable } from 'rxjs';
