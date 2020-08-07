@@ -16,14 +16,14 @@ import { MacFilesService } from './services/mac-files.service';
 const getOS = () => process.platform;
 
 const OSService = {
-  linux: () => new LinuxFilesService(streamService),
-  win32: () => new WindowsFilesService(streamService),
-  darwin: () => new MacFilesService(streamService),
+  linux: LinuxFilesService,
+  win32: WindowsFilesService,
+  darwin: MacFilesService,
 };
 
 const streamService: StreamService = new StreamService();
 
-const fileService: IFileService = OSService[getOS()]();
+const fileService: IFileService = new OSService[getOS()](streamService);
 
 export const controller = new Controller(
   fileService,
