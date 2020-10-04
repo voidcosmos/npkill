@@ -356,11 +356,11 @@ export class Controller {
 
   private getFolderTexts(folder: IFolder): { path: string; size: string } {
     const folderText = this.getFolderPathText(folder);
-    let folderSize = `${this.round(folder.size, 3)} GB`;
+    let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
-      folderSize = `${this.round(size, DECIMALS_SIZE)} MB`;
+      folderSize = `${size.toFixed(DECIMALS_SIZE)} MB`;
     }
 
     const folderSizeText = folder.size ? folderSize : '--';
@@ -709,11 +709,6 @@ export class Controller {
 
   private getRealCursorPosY(): number {
     return this.cursorPosY - this.scroll;
-  }
-
-  private round(numb: number, decimals: number = 0): number {
-    const toRound = +(numb + 'e' + decimals);
-    return Number(Math.round(toRound) + 'e-' + decimals);
   }
 
   private clearErrors(): void {
