@@ -39,7 +39,7 @@ describe('Result Service', () => {
 
       const resultExpected = newResults;
 
-      newResults.forEach(result => resultService.addResult(result));
+      newResults.forEach((result) => resultService.addResult(result));
       expect(resultService.results).toMatchObject(resultExpected);
     });
   });
@@ -206,8 +206,8 @@ describe('Result Service', () => {
 
     it('should get stats of results', () => {
       const expectResult = {
-        spaceReleased: '9 GB',
-        totalSpace: '38 GB',
+        spaceReleased: '9.00 GB',
+        totalSpace: '38.00 GB',
       };
 
       const stats = resultService.getStats();
