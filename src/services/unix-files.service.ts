@@ -1,4 +1,4 @@
-import { StreamService } from '.';
+import { StreamService } from './stream.service';
 import { Observable } from 'rxjs';
 import { spawn, exec } from 'child_process';
 import { IListDirParams } from '@core/interfaces';

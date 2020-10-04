@@ -4,9 +4,8 @@ import { map } from 'rxjs/operators';
 import { UnixFilesService } from './unix-files.service';
 
 export class MacFilesService extends UnixFilesService {
-  getFolderSize(path: string): Observable<any> {
+  getFolderSize(path: string): Observable<number> {
     const du = spawn('du', ['-sk', path]);
-    /* stat -f %z | awk '{t+=$1}END{print t}' */
     const cut = spawn('cut', ['-f', '1']);
 
     du.stdout.pipe(cut.stdin);
