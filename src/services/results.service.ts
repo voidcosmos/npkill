@@ -1,5 +1,4 @@
 import { IFolder, IStats } from '@interfaces/index';
-
 import { FOLDER_SORT } from '@core/constants/sort.result';
 
 export class ResultsService {
@@ -23,13 +22,8 @@ export class ResultsService {
     }, 0);
 
     return {
-      spaceReleased: `${this.round(spaceReleased, 2)} GB`,
-      totalSpace: `${this.round(totalSpace, 2)} GB`,
+      spaceReleased: `${spaceReleased.toFixed(2)} GB`,
+      totalSpace: `${totalSpace.toFixed(2)} GB`,
     };
-  }
-
-  private round(numb: number, decimals: number = 0): number {
-    const toRound = +(numb + 'e' + decimals);
-    return Number(Math.round(toRound) + 'e-' + decimals);
   }
 }
