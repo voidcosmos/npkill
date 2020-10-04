@@ -11,15 +11,19 @@ import {
 
 import { Controller } from './controller';
 import { IFileService } from '@core/interfaces/file-service.interface';
-import { PLATFORMS } from '@core/constants/main.constants';
+import { MacFilesService } from './services/mac-files.service';
 
-const isOSWindows = () => process.platform === PLATFORMS.WINDOWS;
+const getOS = () => process.platform;
+
+const OSService = {
+  linux: LinuxFilesService,
+  win32: WindowsFilesService,
+  darwin: MacFilesService,
+};
 
 const streamService: StreamService = new StreamService();
 
-const fileService: IFileService = isOSWindows()
-  ? new WindowsFilesService(streamService)
-  : new LinuxFilesService(streamService);
+const fileService: IFileService = new OSService[getOS()](streamService);
 
 export const controller = new Controller(
   fileService,
