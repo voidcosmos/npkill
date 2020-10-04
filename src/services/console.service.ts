@@ -29,6 +29,7 @@ export class ConsoleService {
   }
 
   splitData(data: string, separator = '\n'): string[] {
+    if (!data) return [];
     return data.split(separator);
   }
 
@@ -60,8 +61,8 @@ export class ConsoleService {
   }
 
   private getValidArgvs(rawArgv: string[]): ICliOptions[] {
-    const argvs = rawArgv.map(argv => this.getOption(argv));
-    return argvs.filter(argv => argv);
+    const argvs = rawArgv.map((argv) => this.getOption(argv));
+    return argvs.filter((argv) => argv);
   }
 
   private removeSystemArgvs(allArgv: string[]): string[] {
@@ -77,11 +78,11 @@ export class ConsoleService {
   }
 
   private isValidOption(arg: string): boolean {
-    return OPTIONS.some(option => option.arg.includes(arg));
+    return OPTIONS.some((option) => option.arg.includes(arg));
   }
 
   private getOption(arg: string): ICliOptions | undefined {
-    return OPTIONS.find(option => option.arg.includes(arg));
+    return OPTIONS.find((option) => option.arg.includes(arg));
   }
 
   private isNegative(numb: number): boolean {
