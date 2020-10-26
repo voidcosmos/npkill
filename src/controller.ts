@@ -137,6 +137,9 @@ export class Controller {
     if (options['target-folder'])
       this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
+    
+    // Remove trailing slash from folderRoot for consistency
+    this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
   }
 
   private showHelp(): void {
