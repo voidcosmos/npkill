@@ -668,10 +668,10 @@ export class Controller {
         this.printStats();
         this.printFoldersSection();
       })
-      .catch(() => {
+      .catch((e) => {
         folder.status = 'error-deleting';
         this.printFoldersSection();
-        this.printError(ERROR_MSG.CANT_DELETE_FOLDER);
+        this.printError(e.message);
       });
   }
 
