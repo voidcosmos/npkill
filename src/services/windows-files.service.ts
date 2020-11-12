@@ -1,5 +1,5 @@
-import * as PATH from 'path';
-import * as fs from 'fs';
+import { normalize } from 'path';
+import { rmdir } from 'fs';
 import * as getSize from 'get-folder-size';
 
 import { FileService, StreamService } from '@core/services';
@@ -30,7 +30,7 @@ export class WindowsFilesService extends FileService {
 
     const excludeWords = exclude ? exclude.join(' ') : '';
 
-    const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
+    const binPath = normalize(`${__dirname}/../bin/windows-find`);
     const args = [path, target, excludeWords];
 
     const child = spawn(binPath, args);
@@ -39,7 +39,7 @@ export class WindowsFilesService extends FileService {
 
   deleteDir(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      fs.rmdir(path, { recursive: true }, (err) => {
+      rmdir(path, { recursive: true }, err => {
         if (err) {
           reject(err);
         }
