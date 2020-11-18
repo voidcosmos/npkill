@@ -1,5 +1,5 @@
-import * as PATH from 'path';
-import * as fs from 'fs';
+import { normalize } from 'path';
+import { rmdir } from 'fs';
 import * as getSize from 'get-folder-size';
 
 import { FileService, StreamService } from '@core/services';
@@ -14,7 +14,7 @@ export class WindowsFilesService extends FileService {
   }
 
   getFolderSize(path: string): Observable<number> {
-    return Observable.create(observer => {
+    return new Observable(observer => {
       getSize(path, (err, size) => {
         if (err) {
           throw err;
@@ -30,39 +30,21 @@ export class WindowsFilesService extends FileService {
 
     const excludeWords = exclude ? exclude.join(' ') : '';
 
-    const binPath = PATH.normalize(`${__dirname}/../bin/windows-find`);
+    const binPath = normalize(`${__dirname}/../bin/windows-find`);
     const args = [path, target, excludeWords];
 
     const child = spawn(binPath, args);
     return this.streamService.getStream(child);
   }
 
-  deleteDir(path: string): Promise<{}> {
+  deleteDir(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const files = this.getDirectoryFiles(path);
-
-      this.removeDirectoryFiles(path, files);
-      try {
-        fs.rmdirSync(path);
-      } catch (err) {
-        return reject(err);
-      }
-      resolve();
-    });
-  }
-
-  private getDirectoryFiles(dir: string) {
-    return fs.readdirSync(dir);
-  }
-
-  private removeDirectoryFiles(dir: string, files: string[]): void {
-    files.map(file => {
-      const path = PATH.join(dir, file);
-      if (fs.statSync(path).isDirectory()) {
-        this.deleteDir(path);
-      } else {
-        fs.unlinkSync(path);
-      }
+      rmdir(path, { recursive: true }, err => {
+        if (err) {
+          reject(err);
+        }
+        resolve(true);
+      });
     });
   }
 }
