@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://npkill.js.org/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
+  <img src="https://npkill.js.org/img/npkill-text-clean-christmas.svg" width="320" alt="npkill logo" />
   <img src="https://npkill.js.org/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
 </p>
 <p align="center">
@@ -92,7 +92,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -f, --full             | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
 | -gb                    | Show folders in Gigabytes instead of Megabytes.                                                                                                |
 | -h, --help, ?          | Show this help page and exit                                                                                                                   |
-| -nu, --no-check-update | Don't check for updates on startup                                                                                                              |
+| -nu, --no-check-update | Don't check for updates on startup                                                                                                             |
 | -s, --sort             | Sort results by: size or path _[ beta ]_                                                                                                       |
 | -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
 | -v, --version          | Show npkill version                                                                                                                            |
