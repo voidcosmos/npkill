@@ -137,7 +137,7 @@ export class Controller {
     if (options['target-folder'])
       this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
-    
+
     // Remove trailing slash from folderRoot for consistency
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
   }
@@ -478,7 +478,7 @@ export class Controller {
     const command = this.getCommand(name);
     if (command) this.KEYS.execute(name);
 
-    this.printFoldersSection();
+    if (name !== 'space') this.printFoldersSection();
   }
 
   private setErrorEvents(): void {
@@ -660,6 +660,7 @@ export class Controller {
     }
 
     folder.status = 'deleting';
+    this.printFoldersSection();
 
     this.fileService
       .deleteDir(folder.path)
