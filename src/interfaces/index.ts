@@ -8,3 +8,5 @@ export * from './list-dir-params.interface';
 export * from './stats.interface';
 export * from './ui-positions.interface';
 export * from './version.interface';
+export * from './node-version.interface';
+export * from './error-callback.interface';
