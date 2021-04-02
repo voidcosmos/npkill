@@ -69,6 +69,9 @@ export const OPTIONS: ICliOptions[] = [
   },
 ];
 
+export const HELP_WARNING =
+  'Not all node_modules are bad! Some applications (like vscode, Discord, etc) need those dependencies to work. If their directory is deleted, the application will probably break (until the dependencies are reinstalled). NPKILL will show you these directories by highlighting them ⚠️';
+
 export const COLORS = {
   cyan: 'bgCyan',
   magenta: 'bgMagenta',

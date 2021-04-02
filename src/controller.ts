@@ -13,7 +13,7 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from '@core/constants/main.constants';
-import { COLORS, OPTIONS } from '@core/constants/cli.constants';
+import { COLORS, HELP_WARNING, OPTIONS } from '@core/constants/cli.constants';
 import {
   ConsoleService,
   FileService,
@@ -169,7 +169,7 @@ export class Controller {
       });
     });
 
-    this.printAt('', {
+    this.printAt(HELP_WARNING, {
       x: 0,
       y: lineCount * 2 + 2,
     });
