@@ -339,8 +339,9 @@ export class Controller {
 
   private printFolderRow(folder: IFolder, row: number) {
     let { path, size } = this.getFolderTexts(folder);
+    const isRowSelected = row === this.getRealCursorPosY();
 
-    if (row === this.getRealCursorPosY()) {
+    if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
       this.paintBgRow(row);
