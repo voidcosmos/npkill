@@ -347,6 +347,9 @@ export class Controller {
       this.paintBgRow(row);
     }
 
+    if (folder.isDangerous)
+      path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
+
     this.printAt(path, {
       x: MARGINS.FOLDER_COLUMN_START,
       y: row,
