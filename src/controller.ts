@@ -518,7 +518,12 @@ export class Controller {
           from(this.consoleService.splitData(dataFolder.toString())),
         ),
         filter((path) => !!path),
-        map<string, IFolder>((path) => ({ path, size: 0, status: 'live' })),
+        map<string, IFolder>((path) => ({
+          path,
+          size: 0,
+          isDangerous: this.fileService.isDangerous(path),
+          status: 'live',
+        })),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
 

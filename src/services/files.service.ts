@@ -32,4 +32,9 @@ export abstract class FileService implements IFileService {
   isSafeToDelete(path: string, targetFolder: string): boolean {
     return path.includes(targetFolder);
   }
+
+  isDangerous(path: string): boolean {
+    const hiddenFilePattern = /(^|\/)\.[^\/\.]/g;
+    return hiddenFilePattern.test(path);
+  }
 }
