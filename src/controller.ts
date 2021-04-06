@@ -501,8 +501,8 @@ export class Controller {
 
   private scan(): void {
     const params: IListDirParams = this.prepareListDirParams();
-    const bufferFilter = (text: string) =>
-      text.endsWith(this.config.targetFolder + '\n');
+    const isChunkCompleted = (chunk: string) =>
+      chunk.endsWith(this.config.targetFolder + '\n');
     const folders$ = this.fileService.listDir(params);
 
     folders$
@@ -515,7 +515,7 @@ export class Controller {
           throw error;
         }),
         map((buffer) => buffer.toString()),
-        bufferUntil((chunk) => bufferFilter(chunk)),
+        bufferUntil((chunk) => isChunkCompleted(chunk)),
         mergeMap((dataFolder) =>
           from(this.consoleService.splitData(dataFolder)),
         ),
