@@ -47,7 +47,7 @@ import {
 
 import { FOLDER_SORT } from './constants/sort.result';
 import ansiEscapes from 'ansi-escapes';
-import { bufferObserve } from './libs/buffer-observer';
+import { bufferUntil } from './libs/buffer-until';
 
 export class Controller {
   private folderRoot = '';
@@ -515,7 +515,7 @@ export class Controller {
           throw error;
         }),
         map((buffer) => buffer.toString()),
-        bufferObserve((dataFolder) => bufferFilter(dataFolder)),
+        bufferUntil((chunk) => bufferFilter(chunk)),
         mergeMap((dataFolder) =>
           from(this.consoleService.splitData(dataFolder)),
         ),

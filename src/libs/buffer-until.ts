@@ -12,7 +12,7 @@ class Buffer<T> {
   }
 }
 
-export function bufferObserve<T>(
+export function bufferUntil<T>(
   filter: (buffer: string) => boolean,
   resetNotifier: Observable<any> = of(),
 ): OperatorFunction<string, string> {
