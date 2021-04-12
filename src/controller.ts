@@ -47,6 +47,7 @@ import {
 
 import { FOLDER_SORT } from './constants/sort.result';
 import ansiEscapes from 'ansi-escapes';
+import { bufferUntil } from './libs/buffer-until';
 
 export class Controller {
   private folderRoot = '';
@@ -500,21 +501,23 @@ export class Controller {
 
   private scan(): void {
     const params: IListDirParams = this.prepareListDirParams();
-
+    const isChunkCompleted = (chunk: string) =>
+      chunk.endsWith(this.config.targetFolder + '\n');
     const folders$ = this.fileService.listDir(params);
+
     folders$
       .pipe(
         catchError((error, caught) => {
           if (error.bash) {
             this.printFolderError(error.message);
-
             return caught;
           }
-
           throw error;
         }),
+        map((buffer) => buffer.toString()),
+        bufferUntil((chunk) => isChunkCompleted(chunk)),
         mergeMap((dataFolder) =>
-          from(this.consoleService.splitData(dataFolder.toString())),
+          from(this.consoleService.splitData(dataFolder)),
         ),
         filter((path) => !!path),
         map<string, IFolder>((path) => ({ path, size: 0, status: 'live' })),
