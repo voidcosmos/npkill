@@ -9,6 +9,7 @@ export const OVERFLOW_CUT_FROM = 8;
 
 export const DEFAULT_CONFIG: IConfig = {
   backgroundColor: 'bgBlue',
+  warningColor: 'brightYellow',
   checkUpdates: true,
   deleteAll: false,
   exclude: [],

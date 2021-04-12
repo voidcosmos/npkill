@@ -78,6 +78,8 @@ You can also use <kbd>j</kbd> and <kbd>k</kbd> to move between the results
 
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
+**Important!** Some applications installed on the system need their node_modules directory to work and deleting them may break them. NPKILL will highlight them by displaying a :warning: to be careful.
+
 <a name="options"></a>
 
 ## Options
