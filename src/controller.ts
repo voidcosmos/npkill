@@ -13,7 +13,7 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from '@core/constants/main.constants';
-import { COLORS, OPTIONS } from '@core/constants/cli.constants';
+import { COLORS, HELP_WARNING, OPTIONS } from '@core/constants/cli.constants';
 import {
   ConsoleService,
   FileService,
@@ -170,7 +170,7 @@ export class Controller {
       });
     });
 
-    this.printAt('', {
+    this.printAt(HELP_WARNING, {
       x: 0,
       y: lineCount * 2 + 2,
     });
@@ -340,12 +340,16 @@ export class Controller {
 
   private printFolderRow(folder: IFolder, row: number) {
     let { path, size } = this.getFolderTexts(folder);
+    const isRowSelected = row === this.getRealCursorPosY();
 
-    if (row === this.getRealCursorPosY()) {
+    if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
       this.paintBgRow(row);
     }
+
+    if (folder.isDangerous)
+      path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
 
     this.printAt(path, {
       x: MARGINS.FOLDER_COLUMN_START,
@@ -520,7 +524,12 @@ export class Controller {
           from(this.consoleService.splitData(dataFolder)),
         ),
         filter((path) => !!path),
-        map<string, IFolder>((path) => ({ path, size: 0, status: 'live' })),
+        map<string, IFolder>((path) => ({
+          path,
+          size: 0,
+          isDangerous: this.fileService.isDangerous(path),
+          status: 'live',
+        })),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
 

@@ -10,4 +10,5 @@ export interface IFileService {
   convertGBToMB(gb: number): number;
   getFileContent(path: string): string;
   isSafeToDelete(path: string, targetFolder: string): boolean;
+  isDangerous(path: string): boolean;
 }
