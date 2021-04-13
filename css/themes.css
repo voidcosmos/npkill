@@ -1,0 +1,86 @@
+:root {
+  --transition-duration: 0.25s;
+  --main-background-color: white;
+  --notification-background-color: #209cee;
+  --footer-background-color: #fafafa;
+  --title-text-color: #363636;
+  --text-color: #4a4a4a;
+  --window-light-header-color: #dbd9db;
+  --window-light-body-color: #f2f2f2;
+  --window-light-text-color: #1f1f1f;
+  --table-row-color: #fff;
+  --table-even-row-color: #fafafa;
+  --table-row-hover-color: #f5f5f5;
+  --logo-background-color1: #a44d6d;
+  --logo-background-color2: #ff3860;
+  --logo-background-color3: #fe9194;
+  --button-background-color: white;
+}
+
+.dark-theme {
+  --main-background-color: #121212;
+  --notification-background-color: #156194;
+  --footer-background-color: #272727;
+  --title-text-color: #dbdbdb;
+  --text-color: #c2c2c2;
+  --window-light-header-color: #383738;
+  --window-light-body-color: #252525;
+  --window-light-text-color: #fafafa;
+  --table-row-color: #121212;
+  --table-even-row-color: #171717;
+  --table-row-hover-color: #222;
+  --logo-background-color1: #8e435f;
+  --logo-background-color2: #ca2b4b;
+  --logo-background-color3: #b6595c;
+  --button-background-color: #bbb;
+}
+
+body {
+  transition-property: background-color, color;
+  transition-duration: var(--transition-duration);
+  background-color: var(--main-background-color);
+  color: var(--text-color);
+}
+
+.title {
+  transition: color var(--transition-duration);
+  color: var(--title-text-color);
+}
+
+.table > thead > tr > th {
+  transition-property: background-color, color;
+  transition-duration: var(--transition-duration);
+  background-color: var(--table-row-color);
+  color: var(--title-text-color);
+}
+.table tr {
+  transition-property: background-color, color;
+  transition-duration: var(--transition-duration);
+  background-color: var(--table-row-color) !important;
+  color: var(--text-color);
+}
+.table tr:nth-child(even) {
+  transition: background-color var(--transition-duration);
+  background-color: var(--table-even-row-color) !important;
+}
+.table tr:hover {
+  transition: background-color var(--transition-duration);
+  background-color: var(--table-row-hover-color) !important;
+}
+
+.theme-icon {
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 5px;
+  height: 30px;
+}
+
+.theme-icon > img {
+  height: 100%;
+}
+
+.button {
+  transition: background-color var(--transition-duration);
+  background-color: var(--button-background-color);
+}

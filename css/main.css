@@ -2,15 +2,26 @@
   border-radius: 13px;
 }
 
+.notification.is-info {
+  transition: background-color var(--transition-duration);
+  background-color: var(--notification-background-color);
+}
+
 .notification pre code {
   background: #3d3d3d;
 }
 .notification .light pre code {
-  background: #f2f2f2;
+  transition: background-color var(--transition-duration);
+  background: var(--window-light-body-color);
 }
 .hero.is-primary.is-bold {
-  background-image: linear-gradient(141deg, #a44d6d 0, #ff3860 71%, #fe9194 100%);
+  background-image: linear-gradient(141deg, var(--logo-background-color1) 0, var(--logo-background-color2) 71%, var(--logo-background-color3) 100%);
   /* background-image: linear-gradient(141deg, #0b8286 0%, #188eac 71%, #1686c8 100%); */
+}
+
+.footer {
+  transition: background-color var(--transition-duration);
+  background-color: var(--footer-background-color);
 }
 
 footer .npkill-title {

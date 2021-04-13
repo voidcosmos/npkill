@@ -12,7 +12,8 @@
   display: block;
 }
 .window.light:before {
-  background: #dbd9db url('../img/window-btn.svg') no-repeat 0.3em 0.3em;
+  transition: background-color var(--transition-duration);
+  background: var(--window-light-header-color) url('../img/window-btn.svg') no-repeat 0.3em 0.3em;
 }
 
 .window pre {
@@ -43,7 +44,8 @@
 }
 
 .window.light code span {
-  color: #1f1f1f;
+  transition: color var(--transition-duration);
+  color: var(--window-light-text-color);
 }
 
 .window .prompt-sign {
