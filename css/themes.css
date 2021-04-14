@@ -15,6 +15,7 @@
   --logo-background-color2: #ff3860;
   --logo-background-color3: #fe9194;
   --button-background-color: white;
+  --info-text-color: #209cee;
 }
 
 .dark-theme {
@@ -33,6 +34,7 @@
   --logo-background-color2: #ca2b4b;
   --logo-background-color3: #b6595c;
   --button-background-color: #bbb;
+  --info-text-color: #3eb2ff;
 }
 
 body {
@@ -83,4 +85,9 @@ body {
 .button {
   transition: background-color var(--transition-duration);
   background-color: var(--button-background-color);
+}
+
+.has-text-info {
+  transition: color var(--transition-duration);
+  color: var(--info-text-color) !important;
 }
