@@ -225,7 +225,7 @@ We will continue to do things anyway, but donations are one of the many ways to 
 
 ---
 
-### Cripto alternative
+### Crypto alternative
 
 - btc: 1ML2DihUoFTqhoQnrWy4WLxKbVYkUXpMAX
 - bch: 1HVpaicQL5jWKkbChgPf6cvkH8nyktVnVk
