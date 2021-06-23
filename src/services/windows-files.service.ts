@@ -1,5 +1,5 @@
 import { normalize, join as pathJoin } from 'path';
-import { rmdir, lstat, unlink, readdir } from 'fs';
+import { rm, lstat, unlink, readdir } from 'fs';
 import { version } from 'process';
 
 import * as getSize from 'get-folder-size';
@@ -59,7 +59,7 @@ export class WindowsFilesService extends FileService {
           resolve(true);
         });
       } else {
-        rmdir(path, { recursive: true }, err => {
+        rm(path, { recursive: true }, err => {
           if (err) {
             reject(err);
           }
@@ -111,7 +111,7 @@ export class WindowsFilesService extends FileService {
   }
 
   protected removeDirectory(path: string, callback) {
-    rmdir(path, rmDirError => {
+    rm(path, rmDirError => {
       //  We ignore certain error codes
       //  in order to simulate 'recursive' mode
       if (rmDirError && RECURSIVE_RMDIR_IGNORED_ERROR_CODES.includes(rmDirError.code)) {
@@ -134,7 +134,7 @@ export class WindowsFilesService extends FileService {
       //  removeDirectory only allows deleting directories
       //  that has no content inside (empty directory).
       if (!contentInDirectory) {
-        return rmdir(path, callback);
+        return rm(path, callback);
       }
 
       ls.forEach(dirOrFile => {
@@ -154,7 +154,7 @@ export class WindowsFilesService extends FileService {
           //  No more content inside.
           //  Remove the directory.
           if (!contentInDirectory) {
-            rmdir(path, callback);
+            rm(path, callback);
           }
         });
       });

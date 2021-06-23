@@ -55,7 +55,7 @@
     "@stryker-mutator/jest-runner": "^3.1.0",
     "@stryker-mutator/typescript": "^3.1.0",
     "@types/jest": "^25.1.4",
-    "@types/node": "^13.9.8",
+    "@types/node": "^15.12.4",
     "@types/colors": "^1.2.1",
     "commitlint": "^8.3.5",
     "del": "^5.1.0",
