@@ -1,4 +1,4 @@
-import { OperatorFunction, Observable, of } from 'rxjs';
+import { Observable, OperatorFunction, of } from 'rxjs';
 
 class Buffer<T> {
   values = '';
@@ -33,7 +33,10 @@ export function bufferUntil<T>(
           }
         },
         error: () => resetNotifierSubscription.unsubscribe(),
-        complete: () => resetNotifierSubscription.unsubscribe(),
+        complete: () => {
+          resetNotifierSubscription.unsubscribe();
+          observer.complete();
+        },
       });
     });
   };
