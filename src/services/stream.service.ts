@@ -6,11 +6,11 @@ export class StreamService {
   streamToObservable<T>(stream: ChildProcessWithoutNullStreams) {
     const { stdout, stderr } = stream;
 
-    return new Observable<T>(observer => {
-      const dataHandler = data => observer.next(data);
-      const bashErrorHandler = error =>
+    return new Observable<T>((observer) => {
+      const dataHandler = (data) => observer.next(data);
+      const bashErrorHandler = (error) =>
         observer.error({ ...error, bash: true });
-      const errorHandler = error => observer.error(error);
+      const errorHandler = (error) => observer.error(error);
       const endHandler = () => observer.complete();
 
       stdout.addListener('data', dataHandler);
@@ -35,7 +35,10 @@ export class StreamService {
     return this.streamToObservable<T>(child);
   }
 
-  private setEncoding(child: ChildProcessWithoutNullStreams, encoding: string) {
+  private setEncoding(
+    child: ChildProcessWithoutNullStreams,
+    encoding: BufferEncoding,
+  ) {
     child.stdout.setEncoding(encoding);
     child.stderr.setEncoding(encoding);
   }
