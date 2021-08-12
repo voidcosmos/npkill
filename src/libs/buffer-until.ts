@@ -32,7 +32,10 @@ export function bufferUntil<T>(
             buffer.reset();
           }
         },
-        error: () => resetNotifierSubscription.unsubscribe(),
+        error: (err) => {
+          resetNotifierSubscription.unsubscribe();
+          observer.error(err);
+        },
         complete: () => {
           resetNotifierSubscription.unsubscribe();
           observer.complete();
