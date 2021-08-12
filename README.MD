@@ -4,7 +4,7 @@
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
-<a href="https://www.codacy.com/app/zaldih/npkill?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zaldih/npkill&amp;utm_campaign=Badge_Grade"><img src="https://api.codacy.com/project/badge/Grade/b8ba5eb6cba4413eb474921dcc460f34"/></a>
+<a href="https://www.codacy.com/gh/voidcosmos/npkill/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=voidcosmos/npkill&amp;utm_campaign=Badge_Grade"><img src="https://app.codacy.com/project/badge/Grade/cbd0bc6159674e44a3742ac9c28e15dd"/></a>
 <a href="#donations"><img src="https://img.shields.io/badge/donate-<3-red" alt="Donations Badge"/></a>
 <img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg">
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
