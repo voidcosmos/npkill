@@ -10,7 +10,21 @@ import { join as pathJoin } from 'path';
 import { version } from 'process';
 
 export class WindowsStrategyManager {
-  protected getNodeVersion(): INodeVersion {
+ 
+  deleteDir(path: string): Promise<boolean> {
+    const strategy = this.selectStrategy();
+
+    return new Promise((resolve, reject) => {
+      strategy(path, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(true);
+      });
+    });
+  }
+
+  private getNodeVersion(): INodeVersion {
     const releaseVersionsRegExp: RegExp = /^v(\d{1,2})\.(\d{1,2})\.(\d{1,2})/;
     const versionMatch = version.match(releaseVersionsRegExp);
 
@@ -25,27 +39,25 @@ export class WindowsStrategyManager {
     };
   }
 
-  private selectStrategy(version: string) {
-    if (version > RM_NODE_VERSION_SUPPORT) {
+  private selectStrategy() {
+    const { major, minor } = this.getNodeVersion();
+
+    if (this.supportsRm(major,minor)) {
       return this.removeWithRm;
     }
-    if (version > RECURSIVE_RMDIR_NODE_VERSION_SUPPORT) {
+    if (this.supportsRmdir(major,minor)) {
       return this.removeWithRmdir;
     }
-    return this.removeRecursively;
+    return this.removeRecursively.bind(this);
   }
 
-  deleteDir(path: string): Promise<boolean> {
-    const strategy = this.selectStrategy(version);
+  private supportsRm(major:number,minor:number):boolean{
+    return (major > RM_NODE_VERSION_SUPPORT.major || (major === RM_NODE_VERSION_SUPPORT.major && minor > RM_NODE_VERSION_SUPPORT.minor));
+  }
 
-    return new Promise((resolve, reject) => {
-      strategy(path, (err) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(true);
-      });
-    });
+  private supportsRmdir(major:number,minor:number):boolean {
+    return ( major > RECURSIVE_RMDIR_NODE_VERSION_SUPPORT.major ||
+    (major === RECURSIVE_RMDIR_NODE_VERSION_SUPPORT.major && minor > RECURSIVE_RMDIR_NODE_VERSION_SUPPORT.minor));
   }
 
   private removeWithRm(path: string, callback: NoParamCallback) {
