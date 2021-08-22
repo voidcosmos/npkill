@@ -1,24 +1,23 @@
-import { normalize, join as pathJoin } from 'path';
-import { rm, lstat, unlink, readdir } from 'fs';
-import { version } from 'process';
-
 import * as getSize from 'get-folder-size';
 
 import { FileService, StreamService } from '@core/services';
-import { IErrorCallback, INodeVersion } from '@core/interfaces';
-import { RECURSIVE_RMDIR_IGNORED_ERROR_CODES, RECURSIVE_RMDIR_NODE_VERSION_SUPPORT } from '@core/constants';
 
 import { IListDirParams } from '@core/interfaces/list-dir-params.interface';
 import { Observable } from 'rxjs';
+import { WindowsStrategyManager } from '@core/strategies/windows-remove-dir.strategy';
+import { normalize } from 'path';
 import { spawn } from 'child_process';
 
 export class WindowsFilesService extends FileService {
-  constructor(private streamService: StreamService) {
+  constructor(
+    private streamService: StreamService,
+    private windowsStrategyManager: WindowsStrategyManager,
+  ) {
     super();
   }
 
   getFolderSize(path: string): Observable<number> {
-    return new Observable(observer => {
+    return new Observable((observer) => {
       getSize(path, (err, size) => {
         if (err) {
           throw err;
@@ -42,6 +41,10 @@ export class WindowsFilesService extends FileService {
   }
 
   deleteDir(path: string): Promise<boolean> {
+    return this.windowsStrategyManager.deleteDir(path);
+  }
+
+  /*    deleteDir(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const { major: supportedMajor, minor: supportedMinor } = RECURSIVE_RMDIR_NODE_VERSION_SUPPORT;
 
@@ -67,9 +70,9 @@ export class WindowsFilesService extends FileService {
         });
       }
     });
-  }
+  } */
 
-  protected get nodeVersion(): INodeVersion | Error {
+  /* protected get nodeVersion(): INodeVersion | Error {
     const releaseVersionsRegExp: RegExp = /^v(\d{1,2})\.(\d{1,2})\.(\d{1,2})/;
     const versionMatch = version.match(releaseVersionsRegExp);
 
@@ -159,5 +162,5 @@ export class WindowsFilesService extends FileService {
         });
       });
     });
-  }
+  } */
 }
