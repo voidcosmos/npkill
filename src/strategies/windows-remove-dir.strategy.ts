@@ -1,4 +1,4 @@
-import { IErrorCallback, INodeVersion } from '@core/interfaces';
+import { INodeVersion } from '@core/interfaces';
 import { NoParamCallback, lstat, readdir, rm, rmdir, unlink } from 'fs';
 import {
   RECURSIVE_RMDIR_IGNORED_ERROR_CODES,
@@ -10,8 +10,6 @@ import { join as pathJoin } from 'path';
 import { version } from 'process';
 
 export class WindowsStrategyManager {
-  constructor() {}
-
   protected getNodeVersion(): INodeVersion {
     const releaseVersionsRegExp: RegExp = /^v(\d{1,2})\.(\d{1,2})\.(\d{1,2})/;
     const versionMatch = version.match(releaseVersionsRegExp);
