@@ -1,6 +1,11 @@
 import * as getSize from 'get-folder-size';
+import * as rimraf from 'rimraf';
 
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
+import { IFileService } from '../src/interfaces/file-service.interface';
 import { LinuxFilesService } from '../src/services/linux-files.service';
+import { WindowsFilesService } from '../src/services/windows-files.service';
+import { MacFilesService } from '../src/services/mac-files.service';
 import { StreamService } from '../src/services/stream.service';
 jest.mock('get-folder-size');
 
@@ -65,5 +70,75 @@ xdescribe('obsolet File Service', () => {
     it('should throw error if try to delete an important directory ', () => {
       expect(() => fileService.removeDir('/')).toThrow();
     });
+  });
+});
+
+describe('Functional test for #deleteDir', () => {
+  let fileService: IFileService;
+  const testFolder = 'test-files';
+  const directories = [
+    'testProject',
+    'awesome-fake-project',
+    'a',
+    'ewez',
+    'potato and bananas',
+  ];
+
+  const createDir = (dir) => mkdirSync(dir);
+  const isDirEmpty = (dir) => readdirSync(dir).length === 0;
+  const createFileWithSize = (filename, mb) =>
+    writeFileSync(filename, Buffer.alloc(1024 * 1024 * mb));
+
+  beforeAll(() => {
+    const getOS = () => process.platform;
+    const OSService = {
+      linux: LinuxFilesService,
+      win32: WindowsFilesService,
+      darwin: MacFilesService,
+    };
+    const streamService: StreamService = new StreamService();
+    fileService = new OSService[getOS()](streamService);
+
+    if (existsSync(testFolder)) {
+      rimraf.sync(testFolder);
+    }
+    createDir(testFolder);
+
+    directories.forEach((dirName) => {
+      const basePath = `${testFolder}/${dirName}`;
+      const targetFolder = `${basePath}/node_modules`;
+      const subfolder = `${targetFolder}/sample subfolder`;
+      createDir(basePath);
+      createDir(targetFolder);
+      createDir(subfolder);
+      createFileWithSize(targetFolder + '/a', 30);
+      createFileWithSize(subfolder + '/sample file', 12);
+      // Create this structure:
+      //   test-files
+      //    |testProject
+      //      |a (file)
+      //      |sample subfolder
+      //       |sample file (file)
+      //    |etc...
+    });
+  });
+
+  afterAll(() => {
+    rimraf.sync(testFolder);
+  });
+
+  it('Test folder should not be empty', () => {
+    expect(isDirEmpty(testFolder)).toBeFalsy();
+  });
+
+  it('Should delete all folders created in test folder', async () => {
+    directories.forEach(async (dirName) => {
+      const path = `${testFolder}/${dirName}`;
+      expect(existsSync(path)).toBeTruthy();
+      await fileService.deleteDir(path);
+      expect(existsSync(path)).toBeFalsy();
+    });
+    await new Promise((r) => setTimeout(r, 500));
+    expect(isDirEmpty(testFolder)).toBeTruthy();
   });
 });
