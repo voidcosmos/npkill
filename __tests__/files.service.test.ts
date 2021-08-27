@@ -1,4 +1,5 @@
 import * as rimraf from 'rimraf';
+import * as fs from 'fs';
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { IFileService } from '../src/interfaces/file-service.interface';
@@ -81,10 +82,11 @@ xdescribe('obsolet File Service', () => {
     });
   });
 
-  describe('#isSafeToDelete', () => {
-    it('should throw error if try to delete an important directory ', () => {
-      expect(() => fileService.removeDir('/')).toThrow();
-    });
+  it('#getFileContent should read file content with utf8 encoding', () => {
+    const path = 'file.json';
+    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockImplementation();
+    fileService.getFileContent(path);
+    expect(readFileSyncSpy).toBeCalledWith(path, 'utf8');
   });
 });
 
