@@ -38,7 +38,8 @@
     "test": "jest --verbose",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
-    "release": "npm run build && np"
+    "release": "npm run build && np",
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register -r tsconfig-paths/register ./src/main.ts"
   },
   "dependencies": {
     "ansi-escapes": "^4.3.1",
@@ -54,9 +55,9 @@
     "@stryker-mutator/core": "^3.1.0",
     "@stryker-mutator/jest-runner": "^3.1.0",
     "@stryker-mutator/typescript": "^3.1.0",
+    "@types/colors": "^1.2.1",
     "@types/jest": "^25.1.4",
     "@types/node": "^15.12.4",
-    "@types/colors": "^1.2.1",
     "commitlint": "^8.3.5",
     "del": "^5.1.0",
     "gulp": "^4.0.2",
@@ -68,6 +69,7 @@
     "pre-commit": "^1.2.2",
     "prettier": "^2.0.2",
     "remark-lint": "^7.0.0",
+    "rimraf": "^3.0.2",
     "ts-jest": "^25.3.0",
     "ts-node": "^8.8.1",
     "tslint": "^6.1.0",
