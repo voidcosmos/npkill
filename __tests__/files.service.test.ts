@@ -132,13 +132,12 @@ describe('Functional test for #deleteDir', () => {
   });
 
   it('Should delete all folders created in test folder', async () => {
-    directories.forEach(async (dirName) => {
+    for (const dirName of directories) {
       const path = `${testFolder}/${dirName}`;
       expect(existsSync(path)).toBeTruthy();
       await fileService.deleteDir(path);
       expect(existsSync(path)).toBeFalsy();
-    });
-    await new Promise((r) => setTimeout(r, 500));
+    }
     expect(isDirEmpty(testFolder)).toBeTruthy();
   });
 });
