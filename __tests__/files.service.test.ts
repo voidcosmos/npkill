@@ -43,39 +43,41 @@ describe('File Service', () => {
 
     it('should get false if not is safe to delete ', () => {
       expect(fileService.isSafeToDelete('/one/route', target)).toBeFalsy();
+      expect(
+        fileService.isSafeToDelete('/one/node_/ro/modules', target),
+      ).toBeFalsy();
+      expect(fileService.isSafeToDelete('nodemodules', target)).toBeFalsy();
     });
+
     it('should get true if is safe to delete ', () => {
       expect(
         fileService.isSafeToDelete('/one/route/node_modules', target),
-      ).toBe(true);
+      ).toBeTruthy();
       expect(
         fileService.isSafeToDelete('/one/route/node_modules/', target),
-      ).toBe(true);
-    });
-  });
-});
-
-xdescribe('obsolet File Service', () => {
-  let fileService;
-  beforeEach(() => {
-    fileService = new LinuxFilesService(new StreamService());
-  });
-
-  describe('#getFolderSize', () => {
-    it('should call getSize function', () => {
-      const folderSize = fileService.getFolderSize('');
-      expect(getSize).toBeCalled();
-    });
-    it('should get max 2 decimals on the size', async () => {
-      /*jest.mock('get-folder-size', () => getSize => 54674657);
-      const folderSize = await fileService.getFolderSize('');
-      expect(countDecimals(folderSize)).toBe(2);*/
+      ).toBeTruthy();
     });
   });
 
-  describe('#removeDir', () => {
-    it('should throw error if try to delete an important directory ', () => {
-      expect(() => fileService.removeDir('/')).toThrow();
+  describe('#isDangerous', () => {
+    it('should get false if is considered dangerous', () => {
+      expect(
+        fileService.isDangerous('/home/apps/myapp/node_modules'),
+      ).toBeFalsy();
+      expect(fileService.isDangerous('node_modules')).toBeFalsy();
+      expect(
+        fileService.isDangerous('/home/user/projects/a/node_modules'),
+      ).toBeFalsy();
+    });
+
+    it('should get true if is not considered dangerous ', () => {
+      expect(
+        fileService.isDangerous('/home/.config/myapp/node_modules'),
+      ).toBeTruthy();
+      expect(fileService.isDangerous('.apps/node_modules')).toBeTruthy();
+      expect(
+        fileService.isDangerous('.apps/.sample/node_modules'),
+      ).toBeTruthy();
     });
   });
 
