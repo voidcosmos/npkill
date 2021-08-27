@@ -20,6 +20,23 @@ describe('File Service', () => {
     fileService = new LinuxFilesService(new StreamService());
   });
 
+  describe('Conversion methods', () => {
+    it('#convertKbToGB', () => {
+      expect(fileService.convertKbToGB(100000)).toBe(0.095367431640625);
+      expect(fileService.convertKbToGB(140000)).toBe(0.133514404296875);
+    });
+    it('#convertBytesToKB', () => {
+      expect(fileService.convertBytesToKB(1)).toBe(0.0009765625);
+      expect(fileService.convertBytesToKB(100)).toBe(0.09765625);
+      expect(fileService.convertBytesToKB(96)).toBe(0.09375);
+    });
+    it('#convertGBToMB', () => {
+      expect(fileService.convertGBToMB(1)).toBe(1024);
+      expect(fileService.convertGBToMB(100)).toBe(102400);
+      expect(fileService.convertGBToMB(96)).toBe(98304);
+    });
+  });
+
   describe('#isSafeToDelete', () => {
     const target = 'node_modules';
 
