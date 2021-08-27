@@ -32,3 +32,5 @@ export const controller = new Controller(
   new UpdateService(new HttpsService()),
   new ResultsService(),
 );
+
+controller.init();
