@@ -1,4 +1,3 @@
-import * as getSize from 'get-folder-size';
 import * as rimraf from 'rimraf';
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
@@ -7,7 +6,6 @@ import { LinuxFilesService } from '../src/services/linux-files.service';
 import { WindowsFilesService } from '../src/services/windows-files.service';
 import { MacFilesService } from '../src/services/mac-files.service';
 import { StreamService } from '../src/services/stream.service';
-jest.mock('get-folder-size');
 
 const countDecimals = (numb: number): number => {
   if (Math.floor(numb.valueOf()) === numb.valueOf()) {
