@@ -6,7 +6,6 @@ import { join as pathJoin } from 'path';
 
 export class WindowsDefaultStrategy extends WindowsStrategy {
   remove(dirOrFilePath: string, callback: NoParamCallback): boolean {
-    console.log('Default');
     lstat(dirOrFilePath, (lstatError, stats) => {
       //  No such file or directory - Done
       if (lstatError && lstatError.code === 'ENOENT') {
