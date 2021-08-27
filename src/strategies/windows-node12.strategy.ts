@@ -6,10 +6,10 @@ import { WindowsStrategy } from './windows-strategy.abstract';
 export class WindowsNode12Strategy extends WindowsStrategy {
   remove(path: string, callback: NoParamCallback): boolean {
     if (this.isSupported()) {
+      console.log('Node 12');
       rm(path, { recursive: true }, callback);
       return true;
     }
-    console.log('Node 12');
     return this.checkNext(path, callback);
   }
 
