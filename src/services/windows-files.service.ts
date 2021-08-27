@@ -9,14 +9,11 @@ import { normalize } from 'path';
 import { spawn } from 'child_process';
 
 export class WindowsFilesService extends FileService {
+  private windowsStrategyManager: WindowsStrategyManager =
+    new WindowsStrategyManager();
 
-  private windowsStrategyManager: WindowsStrategyManager;
-
-  constructor(
-    private streamService: StreamService,
-  ) {
+  constructor(private streamService: StreamService) {
     super();
-    this.windowsStrategyManager = new WindowsStrategyManager();
   }
 
   getFolderSize(path: string): Observable<number> {
@@ -46,5 +43,4 @@ export class WindowsFilesService extends FileService {
   deleteDir(path: string): Promise<boolean> {
     return this.windowsStrategyManager.deleteDir(path);
   }
-
 }
