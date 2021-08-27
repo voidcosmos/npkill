@@ -1,5 +1,6 @@
-import { RECURSIVE_RMDIR_NODE_VERSION_SUPPORT } from '@core/constants/recursive-rmdir-node-support.constants';
 import { NoParamCallback, rmdir } from 'fs';
+
+import { RECURSIVE_RMDIR_NODE_VERSION_SUPPORT } from '@core/constants/recursive-rmdir-node-support.constants';
 import { WindowsStrategy } from './windows-strategy.abstract';
 
 export class WindowsNode14Strategy extends WindowsStrategy {
@@ -8,6 +9,7 @@ export class WindowsNode14Strategy extends WindowsStrategy {
       rmdir(path, { recursive: true }, callback);
       return true;
     }
+    console.log('Node 14');
     return this.checkNext(path, callback);
   }
 

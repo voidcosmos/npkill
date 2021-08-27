@@ -9,6 +9,7 @@ export class WindowsNode12Strategy extends WindowsStrategy {
       rm(path, { recursive: true }, callback);
       return true;
     }
+    console.log('Node 12');
     return this.checkNext(path, callback);
   }
 

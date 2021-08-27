@@ -1,11 +1,12 @@
-import { RECURSIVE_RMDIR_IGNORED_ERROR_CODES } from '@core/constants';
-import { lstat, NoParamCallback, readdir, rmdir, unlink } from 'fs';
+import { NoParamCallback, lstat, readdir, rmdir, unlink } from 'fs';
 
-import { join as pathJoin } from 'path';
+import { RECURSIVE_RMDIR_IGNORED_ERROR_CODES } from '@core/constants';
 import { WindowsStrategy } from './windows-strategy.abstract';
+import { join as pathJoin } from 'path';
 
 export class WindowsDefaultStrategy extends WindowsStrategy {
   remove(dirOrFilePath: string, callback: NoParamCallback): boolean {
+    console.log('Default');
     lstat(dirOrFilePath, (lstatError, stats) => {
       //  No such file or directory - Done
       if (lstatError && lstatError.code === 'ENOENT') {
