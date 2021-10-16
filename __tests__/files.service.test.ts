@@ -135,7 +135,7 @@ describe('Functional test for #deleteDir', () => {
     for (const dirName of directories) {
       const path = `${testFolder}/${dirName}`;
       expect(existsSync(path)).toBeTruthy();
-      await fileService.deleteDir(path);
+      await fileService.deleteDir(path, false);
       expect(existsSync(path)).toBeFalsy();
     }
     expect(isDirEmpty(testFolder)).toBeTruthy();

@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { spawn, exec } from 'child_process';
 import { IListDirParams } from '../interfaces/index.js';
 import { FileService } from './files.service.js';
-import trash from 'trash';
+import trash from 'trash/index.js';
 
 export abstract class UnixFilesService extends FileService {
   constructor(protected streamService: StreamService) {
