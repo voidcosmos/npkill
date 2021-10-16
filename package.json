@@ -38,8 +38,7 @@
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "ts-node -r tsconfig-paths/register ./src/main.ts",
-    "start2": "node --loader ts-node/esm ./src/main.ts",
+    "start": "node --loader ts-node/esm ./src/main.ts",
     "test": "jest --verbose",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
