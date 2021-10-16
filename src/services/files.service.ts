@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
   abstract listDir(params: IListDirParams): Observable<Buffer>;
-  abstract deleteDir(path: string): Promise<{}>;
+  abstract deleteDir(path: string, moveToTrash: boolean): Promise<{}>;
 
   convertKbToGB(kb: number): number {
     const factorKBtoGB = 1048576;

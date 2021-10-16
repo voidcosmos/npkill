@@ -2,8 +2,8 @@ import {
   WindowsNode12Strategy,
   WindowsNode14Strategy,
   WindowsDefaultStrategy,
-} from '.';
-import { WindowsStrategy } from './windows-strategy.abstract';
+} from './index.js';
+import { WindowsStrategy } from './windows-strategy.abstract.js';
 
 export class WindowsStrategyManager {
   deleteDir(path: string): Promise<boolean> {

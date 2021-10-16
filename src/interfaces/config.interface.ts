@@ -8,5 +8,6 @@ export interface IConfig {
   showErrors: boolean;
   sortBy: string;
   targetFolder: string;
+  trash: boolean;
   exclude: string[];
 }

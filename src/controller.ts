@@ -1,5 +1,5 @@
-import * as colors from 'colors';
-import * as keypress from 'keypress';
+import colors from 'colors';
+import keypress from 'keypress';
 
 import {
   BANNER,
@@ -12,20 +12,20 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-} from '@core/constants/main.constants';
-import { COLORS, HELP_WARNING, OPTIONS } from '@core/constants/cli.constants';
+} from './constants/main.constants.js';
+import { COLORS, HELP_WARNING, OPTIONS } from './constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
   ResultsService,
   SpinnerService,
   UpdateService,
-} from '@core/services';
+} from './services/index.js';
 import {
   ERROR_MSG,
   HELP_MSGS,
   INFO_MSGS,
-} from '@core/constants/messages.constants';
+} from './constants/messages.constants.js';
 import {
   IConfig,
   IFolder,
@@ -33,9 +33,9 @@ import {
   IKeysCommand,
   IListDirParams,
   IPosition,
-} from '@core/interfaces';
+} from './interfaces/index.js';
 import { Observable, Subject, from, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from '@core/constants/spinner.constants';
+import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants.js';
 import {
   catchError,
   filter,
@@ -43,11 +43,12 @@ import {
   mergeMap,
   takeUntil,
   tap,
-} from 'rxjs/operators';
+} from 'rxjs/operators/index.js';
 
-import { FOLDER_SORT } from './constants/sort.result';
+import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
-import { bufferUntil } from './libs/buffer-until';
+import { bufferUntil } from './libs/buffer-until.js';
+import __dirname from './dirname.js';
 
 export class Controller {
   private folderRoot = '';
@@ -117,6 +118,9 @@ export class Controller {
         process.exit();
       }
       this.config.sortBy = options['sort-by'];
+    }
+    if (options['trash']) {
+      this.config.trash = true
     }
 
     const exclude = options['exclude'];
@@ -658,10 +662,15 @@ export class Controller {
       this.cursorPosY - MARGINS.ROW_RESULTS_START
     ];
     this.clearErrors();
-    this.deleteFolder(nodeFolder);
+    this.deleteFolder(nodeFolder, this.config.trash);
   }
 
-  private deleteFolder(folder: IFolder): void {
+  /**
+   * Deletes the user-selected folder.
+   * @param folder Folder to be deleted including deletion state
+   * @param moveToTrash Whether to move to system trash (true) or directly delete permanently (false).
+   */
+  private deleteFolder(folder: IFolder, moveToTrash: boolean): void {
     const isSafeToDelete = this.fileService.isSafeToDelete(
       folder.path,
       this.config.targetFolder,
@@ -675,9 +684,13 @@ export class Controller {
     this.printFoldersSection();
 
     this.fileService
-      .deleteDir(folder.path)
+      .deleteDir(folder.path, moveToTrash)
       .then(() => {
-        folder.status = 'deleted';
+        if (moveToTrash) {
+          folder.status = 'trashed';
+        } else {
+          folder.status = 'deleted';
+        }
         this.printStats();
         this.printFoldersSection();
       })

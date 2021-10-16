@@ -2,7 +2,11 @@
   "name": "npkill",
   "version": "0.8.2",
   "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
-  "main": "lib/index.js",
+  "exports": "./lib/index.js",
+  "type": "module",
+  "engines": {
+    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -35,11 +39,12 @@
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
     "start": "ts-node -r tsconfig-paths/register ./src/main.ts",
+    "start2": "node --loader ts-node/esm ./src/main.ts",
     "test": "jest --verbose",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
     "release": "npm run build && np",
-    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register -r tsconfig-paths/register ./src/main.ts"
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register --loader ts-node/esm ./src/main.ts"
   },
   "dependencies": {
     "ansi-escapes": "^4.3.1",
@@ -48,6 +53,7 @@
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
     "rxjs": "^6.5.4",
+    "trash": "^8.0.0",
     "tsconfig-paths": "^3.9.0"
   },
   "devDependencies": {
@@ -71,7 +77,7 @@
     "remark-lint": "^7.0.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^25.3.0",
-    "ts-node": "^8.8.1",
+    "ts-node": "^10.3.0",
     "tslint": "^6.1.0",
     "typescript": "^3.8.3"
   },

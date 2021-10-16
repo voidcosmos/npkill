@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
-import { map } from 'rxjs/operators';
-import { UnixFilesService } from './unix-files.service';
+import { map } from 'rxjs/operators/index.js';
+import { UnixFilesService } from './unix-files.service.js';
 
 export class MacFilesService extends UnixFilesService {
   getFolderSize(path: string): Observable<number> {

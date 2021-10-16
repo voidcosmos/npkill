@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 export interface IFileService {
   getFolderSize(path: string): Observable<any>;
   listDir(params: IListDirParams): Observable<Buffer>;
-  deleteDir(path: string): Promise<{}>;
+  deleteDir(path: string, moveToTrash: boolean): Promise<{}>;
   convertKbToGB(kb: number): number;
   convertBytesToKB(bytes: number): number;
   convertGBToMB(gb: number): number;

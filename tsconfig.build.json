@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
+    "target": "es2020",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
     "sourceMap": false,
     "declaration": false,
     "rootDir": "./src",
@@ -12,11 +14,21 @@
     "resolveJsonModule": true,
     "baseUrl": "./src",
     "paths": {
-      "@core/*": ["./*"],
-      "@services/*": ["./services/*"],
-      "@constants/*": ["./constants/*"],
-      "@interfaces/*": ["./interfaces/*"]
+      "@core/*": [
+        "./*"
+      ],
+      "@services/*": [
+        "./services/*"
+      ],
+      "@constants/*": [
+        "./constants/*"
+      ],
+      "@interfaces/*": [
+        "./interfaces/*"
+      ]
     }
   },
-  "include": ["./"]
+  "include": [
+    "./"
+  ]
 }

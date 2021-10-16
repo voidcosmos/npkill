@@ -52,6 +52,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'no-check-updates',
   },
   {
+    arg: ['-tr', '--trash'],
+    description: 'Move files to system trash dir instead of deleting directly.',
+    name: 'trash',
+  },
+  {
     arg: ['-s', '--sort'],
     description: 'Sort results by: size or path',
     name: 'sort-by',

@@ -2,7 +2,7 @@ export interface IFolder {
   path: string;
   size: number;
   isDangerous: boolean;
-  status: 'live' | 'deleting' | 'error-deleting' | 'deleted';
+  status: 'live' | 'deleting' | 'error-deleting' | 'deleted' | 'trashed';
 }
 
 /* interface IFolderStatus {

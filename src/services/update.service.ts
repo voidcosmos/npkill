@@ -1,12 +1,12 @@
 import {
   VERSION_CHECK_DIRECTION,
   VERSION_KEY,
-} from '@core/constants/update.constants';
+} from '../constants/update.constants.js';
 
-import { HttpsService } from './https.service';
+import { HttpsService } from './https.service.js';
 
 export class UpdateService {
-  constructor(private httpsService: HttpsService) {}
+  constructor(private httpsService: HttpsService) { }
 
   async isUpdated(localVersion: string): Promise<boolean> {
     const remoteVersion = await this.getRemoteVersion();

@@ -1,4 +1,4 @@
-import { INodeVersion } from '@core/interfaces';
+import { INodeVersion } from '../interfaces/index.js';
 import { NoParamCallback } from 'fs';
 import { version } from 'process';
 

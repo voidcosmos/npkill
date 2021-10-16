@@ -1,12 +1,14 @@
 import * as getSize from 'get-folder-size';
 
-import { FileService, StreamService } from '@core/services';
+import { FileService, StreamService } from '../services/index.js';
 
-import { IListDirParams } from '@core/interfaces/list-dir-params.interface';
+import { IListDirParams } from '../interfaces/list-dir-params.interface.js';
 import { Observable } from 'rxjs';
-import { WindowsStrategyManager } from '@core/strategies/windows-remove-dir.strategy';
+import { WindowsStrategyManager } from '../strategies/windows-remove-dir.strategy.js';
 import { normalize } from 'path';
 import { spawn } from 'child_process';
+import trash from 'trash';
+import __dirname from '../dirname.js';
 
 export class WindowsFilesService extends FileService {
   private windowsStrategyManager: WindowsStrategyManager =
@@ -40,7 +42,12 @@ export class WindowsFilesService extends FileService {
     return this.streamService.getStream(child);
   }
 
-  deleteDir(path: string): Promise<boolean> {
-    return this.windowsStrategyManager.deleteDir(path);
+  deleteDir(path: string, moveToTrash: boolean): Promise<boolean> {
+    if (moveToTrash) {
+      return trash(path)
+        .then(() => Promise.resolve(true))
+    } else {
+      return this.windowsStrategyManager.deleteDir(path);
+    }
   }
 }

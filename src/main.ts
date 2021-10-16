@@ -7,11 +7,11 @@ import {
   StreamService,
   UpdateService,
   WindowsFilesService,
-} from '@core/services';
+} from './services/index.js';
 
-import { Controller } from './controller';
-import { IFileService } from '@core/interfaces/file-service.interface';
-import { MacFilesService } from './services/mac-files.service';
+import { Controller } from './controller.js';
+import { IFileService } from './interfaces/file-service.interface.js';
+import { MacFilesService } from './services/mac-files.service.js';
 
 const getOS = () => process.platform;
 

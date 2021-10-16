@@ -95,6 +95,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -gb                    | Show folders in Gigabytes instead of Megabytes.                                                                                                |
 | -h, --help, ?          | Show this help page and exit                                                                                                                   |
 | -nu, --no-check-update | Don't check for updates on startup                                                                                                             |
+| -tr, --trash           | Move files to system trash dir instead of deleting directly.                                                                                   |
 | -s, --sort             | Sort results by: size or path _[ beta ]_                                                                                                       |
 | -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
 | -v, --version          | Show npkill version                                                                                                                            |

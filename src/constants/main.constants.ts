@@ -18,6 +18,7 @@ export const DEFAULT_CONFIG: IConfig = {
   showErrors: false,
   sortBy: '',
   targetFolder: 'node_modules',
+  trash: false,
 };
 
 export const MARGINS = {

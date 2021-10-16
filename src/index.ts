@@ -2,6 +2,7 @@
 
 const tsConfig = require('./tsconfig.build.json');
 const tsConfigPaths = require('tsconfig-paths');
+import __dirname from './dirname.js';
 
 const baseUrl = __dirname;
 const cleanup = tsConfigPaths.register({
