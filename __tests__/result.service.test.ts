@@ -13,6 +13,7 @@ describe('Result Service', () => {
         path: 'path',
         size: 5,
         status: 'live',
+        isDangerous: false,
       };
       const resultExpected = [newResult];
       resultService.addResult(newResult);
@@ -24,16 +25,19 @@ describe('Result Service', () => {
           path: 'path',
           size: 1,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'path2',
           size: 2,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'path3',
           size: 3,
           status: 'live',
+          isDangerous: false,
         },
       ];
 
@@ -52,31 +56,37 @@ describe('Result Service', () => {
           path: 'pathd',
           size: 5,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'patha',
           size: 6,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'pathc',
           size: 16,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'pathcc',
           size: 0,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathb',
           size: 3,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathz',
           size: 8,
           status: 'live',
+          isDangerous: false,
         },
       ];
 
@@ -89,31 +99,37 @@ describe('Result Service', () => {
           path: 'patha',
           size: 6,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'pathb',
           size: 3,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathc',
           size: 16,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'pathcc',
           size: 0,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathd',
           size: 5,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'pathz',
           size: 8,
           status: 'live',
+          isDangerous: false,
         },
       ];
 
@@ -173,31 +189,37 @@ describe('Result Service', () => {
           path: 'pathd',
           size: 5,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'patha',
           size: 6,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathc',
           size: 16,
           status: 'live',
+          isDangerous: false,
         },
         {
           path: 'pathcc',
           size: 0,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathb',
           size: 3,
           status: 'deleted',
+          isDangerous: false,
         },
         {
           path: 'pathz',
           size: 8,
           status: 'live',
+          isDangerous: false,
         },
       ];
 

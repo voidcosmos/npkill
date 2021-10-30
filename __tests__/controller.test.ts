@@ -14,10 +14,10 @@ import { Controller } from '../src/controller';
 
 describe('Controller test', () => {
   let controller;
-  const linuxFilesServiceMock = jest.fn();
-  const spinnerServiceMock = jest.fn();
-  const UpdateServiceMock = jest.fn();
-  const resultServiceMock = jest.fn();
+  const linuxFilesServiceMock: any = jest.fn();
+  const spinnerServiceMock: any = jest.fn();
+  const UpdateServiceMock: any = jest.fn();
+  const resultServiceMock: any = jest.fn();
   const consoleService: any = {
     getParameters: () => {
       return {};
