@@ -3,9 +3,8 @@
 const tsConfig = require('./tsconfig.build.json');
 const tsConfigPaths = require('tsconfig-paths');
 
-const baseUrl = __dirname;
-const cleanup = tsConfigPaths.register({
-  baseUrl,
+tsConfigPaths.register({
+  baseUrl: __dirname,
   paths: tsConfig.compilerOptions.paths,
 });
 
