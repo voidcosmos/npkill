@@ -102,6 +102,12 @@ describe('Console Service', () => {
     it('should short text according parameters', () => {
       const cases = [
         {
+          cutFrom: 0,
+          expect: '...',
+          text: '/sample/text/for/test how/service/split/thisA',
+          width: 0,
+        },
+        {
           cutFrom: 10,
           expect: '/sample/te.../service/split/this',
           text: '/sample/text/for/test how/service/split/this',
