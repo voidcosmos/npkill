@@ -47,6 +47,26 @@ describe('Console Service', () => {
     });
   });
 
+  describe('#splitData', () => {
+    it('should split data with default separator', () => {
+      expect(consoleService.splitData('foo\nbar\nfoot')).toEqual([
+        'foo',
+        'bar',
+        'foot',
+      ]);
+    });
+    it('should split data with custom separator', () => {
+      expect(consoleService.splitData('foo;bar;foot', ';')).toEqual([
+        'foo',
+        'bar',
+        'foot',
+      ]);
+    });
+    it('should return empty array if data is empty', () => {
+      expect(consoleService.splitData('')).toEqual([]);
+    });
+  });
+
   describe('#splitWordsByWidth', () => {
     it('should get array with text according to width', () => {
       const cases = [
@@ -70,7 +90,7 @@ describe('Console Service', () => {
         }, */
       ];
 
-      cases.forEach(cas => {
+      cases.forEach((cas) => {
         expect(consoleService.splitWordsByWidth(cas.text, cas.width)).toEqual(
           cas.expect,
         );
@@ -101,7 +121,7 @@ describe('Console Service', () => {
         },
       ];
 
-      cases.forEach(cas => {
+      cases.forEach((cas) => {
         const result = consoleService.shortenText(
           cas.text,
           cas.width,
@@ -153,7 +173,7 @@ describe('Console Service', () => {
         },
       ];
 
-      cases.forEach(cas => {
+      cases.forEach((cas) => {
         const result = consoleService.shortenText(
           cas.text,
           cas.width,

@@ -6,5 +6,6 @@ package-lock.json
 .stryker-tmp
 stryker.log
 reports
+coverage
 stuff
 test-files

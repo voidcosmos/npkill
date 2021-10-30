@@ -81,11 +81,9 @@ export class Controller {
     private consoleService: ConsoleService,
     private updateService: UpdateService,
     private resultsService: ResultsService,
-  ) {
-    this.init();
-  }
+  ) {}
 
-  private init(): void {
+  init(): void {
     keypress(process.stdin);
     this.setErrorEvents();
     this.getArguments();

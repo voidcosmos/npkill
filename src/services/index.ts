@@ -2,6 +2,7 @@ export * from './console.service';
 export * from './files.service';
 export * from './https.service';
 export * from './linux-files.service';
+export * from './mac-files.service';
 export * from './results.service';
 export * from './spinner.service';
 export * from './stream.service';

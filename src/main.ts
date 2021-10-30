@@ -2,6 +2,7 @@ import {
   ConsoleService,
   HttpsService,
   LinuxFilesService,
+  MacFilesService,
   ResultsService,
   SpinnerService,
   StreamService,
@@ -11,7 +12,6 @@ import {
 
 import { Controller } from './controller';
 import { IFileService } from '@core/interfaces/file-service.interface';
-import { MacFilesService } from './services/mac-files.service';
 
 const getOS = () => process.platform;
 
@@ -32,3 +32,5 @@ export const controller = new Controller(
   new UpdateService(new HttpsService()),
   new ResultsService(),
 );
+
+controller.init();
