@@ -341,7 +341,9 @@ export class Controller {
   }
 
   private printNoResults(): void {
-    const message = `No ${this.config.targetFolder} found!`;
+    const message = `No ${colors[DEFAULT_CONFIG.warningColor](
+      this.config.targetFolder,
+    )} found!`;
     this.printAt(message, {
       x: Math.floor(this.stdout.columns / 2 - message.length / 2),
       y: MARGINS.ROW_RESULTS_START + 2,
