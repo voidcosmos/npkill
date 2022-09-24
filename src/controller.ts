@@ -327,12 +327,24 @@ export class Controller {
   }
 
   private printFoldersSection(): void {
+    if (this.resultsService.noResultsAfterCompleted) {
+      this.printNoResults();
+      return;
+    }
     const visibleFolders = this.getVisibleScrollFolders();
     this.clearLine(this.previusCursorPosY);
 
     visibleFolders.map((folder: IFolder, index: number) => {
       const folderRow = MARGINS.ROW_RESULTS_START + index;
       this.printFolderRow(folder, folderRow);
+    });
+  }
+
+  private printNoResults(): void {
+    const message = `No ${this.config.targetFolder} found!`;
+    this.printAt(message, {
+      x: Math.floor(this.stdout.columns / 2 - message.length / 2),
+      y: MARGINS.ROW_RESULTS_START + 2,
     });
   }
 
@@ -589,6 +601,12 @@ export class Controller {
   private completeSearch(): void {
     this.finishSearching$.next(true);
     this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
+    if (!this.resultsService.results.length) this.showNoResults();
+  }
+
+  private showNoResults() {
+    this.resultsService.noResultsAfterCompleted = true;
+    this.printNoResults();
   }
 
   private isQuitKey(ctrl, name): boolean {
@@ -652,9 +670,8 @@ export class Controller {
   }
 
   private delete(): void {
-    const nodeFolder = this.resultsService.results[
-      this.cursorPosY - MARGINS.ROW_RESULTS_START
-    ];
+    const nodeFolder =
+      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
     this.clearErrors();
     this.deleteFolder(nodeFolder);
   }

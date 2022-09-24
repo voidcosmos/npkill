@@ -3,6 +3,7 @@ import { FOLDER_SORT } from '@core/constants/sort.result';
 
 export class ResultsService {
   results: IFolder[] = [];
+  noResultsAfterCompleted = false;
 
   addResult(result: IFolder): void {
     this.results = [...this.results, result];
