@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2019",
-    "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "es6",
     "sourceMap": false,
+    "module": "NodeNext",
+    "moduleResolution": "Node16",
     "declaration": false,
     "rootDir": "./src",
     "outDir": "./lib/",
@@ -10,6 +12,7 @@
     "noImplicitAny": false,
     "strictNullChecks": false,
     "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "paths": {
       "@core/*": ["src/*"],

@@ -8,10 +8,9 @@ import {
   StreamService,
   UpdateService,
   WindowsFilesService,
-} from '@core/services';
-
-import { Controller } from './controller';
-import { IFileService } from '@core/interfaces/file-service.interface';
+} from './services/index';
+import { Controller } from './controller.js';
+import { IFileService } from '@core/interfaces/file-service.interface.js';
 
 const getOS = () => process.platform;
 

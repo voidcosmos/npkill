@@ -2,7 +2,8 @@
   "name": "npkill",
   "version": "0.8.3",
   "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
-  "main": "lib/index.js",
+  "exports": "./lib/index.js",
+  "type": "module",
   "publishConfig": {
     "access": "public"
   },
@@ -34,7 +35,7 @@
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "ts-node -r tsconfig-paths/register ./src/main.ts",
+    "start": "node --loader ts-node/esm ./src/main.ts",
     "test": "jest --verbose",
     "test:watch": "jest --watch",
     "test:mutant": "stryker run",
