@@ -1,6 +1,6 @@
 import { NoParamCallback, rm } from 'fs';
 
-import { RM_NODE_VERSION_SUPPORT } from '@core/constants/recursive-rmdir-node-support.constants.js';
+import { RM_NODE_VERSION_SUPPORT } from '../constants/recursive-rmdir-node-support.constants.js';
 import { WindowsStrategy } from './windows-strategy.abstract.js';
 
 export class WindowsNode14Strategy extends WindowsStrategy {

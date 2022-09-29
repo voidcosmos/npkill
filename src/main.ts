@@ -9,8 +9,9 @@ import {
   UpdateService,
   WindowsFilesService,
 } from './services/index.js';
+
 import { Controller } from './controller.js';
-import { IFileService } from '@core/interfaces/file-service.interface.js';
+import { IFileService } from './interfaces/file-service.interface.js';
 
 const getOS = () => process.platform;
 

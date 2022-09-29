@@ -6,20 +6,14 @@
     "module": "NodeNext",
     "moduleResolution": "Node16",
     "declaration": false,
-    "rootDir": "./src",
+    "rootDir": "./src/",
     "outDir": "./lib/",
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
-    "paths": {
-      "@core/*": ["src/*"],
-      "@services/*": ["src/services/*"],
-      "@constants/*": ["src/constants/*"],
-      "@interfaces/*": ["src/interfaces/*"]
-    }
+    "baseUrl": ".",
   },
   "include": ["src"]
 }

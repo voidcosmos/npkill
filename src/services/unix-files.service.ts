@@ -1,8 +1,9 @@
-import { StreamService } from './stream.service.js';
-import { Observable } from 'rxjs';
-import { spawn, exec } from 'child_process';
-import { IListDirParams } from '@core/interfaces/index.js';
+import { exec, spawn } from 'child_process';
+
 import { FileService } from './files.service.js';
+import { IListDirParams } from '../interfaces/index.js';
+import { Observable } from 'rxjs';
+import { StreamService } from './stream.service.js';
 
 export abstract class UnixFilesService extends FileService {
   constructor(protected streamService: StreamService) {

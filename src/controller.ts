@@ -1,6 +1,3 @@
-import * as colors from 'colors';
-import * as keypress from 'keypress';
-
 import {
   BANNER,
   DECIMALS_SIZE,
@@ -12,24 +9,20 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-} from '@core/constants/main.constants.js';
-import {
-  COLORS,
-  HELP_WARNING,
-  OPTIONS,
-} from '@core/constants/cli.constants.js';
+} from './constants/index.js';
+import { COLORS, HELP_WARNING, OPTIONS } from './constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
   ResultsService,
   SpinnerService,
   UpdateService,
-} from '@core/services/index.js';
+} from './services/index.js';
 import {
   ERROR_MSG,
   HELP_MSGS,
   INFO_MSGS,
-} from '@core/constants/messages.constants.js';
+} from './constants/messages.constants.js';
 import {
   IConfig,
   IFolder,
@@ -37,12 +30,9 @@ import {
   IKeysCommand,
   IListDirParams,
   IPosition,
-} from '@core/interfaces/index.js';
+} from './interfaces/index.js';
 import { Observable, Subject, from, interval } from 'rxjs';
-import {
-  SPINNERS,
-  SPINNER_INTERVAL,
-} from '@core/constants/spinner.constants.js';
+import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants.js';
 import {
   catchError,
   filter,
@@ -55,6 +45,8 @@ import {
 import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
 import { bufferUntil } from './libs/buffer-until.js';
+import colors from 'colors';
+import keypress from 'keypress';
 
 export class Controller {
   private folderRoot = '';

@@ -1,10 +1,10 @@
 import * as getSize from 'get-folder-size';
 
-import { FileService, StreamService } from '@core/services/index.js';
+import { FileService, StreamService } from '../services/index.js';
 
-import { IListDirParams } from '@core/interfaces/list-dir-params.interface.js';
+import { IListDirParams } from '../interfaces/list-dir-params.interface.js';
 import { Observable } from 'rxjs';
-import { WindowsStrategyManager } from '@core/strategies/windows-remove-dir.strategy.js';
+import { WindowsStrategyManager } from '../strategies/windows-remove-dir.strategy.js';
 import { normalize } from 'path';
 import { spawn } from 'child_process';
 

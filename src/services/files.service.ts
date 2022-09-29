@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 
-import { IFileService, IListDirParams } from '@core/interfaces/index.js';
+import { IFileService, IListDirParams } from '../interfaces/index.js';
 
 import { Observable } from 'rxjs';
 

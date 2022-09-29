@@ -1,4 +1,4 @@
-import { IFolder } from '@core/interfaces/folder.interface.js';
+import { IFolder } from '../interfaces/folder.interface.js';
 
 export const FOLDER_SORT = {
   path: (a: IFolder, b: IFolder) => (a.path > b.path ? 1 : -1),

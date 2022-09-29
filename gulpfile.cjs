@@ -1,9 +1,7 @@
-'use strict';
-
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const del = require('del');
-const exec = require('child_process').exec;
+const exec = require('child_process');
 
 function clean() {
   return del(['./lib']);
@@ -11,10 +9,7 @@ function clean() {
 
 function typescript() {
   const tsProject = ts.createProject('tsconfig.json');
-  return tsProject
-    .src()
-    .pipe(tsProject())
-    .js.pipe(gulp.dest('lib'));
+  return tsProject.src().pipe(tsProject()).js.pipe(gulp.dest('lib'));
 }
 
 function copyBin() {
@@ -23,7 +18,7 @@ function copyBin() {
 }
 
 function copyTsConfig() {
-  const files = ['./tsconfig.build.json'];
+  const files = ['./tsconfig.json'];
   return gulp.src(files).pipe(gulp.dest('./lib'));
 }
 
@@ -33,13 +28,13 @@ function buildGo() {
   const dest = './src/bin/windows-find.exe';
   const command = `${env} go build -o ${dest} ${filePath}`;
 
-  return new Promise(resolve => {
-    const buildProcess = exec(command, err => {
+  return new Promise((resolve) => {
+    const buildProcess = exec(command, (err) => {
       if (err) {
         throw err;
       }
     });
-    buildProcess.on('exit', function() {
+    buildProcess.on('exit', function () {
       resolve();
     });
   });
