@@ -1,6 +1,6 @@
 import { NoParamCallback, lstat, readdir, rmdir, unlink } from 'fs';
 
-import { RECURSIVE_RMDIR_IGNORED_ERROR_CODES } from '@core/constants';
+import { RECURSIVE_RMDIR_IGNORED_ERROR_CODES } from '@core/constants/index.js';
 import { WindowsStrategy } from './windows-strategy.abstract.js';
 import { join as pathJoin } from 'path';
 

@@ -1,4 +1,4 @@
-import { IListDirParams } from '@core/interfaces/list-dir-params.interface';
+import { IListDirParams } from '@core/interfaces/list-dir-params.interface.js';
 import { Observable } from 'rxjs';
 
 export interface IFileService {

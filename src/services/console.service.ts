@@ -1,6 +1,6 @@
-import { OPTIONS, WIDTH_OVERFLOW } from '@core/constants';
+import { OPTIONS, WIDTH_OVERFLOW } from '@core/constants/index.js';
 
-import { ICliOptions } from '@core/interfaces/cli-options.interface';
+import { ICliOptions } from '@core/interfaces/cli-options.interface.js';
 
 export class ConsoleService {
   getParameters(rawArgv: string[]): {} {

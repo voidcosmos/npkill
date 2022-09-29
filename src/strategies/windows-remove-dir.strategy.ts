@@ -2,7 +2,7 @@ import {
   WindowsNode12Strategy,
   WindowsNode14Strategy,
   WindowsDefaultStrategy,
-} from '..js';
+} from './index.js';
 import { WindowsStrategy } from './windows-strategy.abstract.js';
 
 export class WindowsStrategyManager {
