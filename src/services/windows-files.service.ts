@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { WindowsStrategyManager } from '../strategies/windows-remove-dir.strategy.js';
 import { normalize } from 'path';
 import { spawn } from 'child_process';
+import __dirname from '../dirname.js';
 
 export class WindowsFilesService extends FileService {
   private windowsStrategyManager: WindowsStrategyManager =

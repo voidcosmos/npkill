@@ -1,4 +1,4 @@
-import { IFolder, IStats } from '@interfaces/index.js';
+import { IFolder, IStats } from '../interfaces/index.js';
 import { FOLDER_SORT } from '../constants/sort.result.js';
 
 export class ResultsService {

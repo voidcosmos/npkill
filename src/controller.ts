@@ -47,6 +47,7 @@ import ansiEscapes from 'ansi-escapes';
 import { bufferUntil } from './libs/buffer-until.js';
 import colors from 'colors';
 import keypress from 'keypress';
+import __dirname from './dirname.js';
 
 export class Controller {
   private folderRoot = '';
