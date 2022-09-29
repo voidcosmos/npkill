@@ -2,11 +2,11 @@ import * as rimraf from 'rimraf';
 import * as fs from 'fs';
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
-import { IFileService } from '../src/interfaces/file-service.interface';
-import { LinuxFilesService } from '../src/services/linux-files.service';
-import { WindowsFilesService } from '../src/services/windows-files.service';
-import { MacFilesService } from '../src/services/mac-files.service';
-import { StreamService } from '../src/services/stream.service';
+import { IFileService } from '../src/interfaces/file-service.interface.js';
+import { LinuxFilesService } from '../src/services/linux-files.service.js';
+import { WindowsFilesService } from '../src/services/windows-files.service.js';
+import { MacFilesService } from '../src/services/mac-files.service.js';
+import { StreamService } from '../src/services/stream.service.js';
 
 const countDecimals = (numb: number): number => {
   if (Math.floor(numb.valueOf()) === numb.valueOf()) {

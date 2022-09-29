@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const tsConfig = require('./tsconfig.build.json');
-const tsConfigPaths = require('tsconfig-paths');
+// const tsConfigPaths = require('tsconfig-paths');
 
 tsConfigPaths.register({
   baseUrl: __dirname,

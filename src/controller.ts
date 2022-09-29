@@ -12,20 +12,24 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-} from '@core/constants/main.constants';
-import { COLORS, HELP_WARNING, OPTIONS } from '@core/constants/cli.constants';
+} from '@core/constants/main.constants.js';
+import {
+  COLORS,
+  HELP_WARNING,
+  OPTIONS,
+} from '@core/constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
   ResultsService,
   SpinnerService,
   UpdateService,
-} from '@core/services';
+} from '@core/services/index.js';
 import {
   ERROR_MSG,
   HELP_MSGS,
   INFO_MSGS,
-} from '@core/constants/messages.constants';
+} from '@core/constants/messages.constants.js';
 import {
   IConfig,
   IFolder,
@@ -33,9 +37,12 @@ import {
   IKeysCommand,
   IListDirParams,
   IPosition,
-} from '@core/interfaces';
+} from '@core/interfaces/index.js';
 import { Observable, Subject, from, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from '@core/constants/spinner.constants';
+import {
+  SPINNERS,
+  SPINNER_INTERVAL,
+} from '@core/constants/spinner.constants.js';
 import {
   catchError,
   filter,
@@ -45,9 +52,9 @@ import {
   tap,
 } from 'rxjs/operators';
 
-import { FOLDER_SORT } from './constants/sort.result';
+import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
-import { bufferUntil } from './libs/buffer-until';
+import { bufferUntil } from './libs/buffer-until.js';
 
 export class Controller {
   private folderRoot = '';
@@ -652,9 +659,8 @@ export class Controller {
   }
 
   private delete(): void {
-    const nodeFolder = this.resultsService.results[
-      this.cursorPosY - MARGINS.ROW_RESULTS_START
-    ];
+    const nodeFolder =
+      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
     this.clearErrors();
     this.deleteFolder(nodeFolder);
   }

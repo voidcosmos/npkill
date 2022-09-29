@@ -3,7 +3,7 @@ import {
   VERSION_KEY,
 } from '@core/constants/update.constants';
 
-import { HttpsService } from './https.service';
+import { HttpsService } from './https.service.js';
 
 export class UpdateService {
   constructor(private httpsService: HttpsService) {}

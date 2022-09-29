@@ -8,7 +8,7 @@ import {
   StreamService,
   UpdateService,
   WindowsFilesService,
-} from './services/index';
+} from './services/index.js';
 import { Controller } from './controller.js';
 import { IFileService } from '@core/interfaces/file-service.interface.js';
 

@@ -1,4 +1,4 @@
-import { Controller } from '../src/controller';
+import { Controller } from '../src/controller.js';
 
 /* jest.mock('../src/services/console.service', () => {
   return {

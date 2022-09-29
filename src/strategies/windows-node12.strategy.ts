@@ -1,7 +1,7 @@
 import { NoParamCallback, rmdir } from 'fs';
 
 import { RECURSIVE_RMDIR_NODE_VERSION_SUPPORT } from '@core/constants';
-import { WindowsStrategy } from './windows-strategy.abstract';
+import { WindowsStrategy } from './windows-strategy.abstract.js';
 
 export class WindowsNode12Strategy extends WindowsStrategy {
   remove(path: string, callback: NoParamCallback): boolean {
