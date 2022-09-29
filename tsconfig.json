@@ -3,8 +3,8 @@
     "esModuleInterop": true,
     "target": "es6",
     "sourceMap": false,
-    "module": "NodeNext",
-    "moduleResolution": "Node16",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "declaration": false,
     "rootDir": "./src/",
     "outDir": "./lib/",
@@ -13,7 +13,7 @@
     "strictNullChecks": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
+    "baseUrl": "."
   },
   "include": ["src"]
 }
