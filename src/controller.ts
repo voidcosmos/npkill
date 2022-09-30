@@ -69,6 +69,8 @@ export class Controller {
     space: this.delete.bind(this),
     j: this.moveCursorDown.bind(this),
     k: this.moveCursorUp.bind(this),
+    h: this.moveCursorPageDown.bind(this),
+    l: this.moveCursorPageUp.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);
@@ -638,11 +640,31 @@ export class Controller {
     }
   }
 
+  private moveCursorPageUp(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    this.cursorPosY -= resultsInPage - 1;
+    if (this.cursorPosY - MARGINS.ROW_RESULTS_START < 0)
+      this.cursorPosY = MARGINS.ROW_RESULTS_START;
+    this.checkCursorScroll();
+  }
+
+  private moveCursorPageDown(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    const foldersAmmount = this.resultsService.results.length;
+    this.cursorPosY += resultsInPage - 1;
+    if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
+      this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
+    this.checkCursorScroll();
+  }
+
   private checkCursorScroll(): void {
-    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
+    // TODO improve not using while
+    while (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
       this.scrollFolderResults(-1);
 
-    if (this.cursorPosY > this.stdout.rows + this.scroll - 1)
+    while (this.cursorPosY > this.stdout.rows + this.scroll - 1)
       this.scrollFolderResults(1);
   }
 
@@ -652,9 +674,8 @@ export class Controller {
   }
 
   private delete(): void {
-    const nodeFolder = this.resultsService.results[
-      this.cursorPosY - MARGINS.ROW_RESULTS_START
-    ];
+    const nodeFolder =
+      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
     this.clearErrors();
     this.deleteFolder(nodeFolder);
   }
