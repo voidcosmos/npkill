@@ -71,6 +71,8 @@ export class Controller {
     k: this.moveCursorUp.bind(this),
     h: this.moveCursorPageDown.bind(this),
     l: this.moveCursorPageUp.bind(this),
+    d: this.moveCursorPageDown.bind(this),
+    u: this.moveCursorPageUp.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);

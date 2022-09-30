@@ -6,5 +6,7 @@ export interface IKeysCommand {
   k: () => void;
   h: () => void;
   l: () => void;
+  d: () => void;
+  u: () => void;
   execute: (command: string, params?: string[]) => number;
 }
