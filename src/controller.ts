@@ -13,7 +13,12 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from '@core/constants/main.constants';
-import { COLORS, HELP_WARNING, OPTIONS } from '@core/constants/cli.constants';
+import {
+  COLORS,
+  HELP_FOOTER,
+  HELP_HEADER,
+  OPTIONS,
+} from '@core/constants/cli.constants';
 import {
   ConsoleService,
   FileService,
@@ -148,6 +153,7 @@ export class Controller {
   private showHelp(): void {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
+    this.print(HELP_HEADER + '\n\n');
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
@@ -172,7 +178,7 @@ export class Controller {
       });
     });
 
-    this.printAt(HELP_WARNING, {
+    this.printAt(HELP_FOOTER + '\n', {
       x: 0,
       y: lineCount * 2 + 2,
     });
