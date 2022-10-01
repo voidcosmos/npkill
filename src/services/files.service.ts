@@ -1,8 +1,7 @@
-import * as fs from 'fs';
-
 import { IFileService, IListDirParams } from '../interfaces/index.js';
 
 import { Observable } from 'rxjs';
+import { readFileSync } from 'fs';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
@@ -26,7 +25,7 @@ export abstract class FileService implements IFileService {
 
   getFileContent(path: string): string {
     const encoding = 'utf8';
-    return fs.readFileSync(path, encoding);
+    return readFileSync(path, encoding);
   }
 
   isSafeToDelete(path: string, targetFolder: string): boolean {

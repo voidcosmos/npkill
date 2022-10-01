@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import * as rimraf from 'rimraf';
 import * as fs from 'fs';
 
@@ -7,6 +8,10 @@ import { LinuxFilesService } from '../src/services/linux-files.service.js';
 import { WindowsFilesService } from '../src/services/windows-files.service.js';
 import { MacFilesService } from '../src/services/mac-files.service.js';
 import { StreamService } from '../src/services/stream.service.js';
+
+jest.mock('../src/dirname.js', () => {
+  return { __esModule: true };
+});
 
 const countDecimals = (numb: number): number => {
   if (Math.floor(numb.valueOf()) === numb.valueOf()) {
@@ -83,7 +88,9 @@ describe('File Service', () => {
 
   it('#getFileContent should read file content with utf8 encoding', () => {
     const path = 'file.json';
-    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockImplementation();
+    // const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockImplementation();
+    const readFileSyncSpy = jest.fn();
+    jest.unstable_mockModule('fs', () => ({ readFileSync: readFileSyncSpy }));
     fileService.getFileContent(path);
     expect(readFileSyncSpy).toBeCalledWith(path, 'utf8');
   });
