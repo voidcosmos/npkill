@@ -636,7 +636,7 @@ export class Controller {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
       this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
-      this.checkCursorScroll();
+      this.fitScroll();
     }
   }
 
@@ -644,7 +644,7 @@ export class Controller {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
       this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
-      this.checkCursorScroll();
+      this.fitScroll();
     }
   }
 
@@ -654,7 +654,7 @@ export class Controller {
     this.cursorPosY -= resultsInPage - 1;
     if (this.cursorPosY - MARGINS.ROW_RESULTS_START < 0)
       this.cursorPosY = MARGINS.ROW_RESULTS_START;
-    this.checkCursorScroll();
+    this.fitScroll();
   }
 
   private moveCursorPageDown(): void {
@@ -664,20 +664,33 @@ export class Controller {
     this.cursorPosY += resultsInPage - 1;
     if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
       this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
-    this.checkCursorScroll();
+    this.fitScroll();
   }
 
-  private checkCursorScroll(): void {
-    // TODO improve not using while
-    while (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
-      this.scrollFolderResults(-1);
+  private fitScroll(): void {
+    const shouldScrollUp =
+      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll;
+    const shouldScrollDown =
+      this.cursorPosY > this.stdout.rows + this.scroll - 1;
+    let scrollRequired = 0;
 
-    while (this.cursorPosY > this.stdout.rows + this.scroll - 1)
-      this.scrollFolderResults(1);
+    if (shouldScrollUp)
+      scrollRequired =
+        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll;
+    else if (shouldScrollDown) {
+      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 1;
+    }
+
+    if (scrollRequired) this.scrollFolderResults(scrollRequired);
   }
 
   private scrollFolderResults(scrollAmount: number): void {
-    this.scroll += scrollAmount;
+    const virtualFinalScroll = this.scroll + scrollAmount;
+    this.scroll = this.clamp(
+      virtualFinalScroll,
+      0,
+      this.resultsService.results.length,
+    );
     this.clearFolderSection();
   }
 
@@ -765,5 +778,9 @@ export class Controller {
 
   private getUserHomePath(): string {
     return require('os').homedir();
+  }
+
+  private clamp(num: number, min: number, max: number) {
+    return Math.min(Math.max(num, min), max);
   }
 }
