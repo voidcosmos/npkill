@@ -41,7 +41,8 @@
     "test:mutant": "stryker run",
     "release": "npm run build && np",
     "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/main.ts",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "ansi-escapes": "^4.3.1",
@@ -67,7 +68,7 @@
     "lint-staged": "^13.0.3",
     "np": "^7.5.0",
     "pre-commit": "^1.2.2",
-    "prettier": "^2.0.2",
+    "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "stryker-cli": "^1.0.2",
     "ts-jest": "^29.0.2",
@@ -88,8 +89,7 @@
   },
   "lint-staged": {
     "*.{js,ts,css,json,md}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   }
 }
