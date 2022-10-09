@@ -1,16 +1,8 @@
-import { Controller } from '../src/controller';
+import { Controller } from '../src/controller.js';
 
-/* jest.mock('../src/services/console.service', () => {
-  return {
-    ConsoleService: jest.fn().mockImplementation(() => {
-      return {
-        getParameters: () => {
-          return {};
-        },
-      };
-    }),
-  };
-}); */
+jest.mock('../src/dirname.js', () => {
+  return {};
+});
 
 describe('Controller test', () => {
   let controller;

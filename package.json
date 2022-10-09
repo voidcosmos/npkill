@@ -2,7 +2,8 @@
   "name": "npkill",
   "version": "0.8.3",
   "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
-  "main": "lib/index.js",
+  "exports": "./lib/index.js",
+  "type": "module",
   "publishConfig": {
     "access": "public"
   },
@@ -32,14 +33,14 @@
   ],
   "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
-    "build": "gulp",
+    "build": "gulp --gulpfile gulpfile.cjs",
     "build-go-bin": "gulp buildGo",
-    "start": "ts-node -r tsconfig-paths/register ./src/main.ts",
-    "test": "jest --verbose",
-    "test:watch": "jest --watch",
+    "start": "node --loader ts-node/esm ./src/main.ts",
+    "test": "node --experimental-modules node_modules/jest/bin/jest.js --verbose",
+    "test:watch": "npm run test -- --watch",
     "test:mutant": "stryker run",
     "release": "npm run build && np",
-    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register -r tsconfig-paths/register ./src/main.ts",
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/main.ts",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -48,8 +49,7 @@
     "get-folder-size": "^2.0.1",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
-    "rxjs": "^7.5.7",
-    "tsconfig-paths": "^4.1.0"
+    "rxjs": "^7.5.7"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.1.0",

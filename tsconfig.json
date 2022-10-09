@@ -1,22 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es2019",
-    "module": "commonjs",
+    "esModuleInterop": true,
     "sourceMap": false,
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "node",
     "declaration": false,
-    "rootDir": "./src",
+    "rootDir": "./src/",
     "outDir": "./lib/",
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
     "resolveJsonModule": true,
-    "baseUrl": "./",
-    "paths": {
-      "@core/*": ["src/*"],
-      "@services/*": ["src/services/*"],
-      "@constants/*": ["src/constants/*"],
-      "@interfaces/*": ["src/interfaces/*"]
-    }
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "."
   },
   "include": ["src"]
 }
