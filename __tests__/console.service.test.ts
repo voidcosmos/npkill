@@ -1,4 +1,4 @@
-import { ConsoleService } from '../src/services/console.service';
+import { ConsoleService } from '../src/services/console.service.js';
 
 describe('Console Service', () => {
   let consoleService: ConsoleService;

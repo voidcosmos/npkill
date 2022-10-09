@@ -1,4 +1,4 @@
-import { HttpsService } from '../src/services/https.service';
+import { HttpsService } from '../src/services/https.service.js';
 import * as https from 'https';
 import { EventEmitter } from 'events';
 

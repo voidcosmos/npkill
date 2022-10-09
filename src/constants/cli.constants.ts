@@ -1,4 +1,4 @@
-import { ICliOptions } from '@core/interfaces';
+import { ICliOptions } from '../interfaces/index.js';
 
 export const OPTIONS: ICliOptions[] = [
   {
