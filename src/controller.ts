@@ -10,7 +10,12 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/index.js';
-import { COLORS, HELP_WARNING, OPTIONS } from './constants/cli.constants.js';
+import {
+  COLORS,
+  HELP_HEADER,
+  HELP_FOOTER,
+  OPTIONS,
+} from './constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
@@ -69,6 +74,10 @@ export class Controller {
     space: this.delete.bind(this),
     j: this.moveCursorDown.bind(this),
     k: this.moveCursorUp.bind(this),
+    h: this.moveCursorPageDown.bind(this),
+    l: this.moveCursorPageUp.bind(this),
+    d: this.moveCursorPageDown.bind(this),
+    u: this.moveCursorPageUp.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);
@@ -144,6 +153,7 @@ export class Controller {
   private showHelp(): void {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
+    this.print(HELP_HEADER + '\n\n');
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
@@ -168,7 +178,7 @@ export class Controller {
       });
     });
 
-    this.printAt(HELP_WARNING, {
+    this.printAt(HELP_FOOTER + '\n', {
       x: 0,
       y: lineCount * 2 + 2,
     });
@@ -626,7 +636,7 @@ export class Controller {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
       this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
-      this.checkCursorScroll();
+      this.fitScroll();
     }
   }
 
@@ -634,20 +644,53 @@ export class Controller {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
       this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
-      this.checkCursorScroll();
+      this.fitScroll();
     }
   }
 
-  private checkCursorScroll(): void {
-    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
-      this.scrollFolderResults(-1);
+  private moveCursorPageUp(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    this.cursorPosY -= resultsInPage - 1;
+    if (this.cursorPosY - MARGINS.ROW_RESULTS_START < 0)
+      this.cursorPosY = MARGINS.ROW_RESULTS_START;
+    this.fitScroll();
+  }
 
-    if (this.cursorPosY > this.stdout.rows + this.scroll - 1)
-      this.scrollFolderResults(1);
+  private moveCursorPageDown(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    const foldersAmmount = this.resultsService.results.length;
+    this.cursorPosY += resultsInPage - 1;
+    if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
+      this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
+    this.fitScroll();
+  }
+
+  private fitScroll(): void {
+    const shouldScrollUp =
+      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll;
+    const shouldScrollDown =
+      this.cursorPosY > this.stdout.rows + this.scroll - 1;
+    let scrollRequired = 0;
+
+    if (shouldScrollUp)
+      scrollRequired =
+        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll;
+    else if (shouldScrollDown) {
+      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 1;
+    }
+
+    if (scrollRequired) this.scrollFolderResults(scrollRequired);
   }
 
   private scrollFolderResults(scrollAmount: number): void {
-    this.scroll += scrollAmount;
+    const virtualFinalScroll = this.scroll + scrollAmount;
+    this.scroll = this.clamp(
+      virtualFinalScroll,
+      0,
+      this.resultsService.results.length,
+    );
     this.clearFolderSection();
   }
 
@@ -735,5 +778,9 @@ export class Controller {
 
   private getUserHomePath(): string {
     return require('os').homedir();
+  }
+
+  private clamp(num: number, min: number, max: number) {
+    return Math.min(Math.max(num, min), max);
   }
 }
