@@ -10,7 +10,12 @@ import {
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/index.js';
-import { COLORS, HELP_WARNING, OPTIONS } from './constants/cli.constants.js';
+import {
+  COLORS,
+  HELP_HEADER,
+  HELP_FOOTER,
+  OPTIONS,
+} from './constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
