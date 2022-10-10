@@ -78,6 +78,10 @@ export class Controller {
     l: this.moveCursorPageUp.bind(this),
     d: this.moveCursorPageDown.bind(this),
     u: this.moveCursorPageUp.bind(this),
+    pageup: this.moveCursorPageUp.bind(this),
+    pagedown: this.moveCursorPageDown.bind(this),
+    home: this.moveCursorFirstResult.bind(this),
+    end: this.moveCursorLastResult.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);
@@ -664,6 +668,19 @@ export class Controller {
     this.cursorPosY += resultsInPage - 1;
     if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
       this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
+    this.fitScroll();
+  }
+
+  private moveCursorFirstResult(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    this.cursorPosY = MARGINS.ROW_RESULTS_START;
+    this.fitScroll();
+  }
+
+  private moveCursorLastResult(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    this.cursorPosY =
+      MARGINS.ROW_RESULTS_START + this.resultsService.results.length - 1;
     this.fitScroll();
   }
 

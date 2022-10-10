@@ -8,5 +8,9 @@ export interface IKeysCommand {
   l: () => void;
   d: () => void;
   u: () => void;
+  pageup: () => void;
+  pagedown: () => void;
+  home: () => void;
+  end: () => void;
   execute: (command: string, params?: string[]) => number;
 }

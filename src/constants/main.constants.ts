@@ -53,6 +53,10 @@ export const VALID_KEYS: string[] = [
   'l', // Move page up
   'u', // Move page up
   'd', // Move page down
+  'pageup',
+  'pagedown',
+  'home', // Move to the first result
+  'end', // Move to the last result
 ];
 
 export const BANNER = `-----                    __   .__.__  .__
