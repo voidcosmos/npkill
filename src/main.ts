@@ -33,4 +33,4 @@ export const controller = new Controller(
   new ResultsService(),
 );
 
-controller.init();
+export default () => controller.init();

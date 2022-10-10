@@ -33,7 +33,7 @@
   ],
   "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
-    "build": "gulp --gulpfile gulpfile.cjs",
+    "build": "gulp --gulpfile gulpfile.mjs",
     "build-go-bin": "gulp buildGo",
     "start": "node --loader ts-node/esm ./src/main.ts",
     "test": "node --experimental-modules node_modules/jest/bin/jest.js --verbose",
@@ -57,6 +57,7 @@
     "@stryker-mutator/core": "^6.2.2",
     "@stryker-mutator/jest-runner": "^6.2.2",
     "@types/colors": "^1.2.1",
+    "@types/gulp": "^4.0.9",
     "@types/jest": "^29.1.2",
     "@types/node": "^18.8.3",
     "commitlint": "^17.1.2",

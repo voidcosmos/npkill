@@ -1,3 +1,4 @@
 #!/usr/bin/env node
 
-require('./main');
+import main from './main.js';
+main();
