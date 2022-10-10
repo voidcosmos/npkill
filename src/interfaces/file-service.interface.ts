@@ -11,4 +11,12 @@ export interface IFileService {
   getFileContent(path: string): string;
   isSafeToDelete(path: string, targetFolder: string): boolean;
   isDangerous(path: string): boolean;
+  getFileList(path: string): any;
+  getProjectLastUsage(path: string): Promise<number>;
+  getFileList(dirname: string): Promise<IFileList[]>;
+}
+
+export interface IFileList {
+  path: string;
+  modificationTime: number;
 }

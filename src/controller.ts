@@ -53,6 +53,7 @@ import { bufferUntil } from './libs/buffer-until.js';
 import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
+import path from 'path';
 
 export class Controller {
   private folderRoot = '';
@@ -278,6 +279,15 @@ export class Controller {
 
     ///////////////////////////
     // folder size header
+    this.printAt(colors.gray('days since ↓'), {
+      x:
+        this.stdout.columns -
+        14 -
+        (MARGINS.FOLDER_SIZE_COLUMN +
+          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
+      y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
+    });
+
     this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
       x:
         this.stdout.columns -
@@ -347,12 +357,13 @@ export class Controller {
   }
 
   private printFolderRow(folder: IFolder, row: number) {
-    let { path, size } = this.getFolderTexts(folder);
+    let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
-
     if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
+      lastModification = colors[this.config.backgroundColor](lastModification);
+
       this.paintBgRow(row);
     }
 
@@ -364,15 +375,31 @@ export class Controller {
       y: row,
     });
 
+    this.printAt(lastModification, {
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 8,
+      y: row,
+    });
+
     this.printAt(size, {
       x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
       y: row,
     });
   }
 
-  private getFolderTexts(folder: IFolder): { path: string; size: string } {
+  private getFolderTexts(folder: IFolder): {
+    path: string;
+    size: string;
+    lastModification: string;
+  } {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
+    let daysSinceLastModification = folder.modificationTime
+      ? Math.floor(
+          (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+        ) + 'd'
+      : '--';
+
+    if (folder.isDangerous) daysSinceLastModification = '';
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
@@ -384,6 +411,7 @@ export class Controller {
     return {
       path: folderText,
       size: folderSizeText,
+      lastModification: daysSinceLastModification,
     };
   }
 
@@ -532,12 +560,15 @@ export class Controller {
           from(this.consoleService.splitData(dataFolder)),
         ),
         filter((path) => !!path),
-        map<string, IFolder>((path) => ({
-          path,
-          size: 0,
-          isDangerous: this.fileService.isDangerous(path),
-          status: 'live',
-        })),
+        map<string, IFolder>((path) => {
+          return {
+            path,
+            size: 0,
+            modificationTime: 0,
+            isDangerous: this.fileService.isDangerous(path),
+            status: 'live',
+          };
+        }),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
 
@@ -576,10 +607,18 @@ export class Controller {
     messages.map((msg) => this.printError(msg));
   }
 
-  private calculateFolderStats(nodeFolder: IFolder): Observable<any> {
-    return this.fileService
-      .getFolderSize(nodeFolder.path)
-      .pipe(tap((size) => this.finishFolderStats(nodeFolder, size)));
+  private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
+    return this.fileService.getFolderSize(nodeFolder.path).pipe(
+      tap((size) => this.finishFolderStats(nodeFolder, size)),
+      tap(async () => {
+        // Saves resources by not scanning a result that is probably not of interest
+        if (nodeFolder.isDangerous) return;
+        const parentFolder = path.join(nodeFolder.path, '../');
+        const result = await this.fileService.getProjectLastUsage(parentFolder);
+        nodeFolder.modificationTime = result;
+        this.printFoldersSection();
+      }),
+    );
   }
 
   private finishFolderStats(folder: IFolder, size: string): void {

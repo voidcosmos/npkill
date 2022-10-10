@@ -1,7 +1,12 @@
-import { IFileService, IListDirParams } from '../interfaces/index.js';
+import {
+  IFileList,
+  IFileService,
+  IListDirParams,
+} from '../interfaces/index.js';
 
 import { Observable } from 'rxjs';
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
+import { readdir, stat } from 'fs/promises';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<any>;
@@ -42,5 +47,36 @@ export abstract class FileService implements IFileService {
     */
     const hiddenFilePattern = /(^|\/)\.[^\/\.]/g;
     return hiddenFilePattern.test(path);
+  }
+
+  async getProjectLastUsage(path: string): Promise<number> {
+    const files = await this.getFileList(path);
+    const sorted = files.sort(
+      (a, b) => b.modificationTime - a.modificationTime,
+    );
+    return sorted[0]?.modificationTime || null;
+  }
+
+  async getFileList(dirname: string): Promise<IFileList[]> {
+    let files: IFileList[] = [];
+    const items = await readdir(dirname, { withFileTypes: true });
+
+    for (const item of items) {
+      try {
+        if (item.isDirectory()) {
+          if (item.name === 'node_modules') continue;
+          files = [
+            ...files,
+            ...(await this.getFileList(`${dirname}/${item.name}`)),
+          ];
+        } else {
+          const path = `${dirname}/${item.name}`;
+          const lastModify = (await stat(path)).mtime;
+          files.push({ path, modificationTime: lastModify.getTime() / 1000 });
+        }
+      } catch (error) {}
+    }
+
+    return files;
   }
 }
