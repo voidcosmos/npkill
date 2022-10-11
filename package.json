@@ -33,14 +33,14 @@
   ],
   "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
-    "build": "gulp --gulpfile gulpfile.mjs",
+    "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "node --loader ts-node/esm ./src/main.ts",
+    "start": "node --loader ts-node/esm ./src/index.ts",
     "test": "node --experimental-modules node_modules/jest/bin/jest.js --verbose",
     "test:watch": "npm run test -- --watch",
     "test:mutant": "stryker run",
     "release": "npm run build && np",
-    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/main.ts",
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/index.ts",
     "prepare": "husky install",
     "format": "prettier --write ."
   },
