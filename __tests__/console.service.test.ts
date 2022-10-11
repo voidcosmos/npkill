@@ -35,15 +35,16 @@ describe('Console Service', () => {
         '/blablabla inexistent parameters',
         '-f',
         'lala',
+        '--sort=size',
         '-c',
         'red',
       ];
 
       const result = consoleService.getParameters(argvs);
-
       expect(result['help']).toBeFalsy();
       expect(result['full-scan']).not.toBeFalsy();
       expect(result['bg-color']).toBe('red');
+      expect(result['sort-by']).toBe('size');
     });
   });
 

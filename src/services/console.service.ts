@@ -5,7 +5,8 @@ import { ICliOptions } from '../interfaces/cli-options.interface.js';
 export class ConsoleService {
   getParameters(rawArgv: string[]): {} {
     // This needs a refactor, but fck, is a urgent update
-    const argvs = this.removeSystemArgvs(rawArgv);
+    const rawProgramArgvs = this.removeSystemArgvs(rawArgv);
+    const argvs = this.normalizeParams(rawProgramArgvs);
     const options = {};
 
     argvs.map((argv, index) => {
@@ -49,6 +50,15 @@ export class ConsoleService {
     const partB = text.substring(startPartB, text.length);
 
     return partA + WIDTH_OVERFLOW + partB;
+  }
+
+  /** Argvs can be specified for example by
+   *  "--sort size" and "--sort=size". The main function
+   *  expect the parameters as the first form so this
+   *  method convert the second to first.
+   */
+  private normalizeParams(argvs: string[]): string[] {
+    return argvs.join('=').split('=');
   }
 
   private isValidShortenParams(text: string, width: number, startCut: number) {
