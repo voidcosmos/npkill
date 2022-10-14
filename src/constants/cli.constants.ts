@@ -31,6 +31,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'exclude',
   },
   {
+    arg: ['-x', '--exclude-hidden-directories'],
+    description: 'Exclude hidden directories.',
+    name: 'exclude-hidden-directories',
+  },
+  {
     arg: ['-f', '--full'],
     description:
       'Start searching from the home of the user (example: "/home/user" in linux).',

@@ -11,6 +11,7 @@ import (
 
 var wg sync.WaitGroup
 var targetFolder string
+var ignoreHiddenFolder bool
 var ignoreFolderRegex *regexp.Regexp
 var haveIgnorePatter = false
 
@@ -39,6 +40,9 @@ func newDirFound(path string, dir os.FileInfo) {
 	if isDirExcluded(dirName) {
 		return
 	}
+	if isHiddenFolder(dirName) && ignoreHiddenFolder {
+	    return
+    }
 	if isNodeFolder(dirName) {
 		fmt.Println(path + "/" + dirName)
 	} else {
@@ -52,6 +56,10 @@ func isDirExcluded(path string) bool {
 		return false
 	}
 	return ignoreFolderRegex.MatchString(path)
+}
+
+func isHiddenFolder(path string) bool {
+    return strings.MatchString("/(^|\\/)\\.[^\\/\\.]/g", path)
 }
 
 func isNodeFolder(name string) bool {
@@ -72,8 +80,15 @@ func main() {
 	wg.Add(1)
 	mainPath := os.Args[1]
 	targetFolder = os.Args[2]
-	if len(os.Args) > 3 {
-		prepareIgnoreRegex(os.Args[3])
+
+	if(os.Args[3] == "true") {
+	    ignoreHiddenFolder = true
+	}else{
+	    ignoreHiddenFolder = false
+    }
+
+	if len(os.Args) > 4 {
+		prepareIgnoreRegex(os.Args[4])
 	}
 
 	go listDir(mainPath)

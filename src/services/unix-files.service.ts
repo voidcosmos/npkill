@@ -31,11 +31,15 @@ export abstract class UnixFilesService extends FileService {
   }
 
   protected prepareFindArgs(params: IListDirParams): string[] {
-    const { path, target, exclude } = params;
+    const { path, target, exclude, excludeHiddenDirectories } = params;
     let args: string[] = [path];
 
     if (exclude) {
       args = [...args, this.prepareExcludeArgs(exclude)].flat();
+    }
+
+    if (excludeHiddenDirectories) {
+      args = [...args, '-not', '-path', '*/.*'];
     }
 
     args = [...args, '-name', target, '-type', 'd', '-prune'];

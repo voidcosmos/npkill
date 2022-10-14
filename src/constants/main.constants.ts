@@ -13,6 +13,7 @@ export const DEFAULT_CONFIG: IConfig = {
   checkUpdates: true,
   deleteAll: false,
   exclude: [],
+  excludeHiddenDirectories: false,
   folderSizeInGB: false,
   maxSimultaneousSearch: 6,
   showErrors: false,

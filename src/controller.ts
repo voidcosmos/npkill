@@ -126,6 +126,10 @@ export class Controller {
         .filter(Boolean);
     }
 
+    if (options['exclude-hidden-directories']) {
+      this.config.excludeHiddenDirectories = true;
+    }
+
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
@@ -550,6 +554,7 @@ export class Controller {
     const params = {
       path: this.folderRoot,
       target,
+      excludeHiddenDirectories: this.config.excludeHiddenDirectories,
     };
 
     if (this.config.exclude.length > 0) {
@@ -652,9 +657,8 @@ export class Controller {
   }
 
   private delete(): void {
-    const nodeFolder = this.resultsService.results[
-      this.cursorPosY - MARGINS.ROW_RESULTS_START
-    ];
+    const nodeFolder =
+      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
     this.clearErrors();
     this.deleteFolder(nodeFolder);
   }
