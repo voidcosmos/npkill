@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { SpinnerService } from '../src/services/spinner.service.js';
 
 describe('Spinner Service', () => {

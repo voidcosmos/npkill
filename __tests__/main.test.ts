@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 const controllerConstructorMock = jest.fn();
 const constructorInitMock = jest.fn();
 const linuxServiceConstructorMock = jest.fn();
@@ -11,13 +13,13 @@ jest.mock('../src/controller', () => ({
 }));
 
 //#region mock of files services
-jest.mock('../src/services/linux-files.service', () => ({
+jest.unstable_mockModule('../src/services/linux-files.service', () => ({
   LinuxFilesService: linuxServiceConstructorMock,
 }));
-jest.mock('../src/services/mac-files.service', () => ({
+jest.unstable_mockModule('../src/services/mac-files.service', () => ({
   MacFilesService: mackServiceConstructorMock,
 }));
-jest.mock('../src/services/windows-files.service', () => ({
+jest.unstable_mockModule('../src/services/windows-files.service', () => ({
   WindowsFilesService: windowsServiceConstructorMock,
 }));
 //#endregion
@@ -44,31 +46,31 @@ describe('main', () => {
       });
     };
 
-    const testIfServiceIsIstanciated = (serviceMock) => {
+    const testIfServiceIsIstanciated = async (serviceMock) => {
       let servicesThatShouldNotBeCalled = [...SERVICES_MOCKS].filter(
         (service) => service !== serviceMock,
       );
       expect(serviceMock).toBeCalledTimes(0);
-      main = require('../src/main');
+      main = await import('../src/main');
       expect(serviceMock).toBeCalledTimes(1);
       servicesThatShouldNotBeCalled.forEach((service) =>
         expect(service).toBeCalledTimes(0),
       );
     };
 
-    it('when OS is Linux', () => {
+    it('when OS is Linux', async () => {
       mockOs('linux');
-      testIfServiceIsIstanciated(linuxServiceConstructorMock);
+      await testIfServiceIsIstanciated(linuxServiceConstructorMock);
     });
 
-    it('when OS is MAC', () => {
+    it('when OS is MAC', async () => {
       mockOs('darwin');
-      testIfServiceIsIstanciated(mackServiceConstructorMock);
+      await testIfServiceIsIstanciated(mackServiceConstructorMock);
     });
 
-    it('when OS is Windows', () => {
+    it('when OS is Windows', async () => {
       mockOs('win32');
-      testIfServiceIsIstanciated(windowsServiceConstructorMock);
+      await testIfServiceIsIstanciated(windowsServiceConstructorMock);
     });
   });
 });

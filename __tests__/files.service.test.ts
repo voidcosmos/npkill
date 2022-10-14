@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 
 const readFileSyncSpy = jest.fn();
 // const mockFs = jest.mock('fs', () => ({ readFileSync: readFileSyncSpy }));
-import * as rimraf from 'rimraf';
+import rimraf from 'rimraf';
 import { IFileService } from '../src/interfaces/file-service.interface.js';
 import { WindowsFilesService } from '../src/services/windows-files.service.js';
 import { MacFilesService } from '../src/services/mac-files.service.js';
