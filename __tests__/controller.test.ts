@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { Controller } from '../src/controller.js';
 
 jest.mock('../src/dirname.js', () => {
@@ -28,7 +29,9 @@ describe('Controller test', () => {
   ///////////////////////////////////
 
   beforeEach(() => {
-    exitSpy = jest.spyOn(process, 'exit').mockImplementation();
+    exitSpy = jest
+      .spyOn(process, 'exit')
+      .mockImplementation(() => ({} as never));
     controller = new Controller(
       linuxFilesServiceMock,
       spinnerServiceMock,
@@ -37,20 +40,22 @@ describe('Controller test', () => {
       resultServiceMock,
     );
     getArgumentsSpy = jest.spyOn(controller, 'getArguments');
-    showHelpSpy = jest.spyOn(controller, 'showHelp').mockImplementation();
+    showHelpSpy = jest
+      .spyOn(controller, 'showHelp')
+      .mockImplementation(() => ({}));
     prepareScreenSpy = jest
       .spyOn(controller, 'prepareScreen')
-      .mockImplementation();
+      .mockImplementation(() => ({}));
     setupEventsListenerSpy = jest
       .spyOn(controller, 'setupEventsListener')
-      .mockImplementation();
+      .mockImplementation(() => ({}));
     initializeLoadingStatusSpy = jest
       .spyOn(controller, 'initializeLoadingStatus')
-      .mockImplementation();
-    scanSpy = jest.spyOn(controller, 'scan').mockImplementation();
+      .mockImplementation(() => ({}));
+    scanSpy = jest.spyOn(controller, 'scan').mockImplementation(() => ({}));
     checkVersionSpy = jest
       .spyOn(controller, 'checkVersion')
-      .mockImplementation();
+      .mockImplementation(() => ({}));
   });
 
   it('#init normal start should call some methods', () => {
@@ -92,7 +97,7 @@ describe('Controller test', () => {
       mockParameters({ version: true });
       const functionSpy = jest
         .spyOn(controller, 'showProgramVersion')
-        .mockImplementation();
+        .mockImplementation(() => ({}));
       controller.init();
       expect(functionSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledTimes(1);

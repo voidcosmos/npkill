@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { HttpsService } from '../src/services/https.service.js';
 import * as https from 'https';
 import { EventEmitter } from 'events';
