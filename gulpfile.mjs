@@ -1,7 +1,7 @@
-const gulp = require('gulp');
-const ts = require('gulp-typescript');
-const del = require('del');
-const exec = require('child_process');
+import gulp from 'gulp';
+import ts from 'gulp-typescript';
+import { deleteAsync as del } from 'del';
+import { exec } from 'child_process';
 
 function clean() {
   return del(['./lib']);
@@ -42,6 +42,6 @@ function buildGo() {
 
 const buildAll = gulp.series(clean, typescript, copyBin, copyTsConfig);
 
-exports.default = buildAll;
-exports.buildGo = buildGo;
-exports.typescript = typescript;
+gulp.task('default', buildAll);
+gulp.task('buildGo', buildGo);
+gulp.task('typescript', typescript);

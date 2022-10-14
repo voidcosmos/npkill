@@ -25,6 +25,7 @@ export class StreamService {
         stdout.removeListener('error', errorHandler);
         stdout.removeListener('end', endHandler);
 
+        stderr.removeListener('data', bashErrorHandler);
         stderr.removeListener('error', errorHandler);
       };
     });

@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 import { HttpsService } from '../src/services/https.service.js';
 import { UpdateService } from '../src/services/update.service.js';
 
@@ -62,8 +64,8 @@ describe('update Service', () => {
     cases.forEach((cas) => {
       it(`should check the local version ${localVersion} is up to date with the remote ${cas.remoteVersion}`, (done) => {
         const mockResponse = `{"last-recomended-version": "${cas.remoteVersion}"}`;
-        httpsService.get = jest
-          .fn()
+        jest
+          .spyOn(httpsService, 'get')
           .mockImplementation(() => Promise.resolve(JSON.parse(mockResponse)));
 
         updateService.isUpdated(localVersion).then((isUpdated) => {
