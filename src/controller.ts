@@ -521,6 +521,11 @@ export class Controller {
     const params: IListDirParams = this.prepareListDirParams();
     const isChunkCompleted = (chunk: string) =>
       chunk.endsWith(this.config.targetFolder + '\n');
+
+    const isExcludedDangerousDirectory = (path: string): boolean =>
+      this.config.excludeHiddenDirectories &&
+      this.fileService.isDangerous(path);
+
     const folders$ = this.fileService.listDir(params);
 
     folders$
@@ -538,6 +543,7 @@ export class Controller {
           from(this.consoleService.splitData(dataFolder)),
         ),
         filter((path) => !!path),
+        filter((path) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => ({
           path,
           size: 0,
