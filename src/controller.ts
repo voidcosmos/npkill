@@ -613,21 +613,22 @@ export class Controller {
 
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
-      tap((size) => this.finishFolderStats(nodeFolder, size)),
+      tap((size) => (nodeFolder.size = this.transformFolderSize(size))),
       tap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) return;
         const parentFolder = path.join(nodeFolder.path, '../');
         const result = await this.fileService.getProjectLastUsage(parentFolder);
         nodeFolder.modificationTime = result;
-        this.printFoldersSection();
       }),
+      tap(() => this.finishFolderStats()),
     );
   }
 
-  private finishFolderStats(folder: IFolder, size: string): void {
-    folder.size = this.transformFolderSize(size);
-    if (this.config.sortBy === 'size') {
+  private finishFolderStats(): void {
+    const needSort =
+      this.config.sortBy === 'size' || this.config.sortBy === 'date';
+    if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
       this.clearFolderSection();
     }
