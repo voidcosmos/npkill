@@ -97,6 +97,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -nu, --no-check-update | Don't check for updates on startup                                                                                                             |
 | -s, --sort             | Sort results by: size or path _[ beta ]_                                                                                                       |
 | -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
+| -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                          |
 | -v, --version          | Show npkill version                                                                                                                            |
 
 **Warning:** _In future versions some commands may change_
