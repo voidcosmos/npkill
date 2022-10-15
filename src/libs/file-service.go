@@ -59,7 +59,7 @@ func isDirExcluded(path string) bool {
 }
 
 func isHiddenFolder(path string) bool {
-    return strings.MatchString("/(^|\\/)\\.[^\\/\\.]/g", path)
+    return path[0] == '.'
 }
 
 func isNodeFolder(name string) bool {
@@ -81,11 +81,7 @@ func main() {
 	mainPath := os.Args[1]
 	targetFolder = os.Args[2]
 
-	if(os.Args[3] == "true") {
-	    ignoreHiddenFolder = true
-	}else{
-	    ignoreHiddenFolder = false
-    }
+	ignoreHiddenFolder = os.Args[3] == "true"
 
 	if len(os.Args) > 4 {
 		prepareIgnoreRegex(os.Args[4])
