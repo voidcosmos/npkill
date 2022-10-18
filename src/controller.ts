@@ -43,6 +43,7 @@ import {
   filter,
   map,
   mergeMap,
+  switchMap,
   takeUntil,
   tap,
 } from 'rxjs/operators';
@@ -614,7 +615,7 @@ export class Controller {
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => (nodeFolder.size = this.transformFolderSize(size))),
-      tap(async () => {
+      switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) return;
         const parentFolder = path.join(nodeFolder.path, '../');
