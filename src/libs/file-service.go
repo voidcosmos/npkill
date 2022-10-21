@@ -1,3 +1,4 @@
+// Custom alternative to the linux find command
 package main
 
 import (

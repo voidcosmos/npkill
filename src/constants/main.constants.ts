@@ -1,4 +1,4 @@
-import { IConfig, IUiPosition } from '@core/interfaces';
+import { IConfig, IUiPosition } from '../interfaces/index.js';
 
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';
@@ -13,6 +13,7 @@ export const DEFAULT_CONFIG: IConfig = {
   checkUpdates: true,
   deleteAll: false,
   exclude: [],
+  excludeHiddenDirectories: false,
   folderSizeInGB: false,
   maxSimultaneousSearch: 6,
   showErrors: false,
@@ -43,7 +44,21 @@ export const UI_POSITIONS: IUiPosition = {
   TUTORIAL_TIP: { x: 4, y: 7 },
 };
 
-export const VALID_KEYS: string[] = ['up', 'down', 'space', 'j', 'k'];
+export const VALID_KEYS: string[] = [
+  'up', // Move up
+  'down', // Move down
+  'space', // Delete
+  'j', // Move down
+  'k', // Move up
+  'h', // Move page down
+  'l', // Move page up
+  'u', // Move page up
+  'd', // Move page down
+  'pageup',
+  'pagedown',
+  'home', // Move to the first result
+  'end', // Move to the last result
+];
 
 export const BANNER = `-----                    __   .__.__  .__
 -           ____ ______ |  | _|__|  | |  |

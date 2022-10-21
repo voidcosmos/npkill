@@ -1,6 +1,3 @@
-import * as colors from 'colors';
-import * as keypress from 'keypress';
-
 import {
   BANNER,
   DECIMALS_SIZE,
@@ -12,20 +9,25 @@ import {
   UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
-} from '@core/constants/main.constants';
-import { COLORS, HELP_WARNING, OPTIONS } from '@core/constants/cli.constants';
+} from './constants/index.js';
+import {
+  COLORS,
+  HELP_HEADER,
+  HELP_FOOTER,
+  OPTIONS,
+} from './constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
   ResultsService,
   SpinnerService,
   UpdateService,
-} from '@core/services';
+} from './services/index.js';
 import {
   ERROR_MSG,
   HELP_MSGS,
   INFO_MSGS,
-} from '@core/constants/messages.constants';
+} from './constants/messages.constants.js';
 import {
   IConfig,
   IFolder,
@@ -33,9 +35,9 @@ import {
   IKeysCommand,
   IListDirParams,
   IPosition,
-} from '@core/interfaces';
+} from './interfaces/index.js';
 import { Observable, Subject, from, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from '@core/constants/spinner.constants';
+import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants.js';
 import {
   catchError,
   filter,
@@ -45,9 +47,12 @@ import {
   tap,
 } from 'rxjs/operators';
 
-import { FOLDER_SORT } from './constants/sort.result';
+import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
-import { bufferUntil } from './libs/buffer-until';
+import { bufferUntil } from './libs/buffer-until.js';
+import colors from 'colors';
+import keypress from 'keypress';
+import __dirname from './dirname.js';
 
 export class Controller {
   private folderRoot = '';
@@ -69,6 +74,14 @@ export class Controller {
     space: this.delete.bind(this),
     j: this.moveCursorDown.bind(this),
     k: this.moveCursorUp.bind(this),
+    h: this.moveCursorPageDown.bind(this),
+    l: this.moveCursorPageUp.bind(this),
+    d: this.moveCursorPageDown.bind(this),
+    u: this.moveCursorPageUp.bind(this),
+    pageup: this.moveCursorPageUp.bind(this),
+    pagedown: this.moveCursorPageDown.bind(this),
+    home: this.moveCursorFirstResult.bind(this),
+    end: this.moveCursorLastResult.bind(this),
 
     execute(command: string, params: string[]) {
       return this[command](params);
@@ -136,6 +149,8 @@ export class Controller {
     if (options['target-folder'])
       this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
+    if (options['exclude-hidden-directories'])
+      this.config.excludeHiddenDirectories = true;
 
     // Remove trailing slash from folderRoot for consistency
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
@@ -144,6 +159,7 @@ export class Controller {
   private showHelp(): void {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
+    this.print(HELP_HEADER + '\n\n');
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {
@@ -168,7 +184,7 @@ export class Controller {
       });
     });
 
-    this.printAt(HELP_WARNING, {
+    this.printAt(HELP_FOOTER + '\n', {
       x: 0,
       y: lineCount * 2 + 2,
     });
@@ -519,6 +535,11 @@ export class Controller {
     const params: IListDirParams = this.prepareListDirParams();
     const isChunkCompleted = (chunk: string) =>
       chunk.endsWith(this.config.targetFolder + '\n');
+
+    const isExcludedDangerousDirectory = (path: string): boolean =>
+      this.config.excludeHiddenDirectories &&
+      this.fileService.isDangerous(path);
+
     const folders$ = this.fileService.listDir(params);
 
     folders$
@@ -536,6 +557,7 @@ export class Controller {
           from(this.consoleService.splitData(dataFolder)),
         ),
         filter((path) => !!path),
+        filter((path) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => ({
           path,
           size: 0,
@@ -646,7 +668,7 @@ export class Controller {
     if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
       this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY--;
-      this.checkCursorScroll();
+      this.fitScroll();
     }
   }
 
@@ -654,20 +676,66 @@ export class Controller {
     if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
       this.previusCursorPosY = this.getRealCursorPosY();
       this.cursorPosY++;
-      this.checkCursorScroll();
+      this.fitScroll();
     }
   }
 
-  private checkCursorScroll(): void {
-    if (this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll)
-      this.scrollFolderResults(-1);
+  private moveCursorPageUp(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    this.cursorPosY -= resultsInPage - 1;
+    if (this.cursorPosY - MARGINS.ROW_RESULTS_START < 0)
+      this.cursorPosY = MARGINS.ROW_RESULTS_START;
+    this.fitScroll();
+  }
 
-    if (this.cursorPosY > this.stdout.rows + this.scroll - 1)
-      this.scrollFolderResults(1);
+  private moveCursorPageDown(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    const foldersAmmount = this.resultsService.results.length;
+    this.cursorPosY += resultsInPage - 1;
+    if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
+      this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
+    this.fitScroll();
+  }
+
+  private moveCursorFirstResult(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    this.cursorPosY = MARGINS.ROW_RESULTS_START;
+    this.fitScroll();
+  }
+
+  private moveCursorLastResult(): void {
+    this.previusCursorPosY = this.getRealCursorPosY();
+    this.cursorPosY =
+      MARGINS.ROW_RESULTS_START + this.resultsService.results.length - 1;
+    this.fitScroll();
+  }
+
+  private fitScroll(): void {
+    const shouldScrollUp =
+      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll;
+    const shouldScrollDown =
+      this.cursorPosY > this.stdout.rows + this.scroll - 1;
+    let scrollRequired = 0;
+
+    if (shouldScrollUp)
+      scrollRequired =
+        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll;
+    else if (shouldScrollDown) {
+      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 1;
+    }
+
+    if (scrollRequired) this.scrollFolderResults(scrollRequired);
   }
 
   private scrollFolderResults(scrollAmount: number): void {
-    this.scroll += scrollAmount;
+    const virtualFinalScroll = this.scroll + scrollAmount;
+    this.scroll = this.clamp(
+      virtualFinalScroll,
+      0,
+      this.resultsService.results.length,
+    );
     this.clearFolderSection();
   }
 
@@ -755,5 +823,9 @@ export class Controller {
 
   private getUserHomePath(): string {
     return require('os').homedir();
+  }
+
+  private clamp(num: number, min: number, max: number) {
+    return Math.min(Math.max(num, min), max);
   }
 }

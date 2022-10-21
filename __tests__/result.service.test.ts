@@ -1,5 +1,5 @@
-import { IFolder } from '../src/interfaces/folder.interface';
-import { ResultsService } from '../src/services/results.service';
+import { IFolder } from '../src/interfaces/folder.interface.js';
+import { ResultsService } from '../src/services/results.service.js';
 
 describe('Result Service', () => {
   let resultService;
