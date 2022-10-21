@@ -50,7 +50,7 @@
   "dependencies": {
     "ansi-escapes": "^6.0.0",
     "colors": "1.4.0",
-    "get-folder-size": "^4.0.0",
+    "get-folder-size": "^2.0.0",
     "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
     "rxjs": "^7.5.7"
