@@ -9,4 +9,5 @@ export interface IConfig {
   sortBy: string;
   targetFolder: string;
   exclude: string[];
+  excludeHiddenDirectories: boolean;
 }
