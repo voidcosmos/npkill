@@ -3,17 +3,17 @@ import * as https from 'https';
 export class HttpsService {
   get(url: string): Promise<{}> {
     return new Promise((resolve, reject) => {
-      const fail = err => {
+      const fail = (err) => {
         reject(err);
         return;
       };
 
-      const request = https.get(url, res => {
+      const request = https.get(url, (res) => {
         if (!this.isCorrectResponse(res.statusCode)) fail(res.statusMessage);
 
         res.setEncoding('utf8');
         let body = '';
-        res.on('data', data => {
+        res.on('data', (data) => {
           body += data;
         });
         res.on('end', () => {
@@ -21,7 +21,7 @@ export class HttpsService {
         });
       });
 
-      request.on('error', err => fail(err));
+      request.on('error', (err) => fail(err));
     });
   }
 

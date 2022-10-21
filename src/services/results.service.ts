@@ -1,8 +1,9 @@
-import { IFolder, IStats } from '@interfaces/index';
-import { FOLDER_SORT } from '@core/constants/sort.result';
+import { IFolder, IStats } from '../interfaces/index.js';
+import { FOLDER_SORT } from '../constants/sort.result.js';
 
 export class ResultsService {
   results: IFolder[] = [];
+  noResultsAfterCompleted = false;
 
   addResult(result: IFolder): void {
     this.results = [...this.results, result];

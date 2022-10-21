@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams } from 'child_process';
 import { Observable } from 'rxjs';
-import { STREAM_ENCODING } from '@core/constants';
+import { STREAM_ENCODING } from '../constants/index.js';
 
 export class StreamService {
   streamToObservable<T>(stream: ChildProcessWithoutNullStreams) {
@@ -25,6 +25,7 @@ export class StreamService {
         stdout.removeListener('error', errorHandler);
         stdout.removeListener('end', endHandler);
 
+        stderr.removeListener('data', bashErrorHandler);
         stderr.removeListener('error', errorHandler);
       };
     });
