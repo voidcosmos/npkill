@@ -44,6 +44,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 - **Minified:** It barely has any dependencies.
 
+Npkill requir
 <a name="installation"></a>
 
 # :cloud: Installation
@@ -61,6 +62,8 @@ Or if for some reason you really want to install it:
 $ npm i -g npkill
 # Unix users may need to run the command with sudo. Go carefully
 ```
+
+> NPKILL does not support node<v14. If this affects you you can use `npkill@0.8.3`
 
 <a name="usage"></a>
 
