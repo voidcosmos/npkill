@@ -50,6 +50,7 @@ import {
 import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
 import { bufferUntil } from './libs/buffer-until.js';
+import { homedir } from 'os';
 import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
@@ -822,7 +823,7 @@ export class Controller {
   }
 
   private getUserHomePath(): string {
-    return require('os').homedir();
+    return homedir();
   }
 
   private clamp(num: number, min: number, max: number) {
