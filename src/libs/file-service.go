@@ -18,6 +18,7 @@ var haveIgnorePatter = false
 func listDir(searchStart string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(searchStart)
 	if err != nil {
+    wg.Done()
 		return nil, err
 	}
 
@@ -25,14 +26,12 @@ func listDir(searchStart string) ([]os.FileInfo, error) {
 		scanFile(searchStart, file)
 	}
 
-	wg.Done()
+  wg.Done()
 	return files, nil
 }
 
 func scanFile(path string, file os.FileInfo) {
-	if file.IsDir() {
 		newDirFound(path, file)
-	}
 }
 
 func newDirFound(path string, dir os.FileInfo) {
@@ -42,7 +41,7 @@ func newDirFound(path string, dir os.FileInfo) {
 	}
 	if isNodeFolder(dirName) {
 		fmt.Println(path + "/" + dirName)
-	} else {
+	} else if dir.IsDir() {
 		wg.Add(1)
 		go listDir(path + "/" + dirName)
 	}
