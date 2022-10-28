@@ -414,13 +414,14 @@ export class Controller {
   } {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
-    let daysSinceLastModification = folder.modificationTime
-      ? Math.floor(
-          (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
-        ) + 'd'
-      : '--';
+    let daysSinceLastModification =
+      folder.modificationTime > 0
+        ? Math.floor(
+            (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+          ) + 'd'
+        : '--';
 
-    if (folder.isDangerous) daysSinceLastModification = '';
+    if (folder.isDangerous) daysSinceLastModification = 'xx';
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
@@ -589,6 +590,7 @@ export class Controller {
         filter((path) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => {
           return {
+            id: this.resultsService.results.length,
             path,
             size: 0,
             modificationTime: 0,
@@ -639,7 +641,10 @@ export class Controller {
       tap((size) => (nodeFolder.size = this.transformFolderSize(size))),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
-        if (nodeFolder.isDangerous) return;
+        if (nodeFolder.isDangerous) {
+          nodeFolder.modificationTime = 0;
+          return;
+        }
         const parentFolder = path.join(nodeFolder.path, '../');
         const result = await this.fileService.getProjectLastUsage(parentFolder);
         nodeFolder.modificationTime = result;
@@ -783,6 +788,8 @@ export class Controller {
   private delete(): void {
     const nodeFolder =
       this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
+    console.log(nodeFolder);
+    process.exit();
     this.clearErrors();
     this.deleteFolder(nodeFolder);
   }

@@ -1,4 +1,5 @@
 export interface IFolder {
+  id: number;
   path: string;
   size: number;
   modificationTime: number;
