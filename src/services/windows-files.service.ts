@@ -1,4 +1,4 @@
-import * as getSize from 'get-folder-size';
+import getSize from 'get-folder-size';
 
 import { FileService, StreamService } from '../services/index.js';
 
@@ -34,7 +34,7 @@ export class WindowsFilesService extends FileService {
 
     const excludeWords = exclude ? exclude.join(' ') : '';
 
-    const binPath = normalize(`${__dirname}/../bin/windows-find`);
+    const binPath = normalize(`${__dirname}/bin/windows-find`);
     const args = [path, target, excludeWords];
 
     const child = spawn(binPath, args);

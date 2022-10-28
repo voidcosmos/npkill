@@ -37,14 +37,14 @@ export abstract class FileService implements IFileService {
     return path.includes(targetFolder);
   }
 
+  /** We consider a directory to be dangerous if it is hidden.
+   *
+   * > Why dangerous?
+   * It is probable that if the node_module is included in some hidden directory, it is
+   * required by some application like "spotify", "vscode" or "Discord" and deleting it
+   * would imply breaking the application (until the dependencies are reinstalled).
+   */
   isDangerous(path: string): boolean {
-    /* We consider a directory to be dangerous if it is hidden.
-     
-      > Why dangerous?
-      It is probable that if the node_module is included in some hidden directory, it is
-      required by some application like "spotify", "vscode" or "Discord" and deleting it
-      would imply breaking the application (until the dependencies are reinstalled).
-    */
     const hiddenFilePattern = /(^|\/)\.[^\/\.]/g;
     return hiddenFilePattern.test(path);
   }

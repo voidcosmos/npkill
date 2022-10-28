@@ -44,6 +44,7 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 - **Minified:** It barely has any dependencies.
 
+Npkill requir
 <a name="installation"></a>
 
 # :cloud: Installation
@@ -61,6 +62,8 @@ Or if for some reason you really want to install it:
 $ npm i -g npkill
 # Unix users may need to run the command with sudo. Go carefully
 ```
+
+> NPKILL does not support node<v14. If this affects you you can use `npkill@0.8.3`
 
 <a name="usage"></a>
 
@@ -84,20 +87,21 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 ## Options
 
-| ARGUMENT               | DESCRIPTION                                                                                                                                    |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| -c, --bg-color         | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                      |
-| -d, --directory        | Set the directory from which to begin searching. By default, starting-point is .                                                               |
-| -D, --delete-all       | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found                                                               |
-| -e, --show-errors      | Show error messages related to the search if any                                                                                               |
-| -E, --exclude          | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2" |
-| -f, --full             | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
-| -gb                    | Show folders in Gigabytes instead of Megabytes.                                                                                                |
-| -h, --help, ?          | Show this help page and exit                                                                                                                   |
-| -nu, --no-check-update | Don't check for updates on startup                                                                                                             |
-| -s, --sort             | Sort results by: size or path _[ beta ]_                                                                                                       |
-| -t, --target           | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
-| -v, --version          | Show npkill version                                                                                                                            |
+| ARGUMENT                         | DESCRIPTION                                                                                                                                    |
+| ----------------------           | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| -c, --bg-color                   | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                      |
+| -d, --directory                  | Set the directory from which to begin searching. By default, starting-point is .                                                               |
+| -D, --delete-all                 | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found                                                               |
+| -e, --show-errors                | Show error messages related to the search if any                                                                                               |
+| -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2" |
+| -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
+| -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                |
+| -h, --help, ?                    | Show this help page and exit                                                                                                                   |
+| -nu, --no-check-update           | Don't check for updates on startup                                                                                                             |
+| -s, --sort                       | Sort results by: size or path _[ beta ]_                                                                                                       |
+| -t, --target                     | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
+| -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                    |
+| -v, --version                    | Show npkill version                                                                                                                            |
 
 **Warning:** _In future versions some commands may change_
 

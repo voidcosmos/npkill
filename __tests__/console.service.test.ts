@@ -18,6 +18,7 @@ describe('Console Service', () => {
         'lala',
         'random text',
         '-f',
+        '--exclude-hidden-directories',
       ];
 
       const result = consoleService.getParameters(argvs);
@@ -28,6 +29,7 @@ describe('Console Service', () => {
       expect(result['lala']).toBeUndefined();
       expect(result['inexistent']).toBeUndefined();
       expect(result['full-scan']).not.toBeFalsy();
+      expect(result['exclude-hidden-directories']).not.toBeFalsy();
     });
     it('should get valid parameters 2', () => {
       const argvs = [
@@ -35,15 +37,17 @@ describe('Console Service', () => {
         '/blablabla inexistent parameters',
         '-f',
         'lala',
+        '--sort=size',
         '-c',
         'red',
       ];
 
       const result = consoleService.getParameters(argvs);
-
       expect(result['help']).toBeFalsy();
       expect(result['full-scan']).not.toBeFalsy();
       expect(result['bg-color']).toBe('red');
+      expect(result['sort-by']).toBe('size');
+      expect(result['exclude-hidden-directories']).toBeFalsy();
     });
   });
 

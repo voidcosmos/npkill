@@ -51,6 +51,7 @@ import {
 import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
 import { bufferUntil } from './libs/buffer-until.js';
+import { homedir } from 'os';
 import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
@@ -151,6 +152,8 @@ export class Controller {
     if (options['target-folder'])
       this.config.targetFolder = options['target-folder'];
     if (options['bg-color']) this.setColor(options['bg-color']);
+    if (options['exclude-hidden-directories'])
+      this.config.excludeHiddenDirectories = true;
 
     // Remove trailing slash from folderRoot for consistency
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
@@ -349,12 +352,26 @@ export class Controller {
   }
 
   private printFoldersSection(): void {
+    if (this.resultsService.noResultsAfterCompleted) {
+      this.printNoResults();
+      return;
+    }
     const visibleFolders = this.getVisibleScrollFolders();
     this.clearLine(this.previusCursorPosY);
 
     visibleFolders.map((folder: IFolder, index: number) => {
       const folderRow = MARGINS.ROW_RESULTS_START + index;
       this.printFolderRow(folder, folderRow);
+    });
+  }
+
+  private printNoResults(): void {
+    const message = `No ${colors[DEFAULT_CONFIG.warningColor](
+      this.config.targetFolder,
+    )} found!`;
+    this.printAt(message, {
+      x: Math.floor(this.stdout.columns / 2 - message.length / 2),
+      y: MARGINS.ROW_RESULTS_START + 2,
     });
   }
 
@@ -547,6 +564,11 @@ export class Controller {
     const params: IListDirParams = this.prepareListDirParams();
     const isChunkCompleted = (chunk: string) =>
       chunk.endsWith(this.config.targetFolder + '\n');
+
+    const isExcludedDangerousDirectory = (path: string): boolean =>
+      this.config.excludeHiddenDirectories &&
+      this.fileService.isDangerous(path);
+
     const folders$ = this.fileService.listDir(params);
 
     folders$
@@ -564,6 +586,7 @@ export class Controller {
           from(this.consoleService.splitData(dataFolder)),
         ),
         filter((path) => !!path),
+        filter((path) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => {
           return {
             path,
@@ -643,6 +666,12 @@ export class Controller {
   private completeSearch(): void {
     this.finishSearching$.next(true);
     this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
+    if (!this.resultsService.results.length) this.showNoResults();
+  }
+
+  private showNoResults() {
+    this.resultsService.noResultsAfterCompleted = true;
+    this.printNoResults();
   }
 
   private isQuitKey(ctrl, name): boolean {
@@ -834,7 +863,7 @@ export class Controller {
   }
 
   private getUserHomePath(): string {
-    return require('os').homedir();
+    return homedir();
   }
 
   private clamp(num: number, min: number, max: number) {

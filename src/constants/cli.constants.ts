@@ -64,6 +64,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'target-folder',
   },
   {
+    arg: ['-x', '--exclude-hidden-directories'],
+    description: 'Exclude hidden directories ("dot" directories) from search.',
+    name: 'exclude-hidden-directories',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',
