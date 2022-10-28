@@ -39,7 +39,7 @@ export abstract class UnixFilesService extends FileService {
       args = [...args, this.prepareExcludeArgs(exclude)].flat();
     }
 
-    args = [...args, '-name', target, '-type', 'd', '-prune'];
+    args = [...args, '-name', target, '-prune'];
 
     return args;
   }

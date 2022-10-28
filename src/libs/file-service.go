@@ -18,6 +18,7 @@ var haveIgnorePatter = false
 func listDir(searchStart string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(searchStart)
 	if err != nil {
+		wg.Done()
 		return nil, err
 	}
 
@@ -30,32 +31,30 @@ func listDir(searchStart string) ([]os.FileInfo, error) {
 }
 
 func scanFile(path string, file os.FileInfo) {
-	if file.IsDir() {
-		newDirFound(path, file)
-	}
-}
+	fileName := file.Name()
 
-func newDirFound(path string, dir os.FileInfo) {
-	dirName := dir.Name()
-	if isDirExcluded(dirName) {
+	if isFileExcluded(fileName) {
 		return
 	}
-	if isNodeFolder(dirName) {
-		fmt.Println(path + "/" + dirName)
-	} else {
+
+	if isTargetFile(fileName) {
+		fmt.Println(path + "/" + fileName)
+	}
+
+	if file.IsDir() {
 		wg.Add(1)
-		go listDir(path + "/" + dirName)
+		go listDir(path + "/" + fileName)
 	}
 }
 
-func isDirExcluded(path string) bool {
+func isFileExcluded(path string) bool {
 	if !haveIgnorePatter {
 		return false
 	}
 	return ignoreFolderRegex.MatchString(path)
 }
 
-func isNodeFolder(name string) bool {
+func isTargetFile(name string) bool {
 	return name == targetFolder
 }
 
@@ -70,13 +69,13 @@ func prepareIgnoreRegex(words string) {
 }
 
 func main() {
-	wg.Add(1)
 	mainPath := os.Args[1]
 	targetFolder = os.Args[2]
 	if len(os.Args) > 3 {
 		prepareIgnoreRegex(os.Args[3])
 	}
 
+	wg.Add(1)
 	go listDir(mainPath)
 	wg.Wait()
 }
