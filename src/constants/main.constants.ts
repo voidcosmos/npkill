@@ -5,7 +5,7 @@ export const CURSOR_SIMBOL = '~>';
 export const WIDTH_OVERFLOW = '...';
 export const DEFAULT_SIZE = '0 MB';
 export const DECIMALS_SIZE = 2;
-export const OVERFLOW_CUT_FROM = 8;
+export const OVERFLOW_CUT_FROM = 11;
 
 export const DEFAULT_CONFIG: IConfig = {
   backgroundColor: 'bgBlue',
@@ -21,7 +21,7 @@ export const DEFAULT_CONFIG: IConfig = {
 };
 
 export const MARGINS = {
-  FOLDER_COLUMN_END: 16,
+  FOLDER_COLUMN_END: 19,
   FOLDER_COLUMN_START: 2,
   FOLDER_SIZE_COLUMN: 10,
   ROW_RESULTS_START: 8,

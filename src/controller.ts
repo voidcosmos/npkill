@@ -284,20 +284,17 @@ export class Controller {
 
     ///////////////////////////
     // folder size header
-    this.printAt(colors.gray('days since ↓'), {
+    this.printAt(colors.gray('old  |'), {
       x:
         this.stdout.columns -
-        14 -
+        5 -
         (MARGINS.FOLDER_SIZE_COLUMN +
           Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
     this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
-      x:
-        this.stdout.columns -
-        (MARGINS.FOLDER_SIZE_COLUMN +
-          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN + 2,
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
@@ -364,6 +361,8 @@ export class Controller {
   private printFolderRow(folder: IFolder, row: number) {
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
+
+    lastModification = colors.gray(lastModification);
     if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
@@ -381,7 +380,7 @@ export class Controller {
     });
 
     this.printAt(lastModification, {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 8,
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
       y: row,
     });
 
