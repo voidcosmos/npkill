@@ -54,7 +54,7 @@ export abstract class FileService implements IFileService {
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
     );
-    return sorted[0]?.modificationTime || 0;
+    return sorted[0]?.modificationTime || null;
   }
 
   async getFileList(dirname: string): Promise<IFileList[]> {

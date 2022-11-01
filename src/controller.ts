@@ -415,7 +415,7 @@ export class Controller {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
     let daysSinceLastModification =
-      folder.modificationTime > 0
+      folder.modificationTime !== null && folder.modificationTime > 0
         ? Math.floor(
             (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
           ) + 'd'
@@ -593,7 +593,7 @@ export class Controller {
             id: this.resultsService.results.length,
             path,
             size: 0,
-            modificationTime: 0,
+            modificationTime: null,
             isDangerous: this.fileService.isDangerous(path),
             status: 'live',
           };
@@ -642,7 +642,7 @@ export class Controller {
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
-          nodeFolder.modificationTime = 0;
+          nodeFolder.modificationTime = null;
           return;
         }
         const parentFolder = path.join(nodeFolder.path, '../');
