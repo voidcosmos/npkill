@@ -7,7 +7,7 @@ export class FileWorkerService {
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
     // updateStats(-1, memoryUsage().rss);
 
-    const worker = new Worker(`./src/services/files/files.worker.js`, {
+    const worker = new Worker(`./src/services/files/files.worker.ts`, {
       workerData: {
         path: params.path,
       },

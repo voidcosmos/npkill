@@ -6,6 +6,8 @@ import { parentPort, workerData } from 'worker_threads';
 (() => {
   const taskQueue = [];
   let procs = 0;
+  // More PROCS improve the speed of the search, but increment
+  // but it will greatly increase the maximum ram usage.
   const MAX_PROCS = 100;
 
   const updateProcs = (value) => {
@@ -23,7 +25,7 @@ import { parentPort, workerData } from 'worker_threads';
     processQueue();
   }
 
-  function newResult(path) {
+  function newFoundResult(path) {
     parentPort.postMessage({ type: 'result', value: path });
   }
 
@@ -57,7 +59,7 @@ import { parentPort, workerData } from 'worker_threads';
         if (entry.isDirectory()) {
           const subpath = (path === '/' ? '' : path) + '/' + entry.name;
           if (entry.name === 'node_modules') {
-            newResult(subpath);
+            newFoundResult(subpath);
           } else {
             enqueue(subpath);
           }
