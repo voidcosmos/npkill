@@ -550,7 +550,6 @@ export class Controller {
         catchError((error, caught) => {
           return caught;
         }),
-        // filter(() => false),
         filter((path: string) => !!path),
         filter((path: string) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => ({
@@ -567,7 +566,7 @@ export class Controller {
             this.clearFolderSection();
           }
         }),
-        // mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 4),
+        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 4),
       )
       .subscribe(
         () => this.printFoldersSection(),

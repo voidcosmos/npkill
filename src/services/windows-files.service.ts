@@ -5,23 +5,17 @@ import { FileService, StreamService } from '../services/index.js';
 import { IListDirParams } from '../interfaces/list-dir-params.interface.js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { WindowsStrategyManager } from '../strategies/windows-remove-dir.strategy.js';
-import { normalize } from 'path';
-import { spawn } from 'child_process';
 import __dirname from '../dirname.js';
-import { runWorker } from './files/files.worker.js';
+import { FileWorkerService } from './files/files.worker.service.js';
 
 export class WindowsFilesService extends FileService {
-  listDir(params: IListDirParams): Observable<string> {
-    const stream$ = new BehaviorSubject(null);
-    runWorker(stream$, params);
-    // this.search(stream, params, params.path);
-    return stream$;
-  }
-
   private windowsStrategyManager: WindowsStrategyManager =
     new WindowsStrategyManager();
 
-  constructor(private streamService: StreamService) {
+  constructor(
+    private streamService: StreamService,
+    protected fileWorkerService: FileWorkerService,
+  ) {
     super();
   }
 
@@ -35,6 +29,12 @@ export class WindowsFilesService extends FileService {
         observer.complete();
       });
     });
+  }
+
+  listDir(params: IListDirParams): Observable<string> {
+    const stream$ = new BehaviorSubject(null);
+    this.fileWorkerService.startScan(stream$, params);
+    return stream$;
   }
 
   deleteDir(path: string): Promise<boolean> {
