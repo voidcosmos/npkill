@@ -7,6 +7,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { StreamService } from './stream.service.js';
 import { opendir, readdir } from 'fs/promises';
 import { Dirent } from 'fs';
+import { runWorker } from './files/files.worker.js';
 
 export abstract class UnixFilesService extends FileService {
   constructor(protected streamService: StreamService) {
@@ -16,9 +17,10 @@ export abstract class UnixFilesService extends FileService {
   abstract getFolderSize(path: string): Observable<any>;
 
   listDir(params: IListDirParams): Observable<string> {
-    const stream = new BehaviorSubject(null);
-    this.search(stream, params, params.path);
-    return stream;
+    const stream$ = new BehaviorSubject(null);
+    runWorker(stream$, params);
+    // this.search(stream, params, params.path);
+    return stream$;
   }
 
   private counter = 0;
