@@ -1,12 +1,13 @@
 import getSize from 'get-folder-size';
 
-import { FileService, StreamService } from '../services/index.js';
+import { StreamService } from '../index.js';
 
-import { IListDirParams } from '../interfaces/list-dir-params.interface.js';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { WindowsStrategyManager } from '../strategies/windows-remove-dir.strategy.js';
-import __dirname from '../dirname.js';
-import { FileWorkerService } from './files/files.worker.service.js';
+import __dirname from '../../dirname.js';
+import { FileService } from './files.service.js';
+import { WindowsStrategyManager } from '../../strategies/windows-remove-dir.strategy.js';
+import { FileWorkerService } from './files.worker.service.js';
+import { IListDirParams } from '../../interfaces/list-dir-params.interface.js';
 
 export class WindowsFilesService extends FileService {
   private windowsStrategyManager: WindowsStrategyManager =

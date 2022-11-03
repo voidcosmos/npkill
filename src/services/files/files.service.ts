@@ -1,4 +1,8 @@
-import { IFileService, IFolder, IListDirParams } from '../interfaces/index.js';
+import {
+  IFileService,
+  IFolder,
+  IListDirParams,
+} from '../../interfaces/index.js';
 
 import { Observable } from 'rxjs';
 import { readFileSync } from 'fs';

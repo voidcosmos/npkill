@@ -1,10 +1,10 @@
 import { exec } from 'child_process';
 
 import { FileService } from './files.service.js';
-import { IListDirParams } from '../interfaces/index.js';
+import { IListDirParams } from '../../interfaces/index.js';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { StreamService } from './stream.service.js';
-import { FileWorkerService } from './files/files.worker.service.js';
+import { StreamService } from '../stream.service.js';
+import { FileWorkerService } from './files.worker.service.js';
 
 export abstract class UnixFilesService extends FileService {
   constructor(
