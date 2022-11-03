@@ -3,25 +3,31 @@ import { IListDirParams } from '../../interfaces/index.js';
 import ansiEscapes from 'ansi-escapes';
 import { Worker } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
+import { memoryUsage } from 'process';
 
 export function runWorker(
   stream$: BehaviorSubject<string>,
   params: IListDirParams,
 ) {
+  // updateStats(-1, memoryUsage().rss);
+
   const worker = new Worker(`./src/services/files/worker.js`, {
     workerData: {
       path: params.path,
     },
   });
+
   worker.on('message', function (data) {
     if (data?.type === 'result') {
-      if (data.value.includes('projects')) {
-        return;
-      }
       stream$.next(data.value);
     }
+
     if (data?.type === 'proc') {
       updateStats(data.value.procs, data.value.mem.rss);
+    }
+
+    if (data?.type === 'job-complete') {
+      stream$.complete();
     }
   });
   worker.on('error', function (error) {

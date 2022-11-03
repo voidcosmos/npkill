@@ -67,6 +67,7 @@ export class Controller {
   private scroll: number = 0;
 
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
+  private searchStartTime;
 
   private KEYS: IKeysCommand = {
     up: this.moveCursorUp.bind(this),
@@ -106,6 +107,7 @@ export class Controller {
     this.initializeLoadingStatus();
     if (this.config.checkUpdates) this.checkVersion();
 
+    this.searchStartTime = Date.now();
     this.scan();
   }
 
@@ -618,6 +620,7 @@ export class Controller {
   private completeSearch(): void {
     this.finishSearching$.next(true);
     this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
+    console.log(`Search time: ${(Date.now() - this.searchStartTime) / 1000} s`);
     if (!this.resultsService.results.length) this.showNoResults();
   }
 
