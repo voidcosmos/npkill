@@ -38,7 +38,7 @@
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
-    "start": "node --loader ts-node/esm ./src/index.ts",
+    "start": "node --loader ts-node/esm --no-warnings ./src/index.ts",
     "test": "node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js --verbose",
     "test:watch": "npm run test -- --watch",
     "test:mutant": "stryker run",
