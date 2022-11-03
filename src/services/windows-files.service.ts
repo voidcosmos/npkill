@@ -10,6 +10,9 @@ import { spawn } from 'child_process';
 import __dirname from '../dirname.js';
 
 export class WindowsFilesService extends FileService {
+  listDir(params: IListDirParams): Observable<string> {
+    throw new Error('Method not implemented.');
+  }
   private windowsStrategyManager: WindowsStrategyManager =
     new WindowsStrategyManager();
 
@@ -27,18 +30,6 @@ export class WindowsFilesService extends FileService {
         observer.complete();
       });
     });
-  }
-
-  listDir(params: IListDirParams): Observable<Buffer> {
-    const { path, target, exclude } = params;
-
-    const excludeWords = exclude ? exclude.join(' ') : '';
-
-    const binPath = normalize(`${__dirname}/bin/windows-find`);
-    const args = [path, target, excludeWords];
-
-    const child = spawn(binPath, args);
-    return this.streamService.getStream(child);
   }
 
   deleteDir(path: string): Promise<boolean> {
