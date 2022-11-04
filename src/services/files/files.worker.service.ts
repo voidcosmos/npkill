@@ -3,18 +3,25 @@ import ansiEscapes from 'ansi-escapes';
 import { Worker } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
 import { dirname, extname } from 'path';
+import { memoryUsage } from 'process';
 
 export class FileWorkerService {
-  private worker = new Worker(this.getWorkerPath());
+  private scanWorker = new Worker(this.getWorkerPath());
+  private getSizeWorker = new Worker(this.getWorkerPath());
+
+  constructor() {
+    setInterval(() => {
+      updateStats(-1, memoryUsage().rss);
+    }, 300);
+  }
 
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
-    // updateStats(-1, memoryUsage().rss);
-    this.worker.postMessage({
+    this.scanWorker.postMessage({
       type: 'start-explore',
       value: { path: params.path },
     });
 
-    this.worker.on('message', (data) => {
+    this.scanWorker.on('message', (data) => {
       if (data?.type === 'scan-result') {
         stream$.next(data.value);
       }
@@ -28,28 +35,31 @@ export class FileWorkerService {
       }
     });
 
-    this.worker.on('error', (error) => {
+    this.scanWorker.on('error', (error) => {
       console.log('this.worker error', error);
-      this.worker.terminate();
+      this.scanWorker.terminate();
     });
 
-    this.worker.on('exit', (code) => {
+    this.scanWorker.on('exit', (code) => {
       console.log('this.worker Exit');
 
       if (code !== 0) {
-        this.worker.terminate();
+        this.scanWorker.terminate();
         return;
       }
     });
 
-    return this.worker;
+    return this.scanWorker;
   }
 
   getSize(stream$: BehaviorSubject<string>, path: string) {
     const id = Math.random();
-    this.worker.postMessage({ type: 'start-getSize', value: { path, id } });
+    this.getSizeWorker.postMessage({
+      type: 'start-getSize',
+      value: { path, id },
+    });
 
-    this.worker.on('message', (data) => {
+    this.getSizeWorker.on('message', (data) => {
       if (data?.type === 'getsize-job-completed-' + id) {
         stream$.next(data.value);
         stream$.complete();
@@ -73,9 +83,9 @@ export class FileWorkerService {
 
 // This methods is only temporal for debug.
 function updateStats(procs: number, mem: number) {
-  print(ansiEscapes.cursorTo(40, 0));
+  print(ansiEscapes.cursorTo(50, 0));
   print('Opened dirs: ' + procs + '       ');
-  print(ansiEscapes.cursorTo(40, 1));
+  print(ansiEscapes.cursorTo(50, 1));
   print(
     `Work. Mem usage:   ${
       Math.round((mem / 1024 / 1024) * 100) / 100

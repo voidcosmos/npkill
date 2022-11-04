@@ -21,7 +21,11 @@ interface Task {
     }
 
     if (data?.type === 'start-getSize') {
-      startGetSize(data.value.path, data.value.id);
+      // startGetSize(data.value.path, data.value.id);
+      parentPort.postMessage({
+        type: 'getsize-job-completed-' + data.value.id,
+        value: -1,
+      });
     }
   });
 
@@ -45,45 +49,47 @@ interface Task {
     });
   }
 
-  function startGetSize(path: string, id: number) {
-    const fileWalker = new FileWalker();
-    let size = 0;
-    let allFilesScanned = false;
-    let getSizeInProgress = false;
-    fileWalker.enqueueTask(path);
+  // Unnused for now because 'du' is much faster.
+  //
+  // function startGetSize(path: string, id: number) {
+  //   const fileWalker = new FileWalker();
+  //   let size = 0;
+  //   let allFilesScanned = false;
+  //   let getSizeInProgress = false;
+  //   fileWalker.enqueueTask(path);
 
-    const sendResult = () => {
-      parentPort.postMessage({
-        type: 'getsize-job-completed-' + id,
-        value: size,
-      });
-    };
+  //   const sendResult = () => {
+  //     parentPort.postMessage({
+  //       type: 'getsize-job-completed-' + id,
+  //       value: size,
+  //     });
+  //   };
 
-    const getSize = async (path: string) => {
-      getSizeInProgress = true;
-      size += (await stat(path)).size;
-      getSizeInProgress = false;
-      if (allFilesScanned) {
-        sendResult();
-      }
-    };
+  //   const getSize = async (path: string) => {
+  //     getSizeInProgress = true;
+  //     size += (await stat(path)).size;
+  //     getSizeInProgress = false;
+  //     if (allFilesScanned) {
+  //       sendResult();
+  //     }
+  //   };
 
-    fileWalker.onNewResult(({ path, dirent }) => {
-      const subpath = (path === '/' ? '' : path) + '/' + dirent.name;
-      if (dirent.isDirectory()) {
-        fileWalker.enqueueTask(subpath);
-      } else if (dirent.isFile()) {
-        getSize(subpath);
-      }
-    });
+  //   fileWalker.onNewResult(({ path, dirent }) => {
+  //     const subpath = (path === '/' ? '' : path) + '/' + dirent.name;
+  //     if (dirent.isDirectory()) {
+  //       fileWalker.enqueueTask(subpath);
+  //     } else if (dirent.isFile()) {
+  //       getSize(subpath);
+  //     }
+  //   });
 
-    fileWalker.onQueueEmpty(() => {
-      allFilesScanned = true;
-      if (!getSizeInProgress) {
-        sendResult();
-      }
-    });
-  }
+  //   fileWalker.onQueueEmpty(() => {
+  //     allFilesScanned = true;
+  //     if (!getSizeInProgress) {
+  //       sendResult();
+  //     }
+  //   });
+  // }
 })();
 
 class FileWalker {
