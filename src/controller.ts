@@ -566,7 +566,7 @@ export class Controller {
             this.clearFolderSection();
           }
         }),
-        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 4),
+        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder)),
       )
       .subscribe(
         () => this.printFoldersSection(),
