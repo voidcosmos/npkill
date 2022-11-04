@@ -424,9 +424,9 @@ export class Controller {
     if (folder.isDangerous) daysSinceLastModification = 'xxx';
 
     // Align to right
+    const alignMargin = 4 - daysSinceLastModification.length;
     daysSinceLastModification =
-      ' '.repeat(4 - daysSinceLastModification.length) +
-      daysSinceLastModification;
+      ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
