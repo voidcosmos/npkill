@@ -421,7 +421,12 @@ export class Controller {
           ) + 'd'
         : '--';
 
-    if (folder.isDangerous) daysSinceLastModification = 'xx';
+    if (folder.isDangerous) daysSinceLastModification = 'xxx';
+
+    // Align to right
+    daysSinceLastModification =
+      ' '.repeat(4 - daysSinceLastModification.length) +
+      daysSinceLastModification;
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
