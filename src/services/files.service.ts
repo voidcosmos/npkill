@@ -1,5 +1,5 @@
 import {
-  IFileList,
+  IFileStat,
   IFileService,
   IListDirParams,
 } from '../interfaces/index.js';
@@ -49,16 +49,16 @@ export abstract class FileService implements IFileService {
     return hiddenFilePattern.test(path);
   }
 
-  async getProjectLastUsage(path: string): Promise<number> {
-    const files = await this.getFileList(path);
+  async getRecentModificationInDir(path: string): Promise<number> {
+    const files = await this.getFileStatsInDir(path);
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
     );
     return sorted[0]?.modificationTime || null;
   }
 
-  async getFileList(dirname: string): Promise<IFileList[]> {
-    let files: IFileList[] = [];
+  async getFileStatsInDir(dirname: string): Promise<IFileStat[]> {
+    let files: IFileStat[] = [];
     const items = await readdir(dirname, { withFileTypes: true });
 
     for (const item of items) {
@@ -67,12 +67,13 @@ export abstract class FileService implements IFileService {
           if (item.name === 'node_modules') continue;
           files = [
             ...files,
-            ...(await this.getFileList(`${dirname}/${item.name}`)),
+            ...(await this.getFileStatsInDir(`${dirname}/${item.name}`)),
           ];
         } else {
           const path = `${dirname}/${item.name}`;
-          const lastModify = (await stat(path)).mtime;
-          files.push({ path, modificationTime: lastModify.getTime() / 1000 });
+          const fileStat = await stat(path);
+
+          files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
         }
       } catch (error) {}
     }

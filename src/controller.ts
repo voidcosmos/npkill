@@ -651,7 +651,9 @@ export class Controller {
           return;
         }
         const parentFolder = path.join(nodeFolder.path, '../');
-        const result = await this.fileService.getProjectLastUsage(parentFolder);
+        const result = await this.fileService.getRecentModificationInDir(
+          parentFolder,
+        );
         nodeFolder.modificationTime = result;
       }),
       tap(() => this.finishFolderStats()),
