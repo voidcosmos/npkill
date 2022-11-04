@@ -283,6 +283,10 @@ export class Controller {
       UI_POSITIONS.TUTORIAL_TIP,
     );
 
+    if (this.consoleService.isRunningBuild()) {
+      this.printAt(colors.gray(this.getVersion()), UI_POSITIONS.VERSION);
+    }
+
     ///////////////////////////
     // folder size header
     this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {

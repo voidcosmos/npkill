@@ -37,6 +37,7 @@ export const UI_HELP = {
 export const UI_POSITIONS: IUiPosition = {
   FOLDER_SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
   INITIAL: { x: 0, y: 0 },
+  VERSION: { x: 38, y: 5 },
   NEW_UPDATE_FOUND: { x: 42, y: 0 },
   SPACE_RELEASED: { x: 50, y: 4 },
   STATUS: { x: 50, y: 5 },
