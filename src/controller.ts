@@ -595,7 +595,6 @@ export class Controller {
         filter((path) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => {
           return {
-            id: this.resultsService.results.length,
             path,
             size: 0,
             modificationTime: null,
