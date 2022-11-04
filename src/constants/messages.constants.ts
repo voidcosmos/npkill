@@ -9,7 +9,7 @@ export const INFO_MSGS = {
 
   DISABLED:
     '[-D, --delete-all] option has been disabled until future versions. Please restart npkill without this option.',
-  HEADER_SIZE_COLUMN: 'size',
+  HEADER_COLUMNS: 'last_mod   size',
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +

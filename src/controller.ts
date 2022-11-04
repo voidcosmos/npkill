@@ -286,18 +286,9 @@ export class Controller {
     );
 
     ///////////////////////////
-    // folder size header
-    this.printAt(colors.gray('old  |'), {
-      x:
-        this.stdout.columns -
-        5 -
-        (MARGINS.FOLDER_SIZE_COLUMN +
-          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
-      y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
-    });
-
-    this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN + 2,
+    // Columns headers
+    this.printAt(colors.gray(INFO_MSGS.HEADER_COLUMNS), {
+      x: this.stdout.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
