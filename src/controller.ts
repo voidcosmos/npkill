@@ -789,8 +789,6 @@ export class Controller {
   private delete(): void {
     const nodeFolder =
       this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
-    console.log(nodeFolder);
-    process.exit();
     this.clearErrors();
     this.deleteFolder(nodeFolder);
   }
