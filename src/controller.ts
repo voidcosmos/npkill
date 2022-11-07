@@ -652,7 +652,7 @@ export class Controller {
 
   private finishFolderStats(): void {
     const needSort =
-      this.config.sortBy === 'size' || this.config.sortBy === 'date';
+      this.config.sortBy === 'size' || this.config.sortBy === 'last-mod';
     if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
       this.clearFolderSection();

@@ -36,7 +36,9 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 # :heavy_check_mark: Features
 
-- **Clear space:** Get rid of old and dusty node_modules cluttering up your machine.
+- **Clear space:** Get rid of old and dusty *node_modules* cluttering up your machine.
+
+- **Last Workspace Usage**: Check when was the last time you modified a file in the workspace (indicated in the **last_mod** column).
 
 - **Very fast:** NPKILL is written in TypeScript, but searches are performed at a low level, improving performance greatly.
 
@@ -44,7 +46,6 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 
 - **Minified:** It barely has any dependencies.
 
-Npkill requir
 <a name="installation"></a>
 
 # :cloud: Installation
@@ -98,7 +99,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                |
 | -h, --help, ?                    | Show this help page and exit                                                                                                                   |
 | -nu, --no-check-update           | Don't check for updates on startup                                                                                                             |
-| -s, --sort                       | Sort results by: `size`, `path` or `last_mod`                                                                                                     |
+| -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                     |
 | -t, --target                     | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
 | -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                    |
 | -v, --version                    | Show npkill version                                                                                                                            |
