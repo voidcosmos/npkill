@@ -9,7 +9,7 @@ export const INFO_MSGS = {
 
   DISABLED:
     '[-D, --delete-all] option has been disabled until future versions. Please restart npkill without this option.',
-  HEADER_SIZE_COLUMN: 'folder size',
+  HEADER_COLUMNS: 'last_mod   size',
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
@@ -18,7 +18,7 @@ export const INFO_MSGS = {
   NO_TTY:
     // tslint:disable-next-line: max-line-length
     'Oh no! Npkill does not support this terminal (TTY is required). This is a bug, which has to be fixed. Please try another command interpreter (for example, CMD in windows)',
-  NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size',
+  NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size | last-mod',
   SEARCHING: 'searching ',
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
