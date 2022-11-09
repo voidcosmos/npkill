@@ -68,8 +68,9 @@ export class Controller {
 
   private scroll: number = 0;
 
+  private searchStart: number;
+  private searchDuration: number;
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
-  private searchStartTime;
 
   private KEYS: IKeysCommand = {
     up: this.moveCursorUp.bind(this),
@@ -109,7 +110,6 @@ export class Controller {
     this.initializeLoadingStatus();
     if (this.config.checkUpdates) this.checkVersion();
 
-    this.searchStartTime = Date.now();
     this.scan();
   }
 
@@ -572,6 +572,7 @@ export class Controller {
       this.config.excludeHiddenDirectories &&
       this.fileService.isDangerous(path);
 
+    this.searchStart = Date.now();
     const folders$ = this.fileService.listDir(params);
 
     folders$
@@ -667,10 +668,17 @@ export class Controller {
   }
 
   private completeSearch(): void {
+    this.setSearchDuration();
     this.finishSearching$.next(true);
-    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
-    console.log(`Search time: ${(Date.now() - this.searchStartTime) / 1000} s`);
+    this.updateStatus(
+      colors.green(INFO_MSGS.SEARCH_COMPLETED) +
+        colors.gray(`${this.searchDuration}s`),
+    );
     if (!this.resultsService.results.length) this.showNoResults();
+  }
+
+  private setSearchDuration() {
+    this.searchDuration = +((Date.now() - this.searchStart) / 1000).toFixed(2);
   }
 
   private showNoResults() {
