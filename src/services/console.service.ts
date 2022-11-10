@@ -1,3 +1,4 @@
+import { extname } from 'path';
 import { OPTIONS, WIDTH_OVERFLOW } from '../constants/index.js';
 
 import { ICliOptions } from '../interfaces/cli-options.interface.js';
@@ -50,6 +51,10 @@ export class ConsoleService {
     const partB = text.substring(startPartB, text.length);
 
     return partA + WIDTH_OVERFLOW + partB;
+  }
+
+  isRunningBuild(): boolean {
+    return extname(import.meta.url) === '.js';
   }
 
   /** Argvs can be specified for example by

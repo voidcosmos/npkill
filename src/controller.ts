@@ -43,6 +43,7 @@ import {
   filter,
   map,
   mergeMap,
+  switchMap,
   takeUntil,
   tap,
 } from 'rxjs/operators';
@@ -54,6 +55,7 @@ import { homedir } from 'os';
 import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
+import path from 'path';
 
 export class Controller {
   private folderRoot = '';
@@ -66,6 +68,8 @@ export class Controller {
 
   private scroll: number = 0;
 
+  private searchStart: number;
+  private searchDuration: number;
   private finishSearching$: Subject<boolean> = new Subject<boolean>();
 
   private KEYS: IKeysCommand = {
@@ -283,13 +287,14 @@ export class Controller {
       UI_POSITIONS.TUTORIAL_TIP,
     );
 
+    if (this.consoleService.isRunningBuild()) {
+      this.printAt(colors.gray(this.getVersion()), UI_POSITIONS.VERSION);
+    }
+
     ///////////////////////////
-    // folder size header
-    this.printAt(colors.gray(INFO_MSGS.HEADER_SIZE_COLUMN), {
-      x:
-        this.stdout.columns -
-        (MARGINS.FOLDER_SIZE_COLUMN +
-          Math.round(INFO_MSGS.HEADER_SIZE_COLUMN.length / 5)),
+    // Columns headers
+    this.printAt(colors.gray(INFO_MSGS.HEADER_COLUMNS), {
+      x: this.stdout.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
@@ -368,12 +373,15 @@ export class Controller {
   }
 
   private printFolderRow(folder: IFolder, row: number) {
-    let { path, size } = this.getFolderTexts(folder);
+    let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
 
+    lastModification = colors.gray(lastModification);
     if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
+      lastModification = colors[this.config.backgroundColor](lastModification);
+
       this.paintBgRow(row);
     }
 
@@ -385,15 +393,37 @@ export class Controller {
       y: row,
     });
 
+    this.printAt(lastModification, {
+      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
+      y: row,
+    });
+
     this.printAt(size, {
       x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
       y: row,
     });
   }
 
-  private getFolderTexts(folder: IFolder): { path: string; size: string } {
+  private getFolderTexts(folder: IFolder): {
+    path: string;
+    size: string;
+    lastModification: string;
+  } {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
+    let daysSinceLastModification =
+      folder.modificationTime !== null && folder.modificationTime > 0
+        ? Math.floor(
+            (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+          ) + 'd'
+        : '--';
+
+    if (folder.isDangerous) daysSinceLastModification = 'xxx';
+
+    // Align to right
+    const alignMargin = 4 - daysSinceLastModification.length;
+    daysSinceLastModification =
+      ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
@@ -405,6 +435,7 @@ export class Controller {
     return {
       path: folderText,
       size: folderSizeText,
+      lastModification: daysSinceLastModification,
     };
   }
 
@@ -541,6 +572,7 @@ export class Controller {
       this.config.excludeHiddenDirectories &&
       this.fileService.isDangerous(path);
 
+    this.searchStart = Date.now();
     const folders$ = this.fileService.listDir(params);
 
     folders$
@@ -559,12 +591,15 @@ export class Controller {
         ),
         filter((path) => !!path),
         filter((path) => !isExcludedDangerousDirectory(path)),
-        map<string, IFolder>((path) => ({
-          path,
-          size: 0,
-          isDangerous: this.fileService.isDangerous(path),
-          status: 'live',
-        })),
+        map<string, IFolder>((path) => {
+          return {
+            path,
+            size: 0,
+            modificationTime: null,
+            isDangerous: this.fileService.isDangerous(path),
+            status: 'live',
+          };
+        }),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
 
@@ -603,15 +638,29 @@ export class Controller {
     messages.map((msg) => this.printError(msg));
   }
 
-  private calculateFolderStats(nodeFolder: IFolder): Observable<any> {
-    return this.fileService
-      .getFolderSize(nodeFolder.path)
-      .pipe(tap((size) => this.finishFolderStats(nodeFolder, size)));
+  private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
+    return this.fileService.getFolderSize(nodeFolder.path).pipe(
+      tap((size) => (nodeFolder.size = this.transformFolderSize(size))),
+      switchMap(async () => {
+        // Saves resources by not scanning a result that is probably not of interest
+        if (nodeFolder.isDangerous) {
+          nodeFolder.modificationTime = null;
+          return;
+        }
+        const parentFolder = path.join(nodeFolder.path, '../');
+        const result = await this.fileService.getRecentModificationInDir(
+          parentFolder,
+        );
+        nodeFolder.modificationTime = result;
+      }),
+      tap(() => this.finishFolderStats()),
+    );
   }
 
-  private finishFolderStats(folder: IFolder, size: string): void {
-    folder.size = this.transformFolderSize(size);
-    if (this.config.sortBy === 'size') {
+  private finishFolderStats(): void {
+    const needSort =
+      this.config.sortBy === 'size' || this.config.sortBy === 'last-mod';
+    if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
       this.clearFolderSection();
     }
@@ -624,9 +673,17 @@ export class Controller {
   }
 
   private completeSearch(): void {
+    this.setSearchDuration();
     this.finishSearching$.next(true);
-    this.updateStatus(colors.green(INFO_MSGS.SEARCH_COMPLETED));
+    this.updateStatus(
+      colors.green(INFO_MSGS.SEARCH_COMPLETED) +
+        colors.gray(`${this.searchDuration}s`),
+    );
     if (!this.resultsService.results.length) this.showNoResults();
+  }
+
+  private setSearchDuration() {
+    this.searchDuration = +((Date.now() - this.searchStart) / 1000).toFixed(2);
   }
 
   private showNoResults() {
