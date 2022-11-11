@@ -8,13 +8,17 @@ import { HttpsService } from './https.service.js';
 export class UpdateService {
   constructor(private httpsService: HttpsService) {}
 
+  /**
+   * Check if localVersion is greater or equal to remote version
+   * ignoring the pre-release tag. ex: 1.3.12 = 1.3.12-21
+   */
   async isUpdated(localVersion: string): Promise<boolean> {
+    const removePreReaseTag = (value: string) => value.split('-')[0];
+
+    const localVersionPrepared = removePreReaseTag(localVersion);
     const remoteVersion = await this.getRemoteVersion();
-
-    const local = this.splitVersion(localVersion);
-    const remote = this.splitVersion(remoteVersion);
-
-    return this.compareVersions(local, remote);
+    const remoteVersionPrepared = removePreReaseTag(remoteVersion);
+    return this.compareVersions(localVersionPrepared, remoteVersionPrepared);
   }
 
   private compareVersions(local: string, remote: string): boolean {
@@ -29,17 +33,17 @@ export class UpdateService {
     return response[VERSION_KEY];
   }
 
-  private splitVersion(version: string): string {
-    const versionSeparator = '.';
-    const remoteSplited = version.split(versionSeparator);
-    return remoteSplited.join('');
-  }
-
   private isSameVersion(version1: string, version2: string): boolean {
     return version1 === version2;
   }
 
+  /** Valid to compare versions up to 99999.99999.99999 */
   private isLocalVersionGreater(local: string, remote: string): boolean {
-    return local > remote;
+    const leadingZeros = (value: string) => ('00000' + value).substring(-5);
+
+    const localLeaded = +local.split('.').map(leadingZeros).join('');
+    const remoteLeaded = +remote.split('.').map(leadingZeros).join('');
+
+    return localLeaded >= remoteLeaded;
   }
 }
