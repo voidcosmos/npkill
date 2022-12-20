@@ -67,17 +67,15 @@ export class FileWorkerService {
     });
   }
 
-  private getWorkerPath(): string {
-    // import.meta.url return something like file:///home/...
-    // Slice remove the protocol and leave /home/...
-    const actualFilePath = import.meta.url.slice(7);
+  private getWorkerPath(): URL {
+    const actualFilePath = import.meta.url;
     const dirPath = dirname(actualFilePath);
     // Extension = .ts if is not transpiled.
     // Extension = .js if is a build
     const extension = extname(actualFilePath);
     const workerName = 'files.worker';
 
-    return `${dirPath}/${workerName}${extension}`;
+    return new URL(`${dirPath}/${workerName}${extension}`);
   }
 }
 
