@@ -1,23 +1,25 @@
-import { exec, spawn } from 'child_process';
+import { exec } from 'child_process';
 
 import { FileService } from './files.service.js';
-import { IListDirParams } from '../interfaces/index.js';
-import { Observable } from 'rxjs';
-import { StreamService } from './stream.service.js';
+import { IListDirParams } from '../../interfaces/index.js';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { StreamService } from '../stream.service.js';
+import { FileWorkerService } from './files.worker.service.js';
 
 export abstract class UnixFilesService extends FileService {
-  constructor(protected streamService: StreamService) {
+  constructor(
+    protected streamService: StreamService,
+    protected fileWorkerService: FileWorkerService,
+  ) {
     super();
   }
 
   abstract getFolderSize(path: string): Observable<any>;
 
-  listDir(params: IListDirParams): Observable<Buffer> {
-    const args = this.prepareFindArgs(params);
-
-    const child = spawn('find', args);
-
-    return this.streamService.getStream(child);
+  listDir(params: IListDirParams): Observable<string> {
+    const stream$ = new BehaviorSubject(null);
+    this.fileWorkerService.startScan(stream$, params);
+    return stream$;
   }
 
   deleteDir(path: string): Promise<{}> {

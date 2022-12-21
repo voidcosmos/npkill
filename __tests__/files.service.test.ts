@@ -4,22 +4,27 @@ const readFileSyncSpy = jest.fn();
 // const mockFs = jest.mock('fs', () => ({ readFileSync: readFileSyncSpy }));
 import rimraf from 'rimraf';
 import { IFileService } from '../src/interfaces/file-service.interface.js';
-import { WindowsFilesService } from '../src/services/windows-files.service.js';
-import { MacFilesService } from '../src/services/mac-files.service.js';
+import {
+  FileService,
+  LinuxFilesService,
+  MacFilesService,
+  WindowsFilesService,
+} from '../src/services/files/index.js';
 
 import { StreamService } from '../src/services/stream.service.js';
-import { LinuxFilesService } from '../src/services/linux-files.service.js';
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 
 jest.mock('../src/dirname.js', () => {
   return { __esModule: true };
 });
 
+const fileWorkerService: any = jest.fn();
+
 describe('File Service', () => {
-  let fileService;
+  let fileService: FileService;
 
   beforeEach(() => {
-    fileService = new LinuxFilesService(new StreamService());
+    fileService = new LinuxFilesService(new StreamService(), fileWorkerService);
   });
 
   describe('Conversion methods', () => {
