@@ -5,6 +5,7 @@ const constructorInitMock = jest.fn();
 const linuxServiceConstructorMock = jest.fn();
 const mackServiceConstructorMock = jest.fn();
 const windowsServiceConstructorMock = jest.fn();
+const fileWorkerServiceConstructorMock = jest.fn();
 
 jest.mock('../src/controller', () => ({
   Controller: controllerConstructorMock.mockImplementation(() => ({
@@ -21,6 +22,9 @@ jest.unstable_mockModule('../src/services/files/mac-files.service', () => ({
 }));
 jest.unstable_mockModule('../src/services/files/windows-files.service', () => ({
   WindowsFilesService: windowsServiceConstructorMock,
+}));
+jest.unstable_mockModule('../src/services/files/files.worker.service', () => ({
+  FileWorkerService: fileWorkerServiceConstructorMock,
 }));
 //#endregion
 
