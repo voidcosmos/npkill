@@ -1,19 +1,13 @@
 import { IListDirParams } from '../../interfaces/index.js';
-import ansiEscapes from 'ansi-escapes';
 import { Worker } from 'worker_threads';
 import { BehaviorSubject } from 'rxjs';
 import { dirname, extname } from 'path';
-import { memoryUsage } from 'process';
 
 export class FileWorkerService {
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
 
-  constructor() {
-    setInterval(() => {
-      updateStats(-1, memoryUsage().rss);
-    }, 300);
-  }
+  constructor() {}
 
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
     this.scanWorker.postMessage({
@@ -24,10 +18,6 @@ export class FileWorkerService {
     this.scanWorker.on('message', (data) => {
       if (data?.type === 'scan-result') {
         stream$.next(data.value);
-      }
-
-      if (data?.type === 'proc') {
-        updateStats(data.value.procs, data.value.mem.rss);
       }
 
       if (data?.type === 'scan-job-completed') {
@@ -78,20 +68,3 @@ export class FileWorkerService {
     return new URL(`${dirPath}/${workerName}${extension}`);
   }
 }
-
-// This methods is only temporal for debug.
-function updateStats(procs: number, mem: number) {
-  print(ansiEscapes.cursorTo(50, 0));
-  print('Opened dirs: ' + procs + '       ');
-  print(ansiEscapes.cursorTo(50, 1));
-  print(
-    `Work. Mem usage:   ${
-      Math.round((mem / 1024 / 1024) * 100) / 100
-    } MB       `,
-  );
-}
-
-function print(value: string): void {
-  process.stdout.write.bind(process.stdout)(value);
-}
-//////////////////////////////////////////
