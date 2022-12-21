@@ -12,6 +12,7 @@ import {
 
 import { Controller } from './controller.js';
 import { IFileService } from './interfaces/file-service.interface.js';
+import { FileWorkerService } from './services/files/files.worker.service.js';
 
 const getOS = () => process.platform;
 
@@ -21,9 +22,13 @@ const OSService = {
   darwin: MacFilesService,
 };
 
+const fileWorkerService = new FileWorkerService();
 const streamService: StreamService = new StreamService();
 
-const fileService: IFileService = new OSService[getOS()](streamService);
+const fileService: IFileService = new OSService[getOS()](
+  streamService,
+  fileWorkerService,
+);
 
 export const controller = new Controller(
   fileService,

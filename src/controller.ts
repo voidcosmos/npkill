@@ -578,14 +578,9 @@ export class Controller {
     folders$
       .pipe(
         catchError((error, caught) => {
-          if (error.bash) {
-            this.printFolderError(error.message);
-            return caught;
-          }
-          throw error;
+          this.printFolderError(error.message);
+          return caught;
         }),
-        map((buffer) => buffer.toString()),
-        bufferUntil((chunk) => isChunkCompleted(chunk)),
         mergeMap((dataFolder) =>
           from(this.consoleService.splitData(dataFolder)),
         ),
@@ -608,7 +603,7 @@ export class Controller {
             this.clearFolderSection();
           }
         }),
-        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 4),
+        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder)),
       )
       .subscribe(
         () => this.printFoldersSection(),
