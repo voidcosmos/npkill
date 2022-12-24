@@ -767,16 +767,16 @@ export class Controller {
 
   private fitScroll(): void {
     const shouldScrollUp =
-      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll;
+      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll + 1;
     const shouldScrollDown =
-      this.cursorPosY > this.stdout.rows + this.scroll - 1;
+      this.cursorPosY > this.stdout.rows + this.scroll - 2;
     let scrollRequired = 0;
 
     if (shouldScrollUp)
       scrollRequired =
-        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll;
+        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll - 1;
     else if (shouldScrollDown) {
-      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 1;
+      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 2;
     }
 
     if (scrollRequired) this.scrollFolderResults(scrollRequired);
