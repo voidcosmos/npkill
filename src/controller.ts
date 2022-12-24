@@ -603,7 +603,7 @@ export class Controller {
             this.clearFolderSection();
           }
         }),
-        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder)),
+        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 2),
       )
       .subscribe(
         () => this.printFoldersSection(),
