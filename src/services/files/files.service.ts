@@ -9,7 +9,7 @@ import { readFileSync, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
 
 export abstract class FileService implements IFileService {
-  abstract getFolderSize(path: string): Observable<any>;
+  abstract getFolderSize(path: string): Observable<number>;
   abstract listDir(params: IListDirParams): Observable<string>;
   abstract deleteDir(path: string): Promise<{}>;
 

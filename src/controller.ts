@@ -50,7 +50,6 @@ import {
 
 import { FOLDER_SORT } from './constants/sort.result.js';
 import ansiEscapes from 'ansi-escapes';
-import { homedir } from 'os';
 import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
@@ -60,6 +59,7 @@ import { UiService } from './services/ui.service.js';
 import { ResultsUi } from './ui/results.ui.js';
 import { GeneralUi } from './ui/general.ui.js';
 import { HelpUi } from './ui/help.ui.js';
+import { homedir } from 'os';
 
 export class Controller {
   private folderRoot = '';
@@ -146,7 +146,7 @@ export class Controller {
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
-    if (options['full-scan']) this.folderRoot = this.getUserHomePath();
+    if (options['full-scan']) this.folderRoot = homedir();
     if (options['show-errors']) this.config.showErrors = true;
     if (options['gb']) this.config.folderSizeInGB = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
@@ -394,7 +394,7 @@ export class Controller {
 
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
-      tap((size) => (nodeFolder.size = this.transformFolderSize(size))),
+      tap((size) => (nodeFolder.size = this.fileService.convertKbToGB(+size))),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
@@ -420,10 +420,6 @@ export class Controller {
     }
     this.printStats();
     this.printFoldersSection();
-  }
-
-  private transformFolderSize(size: string): number {
-    return this.fileService.convertKbToGB(+size);
   }
 
   private completeSearch(): void {
@@ -542,9 +538,5 @@ export class Controller {
   private clearErrors(): void {
     const lineOfErrors = this.stdout.rows;
     this.uiService.clearLine(lineOfErrors);
-  }
-
-  private getUserHomePath(): string {
-    return homedir();
   }
 }
