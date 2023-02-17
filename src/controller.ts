@@ -1,21 +1,11 @@
 import {
-  BANNER,
-  DECIMALS_SIZE,
   DEFAULT_CONFIG,
-  DEFAULT_SIZE,
   MARGINS,
   MIN_CLI_COLUMNS_SIZE,
-  OVERFLOW_CUT_FROM,
-  UI_HELP,
   UI_POSITIONS,
   VALID_KEYS,
 } from './constants/index.js';
-import {
-  COLORS,
-  HELP_HEADER,
-  HELP_FOOTER,
-  OPTIONS,
-} from './constants/cli.constants.js';
+import { COLORS } from './constants/cli.constants.js';
 import {
   ConsoleService,
   FileService,
@@ -23,33 +13,25 @@ import {
   SpinnerService,
   UpdateService,
 } from './services/index.js';
-import {
-  ERROR_MSG,
-  HELP_MSGS,
-  INFO_MSGS,
-} from './constants/messages.constants.js';
+import { ERROR_MSG, INFO_MSGS } from './constants/messages.constants.js';
 import {
   IConfig,
   IFolder,
   IKeyPress,
   IKeysCommand,
   IListDirParams,
-  IPosition,
 } from './interfaces/index.js';
-import { Observable, Subject, from, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants.js';
+import { Observable, from } from 'rxjs';
 import {
   catchError,
   filter,
   map,
   mergeMap,
   switchMap,
-  takeUntil,
   tap,
 } from 'rxjs/operators';
 
 import { FOLDER_SORT } from './constants/sort.result.js';
-import ansiEscapes from 'ansi-escapes';
 import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
@@ -60,6 +42,8 @@ import { ResultsUi } from './ui/results.ui.js';
 import { GeneralUi } from './ui/general.ui.js';
 import { HelpUi } from './ui/help.ui.js';
 import { homedir } from 'os';
+import { StatsUi } from './ui/stats.ui.js';
+import { StatusUi } from './ui/status.ui.js';
 
 export class Controller {
   private folderRoot = '';
@@ -68,9 +52,10 @@ export class Controller {
 
   private searchStart: number;
   private searchDuration: number;
-  private finishSearching$: Subject<boolean> = new Subject<boolean>();
 
   private uiGeneral: GeneralUi;
+  private uiStats: StatsUi;
+  private uiStatus: StatusUi;
   private uiResults: ResultsUi;
 
   private KEYS: IKeysCommand;
@@ -86,26 +71,30 @@ export class Controller {
 
   init(): void {
     const banner = new BannerUi();
+    this.uiService.add(banner);
     this.uiResults = new ResultsUi(
       this.resultsService,
       this.consoleService,
       this.fileService,
     );
-
+    this.uiService.add(this.uiResults);
+    this.uiStats = new StatsUi(this.resultsService);
+    this.uiService.add(this.uiStats);
+    this.uiStatus = new StatusUi(this.spinnerService);
+    this.uiService.add(this.uiStatus);
     this.uiGeneral = new GeneralUi();
+    this.uiService.add(this.uiGeneral);
+
     if (this.consoleService.isRunningBuild()) {
       banner.programVersion = this.getVersion();
     }
-    this.uiService.add(banner);
-    this.uiService.add(this.uiResults);
-    this.uiService.add(this.uiGeneral);
 
     keypress(process.stdin);
     this.setErrorEvents();
     this.getArguments();
     this.prepareScreen();
     this.setupEventsListener();
-    this.initializeLoadingStatus();
+    this.uiStatus.start();
     if (this.config.checkUpdates) this.checkVersion();
 
     this.setupKeysCommand();
@@ -222,7 +211,7 @@ export class Controller {
     this.uiService.prepareUi();
     this.uiService.setCursorVisible(false);
     this.uiService.clear();
-    this.printUI();
+    this.uiService.renderAll();
   }
 
   private checkScreenRequirements(): void {
@@ -258,36 +247,11 @@ export class Controller {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
-  private printUI(): void {
-    this.uiService.renderAll();
-  }
-
-  private initializeLoadingStatus(): void {
-    this.spinnerService.setSpinner(SPINNERS.W10);
-    interval(SPINNER_INTERVAL)
-      .pipe(takeUntil(this.finishSearching$))
-      .subscribe(
-        () =>
-          this.updateStatus(
-            INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
-          ),
-        (error) => this.printError(error),
-      );
-  }
-
-  private updateStatus(text: string): void {
-    this.uiService.printAt(text, UI_POSITIONS.STATUS);
-  }
-
   private printFoldersSection(): void {
     this.uiResults.render();
   }
 
   private printNoResults(): void {}
-
-  private clearFolderSection(): void {
-    this.uiResults.clear();
-  }
 
   private setupEventsListener(): void {
     this.uiService.stdin.on('keypress', (ch, key) => {
@@ -296,9 +260,8 @@ export class Controller {
 
     this.stdout.on('resize', () => {
       this.uiService.clear();
-      this.printUI();
-      this.printStats();
-      this.printFoldersSection();
+      this.uiService.renderAll();
+      this.uiService.renderAll();
     });
   }
 
@@ -359,7 +322,7 @@ export class Controller {
 
           if (this.config.sortBy === 'path') {
             this.resultsService.sortResults(this.config.sortBy);
-            this.clearFolderSection();
+            this.uiResults.clear();
           }
         }),
         mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 2),
@@ -416,19 +379,15 @@ export class Controller {
       this.config.sortBy === 'size' || this.config.sortBy === 'last-mod';
     if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
-      this.clearFolderSection();
+      this.uiResults.clear();
     }
-    this.printStats();
+    this.uiStats.render();
     this.printFoldersSection();
   }
 
   private completeSearch(): void {
     this.setSearchDuration();
-    this.finishSearching$.next(true);
-    this.updateStatus(
-      colors.green(INFO_MSGS.SEARCH_COMPLETED) +
-        colors.gray(`${this.searchDuration}s`),
-    );
+    this.uiStatus.completeSearch(this.searchDuration);
     if (!this.resultsService.results.length) this.showNoResults();
   }
 
@@ -488,7 +447,7 @@ export class Controller {
       .deleteDir(folder.path)
       .then(() => {
         folder.status = 'deleted';
-        this.printStats();
+        this.uiStats.render();
         this.printFoldersSection();
       })
       .catch((e) => {
@@ -521,19 +480,6 @@ export class Controller {
   //   const width = this.stdout.columns - margin - 3;
   //   return this.consoleService.shortenText(errMessage, width, width);
   // }
-
-  private printStats(): void {
-    const { totalSpace, spaceReleased } = this.resultsService.getStats();
-
-    const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
-    const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
-
-    totalSpacePosition.x += INFO_MSGS.TOTAL_SPACE.length;
-    spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
-
-    this.uiService.printAt(totalSpace, totalSpacePosition);
-    this.uiService.printAt(spaceReleased, spaceReleasedPosition);
-  }
 
   private clearErrors(): void {
     const lineOfErrors = this.stdout.rows;
