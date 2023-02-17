@@ -8,7 +8,7 @@ import {
 import { Ui } from '../ui.js';
 import colors from 'colors';
 
-export class BannerUi extends Ui {
+export class HeaderUi extends Ui {
   public programVersion: string;
 
   constructor() {

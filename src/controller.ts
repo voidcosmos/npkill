@@ -37,7 +37,7 @@ import keypress from 'keypress';
 import __dirname from './dirname.js';
 import path from 'path';
 import { homedir } from 'os';
-import { BannerUi } from './ui/header/header.ui.js';
+import { HeaderUi } from './ui/header/header.ui.js';
 import { UiService } from './services/ui.service.js';
 import { ResultsUi } from './ui/results.ui.js';
 import { GeneralUi } from './ui/general.ui.js';
@@ -70,8 +70,8 @@ export class Controller {
   ) {}
 
   init(): void {
-    const banner = new BannerUi();
-    this.uiService.add(banner);
+    const uiHeader = new HeaderUi();
+    this.uiService.add(uiHeader);
     this.uiResults = new ResultsUi(
       this.resultsService,
       this.consoleService,
@@ -86,7 +86,7 @@ export class Controller {
     this.uiService.add(this.uiGeneral);
 
     if (this.consoleService.isRunningBuild()) {
-      banner.programVersion = this.getVersion();
+      uiHeader.programVersion = this.getVersion();
     }
 
     keypress(process.stdin);
@@ -117,8 +117,7 @@ export class Controller {
     }
     if (options['sort-by']) {
       if (!this.isValidSortParam(options['sort-by'])) {
-        this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
-        process.exit();
+        this.invalidSortParam();
       }
       this.config.sortBy = options['sort-by'];
     }
@@ -170,6 +169,11 @@ export class Controller {
         return this[command](params);
       },
     };
+  }
+
+  private invalidSortParam(): void {
+    this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
+    process.exit();
   }
 
   private showHelp(): void {

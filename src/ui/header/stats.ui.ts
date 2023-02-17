@@ -1,6 +1,6 @@
 import { UI_POSITIONS, INFO_MSGS } from '../../constants/index.js';
 import { Ui } from '../ui.js';
-import { ResultsService } from 'src/services/results.service.js';
+import { ResultsService } from '../../services/results.service.js';
 
 export class StatsUi extends Ui {
   constructor(private resultsService: ResultsService) {
