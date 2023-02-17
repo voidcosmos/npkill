@@ -128,7 +128,7 @@ export class Controller {
     }
     if (options['sort-by']) {
       if (!this.isValidSortParam(options['sort-by'])) {
-        new GeneralUi().print(INFO_MSGS.NO_VALID_SORT_NAME);
+        this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
         process.exit();
       }
       this.config.sortBy = options['sort-by'];
@@ -162,20 +162,20 @@ export class Controller {
 
   private setupKeysCommand() {
     this.KEYS = {
-      up: this.uiResults.moveCursorUp.bind(this),
+      up: () => this.uiResults.moveCursorUp(),
       // tslint:disable-next-line: object-literal-sort-keys
-      down: this.uiResults.moveCursorDown.bind(this),
-      space: this.delete.bind(this),
-      j: this.uiResults.moveCursorDown.bind(this),
-      k: this.uiResults.moveCursorUp.bind(this),
-      h: this.uiResults.moveCursorPageDown.bind(this),
-      l: this.uiResults.moveCursorPageUp.bind(this),
-      d: this.uiResults.moveCursorPageDown.bind(this),
-      u: this.uiResults.moveCursorPageUp.bind(this),
-      pageup: this.uiResults.moveCursorPageUp.bind(this),
-      pagedown: this.uiResults.moveCursorPageDown.bind(this),
-      home: this.uiResults.moveCursorFirstResult.bind(this),
-      end: this.uiResults.moveCursorLastResult.bind(this),
+      down: () => this.uiResults.moveCursorDown(),
+      space: () => this.delete(),
+      j: () => this.uiResults.moveCursorDown(),
+      k: () => this.uiResults.moveCursorUp(),
+      h: () => this.uiResults.moveCursorPageDown(),
+      l: () => this.uiResults.moveCursorPageUp(),
+      d: () => this.uiResults.moveCursorPageDown(),
+      u: () => this.uiResults.moveCursorPageUp(),
+      pageup: () => this.uiResults.moveCursorPageUp(),
+      pagedown: () => this.uiResults.moveCursorPageDown(),
+      home: () => this.uiResults.moveCursorFirstResult(),
+      end: () => this.uiResults.moveCursorLastResult(),
 
       execute(command: string, params: string[]) {
         return this[command](params);
@@ -188,11 +188,11 @@ export class Controller {
   }
 
   private showProgramVersion(): void {
-    new GeneralUi().print('v' + this.getVersion());
+    this.uiService.print('v' + this.getVersion());
   }
 
   private showObsoleteMessage(): void {
-    new GeneralUi().print(INFO_MSGS.DISABLED);
+    this.uiService.print(INFO_MSGS.DISABLED);
   }
 
   private setColor(color: string) {
@@ -220,17 +220,18 @@ export class Controller {
     this.checkScreenRequirements();
     this.uiService.setRawMode();
     this.uiService.prepareUi();
-    this.printUI();
     this.uiService.setCursorVisible(false);
+    this.uiService.clear();
+    this.printUI();
   }
 
   private checkScreenRequirements(): void {
     if (this.isTerminalTooSmall()) {
-      new GeneralUi().print(INFO_MSGS.MIN_CLI_CLOMUNS);
+      this.uiService.print(INFO_MSGS.MIN_CLI_CLOMUNS);
       process.exit();
     }
     if (!this.stdout.isTTY) {
-      new GeneralUi().print(INFO_MSGS.NO_TTY);
+      this.uiService.print(INFO_MSGS.NO_TTY);
       process.exit();
     }
   }
@@ -502,12 +503,14 @@ export class Controller {
   }
 
   private printError(error: string): void {
+    return;
     const errorText = (() => {
       const margin = MARGINS.FOLDER_COLUMN_START;
       const width = this.stdout.columns - margin - 3;
       return this.consoleService.shortenText(error, width, width);
     })();
 
+    console.log(error);
     throw new Error('TODO implement');
 
     // TODO create ErrorUi component

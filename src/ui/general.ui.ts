@@ -14,8 +14,4 @@ export class GeneralUi extends Ui {
     const exitMessage = `Space released: ${spaceReleased}\n`;
     this.print(exitMessage);
   }
-
-  print(text: string) {
-    this.print(text);
-  }
 }
