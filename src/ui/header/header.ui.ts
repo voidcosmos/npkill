@@ -4,8 +4,8 @@ import {
   HELP_MSGS,
   INFO_MSGS,
   DEFAULT_SIZE,
-} from '../constants/index.js';
-import { Ui } from './ui.js';
+} from '../../constants/index.js';
+import { Ui } from '../ui.js';
 import colors from 'colors';
 
 export class BannerUi extends Ui {

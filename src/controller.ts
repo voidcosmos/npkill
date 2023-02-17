@@ -36,14 +36,14 @@ import colors from 'colors';
 import keypress from 'keypress';
 import __dirname from './dirname.js';
 import path from 'path';
-import { BannerUi } from './ui/header.ui.js';
+import { homedir } from 'os';
+import { BannerUi } from './ui/header/header.ui.js';
 import { UiService } from './services/ui.service.js';
 import { ResultsUi } from './ui/results.ui.js';
 import { GeneralUi } from './ui/general.ui.js';
 import { HelpUi } from './ui/help.ui.js';
-import { homedir } from 'os';
-import { StatsUi } from './ui/stats.ui.js';
-import { StatusUi } from './ui/status.ui.js';
+import { StatsUi } from './ui/header/stats.ui.js';
+import { StatusUi } from './ui/header/status.ui.js';
 
 export class Controller {
   private folderRoot = '';
@@ -458,28 +458,24 @@ export class Controller {
   }
 
   private printError(error: string): void {
-    return;
     const errorText = (() => {
       const margin = MARGINS.FOLDER_COLUMN_START;
       const width = this.stdout.columns - margin - 3;
       return this.consoleService.shortenText(error, width, width);
     })();
 
-    console.log(error);
-    throw new Error('TODO implement');
-
     // TODO create ErrorUi component
-    // this.uiService.printAt(colors.red(errorText), {
-    //   x: 0,
-    //   y: this.stdout.rows,
-    // });
+    this.uiService.printAt(colors.red(errorText), {
+      x: 0,
+      y: this.stdout.rows,
+    });
   }
-  //
-  // private prepareErrorMsg(errMessage: string): string {
-  //   const margin = MARGINS.FOLDER_COLUMN_START;
-  //   const width = this.stdout.columns - margin - 3;
-  //   return this.consoleService.shortenText(errMessage, width, width);
-  // }
+
+  private prepareErrorMsg(errMessage: string): string {
+    const margin = MARGINS.FOLDER_COLUMN_START;
+    const width = this.stdout.columns - margin - 3;
+    return this.consoleService.shortenText(errMessage, width, width);
+  }
 
   private clearErrors(): void {
     const lineOfErrors = this.stdout.rows;

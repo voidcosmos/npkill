@@ -1,10 +1,13 @@
-import { Ui } from './ui.js';
+import { Ui } from '../ui.js';
 import colors from 'colors';
-import { SpinnerService } from '../services/spinner.service.js';
+import { SpinnerService } from '../../services/spinner.service.js';
 import { interval, Subject, takeUntil } from 'rxjs';
-import { INFO_MSGS } from '../constants/messages.constants.js';
-import { SPINNERS, SPINNER_INTERVAL } from '../constants/spinner.constants.js';
-import { UI_POSITIONS } from '../constants/main.constants.js';
+import { INFO_MSGS } from '../../constants/messages.constants.js';
+import {
+  SPINNERS,
+  SPINNER_INTERVAL,
+} from '../../constants/spinner.constants.js';
+import { UI_POSITIONS } from '../../constants/main.constants.js';
 
 export class StatusUi extends Ui {
   private text = '';
