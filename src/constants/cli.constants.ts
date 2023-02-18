@@ -20,9 +20,9 @@ export const OPTIONS: ICliOptions[] = [
     name: 'delete-all',
   },
   {
-    arg: ['-e', '--show-errors'],
-    description: 'Show error messages if any.',
-    name: 'show-errors',
+    arg: ['-e', '--hide-errors'],
+    description: 'Hide errors if any.',
+    name: 'hide-errors',
   },
   {
     arg: ['-E', '--exclude'],

@@ -21,7 +21,7 @@ import {
   IKeysCommand,
   IListDirParams,
 } from './interfaces/index.js';
-import { Observable, from } from 'rxjs';
+import { Observable, from, throwError } from 'rxjs';
 import {
   catchError,
   filter,
@@ -44,6 +44,8 @@ import { GeneralUi } from './ui/general.ui.js';
 import { HelpUi } from './ui/help.ui.js';
 import { StatsUi } from './ui/header/stats.ui.js';
 import { StatusUi } from './ui/header/status.ui.js';
+import { LoggerService } from './services/logger.service.js';
+import { LogsUi } from './ui/logs.ui.js';
 
 export class Controller {
   private folderRoot = '';
@@ -57,10 +59,12 @@ export class Controller {
   private uiStats: StatsUi;
   private uiStatus: StatusUi;
   private uiResults: ResultsUi;
+  private uiLogs: LogsUi;
 
   private KEYS: IKeysCommand;
 
   constructor(
+    private logger: LoggerService,
     private fileService: FileService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
@@ -70,6 +74,7 @@ export class Controller {
   ) {}
 
   init(): void {
+    this.logger.info('Npkill started!');
     const uiHeader = new HeaderUi();
     this.uiService.add(uiHeader);
     this.uiResults = new ResultsUi(
@@ -78,12 +83,14 @@ export class Controller {
       this.fileService,
     );
     this.uiService.add(this.uiResults);
-    this.uiStats = new StatsUi(this.resultsService);
+    this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
     this.uiService.add(this.uiStats);
     this.uiStatus = new StatusUi(this.spinnerService);
     this.uiService.add(this.uiStatus);
     this.uiGeneral = new GeneralUi();
     this.uiService.add(this.uiGeneral);
+    this.uiLogs = new LogsUi(this.logger);
+    this.uiService.add(this.uiLogs);
 
     if (this.consoleService.isRunningBuild()) {
       uiHeader.programVersion = this.getVersion();
@@ -135,7 +142,7 @@ export class Controller {
       ? options['directory']
       : process.cwd();
     if (options['full-scan']) this.folderRoot = homedir();
-    if (options['show-errors']) this.config.showErrors = true;
+    if (options['hide-errors']) this.config.showErrors = false;
     if (options['gb']) this.config.folderSizeInGB = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
     if (options['target-folder'])
@@ -164,11 +171,16 @@ export class Controller {
       pagedown: () => this.uiResults.moveCursorPageDown(),
       home: () => this.uiResults.moveCursorFirstResult(),
       end: () => this.uiResults.moveCursorLastResult(),
+      e: () => this.toggleErrorsPopup(),
 
       execute(command: string, params: string[]) {
         return this[command](params);
       },
     };
+  }
+
+  private toggleErrorsPopup() {
+    this.uiLogs.setVisible(!this.uiLogs.visible);
   }
 
   private invalidSortParam(): void {
@@ -238,7 +250,7 @@ export class Controller {
       .catch((err) => {
         const errorMessage =
           ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
-        this.printError(errorMessage);
+        this.newError(errorMessage);
       });
   }
 
@@ -277,15 +289,15 @@ export class Controller {
     const command = this.getCommand(name);
     if (command) this.KEYS.execute(name);
 
-    if (name !== 'space') this.printFoldersSection();
+    if (name !== 'space') this.uiService.renderAll();
   }
 
   private setErrorEvents(): void {
     process.on('uncaughtException', (err) => {
-      this.printError(err.message);
+      this.newError(err.message);
     });
     process.on('unhandledRejection', (reason: {}) => {
-      this.printError(reason['stack']);
+      this.newError(reason['stack']);
     });
   }
 
@@ -301,10 +313,11 @@ export class Controller {
     this.searchStart = Date.now();
     const folders$ = this.fileService.listDir(params);
 
+    this.logger.info(`Scan started in ${params.path}`);
     folders$
       .pipe(
         catchError((error, caught) => {
-          this.printFolderError(error.message);
+          this.newError(error.message);
           return caught;
         }),
         mergeMap((dataFolder) =>
@@ -323,6 +336,7 @@ export class Controller {
         }),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
+          this.logger.info(`Folder found: ${nodeFolder.path}`);
 
           if (this.config.sortBy === 'path') {
             this.resultsService.sortResults(this.config.sortBy);
@@ -333,7 +347,7 @@ export class Controller {
       )
       .subscribe(
         () => this.printFoldersSection(),
-        (error) => this.printError(error),
+        (error) => this.newError(error),
         () => this.completeSearch(),
       );
   }
@@ -350,13 +364,6 @@ export class Controller {
     }
 
     return params;
-  }
-
-  private printFolderError(err: string) {
-    if (!this.config.showErrors) return;
-
-    const messages = this.consoleService.splitData(err);
-    messages.map((msg) => this.printError(msg));
   }
 
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
@@ -430,7 +437,6 @@ export class Controller {
       this.resultsService.results[
         this.uiResults.cursorPosY - MARGINS.ROW_RESULTS_START
       ];
-    this.clearErrors();
     this.deleteFolder(nodeFolder);
   }
 
@@ -440,7 +446,7 @@ export class Controller {
       this.config.targetFolder,
     );
     if (!isSafeToDelete) {
-      this.printError('Folder not safe to delete');
+      this.newError('Folder not safe to delete');
       return;
     }
 
@@ -457,32 +463,12 @@ export class Controller {
       .catch((e) => {
         folder.status = 'error-deleting';
         this.printFoldersSection();
-        this.printError(e.message);
+        this.newError(e.message);
       });
   }
 
-  private printError(error: string): void {
-    const errorText = (() => {
-      const margin = MARGINS.FOLDER_COLUMN_START;
-      const width = this.stdout.columns - margin - 3;
-      return this.consoleService.shortenText(error, width, width);
-    })();
-
-    // TODO create ErrorUi component
-    this.uiService.printAt(colors.red(errorText), {
-      x: 0,
-      y: this.stdout.rows,
-    });
-  }
-
-  private prepareErrorMsg(errMessage: string): string {
-    const margin = MARGINS.FOLDER_COLUMN_START;
-    const width = this.stdout.columns - margin - 3;
-    return this.consoleService.shortenText(errMessage, width, width);
-  }
-
-  private clearErrors(): void {
-    const lineOfErrors = this.stdout.rows;
-    this.uiService.clearLine(lineOfErrors);
+  private newError(error: string): void {
+    this.logger.error(error);
+    this.uiStats.render();
   }
 }

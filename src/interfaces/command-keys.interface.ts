@@ -12,5 +12,6 @@ export interface IKeysCommand {
   pagedown: () => void;
   home: () => void;
   end: () => void;
+  e: () => void;
   execute: (command: string, params?: string[]) => number;
 }
