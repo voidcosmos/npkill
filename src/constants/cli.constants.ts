@@ -77,12 +77,13 @@ export const OPTIONS: ICliOptions[] = [
 
 export const HELP_HEADER = `This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.
  ┌------ CONTROLS --------------------
- | SPACE:          delete selected result
- | Cursor UP, k:   move up
- | Cursor DOWN, j: move down
- | h, d, Ctrl+d, PgUp:     move one page down
- | l, u, Ctrl+u, PgDown:   move one page up
- | home, end:      move to the first and last result`;
+ | SPACE:                 delete selected result
+ | Cursor UP, k:          move up
+ | Cursor DOWN, j:        move down
+ | h, d, Ctrl+d, PgUp:    move one page down
+ | l, u, Ctrl+u, PgDown:  move one page up
+ | home, end:             move to the first and last result
+ | e:                     show errors popup`;
 
 export const HELP_FOOTER =
   'Not all node_modules are bad! Some applications (like vscode, Discord, etc) need those dependencies to work. If their directory is deleted, the application will probably break (until the dependencies are reinstalled). NPKILL will show you these directories by highlighting them ⚠️';
