@@ -1,21 +1,52 @@
 import { LoggerService } from 'src/services/logger.service.js';
-import { Position, Ui } from './ui.js';
+import { InteractiveUi, Ui } from './ui.js';
 import colors from 'colors';
 import { IPosition } from 'src/interfaces/ui-positions.interface.js';
+import { Subject } from 'rxjs';
+import { IKeyPress } from 'src/interfaces/key-press.interface.js';
 
-export class LogsUi extends Ui {
+export class LogsUi extends Ui implements InteractiveUi {
   private size: IPosition;
   private errors = 0;
-  private pages;
+  private pages = [];
   private actualPage = 0;
+
+  public readonly close$ = new Subject<null>();
+
+  private KEYS = {
+    e: () => this.cyclePages(),
+    escape: () => this.close(),
+  };
 
   constructor(private logger: LoggerService) {
     super();
     this.setVisible(false, false);
   }
+  onKeyInput({ name }: IKeyPress): void {
+    const action = this.KEYS[name];
+    if (!action) {
+      return;
+    }
+    action();
+  }
 
   render() {
     this.renderPopup();
+  }
+
+  private cyclePages() {
+    this.actualPage++;
+    if (this.actualPage >= this.pages.length) {
+      this.actualPage = 0;
+      this.close();
+      return;
+    }
+
+    this.render();
+  }
+
+  private close() {
+    this.close$.next(null);
   }
 
   private renderPopup() {

@@ -46,22 +46,22 @@ export const UI_POSITIONS: IUiPosition = {
   TUTORIAL_TIP: { x: 4, y: 7 },
 };
 
-export const VALID_KEYS: string[] = [
-  'up', // Move up
-  'down', // Move down
-  'space', // Delete
-  'j', // Move down
-  'k', // Move up
-  'h', // Move page down
-  'l', // Move page up
-  'u', // Move page up
-  'd', // Move page down
-  'pageup',
-  'pagedown',
-  'home', // Move to the first result
-  'end', // Move to the last result
-  'e', // Show errors
-];
+// export const VALID_KEYS: string[] = [
+//   'up', // Move up
+//   'down', // Move down
+//   'space', // Delete
+//   'j', // Move down
+//   'k', // Move up
+//   'h', // Move page down
+//   'l', // Move page up
+//   'u', // Move page up
+//   'd', // Move page down
+//   'pageup',
+//   'pagedown',
+//   'home', // Move to the first result
+//   'end', // Move to the last result
+//   'e', // Show errors
+// ];
 
 export const BANNER = `-----                    __   .__.__  .__
 -           ____ ______ |  | _|__|  | |  |

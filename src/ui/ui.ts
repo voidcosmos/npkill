@@ -1,8 +1,13 @@
 import ansiEscapes from 'ansi-escapes';
+import { IKeyPress } from 'src/interfaces';
 
 export interface Position {
   x: number;
   y: number;
+}
+
+export interface InteractiveUi {
+  onKeyInput(key: IKeyPress): void;
 }
 
 export abstract class Ui {

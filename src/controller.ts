@@ -1,9 +1,7 @@
 import {
   DEFAULT_CONFIG,
-  MARGINS,
   MIN_CLI_COLUMNS_SIZE,
   UI_POSITIONS,
-  VALID_KEYS,
 } from './constants/index.js';
 import { COLORS } from './constants/cli.constants.js';
 import {
@@ -18,10 +16,9 @@ import {
   IConfig,
   IFolder,
   IKeyPress,
-  IKeysCommand,
   IListDirParams,
 } from './interfaces/index.js';
-import { Observable, from, throwError } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import {
   catchError,
   filter,
@@ -46,6 +43,7 @@ import { StatsUi } from './ui/header/stats.ui.js';
 import { StatusUi } from './ui/header/status.ui.js';
 import { LoggerService } from './services/logger.service.js';
 import { LogsUi } from './ui/logs.ui.js';
+import { InteractiveUi } from './ui/ui.js';
 
 export class Controller {
   private folderRoot = '';
@@ -60,8 +58,7 @@ export class Controller {
   private uiStatus: StatusUi;
   private uiResults: ResultsUi;
   private uiLogs: LogsUi;
-
-  private KEYS: IKeysCommand;
+  private activeComponent: InteractiveUi;
 
   constructor(
     private logger: LoggerService,
@@ -91,6 +88,10 @@ export class Controller {
     this.uiService.add(this.uiGeneral);
     this.uiLogs = new LogsUi(this.logger);
     this.uiService.add(this.uiLogs);
+    this.activeComponent = this.uiResults;
+    this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
+    this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
+    this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
 
     if (this.consoleService.isRunningBuild()) {
       uiHeader.programVersion = this.getVersion();
@@ -155,32 +156,14 @@ export class Controller {
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
   }
 
-  private setupKeysCommand() {
-    this.KEYS = {
-      up: () => this.uiResults.moveCursorUp(),
-      // tslint:disable-next-line: object-literal-sort-keys
-      down: () => this.uiResults.moveCursorDown(),
-      space: () => this.delete(),
-      j: () => this.uiResults.moveCursorDown(),
-      k: () => this.uiResults.moveCursorUp(),
-      h: () => this.uiResults.moveCursorPageDown(),
-      l: () => this.uiResults.moveCursorPageUp(),
-      d: () => this.uiResults.moveCursorPageDown(),
-      u: () => this.uiResults.moveCursorPageUp(),
-      pageup: () => this.uiResults.moveCursorPageUp(),
-      pagedown: () => this.uiResults.moveCursorPageDown(),
-      home: () => this.uiResults.moveCursorFirstResult(),
-      end: () => this.uiResults.moveCursorLastResult(),
-      e: () => this.toggleErrorsPopup(),
+  private setupKeysCommand() {}
 
-      execute(command: string, params: string[]) {
-        return this[command](params);
-      },
-    };
-  }
-
-  private toggleErrorsPopup() {
-    this.uiLogs.setVisible(!this.uiLogs.visible);
+  private showErrorPopup(visible: boolean) {
+    this.uiLogs.setVisible(visible);
+    // Need convert to pattern and have a stack for recover latest
+    // component.
+    this.activeComponent = visible ? this.uiLogs : this.uiResults;
+    this.uiService.renderAll();
   }
 
   private invalidSortParam(): void {
@@ -286,10 +269,12 @@ export class Controller {
 
     if (this.isQuitKey(ctrl, name)) this.quit();
 
-    const command = this.getCommand(name);
-    if (command) this.KEYS.execute(name);
+    if (!this.activeComponent) {
+      this.logger.error('activeComponent is NULL in Controller.');
+      return;
+    }
 
-    if (name !== 'space') this.uiService.renderAll();
+    this.activeComponent.onKeyInput(key);
   }
 
   private setErrorEvents(): void {
@@ -428,25 +413,14 @@ export class Controller {
     new GeneralUi().printExitMessage({ spaceReleased });
   }
 
-  private getCommand(keyName: string): string {
-    return VALID_KEYS.find((name) => name === keyName);
-  }
-
-  private delete(): void {
-    const nodeFolder =
-      this.resultsService.results[
-        this.uiResults.cursorPosY - MARGINS.ROW_RESULTS_START
-      ];
-    this.deleteFolder(nodeFolder);
-  }
-
   private deleteFolder(folder: IFolder): void {
     const isSafeToDelete = this.fileService.isSafeToDelete(
       folder.path,
       this.config.targetFolder,
     );
+
     if (!isSafeToDelete) {
-      this.newError('Folder not safe to delete');
+      this.newError(`Folder not safe to delete: ${folder.path}`);
       return;
     }
 
