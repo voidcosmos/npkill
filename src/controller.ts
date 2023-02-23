@@ -53,6 +53,7 @@ export class Controller {
   private searchStart: number;
   private searchDuration: number;
 
+  private uiHeader: HeaderUi;
   private uiGeneral: GeneralUi;
   private uiStats: StatsUi;
   private uiStatus: StatusUi;
@@ -72,8 +73,26 @@ export class Controller {
 
   init(): void {
     this.logger.info('Npkill started!');
-    const uiHeader = new HeaderUi();
-    this.uiService.add(uiHeader);
+    this.initUi();
+    if (this.consoleService.isRunningBuild()) {
+      this.uiHeader.programVersion = this.getVersion();
+    }
+
+    keypress(process.stdin);
+    this.setErrorEvents();
+    this.getArguments();
+    this.prepareScreen();
+    this.setupEventsListener();
+    this.uiStatus.start();
+    if (this.config.checkUpdates) this.checkVersion();
+
+    this.setupKeysCommand();
+    this.scan();
+  }
+
+  private initUi() {
+    this.uiHeader = new HeaderUi();
+    this.uiService.add(this.uiHeader);
     this.uiResults = new ResultsUi(
       this.resultsService,
       this.consoleService,
@@ -88,25 +107,14 @@ export class Controller {
     this.uiService.add(this.uiGeneral);
     this.uiLogs = new LogsUi(this.logger);
     this.uiService.add(this.uiLogs);
-    this.activeComponent = this.uiResults;
+
+    // Set Events
     this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
     this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
     this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
 
-    if (this.consoleService.isRunningBuild()) {
-      uiHeader.programVersion = this.getVersion();
-    }
-
-    keypress(process.stdin);
-    this.setErrorEvents();
-    this.getArguments();
-    this.prepareScreen();
-    this.setupEventsListener();
-    this.uiStatus.start();
-    if (this.config.checkUpdates) this.checkVersion();
-
-    this.setupKeysCommand();
-    this.scan();
+    // Activate the main interactive component
+    this.activeComponent = this.uiResults;
   }
 
   private getArguments(): void {
