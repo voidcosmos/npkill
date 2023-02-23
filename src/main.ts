@@ -13,6 +13,7 @@ import {
 import { Controller } from './controller.js';
 import { IFileService } from './interfaces/file-service.interface.js';
 import { FileWorkerService } from './services/files/files.worker.service.js';
+import { UiService } from './services/ui.service.js';
 
 const getOS = () => process.platform;
 
@@ -36,6 +37,7 @@ export const controller = new Controller(
   new ConsoleService(),
   new UpdateService(new HttpsService()),
   new ResultsService(),
+  new UiService(),
 );
 
 export default () => controller.init();
