@@ -1,7 +1,7 @@
 import { UI_POSITIONS, INFO_MSGS } from '../../constants/index.js';
 import { Ui } from '../ui.js';
 import { ResultsService } from '../../services/results.service.js';
-import { LoggerService } from 'src/services/logger.service.js';
+import { LoggerService } from '../../services/logger.service.js';
 import colors from 'colors';
 import { IConfig } from 'src/interfaces/config.interface.js';
 
