@@ -412,7 +412,7 @@ export class Controller {
   }
 
   private isQuitKey(ctrl, name): boolean {
-    return (ctrl && name === 'c') || name === 'q' || name === 'escape';
+    return (ctrl && name === 'c') || name === 'q';
   }
 
   private quit(): void {
