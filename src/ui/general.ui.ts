@@ -1,6 +1,7 @@
 // This class in only a intermediate for the refactor.
 
 import { Ui } from './ui.js';
+import colors from 'colors';
 
 export class GeneralUi extends Ui {
   constructor() {
@@ -11,7 +12,8 @@ export class GeneralUi extends Ui {
 
   printExitMessage(stats: { spaceReleased: string }): void {
     const { spaceReleased } = stats;
-    const exitMessage = `Space released: ${spaceReleased}\n`;
+    let exitMessage = `Space released: ${spaceReleased}\n`;
+    exitMessage += colors['gray']('Thanks for using npkill!\n');
     this.print(exitMessage);
   }
 }

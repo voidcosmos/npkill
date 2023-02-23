@@ -421,10 +421,11 @@ export class Controller {
   private quit(): void {
     this.uiService.setRawMode(false);
     this.uiService.clear();
-    this.printExitMessage();
     this.uiService.setCursorVisible(true);
+    this.printExitMessage();
     this.logger.info('Thank for using npkill. Bye!');
-    this.logger.saveToFile(this.logger.getSuggestLogfilePath());
+    const logPath = this.logger.getSuggestLogfilePath();
+    this.logger.saveToFile(logPath);
     process.exit();
   }
 
