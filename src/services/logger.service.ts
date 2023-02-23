@@ -1,3 +1,6 @@
+import { writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+
 interface LogEntry {
   type: 'info' | 'error';
   timestamp: number;
@@ -29,6 +32,24 @@ export class LoggerService {
     if (type === 'all') return this.log;
 
     return this.log.filter((entry) => entry.type === type);
+  }
+
+  saveToFile(path: string): void {
+    const convertTime = (timestamp: number) => timestamp;
+
+    const content: string = this.log.reduce((log, actual) => {
+      const line = `[${convertTime(actual.timestamp)}](${actual.type}) ${
+        actual.message
+      }\n`;
+      return log + line;
+    }, '');
+
+    writeFileSync(path, content);
+  }
+
+  getSuggestLogfilePath(): string {
+    const timestamp = new Date().getTime();
+    return `${tmpdir()}/npkill-${timestamp}.log`;
   }
 
   private addToLog(entry: LogEntry): void {

@@ -72,7 +72,8 @@ export class Controller {
   ) {}
 
   init(): void {
-    this.logger.info('Npkill started!');
+    this.logger.info(process.argv.join(' '));
+    this.logger.info(`Npkill started! v${this.getVersion()}`);
     this.initUi();
     if (this.consoleService.isRunningBuild()) {
       this.uiHeader.programVersion = this.getVersion();
@@ -86,7 +87,6 @@ export class Controller {
     this.uiStatus.start();
     if (this.config.checkUpdates) this.checkVersion();
 
-    this.setupKeysCommand();
     this.scan();
   }
 
@@ -164,8 +164,6 @@ export class Controller {
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
   }
 
-  private setupKeysCommand() {}
-
   private showErrorPopup(visible: boolean) {
     this.uiLogs.setVisible(visible);
     // Need convert to pattern and have a stack for recover latest
@@ -233,10 +231,16 @@ export class Controller {
   }
 
   private checkVersion(): void {
+    this.logger.info('Checking updates...');
     this.updateService
       .isUpdated(this.getVersion())
       .then((isUpdated: boolean) => {
-        if (!isUpdated) this.showNewInfoMessage();
+        if (isUpdated) {
+          this.showUpdateMessage();
+          this.logger.info('New version found!');
+        } else {
+          this.logger.info('Npkill is update');
+        }
       })
       .catch((err) => {
         const errorMessage =
@@ -245,7 +249,7 @@ export class Controller {
       });
   }
 
-  private showNewInfoMessage(): void {
+  private showUpdateMessage(): void {
     const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
     this.uiService.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
@@ -360,8 +364,12 @@ export class Controller {
   }
 
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
+    this.logger.info(`Calculating stats for ${nodeFolder.path}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
-      tap((size) => (nodeFolder.size = this.fileService.convertKbToGB(+size))),
+      tap((size) => {
+        nodeFolder.size = this.fileService.convertKbToGB(+size);
+        this.logger.info(`Size of ${nodeFolder.path}: ${size}kb`);
+      }),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
@@ -373,6 +381,7 @@ export class Controller {
           parentFolder,
         );
         nodeFolder.modificationTime = result;
+        this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
       }),
       tap(() => this.finishFolderStats()),
     );
@@ -392,6 +401,7 @@ export class Controller {
   private completeSearch(): void {
     this.setSearchDuration();
     this.uiStatus.completeSearch(this.searchDuration);
+    this.logger.info(`Search completed after ${this.searchDuration}s`);
     if (!this.resultsService.results.length) this.showNoResults();
   }
 
@@ -413,6 +423,8 @@ export class Controller {
     this.uiService.clear();
     this.printExitMessage();
     this.uiService.setCursorVisible(true);
+    this.logger.info('Thank for using npkill. Bye!');
+    this.logger.saveToFile(this.logger.getSuggestLogfilePath());
     process.exit();
   }
 
@@ -432,6 +444,7 @@ export class Controller {
       return;
     }
 
+    this.logger.info(`Deleting ${folder.path}`);
     folder.status = 'deleting';
     this.printFoldersSection();
 
@@ -441,6 +454,7 @@ export class Controller {
         folder.status = 'deleted';
         this.uiStats.render();
         this.printFoldersSection();
+        this.logger.info(`Deleted ${folder.path}`);
       })
       .catch((e) => {
         folder.status = 'error-deleting';
