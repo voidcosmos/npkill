@@ -1,13 +1,12 @@
+import { dirname, extname } from 'path';
+
+import { BehaviorSubject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { Worker } from 'worker_threads';
-import { BehaviorSubject } from 'rxjs';
-import { dirname, extname } from 'path';
 
 export class FileWorkerService {
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
-
-  constructor() {}
 
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
     this.scanWorker.postMessage({
@@ -26,13 +25,11 @@ export class FileWorkerService {
     });
 
     this.scanWorker.on('error', (error) => {
-      console.log('this.worker error', error);
       this.scanWorker.terminate();
+      throw error;
     });
 
     this.scanWorker.on('exit', (code) => {
-      console.log('this.worker Exit');
-
       if (code !== 0) {
         this.scanWorker.terminate();
         return;

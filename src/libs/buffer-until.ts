@@ -17,7 +17,7 @@ export function bufferUntil<T>(
   resetNotifier: Observable<any> = of(),
 ): OperatorFunction<string, string> {
   return function (source$: Observable<string>): Observable<string> {
-    let buffer = new Buffer<T>();
+    const buffer = new Buffer<T>();
 
     return new Observable((observer) => {
       const resetNotifierSubscription = resetNotifier.subscribe(() =>

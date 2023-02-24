@@ -9,7 +9,7 @@ import { readFileSync, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
 
 export abstract class FileService implements IFileService {
-  abstract getFolderSize(path: string): Observable<any>;
+  abstract getFolderSize(path: string): Observable<number>;
   abstract listDir(params: IListDirParams): Observable<string>;
   abstract deleteDir(path: string): Promise<{}>;
 
@@ -62,20 +62,18 @@ export abstract class FileService implements IFileService {
     const items = await readdir(dirname, { withFileTypes: true });
 
     for (const item of items) {
-      try {
-        if (item.isDirectory()) {
-          if (item.name === 'node_modules') continue;
-          files = [
-            ...files,
-            ...(await this.getFileStatsInDir(`${dirname}/${item.name}`)),
-          ];
-        } else {
-          const path = `${dirname}/${item.name}`;
-          const fileStat = await stat(path);
+      if (item.isDirectory()) {
+        if (item.name === 'node_modules') continue;
+        files = [
+          ...files,
+          ...(await this.getFileStatsInDir(`${dirname}/${item.name}`)),
+        ];
+      } else {
+        const path = `${dirname}/${item.name}`;
+        const fileStat = await stat(path);
 
-          files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
-        }
-      } catch (error) {}
+        files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
+      }
     }
 
     return files;

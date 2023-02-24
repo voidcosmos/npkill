@@ -34,7 +34,6 @@
   "files": [
     "lib/**/*"
   ],
-  "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259",
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
@@ -51,7 +50,6 @@
     "ansi-escapes": "^6.0.0",
     "colors": "1.4.0",
     "get-folder-size": "^2.0.0",
-    "keypress": "^0.2.1",
     "node-emoji": "^1.10.0",
     "rxjs": "^7.5.7"
   },
@@ -96,5 +94,6 @@
     "*.{js,ts,css,json,md}": [
       "prettier --write"
     ]
-  }
+  },
+  "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259"
 }

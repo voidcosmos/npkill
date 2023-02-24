@@ -1,24 +1,64 @@
 import { jest } from '@jest/globals';
-import { Controller } from '../src/controller.js';
 
 jest.mock('../src/dirname.js', () => {
   return {};
 });
+jest.unstable_mockModule('../src/ui/header/header.ui.js', () => ({
+  HeaderUi: jest.fn(),
+}));
+jest.unstable_mockModule('../src/ui/header/stats.ui.js', () => ({
+  StatsUi: jest.fn(),
+}));
+jest.unstable_mockModule('../src/ui/header/status.ui.js', () => ({
+  StatusUi: jest.fn(() => ({
+    start: jest.fn(),
+  })),
+}));
+jest.unstable_mockModule('../src/ui/general.ui.js', () => ({
+  GeneralUi: jest.fn(),
+}));
+jest.unstable_mockModule('../src/ui/help.ui.js', () => ({
+  HelpUi: jest.fn(),
+}));
+jest.unstable_mockModule('../src/ui/results.ui.js', () => ({
+  ResultsUi: jest.fn(() => ({
+    delete$: { subscribe: jest.fn() },
+    showErrors$: { subscribe: jest.fn() },
+  })),
+}));
+jest.unstable_mockModule('../src/ui/logs.ui.js', () => ({
+  LogsUi: jest.fn(() => ({
+    close$: { subscribe: jest.fn() },
+  })),
+}));
+jest.unstable_mockModule('../src/ui/ui.js', () => ({
+  Ui: { setVisible: jest.fn() },
+}));
 
 describe('Controller test', () => {
   let controller;
-  const linuxFilesServiceMock: any = jest.fn();
+  const linuxFilesServiceMock: any = {
+    getFileContent: jest.fn().mockReturnValue('{}'),
+  };
   const spinnerServiceMock: any = jest.fn();
   const UpdateServiceMock: any = jest.fn();
   const resultServiceMock: any = jest.fn();
+  const loggerServiceMock: any = {
+    info: () => {},
+  };
+  const uiServiceMock: any = {
+    add: () => {},
+  };
   const consoleService: any = {
     getParameters: () => {
       return {};
     },
+    isRunningBuild: () => false,
+    startListenKeyEvents: jest.fn(),
   };
 
   ////////// mocked Controller Methods
-  let getArgumentsSpy;
+  let parseArgumentsSpy;
   let showHelpSpy;
   let prepareScreenSpy;
   let setupEventsListenerSpy;
@@ -28,18 +68,21 @@ describe('Controller test', () => {
   let exitSpy;
   ///////////////////////////////////
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const { Controller } = await import('../src/controller.js');
     exitSpy = jest
       .spyOn(process, 'exit')
       .mockImplementation(() => ({} as never));
     controller = new Controller(
+      loggerServiceMock,
       linuxFilesServiceMock,
       spinnerServiceMock,
       consoleService,
       UpdateServiceMock,
       resultServiceMock,
+      uiServiceMock,
     );
-    getArgumentsSpy = jest.spyOn(controller, 'getArguments');
+    parseArgumentsSpy = jest.spyOn(controller, 'parseArguments');
     showHelpSpy = jest
       .spyOn(controller, 'showHelp')
       .mockImplementation(() => ({}));
@@ -48,9 +91,6 @@ describe('Controller test', () => {
       .mockImplementation(() => ({}));
     setupEventsListenerSpy = jest
       .spyOn(controller, 'setupEventsListener')
-      .mockImplementation(() => ({}));
-    initializeLoadingStatusSpy = jest
-      .spyOn(controller, 'initializeLoadingStatus')
       .mockImplementation(() => ({}));
     scanSpy = jest.spyOn(controller, 'scan').mockImplementation(() => ({}));
     checkVersionSpy = jest
@@ -119,13 +159,12 @@ describe('Controller test', () => {
     });
 
     describe('--sort-by parameter   ', () => {
-      it('Should print a error and exit if option is invalid', () => {
+      it('Should detect if option is invalid', () => {
         mockParameters({ 'sort-by': 'novalid' });
         spyMethod('isValidSortParam', () => false);
-        const functionSpy = spyMethod('print');
+        const functionSpy = spyMethod('invalidSortParam');
         controller.init();
         expect(functionSpy).toHaveBeenCalledTimes(1);
-        expect(exitSpy).toHaveBeenCalledTimes(1);
       });
 
       // TODO test that check sortBy property is changed

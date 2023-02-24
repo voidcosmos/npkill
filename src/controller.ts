@@ -1,22 +1,4 @@
 import {
-  BANNER,
-  DECIMALS_SIZE,
-  DEFAULT_CONFIG,
-  DEFAULT_SIZE,
-  MARGINS,
-  MIN_CLI_COLUMNS_SIZE,
-  OVERFLOW_CUT_FROM,
-  UI_HELP,
-  UI_POSITIONS,
-  VALID_KEYS,
-} from './constants/index.js';
-import {
-  COLORS,
-  HELP_HEADER,
-  HELP_FOOTER,
-  OPTIONS,
-} from './constants/cli.constants.js';
-import {
   ConsoleService,
   FileService,
   ResultsService,
@@ -24,96 +6,116 @@ import {
   UpdateService,
 } from './services/index.js';
 import {
-  ERROR_MSG,
-  HELP_MSGS,
-  INFO_MSGS,
-} from './constants/messages.constants.js';
+  DEFAULT_CONFIG,
+  MIN_CLI_COLUMNS_SIZE,
+  UI_POSITIONS,
+} from './constants/index.js';
+import { ERROR_MSG, INFO_MSGS } from './constants/messages.constants.js';
 import {
   IConfig,
   IFolder,
   IKeyPress,
-  IKeysCommand,
   IListDirParams,
-  IPosition,
 } from './interfaces/index.js';
-import { Observable, Subject, from, interval } from 'rxjs';
-import { SPINNERS, SPINNER_INTERVAL } from './constants/spinner.constants.js';
+import { Observable, from } from 'rxjs';
 import {
   catchError,
   filter,
   map,
   mergeMap,
   switchMap,
-  takeUntil,
   tap,
 } from 'rxjs/operators';
 
+import { COLORS } from './constants/cli.constants.js';
 import { FOLDER_SORT } from './constants/sort.result.js';
-import ansiEscapes from 'ansi-escapes';
-import { bufferUntil } from './libs/buffer-until.js';
-import { homedir } from 'os';
-import colors from 'colors';
-import keypress from 'keypress';
+import { GeneralUi } from './ui/general.ui.js';
+import { HeaderUi } from './ui/header/header.ui.js';
+import { HelpUi } from './ui/help.ui.js';
+import { InteractiveUi } from './ui/ui.js';
+import { LoggerService } from './services/logger.service.js';
+import { LogsUi } from './ui/logs.ui.js';
+import { ResultsUi } from './ui/results.ui.js';
+import { StatsUi } from './ui/header/stats.ui.js';
+import { StatusUi } from './ui/header/status.ui.js';
+import { UiService } from './services/ui.service.js';
 import __dirname from './dirname.js';
+import colors from 'colors';
+import { homedir } from 'os';
 import path from 'path';
 
 export class Controller {
   private folderRoot = '';
-  private stdin: NodeJS.ReadStream = process.stdin;
   private stdout: NodeJS.WriteStream = process.stdout;
   private config: IConfig = DEFAULT_CONFIG;
 
-  private cursorPosY = MARGINS.ROW_RESULTS_START;
-  private previusCursorPosY = MARGINS.ROW_RESULTS_START;
-
-  private scroll: number = 0;
-
   private searchStart: number;
   private searchDuration: number;
-  private finishSearching$: Subject<boolean> = new Subject<boolean>();
 
-  private KEYS: IKeysCommand = {
-    up: this.moveCursorUp.bind(this),
-    // tslint:disable-next-line: object-literal-sort-keys
-    down: this.moveCursorDown.bind(this),
-    space: this.delete.bind(this),
-    j: this.moveCursorDown.bind(this),
-    k: this.moveCursorUp.bind(this),
-    h: this.moveCursorPageDown.bind(this),
-    l: this.moveCursorPageUp.bind(this),
-    d: this.moveCursorPageDown.bind(this),
-    u: this.moveCursorPageUp.bind(this),
-    pageup: this.moveCursorPageUp.bind(this),
-    pagedown: this.moveCursorPageDown.bind(this),
-    home: this.moveCursorFirstResult.bind(this),
-    end: this.moveCursorLastResult.bind(this),
-
-    execute(command: string, params: string[]) {
-      return this[command](params);
-    },
-  };
+  private uiHeader: HeaderUi;
+  private uiGeneral: GeneralUi;
+  private uiStats: StatsUi;
+  private uiStatus: StatusUi;
+  private uiResults: ResultsUi;
+  private uiLogs: LogsUi;
+  private activeComponent: InteractiveUi;
 
   constructor(
+    private logger: LoggerService,
     private fileService: FileService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
     private updateService: UpdateService,
     private resultsService: ResultsService,
+    private uiService: UiService,
   ) {}
 
   init(): void {
-    keypress(process.stdin);
-    this.setErrorEvents();
-    this.getArguments();
+    this.logger.info(process.argv.join(' '));
+    this.logger.info(`Npkill started! v${this.getVersion()}`);
+    this.initUi();
+    if (this.consoleService.isRunningBuild()) {
+      this.uiHeader.programVersion = this.getVersion();
+    }
+
+    this.consoleService.startListenKeyEvents();
+    this.parseArguments();
     this.prepareScreen();
     this.setupEventsListener();
-    this.initializeLoadingStatus();
+    this.uiStatus.start();
     if (this.config.checkUpdates) this.checkVersion();
 
     this.scan();
   }
 
-  private getArguments(): void {
+  private initUi() {
+    this.uiHeader = new HeaderUi();
+    this.uiService.add(this.uiHeader);
+    this.uiResults = new ResultsUi(
+      this.resultsService,
+      this.consoleService,
+      this.fileService,
+    );
+    this.uiService.add(this.uiResults);
+    this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
+    this.uiService.add(this.uiStats);
+    this.uiStatus = new StatusUi(this.spinnerService);
+    this.uiService.add(this.uiStatus);
+    this.uiGeneral = new GeneralUi();
+    this.uiService.add(this.uiGeneral);
+    this.uiLogs = new LogsUi(this.logger);
+    this.uiService.add(this.uiLogs);
+
+    // Set Events
+    this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
+    this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
+    this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
+
+    // Activate the main interactive component
+    this.activeComponent = this.uiResults;
+  }
+
+  private parseArguments(): void {
     const options = this.consoleService.getParameters(process.argv);
     if (options['help']) {
       this.showHelp();
@@ -129,8 +131,7 @@ export class Controller {
     }
     if (options['sort-by']) {
       if (!this.isValidSortParam(options['sort-by'])) {
-        this.print(INFO_MSGS.NO_VALID_SORT_NAME);
-        process.exit();
+        this.invalidSortParam();
       }
       this.config.sortBy = options['sort-by'];
     }
@@ -147,8 +148,8 @@ export class Controller {
     this.folderRoot = options['directory']
       ? options['directory']
       : process.cwd();
-    if (options['full-scan']) this.folderRoot = this.getUserHomePath();
-    if (options['show-errors']) this.config.showErrors = true;
+    if (options['full-scan']) this.folderRoot = homedir();
+    if (options['hide-errors']) this.config.showErrors = false;
     if (options['gb']) this.config.folderSizeInGB = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
     if (options['target-folder'])
@@ -161,46 +162,37 @@ export class Controller {
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
   }
 
+  private showErrorPopup(visible: boolean) {
+    this.uiLogs.setVisible(visible);
+    // Need convert to pattern and have a stack for recover latest
+    // component.
+    this.uiResults.freezed = visible;
+    this.uiStats.freezed = visible;
+    this.uiStatus.freezed = visible;
+    if (visible) {
+      this.activeComponent = this.uiLogs;
+      this.uiLogs.render();
+    } else {
+      this.activeComponent = this.uiResults;
+      this.uiService.renderAll();
+    }
+  }
+
+  private invalidSortParam(): void {
+    this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
+    process.exit();
+  }
+
   private showHelp(): void {
-    this.clear();
-    this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
-    this.print(HELP_HEADER + '\n\n');
-
-    let lineCount = 0;
-    OPTIONS.map((option, index) => {
-      this.printAtHelp(
-        option.arg.reduce((text, arg) => text + ', ' + arg),
-        {
-          x: UI_HELP.X_COMMAND_OFFSET,
-          y: index + UI_HELP.Y_OFFSET + lineCount,
-        },
-      );
-      const description = this.consoleService.splitWordsByWidth(
-        option.description,
-        this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
-      );
-
-      description.map((line) => {
-        this.printAtHelp(line, {
-          x: UI_HELP.X_DESCRIPTION_OFFSET,
-          y: index + UI_HELP.Y_OFFSET + lineCount,
-        });
-        ++lineCount;
-      });
-    });
-
-    this.printAt(HELP_FOOTER + '\n', {
-      x: 0,
-      y: lineCount * 2 + 2,
-    });
+    new HelpUi(this.consoleService).show();
   }
 
   private showProgramVersion(): void {
-    this.print('v' + this.getVersion());
+    this.uiService.print('v' + this.getVersion());
   }
 
   private showObsoleteMessage(): void {
-    this.print(INFO_MSGS.DISABLED);
+    this.uiService.print(INFO_MSGS.DISABLED);
   }
 
   private setColor(color: string) {
@@ -224,314 +216,75 @@ export class Controller {
     return packageData.version;
   }
 
-  private clear(): void {
-    this.print(ansiEscapes.clearTerminal);
-  }
-
-  private print(text: string): void {
-    process.stdout.write.bind(process.stdout)(text);
-  }
-
   private prepareScreen(): void {
     this.checkScreenRequirements();
-    this.setRawMode();
-    this.clear();
-    this.printUI();
-    this.hideCursor();
+    this.uiService.setRawMode();
+    this.uiService.prepareUi();
+    this.uiService.setCursorVisible(false);
+    this.uiService.clear();
+    this.uiService.renderAll();
   }
 
   private checkScreenRequirements(): void {
     if (this.isTerminalTooSmall()) {
-      this.print(INFO_MSGS.MIN_CLI_CLOMUNS);
+      this.uiService.print(INFO_MSGS.MIN_CLI_CLOMUNS);
       process.exit();
     }
     if (!this.stdout.isTTY) {
-      this.print(INFO_MSGS.NO_TTY);
+      this.uiService.print(INFO_MSGS.NO_TTY);
       process.exit();
     }
   }
 
   private checkVersion(): void {
+    this.logger.info('Checking updates...');
     this.updateService
       .isUpdated(this.getVersion())
       .then((isUpdated: boolean) => {
-        if (!isUpdated) this.showNewInfoMessage();
+        if (isUpdated) {
+          this.showUpdateMessage();
+          this.logger.info('New version found!');
+        } else {
+          this.logger.info('Npkill is update');
+        }
       })
       .catch((err) => {
         const errorMessage =
           ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
-        this.printError(errorMessage);
+        this.newError(errorMessage);
       });
   }
 
-  private showNewInfoMessage(): void {
+  private showUpdateMessage(): void {
     const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
-    this.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
+    this.uiService.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
 
   private isTerminalTooSmall(): boolean {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
-  private setRawMode(set = true): void {
-    this.stdin.setRawMode(set);
-    process.stdin.resume();
-  }
-
-  private printUI(): void {
-    ///////////////////////////
-    // banner and tutorial
-    this.printAt(BANNER, UI_POSITIONS.INITIAL);
-    this.printAt(
-      colors.yellow(colors.inverse(HELP_MSGS.BASIC_USAGE)),
-      UI_POSITIONS.TUTORIAL_TIP,
-    );
-
-    if (this.consoleService.isRunningBuild()) {
-      this.printAt(colors.gray(this.getVersion()), UI_POSITIONS.VERSION);
-    }
-
-    ///////////////////////////
-    // Columns headers
-    this.printAt(colors.gray(INFO_MSGS.HEADER_COLUMNS), {
-      x: this.stdout.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
-      y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
-    });
-
-    ///////////////////////////
-    // npkill stats
-    this.printAt(
-      colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
-      UI_POSITIONS.TOTAL_SPACE,
-    );
-    this.printAt(
-      colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
-      UI_POSITIONS.SPACE_RELEASED,
-    );
-  }
-
-  private printAt(message: string, position: IPosition): void {
-    this.setCursorAt(position);
-    this.print(message);
-  }
-
-  private setCursorAt({ x, y }: IPosition): void {
-    this.print(ansiEscapes.cursorTo(x, y));
-  }
-
-  private printAtHelp(message: string, position: IPosition): void {
-    this.setCursorAtHelp(position);
-    this.print(message);
-    if (!/-[a-zA-Z]/.test(message.substring(0, 2)) && message !== '') {
-      this.print('\n\n');
-    }
-  }
-
-  private setCursorAtHelp({ x, y }: IPosition): void {
-    this.print(ansiEscapes.cursorTo(x));
-  }
-
-  private initializeLoadingStatus(): void {
-    this.spinnerService.setSpinner(SPINNERS.W10);
-    interval(SPINNER_INTERVAL)
-      .pipe(takeUntil(this.finishSearching$))
-      .subscribe(
-        () =>
-          this.updateStatus(
-            INFO_MSGS.SEARCHING + this.spinnerService.nextFrame(),
-          ),
-        (error) => this.printError(error),
-      );
-  }
-
-  private updateStatus(text: string): void {
-    this.printAt(text, UI_POSITIONS.STATUS);
-  }
-
   private printFoldersSection(): void {
-    if (this.resultsService.noResultsAfterCompleted) {
-      this.printNoResults();
-      return;
-    }
-    const visibleFolders = this.getVisibleScrollFolders();
-    this.clearLine(this.previusCursorPosY);
-
-    visibleFolders.map((folder: IFolder, index: number) => {
-      const folderRow = MARGINS.ROW_RESULTS_START + index;
-      this.printFolderRow(folder, folderRow);
-    });
-  }
-
-  private printNoResults(): void {
-    const message = `No ${colors[DEFAULT_CONFIG.warningColor](
-      this.config.targetFolder,
-    )} found!`;
-    this.printAt(message, {
-      x: Math.floor(this.stdout.columns / 2 - message.length / 2),
-      y: MARGINS.ROW_RESULTS_START + 2,
-    });
-  }
-
-  private printFolderRow(folder: IFolder, row: number) {
-    let { path, lastModification, size } = this.getFolderTexts(folder);
-    const isRowSelected = row === this.getRealCursorPosY();
-
-    lastModification = colors.gray(lastModification);
-    if (isRowSelected) {
-      path = colors[this.config.backgroundColor](path);
-      size = colors[this.config.backgroundColor](size);
-      lastModification = colors[this.config.backgroundColor](lastModification);
-
-      this.paintBgRow(row);
-    }
-
-    if (folder.isDangerous)
-      path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
-
-    this.printAt(path, {
-      x: MARGINS.FOLDER_COLUMN_START,
-      y: row,
-    });
-
-    this.printAt(lastModification, {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
-      y: row,
-    });
-
-    this.printAt(size, {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
-      y: row,
-    });
-  }
-
-  private getFolderTexts(folder: IFolder): {
-    path: string;
-    size: string;
-    lastModification: string;
-  } {
-    const folderText = this.getFolderPathText(folder);
-    let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
-    let daysSinceLastModification =
-      folder.modificationTime !== null && folder.modificationTime > 0
-        ? Math.floor(
-            (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
-          ) + 'd'
-        : '--';
-
-    if (folder.isDangerous) daysSinceLastModification = 'xxx';
-
-    // Align to right
-    const alignMargin = 4 - daysSinceLastModification.length;
-    daysSinceLastModification =
-      ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
-
-    if (!this.config.folderSizeInGB) {
-      const size = this.fileService.convertGBToMB(folder.size);
-      folderSize = `${size.toFixed(DECIMALS_SIZE)} MB`;
-    }
-
-    const folderSizeText = folder.size ? folderSize : '--';
-
-    return {
-      path: folderText,
-      size: folderSizeText,
-      lastModification: daysSinceLastModification,
-    };
-  }
-
-  private paintBgRow(row: number) {
-    const startPaint = MARGINS.FOLDER_COLUMN_START;
-    const endPaint = this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN;
-    let paintSpaces = '';
-
-    for (let i = startPaint; i < endPaint; ++i) {
-      paintSpaces += ' ';
-    }
-
-    this.printAt(colors[this.config.backgroundColor](paintSpaces), {
-      x: startPaint,
-      y: row,
-    });
-  }
-
-  private getFolderPathText(folder: IFolder): string {
-    let cutFrom = OVERFLOW_CUT_FROM;
-    let text = folder.path;
-    const ACTIONS = {
-      // tslint:disable-next-line: object-literal-key-quotes
-      deleted: () => {
-        cutFrom += INFO_MSGS.DELETED_FOLDER.length;
-        text = INFO_MSGS.DELETED_FOLDER + text;
-      },
-      // tslint:disable-next-line: object-literal-key-quotes
-      deleting: () => {
-        cutFrom += INFO_MSGS.DELETING_FOLDER.length;
-        text = INFO_MSGS.DELETING_FOLDER + text;
-      },
-      'error-deleting': () => {
-        cutFrom += INFO_MSGS.ERROR_DELETING_FOLDER.length;
-        text = INFO_MSGS.ERROR_DELETING_FOLDER + text;
-      },
-    };
-
-    if (ACTIONS[folder.status]) ACTIONS[folder.status]();
-
-    text = this.consoleService.shortenText(
-      text,
-      this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
-      cutFrom,
-    );
-
-    // This is necessary for the coloring of the text, since
-    // the shortener takes into ansi-scape codes invisible
-    // characters and can cause an error in the cli.
-    text = this.paintStatusFolderPath(text, folder.status);
-
-    return text;
-  }
-
-  private paintStatusFolderPath(folderString: string, action: string): string {
-    const TRANSFORMATIONS = {
-      // tslint:disable-next-line: object-literal-key-quotes
-      deleted: (text) =>
-        text.replace(
-          INFO_MSGS.DELETED_FOLDER,
-          colors.green(INFO_MSGS.DELETED_FOLDER),
-        ),
-      // tslint:disable-next-line: object-literal-key-quotes
-      deleting: (text) =>
-        text.replace(
-          INFO_MSGS.DELETING_FOLDER,
-          colors.yellow(INFO_MSGS.DELETING_FOLDER),
-        ),
-      'error-deleting': (text) =>
-        text.replace(
-          INFO_MSGS.ERROR_DELETING_FOLDER,
-          colors.red(INFO_MSGS.ERROR_DELETING_FOLDER),
-        ),
-    };
-
-    return TRANSFORMATIONS[action]
-      ? TRANSFORMATIONS[action](folderString)
-      : folderString;
-  }
-
-  private clearFolderSection(): void {
-    for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
-      this.clearLine(row);
-    }
+    this.uiResults.render();
   }
 
   private setupEventsListener(): void {
-    this.stdin.on('keypress', (ch, key) => {
+    this.uiService.stdin.on('keypress', (_, key) => {
       if (key && key['name']) this.keyPress(key);
     });
 
     this.stdout.on('resize', () => {
-      this.clear();
-      this.printUI();
-      this.printStats();
-      this.printFoldersSection();
+      this.uiService.clear();
+      this.uiService.renderAll();
+      this.uiService.renderAll();
+    });
+
+    process.on('uncaughtException', (err) => {
+      this.newError(err.message);
+    });
+
+    process.on('unhandledRejection', (reason: {}) => {
+      this.newError(reason['stack']);
     });
   }
 
@@ -540,27 +293,12 @@ export class Controller {
 
     if (this.isQuitKey(ctrl, name)) this.quit();
 
-    const command = this.getCommand(name);
-    if (command) this.KEYS.execute(name);
+    if (!this.activeComponent) {
+      this.logger.error('activeComponent is NULL in Controller.');
+      return;
+    }
 
-    if (name !== 'space') this.printFoldersSection();
-  }
-
-  private setErrorEvents(): void {
-    process.on('uncaughtException', (err) => {
-      this.printError(err.message);
-    });
-    process.on('unhandledRejection', (reason: {}) => {
-      this.printError(reason['stack']);
-    });
-  }
-
-  private hideCursor(): void {
-    this.print(ansiEscapes.cursorHide);
-  }
-
-  private showCursor(): void {
-    this.print(ansiEscapes.cursorShow);
+    this.activeComponent.onKeyInput(key);
   }
 
   private scan(): void {
@@ -575,10 +313,11 @@ export class Controller {
     this.searchStart = Date.now();
     const folders$ = this.fileService.listDir(params);
 
+    this.logger.info(`Scan started in ${params.path}`);
     folders$
       .pipe(
         catchError((error, caught) => {
-          this.printFolderError(error.message);
+          this.newError(error.message);
           return caught;
         }),
         mergeMap((dataFolder) =>
@@ -597,19 +336,20 @@ export class Controller {
         }),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
+          this.logger.info(`Folder found: ${nodeFolder.path}`);
 
           if (this.config.sortBy === 'path') {
             this.resultsService.sortResults(this.config.sortBy);
-            this.clearFolderSection();
+            this.uiResults.clear();
           }
         }),
         mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 2),
       )
-      .subscribe(
-        () => this.printFoldersSection(),
-        (error) => this.printError(error),
-        () => this.completeSearch(),
-      );
+      .subscribe({
+        next: () => this.printFoldersSection(),
+        error: (error) => this.newError(error),
+        complete: () => this.completeSearch(),
+      });
   }
 
   private prepareListDirParams(): IListDirParams {
@@ -626,16 +366,13 @@ export class Controller {
     return params;
   }
 
-  private printFolderError(err: string) {
-    if (!this.config.showErrors) return;
-
-    const messages = this.consoleService.splitData(err);
-    messages.map((msg) => this.printError(msg));
-  }
-
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
+    this.logger.info(`Calculating stats for ${nodeFolder.path}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
-      tap((size) => (nodeFolder.size = this.transformFolderSize(size))),
+      tap((size) => {
+        nodeFolder.size = this.fileService.convertKbToGB(+size);
+        this.logger.info(`Size of ${nodeFolder.path}: ${size}kb`);
+      }),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
@@ -647,6 +384,7 @@ export class Controller {
           parentFolder,
         );
         nodeFolder.modificationTime = result;
+        this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
       }),
       tap(() => this.finishFolderStats()),
     );
@@ -657,146 +395,41 @@ export class Controller {
       this.config.sortBy === 'size' || this.config.sortBy === 'last-mod';
     if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
-      this.clearFolderSection();
+      this.uiResults.clear();
     }
-    this.printStats();
+    this.uiStats.render();
     this.printFoldersSection();
-  }
-
-  private transformFolderSize(size: string): number {
-    return this.fileService.convertKbToGB(+size);
   }
 
   private completeSearch(): void {
     this.setSearchDuration();
-    this.finishSearching$.next(true);
-    this.updateStatus(
-      colors.green(INFO_MSGS.SEARCH_COMPLETED) +
-        colors.gray(`${this.searchDuration}s`),
-    );
-    if (!this.resultsService.results.length) this.showNoResults();
+    this.uiResults.completeSearch();
+    this.uiStatus.completeSearch(this.searchDuration);
+    this.logger.info(`Search completed after ${this.searchDuration}s`);
   }
 
   private setSearchDuration() {
     this.searchDuration = +((Date.now() - this.searchStart) / 1000).toFixed(2);
   }
 
-  private showNoResults() {
-    this.resultsService.noResultsAfterCompleted = true;
-    this.printNoResults();
-  }
-
-  private isQuitKey(ctrl, name): boolean {
-    return (ctrl && name === 'c') || name === 'q' || name === 'escape';
+  private isQuitKey(ctrl: boolean, name: string): boolean {
+    return (ctrl && name === 'c') || name === 'q';
   }
 
   private quit(): void {
-    this.setRawMode(false);
-    this.clear();
+    this.uiService.setRawMode(false);
+    this.uiService.clear();
+    this.uiService.setCursorVisible(true);
     this.printExitMessage();
-    this.showCursor();
+    this.logger.info('Thank for using npkill. Bye!');
+    const logPath = this.logger.getSuggestLogfilePath();
+    this.logger.saveToFile(logPath);
     process.exit();
   }
 
   private printExitMessage(): void {
     const { spaceReleased } = this.resultsService.getStats();
-    const exitMessage = `Space released: ${spaceReleased}\n`;
-    this.print(exitMessage);
-  }
-
-  private getCommand(keyName: string): string {
-    return VALID_KEYS.find((name) => name === keyName);
-  }
-
-  private isCursorInLowerTextLimit(positionY: number): boolean {
-    const foldersAmmount = this.resultsService.results.length;
-    return positionY < foldersAmmount - 1 + MARGINS.ROW_RESULTS_START;
-  }
-
-  private isCursorInUpperTextLimit(positionY: number): boolean {
-    return positionY > MARGINS.ROW_RESULTS_START;
-  }
-
-  private moveCursorUp(): void {
-    if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
-      this.previusCursorPosY = this.getRealCursorPosY();
-      this.cursorPosY--;
-      this.fitScroll();
-    }
-  }
-
-  private moveCursorDown(): void {
-    if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
-      this.previusCursorPosY = this.getRealCursorPosY();
-      this.cursorPosY++;
-      this.fitScroll();
-    }
-  }
-
-  private moveCursorPageUp(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
-    this.cursorPosY -= resultsInPage - 1;
-    if (this.cursorPosY - MARGINS.ROW_RESULTS_START < 0)
-      this.cursorPosY = MARGINS.ROW_RESULTS_START;
-    this.fitScroll();
-  }
-
-  private moveCursorPageDown(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
-    const foldersAmmount = this.resultsService.results.length;
-    this.cursorPosY += resultsInPage - 1;
-    if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
-      this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
-    this.fitScroll();
-  }
-
-  private moveCursorFirstResult(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    this.cursorPosY = MARGINS.ROW_RESULTS_START;
-    this.fitScroll();
-  }
-
-  private moveCursorLastResult(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    this.cursorPosY =
-      MARGINS.ROW_RESULTS_START + this.resultsService.results.length - 1;
-    this.fitScroll();
-  }
-
-  private fitScroll(): void {
-    const shouldScrollUp =
-      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll + 1;
-    const shouldScrollDown =
-      this.cursorPosY > this.stdout.rows + this.scroll - 2;
-    let scrollRequired = 0;
-
-    if (shouldScrollUp)
-      scrollRequired =
-        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll - 1;
-    else if (shouldScrollDown) {
-      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 2;
-    }
-
-    if (scrollRequired) this.scrollFolderResults(scrollRequired);
-  }
-
-  private scrollFolderResults(scrollAmount: number): void {
-    const virtualFinalScroll = this.scroll + scrollAmount;
-    this.scroll = this.clamp(
-      virtualFinalScroll,
-      0,
-      this.resultsService.results.length,
-    );
-    this.clearFolderSection();
-  }
-
-  private delete(): void {
-    const nodeFolder =
-      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
-    this.clearErrors();
-    this.deleteFolder(nodeFolder);
+    new GeneralUi().printExitMessage({ spaceReleased });
   }
 
   private deleteFolder(folder: IFolder): void {
@@ -804,11 +437,13 @@ export class Controller {
       folder.path,
       this.config.targetFolder,
     );
+
     if (!isSafeToDelete) {
-      this.printError('Folder not safe to delete');
+      this.newError(`Folder not safe to delete: ${folder.path}`);
       return;
     }
 
+    this.logger.info(`Deleting ${folder.path}`);
     folder.status = 'deleting';
     this.printFoldersSection();
 
@@ -816,69 +451,19 @@ export class Controller {
       .deleteDir(folder.path)
       .then(() => {
         folder.status = 'deleted';
-        this.printStats();
+        this.uiStats.render();
         this.printFoldersSection();
+        this.logger.info(`Deleted ${folder.path}`);
       })
       .catch((e) => {
         folder.status = 'error-deleting';
         this.printFoldersSection();
-        this.printError(e.message);
+        this.newError(e.message);
       });
   }
 
-  private printError(error: string): void {
-    const errorText = this.prepareErrorMsg(error);
-
-    this.printAt(colors.red(errorText), {
-      x: 0,
-      y: this.stdout.rows,
-    });
-  }
-
-  private prepareErrorMsg(errMessage: string): string {
-    const margin = MARGINS.FOLDER_COLUMN_START;
-    const width = this.stdout.columns - margin - 3;
-    return this.consoleService.shortenText(errMessage, width, width);
-  }
-
-  private printStats(): void {
-    const { totalSpace, spaceReleased } = this.resultsService.getStats();
-
-    const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
-    const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
-
-    totalSpacePosition.x += INFO_MSGS.TOTAL_SPACE.length;
-    spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
-
-    this.printAt(totalSpace, totalSpacePosition);
-    this.printAt(spaceReleased, spaceReleasedPosition);
-  }
-
-  private getVisibleScrollFolders(): IFolder[] {
-    return this.resultsService.results.slice(
-      this.scroll,
-      this.stdout.rows - MARGINS.ROW_RESULTS_START + this.scroll,
-    );
-  }
-
-  private getRealCursorPosY(): number {
-    return this.cursorPosY - this.scroll;
-  }
-
-  private clearErrors(): void {
-    const lineOfErrors = this.stdout.rows;
-    this.clearLine(lineOfErrors);
-  }
-
-  private clearLine(row: number): void {
-    this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
-  }
-
-  private getUserHomePath(): string {
-    return homedir();
-  }
-
-  private clamp(num: number, min: number, max: number) {
-    return Math.min(Math.max(num, min), max);
+  private newError(error: string): void {
+    this.logger.error(error);
+    this.uiStats.render();
   }
 }

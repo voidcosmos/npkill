@@ -93,7 +93,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -c, --bg-color                   | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                      |
 | -d, --directory                  | Set the directory from which to begin searching. By default, starting-point is .                                                               |
 | -D, --delete-all                 | CURRENTLY DISABLED. Automatically delete all node_modules folders that are found                                                               |
-| -e, --show-errors                | Show error messages related to the search if any                                                                                               |
+| -e, --hide-errors                | Hide errors if any                                                                                               |
 | -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2" |
 | -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
 | -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                |
@@ -186,8 +186,8 @@ npm run start -- -f -e
 - [ ] Reduce dependencies to be a more minimalist module
 - [ ] Allow to filter by directories that have not been used in a period of time
 - [ ] Create option for displaying directories in tree format
-- [ ] Add some menus
-- [ ] Add log service
+- [x] Add some menus
+- [x] Add log service
 - [ ] Periodic and automatic cleaning (?)
 
 <a name="known-bugs"></a>

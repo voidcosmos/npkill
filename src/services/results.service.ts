@@ -3,7 +3,6 @@ import { FOLDER_SORT } from '../constants/sort.result.js';
 
 export class ResultsService {
   results: IFolder[] = [];
-  noResultsAfterCompleted = false;
 
   addResult(result: IFolder): void {
     this.results = [...this.results, result];

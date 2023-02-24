@@ -1,9 +1,10 @@
 'use strict';
+
 import { Dirent, opendir } from 'fs';
+
+import EventEmitter from 'events';
 import { memoryUsage } from 'process';
 import { parentPort } from 'worker_threads';
-import EventEmitter from 'events';
-import { stat } from 'fs/promises';
 
 enum ETaskOperation {
   'explore',
@@ -155,7 +156,7 @@ class FileWalker {
 
   private processQueue() {
     while (this.procs < this.MAX_PROCS && this.taskQueue.length > 0) {
-      let path = this.taskQueue.shift().path;
+      const path = this.taskQueue.shift().path;
       this.run(path);
     }
   }
