@@ -269,7 +269,7 @@ export class Controller {
   }
 
   private setupEventsListener(): void {
-    this.uiService.stdin.on('keypress', (ch, key) => {
+    this.uiService.stdin.on('keypress', (_, key) => {
       if (key && key['name']) this.keyPress(key);
     });
 
