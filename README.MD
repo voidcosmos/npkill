@@ -186,8 +186,8 @@ npm run start -- -f -e
 - [ ] Reduce dependencies to be a more minimalist module
 - [ ] Allow to filter by directories that have not been used in a period of time
 - [ ] Create option for displaying directories in tree format
-- [ ] Add some menus
-- [ ] Add log service
+- [x] Add some menus
+- [x] Add log service
 - [ ] Periodic and automatic cleaning (?)
 
 <a name="known-bugs"></a>

@@ -83,7 +83,7 @@ export const HELP_HEADER = `This tool allows you to list any node_modules direct
  | h, d, Ctrl+d, PgUp:    move one page down
  | l, u, Ctrl+u, PgDown:  move one page up
  | home, end:             move to the first and last result
- | e:                     show errors popup`;
+ | e:                     show errors popup, next page`;
 
 export const HELP_FOOTER =
   'Not all node_modules are bad! Some applications (like vscode, Discord, etc) need those dependencies to work. If their directory is deleted, the application will probably break (until the dependencies are reinstalled). NPKILL will show you these directories by highlighting them ⚠️';
