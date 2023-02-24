@@ -2,6 +2,7 @@ import { OPTIONS, WIDTH_OVERFLOW } from '../constants/index.js';
 
 import { ICliOptions } from '../interfaces/cli-options.interface.js';
 import { extname } from 'path';
+import * as readline from 'node:readline';
 
 export class ConsoleService {
   getParameters(rawArgv: string[]): {} {
@@ -55,6 +56,10 @@ export class ConsoleService {
 
   isRunningBuild(): boolean {
     return extname(import.meta.url) === '.js';
+  }
+
+  startListenKeyEvents() {
+    readline.emitKeypressEvents(process.stdin);
   }
 
   /** Argvs can be specified for example by

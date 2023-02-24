@@ -42,7 +42,6 @@ import { UiService } from './services/ui.service.js';
 import __dirname from './dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';
-import keypress from 'keypress';
 import path from 'path';
 
 export class Controller {
@@ -79,9 +78,8 @@ export class Controller {
       this.uiHeader.programVersion = this.getVersion();
     }
 
-    keypress(process.stdin);
-    this.setErrorEvents();
-    this.getArguments();
+    this.consoleService.startListenKeyEvents();
+    this.parseArguments();
     this.prepareScreen();
     this.setupEventsListener();
     this.uiStatus.start();
@@ -117,7 +115,7 @@ export class Controller {
     this.activeComponent = this.uiResults;
   }
 
-  private getArguments(): void {
+  private parseArguments(): void {
     const options = this.consoleService.getParameters(process.argv);
     if (options['help']) {
       this.showHelp();
@@ -280,6 +278,14 @@ export class Controller {
       this.uiService.renderAll();
       this.uiService.renderAll();
     });
+
+    process.on('uncaughtException', (err) => {
+      this.newError(err.message);
+    });
+
+    process.on('unhandledRejection', (reason: {}) => {
+      this.newError(reason['stack']);
+    });
   }
 
   private keyPress(key: IKeyPress) {
@@ -293,15 +299,6 @@ export class Controller {
     }
 
     this.activeComponent.onKeyInput(key);
-  }
-
-  private setErrorEvents(): void {
-    process.on('uncaughtException', (err) => {
-      this.newError(err.message);
-    });
-    process.on('unhandledRejection', (reason: {}) => {
-      this.newError(reason['stack']);
-    });
   }
 
   private scan(): void {
