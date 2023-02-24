@@ -74,6 +74,13 @@ export class ResultsUi extends Ui implements InteractiveUi {
     }
   }
 
+  completeSearch() {
+    if (this.resultsService.results.length === 0) {
+      this.haveResultsAfterCompleted = false;
+      this.render();
+    }
+  }
+
   private printResults() {
     const visibleFolders = this.getVisibleScrollFolders();
     this.clearLine(this.previusCursorPosY);

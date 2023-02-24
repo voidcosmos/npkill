@@ -270,8 +270,6 @@ export class Controller {
     this.uiResults.render();
   }
 
-  private printNoResults(): void {}
-
   private setupEventsListener(): void {
     this.uiService.stdin.on('keypress', (ch, key) => {
       if (key && key['name']) this.keyPress(key);
@@ -408,18 +406,13 @@ export class Controller {
 
   private completeSearch(): void {
     this.setSearchDuration();
+    this.uiResults.completeSearch();
     this.uiStatus.completeSearch(this.searchDuration);
     this.logger.info(`Search completed after ${this.searchDuration}s`);
-    if (!this.resultsService.results.length) this.showNoResults();
   }
 
   private setSearchDuration() {
     this.searchDuration = +((Date.now() - this.searchStart) / 1000).toFixed(2);
-  }
-
-  private showNoResults() {
-    this.resultsService.noResultsAfterCompleted = true;
-    this.printNoResults();
   }
 
   private isQuitKey(ctrl, name): boolean {
