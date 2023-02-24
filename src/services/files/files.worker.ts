@@ -1,9 +1,10 @@
 'use strict';
+
 import { Dirent, opendir } from 'fs';
+
+import EventEmitter from 'events';
 import { memoryUsage } from 'process';
 import { parentPort } from 'worker_threads';
-import EventEmitter from 'events';
-import { stat } from 'fs/promises';
 
 enum ETaskOperation {
   'explore',

@@ -25,13 +25,11 @@ export class FileWorkerService {
     });
 
     this.scanWorker.on('error', (error) => {
-      console.log('this.worker error', error);
       this.scanWorker.terminate();
+      throw error;
     });
 
     this.scanWorker.on('exit', (code) => {
-      console.log('this.worker Exit');
-
       if (code !== 0) {
         this.scanWorker.terminate();
         return;
