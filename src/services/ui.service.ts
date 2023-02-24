@@ -2,15 +2,15 @@ import ansiEscapes from 'ansi-escapes';
 import { Position, Ui } from '../ui/ui.js';
 
 export class UiService {
-  public stdin: NodeJS.ReadStream = process.stdin;
+  stdin: NodeJS.ReadStream = process.stdin;
   // public stdout: NodeJS.WriteStream = process.stdout;
-  public uiComponents: Ui[] = [];
+  uiComponents: Ui[] = [];
 
   constructor() {}
 
   prepareUi() {}
 
-  public setRawMode(set = true): void {
+  setRawMode(set = true): void {
     this.stdin.setRawMode(set);
     process.stdin.resume();
   }

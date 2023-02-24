@@ -1,5 +1,5 @@
-import ansiEscapes from 'ansi-escapes';
 import { IKeyPress } from 'src/interfaces';
+import ansiEscapes from 'ansi-escapes';
 
 export interface Position {
   x: number;
@@ -15,8 +15,6 @@ export abstract class Ui {
   protected _position: Position;
   protected _visible = true;
   protected stdout: NodeJS.WriteStream = process.stdout;
-
-  constructor() {}
 
   protected printAt(message: string, position: Position): void {
     this.setCursorAt(position);

@@ -155,7 +155,7 @@ class FileWalker {
 
   private processQueue() {
     while (this.procs < this.MAX_PROCS && this.taskQueue.length > 0) {
-      let path = this.taskQueue.shift().path;
+      const path = this.taskQueue.shift().path;
       this.run(path);
     }
   }

@@ -1,5 +1,5 @@
-import { writeFileSync } from 'fs';
 import { tmpdir } from 'os';
+import { writeFileSync } from 'fs';
 
 interface LogEntry {
   type: 'info' | 'error';
@@ -9,8 +9,6 @@ interface LogEntry {
 
 export class LoggerService {
   private log: LogEntry[] = [];
-
-  constructor() {}
 
   info(message: string): void {
     this.addToLog({

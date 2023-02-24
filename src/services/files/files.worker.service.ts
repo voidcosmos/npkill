@@ -1,13 +1,12 @@
+import { dirname, extname } from 'path';
+
+import { BehaviorSubject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { Worker } from 'worker_threads';
-import { BehaviorSubject } from 'rxjs';
-import { dirname, extname } from 'path';
 
 export class FileWorkerService {
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
-
-  constructor() {}
 
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
     this.scanWorker.postMessage({

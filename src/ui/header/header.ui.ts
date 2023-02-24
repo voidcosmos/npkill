@@ -9,7 +9,7 @@ import { Ui } from '../ui.js';
 import colors from 'colors';
 
 export class HeaderUi extends Ui {
-  public programVersion: string;
+  programVersion: string;
 
   constructor() {
     super();

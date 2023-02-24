@@ -1,16 +1,15 @@
 import {
-  DEFAULT_CONFIG,
-  MIN_CLI_COLUMNS_SIZE,
-  UI_POSITIONS,
-} from './constants/index.js';
-import { COLORS } from './constants/cli.constants.js';
-import {
   ConsoleService,
   FileService,
   ResultsService,
   SpinnerService,
   UpdateService,
 } from './services/index.js';
+import {
+  DEFAULT_CONFIG,
+  MIN_CLI_COLUMNS_SIZE,
+  UI_POSITIONS,
+} from './constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from './constants/messages.constants.js';
 import {
   IConfig,
@@ -28,22 +27,23 @@ import {
   tap,
 } from 'rxjs/operators';
 
+import { COLORS } from './constants/cli.constants.js';
 import { FOLDER_SORT } from './constants/sort.result.js';
-import colors from 'colors';
-import keypress from 'keypress';
-import __dirname from './dirname.js';
-import path from 'path';
-import { homedir } from 'os';
-import { HeaderUi } from './ui/header/header.ui.js';
-import { UiService } from './services/ui.service.js';
-import { ResultsUi } from './ui/results.ui.js';
 import { GeneralUi } from './ui/general.ui.js';
+import { HeaderUi } from './ui/header/header.ui.js';
 import { HelpUi } from './ui/help.ui.js';
-import { StatsUi } from './ui/header/stats.ui.js';
-import { StatusUi } from './ui/header/status.ui.js';
+import { InteractiveUi } from './ui/ui.js';
 import { LoggerService } from './services/logger.service.js';
 import { LogsUi } from './ui/logs.ui.js';
-import { InteractiveUi } from './ui/ui.js';
+import { ResultsUi } from './ui/results.ui.js';
+import { StatsUi } from './ui/header/stats.ui.js';
+import { StatusUi } from './ui/header/status.ui.js';
+import { UiService } from './services/ui.service.js';
+import __dirname from './dirname.js';
+import colors from 'colors';
+import { homedir } from 'os';
+import keypress from 'keypress';
+import path from 'path';
 
 export class Controller {
   private folderRoot = '';
@@ -415,7 +415,7 @@ export class Controller {
     this.searchDuration = +((Date.now() - this.searchStart) / 1000).toFixed(2);
   }
 
-  private isQuitKey(ctrl, name): boolean {
+  private isQuitKey(ctrl: boolean, name: string): boolean {
     return (ctrl && name === 'c') || name === 'q';
   }
 

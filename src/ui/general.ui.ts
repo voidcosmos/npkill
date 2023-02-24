@@ -4,10 +4,6 @@ import { Ui } from './ui.js';
 import colors from 'colors';
 
 export class GeneralUi extends Ui {
-  constructor() {
-    super();
-  }
-
   render() {}
 
   printExitMessage(stats: { spaceReleased: string }): void {

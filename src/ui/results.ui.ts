@@ -16,13 +16,13 @@ import { Subject } from 'rxjs';
 import { IKeyPress } from 'src/interfaces/key-press.interface.js';
 
 export class ResultsUi extends Ui implements InteractiveUi {
-  public haveResultsAfterCompleted = true;
-  public cursorPosY = MARGINS.ROW_RESULTS_START;
-  public previusCursorPosY = MARGINS.ROW_RESULTS_START;
-  public scroll: number = 0;
+  haveResultsAfterCompleted = true;
+  cursorPosY = MARGINS.ROW_RESULTS_START;
+  previusCursorPosY = MARGINS.ROW_RESULTS_START;
+  scroll: number = 0;
 
-  public readonly delete$ = new Subject<IFolder>();
-  public readonly showErrors$ = new Subject<null>();
+  readonly delete$ = new Subject<IFolder>();
+  readonly showErrors$ = new Subject<null>();
 
   private config: IConfig = DEFAULT_CONFIG;
   private KEYS = {

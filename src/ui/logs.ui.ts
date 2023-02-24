@@ -11,7 +11,7 @@ export class LogsUi extends Ui implements InteractiveUi {
   private pages = [];
   private actualPage = 0;
 
-  public readonly close$ = new Subject<null>();
+  readonly close$ = new Subject<null>();
 
   private KEYS = {
     e: () => this.cyclePages(),

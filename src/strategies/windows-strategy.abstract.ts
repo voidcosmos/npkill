@@ -15,7 +15,7 @@ export abstract class WindowsStrategy {
     this.major = major;
     this.minor = minor;
   }
-  public setNextStrategy(next: WindowsStrategy): WindowsStrategy {
+  setNextStrategy(next: WindowsStrategy): WindowsStrategy {
     this.next = next;
     return next;
   }

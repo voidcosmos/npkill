@@ -1,7 +1,7 @@
-import { extname } from 'path';
 import { OPTIONS, WIDTH_OVERFLOW } from '../constants/index.js';
 
 import { ICliOptions } from '../interfaces/cli-options.interface.js';
+import { extname } from 'path';
 
 export class ConsoleService {
   getParameters(rawArgv: string[]): {} {
@@ -36,11 +36,11 @@ export class ConsoleService {
   }
 
   replaceString(
-    string: string,
-    stringToReplace: string | RegExp,
+    text: string,
+    textToReplace: string | RegExp,
     replaceValue: string,
   ) {
-    return string.replace(stringToReplace, replaceValue);
+    return text.replace(textToReplace, replaceValue);
   }
 
   shortenText(text: string, width: number, startCut = 0): string {
