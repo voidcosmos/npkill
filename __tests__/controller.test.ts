@@ -54,10 +54,11 @@ describe('Controller test', () => {
       return {};
     },
     isRunningBuild: () => false,
+    startListenKeyEvents: jest.fn(),
   };
 
   ////////// mocked Controller Methods
-  let getArgumentsSpy;
+  let parseArgumentsSpy;
   let showHelpSpy;
   let prepareScreenSpy;
   let setupEventsListenerSpy;
@@ -81,7 +82,7 @@ describe('Controller test', () => {
       resultServiceMock,
       uiServiceMock,
     );
-    getArgumentsSpy = jest.spyOn(controller, 'getArguments');
+    parseArgumentsSpy = jest.spyOn(controller, 'parseArguments');
     showHelpSpy = jest
       .spyOn(controller, 'showHelp')
       .mockImplementation(() => ({}));
