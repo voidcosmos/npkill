@@ -168,9 +168,9 @@ export class Controller {
     this.uiLogs.setVisible(visible);
     // Need convert to pattern and have a stack for recover latest
     // component.
-    this.uiResults.freeze = visible;
-    this.uiStats.freeze = visible;
-    this.uiStatus.freeze = visible;
+    this.uiResults.freezed = visible;
+    this.uiStats.freezed = visible;
+    this.uiStatus.freezed = visible;
     if (visible) {
       this.activeComponent = this.uiLogs;
       this.uiLogs.render();
