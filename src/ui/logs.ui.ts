@@ -1,9 +1,9 @@
-import { LoggerService } from 'src/services/logger.service.js';
+import { LoggerService } from '../services/logger.service.js';
 import { InteractiveUi, Ui } from './ui.js';
 import colors from 'colors';
-import { IPosition } from 'src/interfaces/ui-positions.interface.js';
+import { IPosition } from '../interfaces/ui-positions.interface.js';
 import { Subject } from 'rxjs';
-import { IKeyPress } from 'src/interfaces/key-press.interface.js';
+import { IKeyPress } from '../interfaces/key-press.interface.js';
 
 export class LogsUi extends Ui implements InteractiveUi {
   private size: IPosition;

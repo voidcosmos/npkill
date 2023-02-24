@@ -21,16 +21,31 @@ jest.unstable_mockModule('../src/ui/help.ui.js', () => ({
   HelpUi: jest.fn(),
 }));
 jest.unstable_mockModule('../src/ui/results.ui.js', () => ({
-  ResultsUi: jest.fn(),
+  ResultsUi: jest.fn(() => ({
+    delete$: { subscribe: jest.fn() },
+    showErrors$: { subscribe: jest.fn() },
+  })),
 }));
-jest.unstable_mockModule('../src/ui/ui.js', () => ({ Ui: jest.fn() }));
+jest.unstable_mockModule('../src/ui/logs.ui.js', () => ({
+  LogsUi: jest.fn(() => ({
+    close$: { subscribe: jest.fn() },
+  })),
+}));
+jest.unstable_mockModule('../src/ui/ui.js', () => ({
+  Ui: { setVisible: jest.fn() },
+}));
 
 describe('Controller test', () => {
   let controller;
-  const linuxFilesServiceMock: any = jest.fn();
+  const linuxFilesServiceMock: any = {
+    getFileContent: jest.fn().mockReturnValue('{}'),
+  };
   const spinnerServiceMock: any = jest.fn();
   const UpdateServiceMock: any = jest.fn();
   const resultServiceMock: any = jest.fn();
+  const loggerServiceMock: any = {
+    info: () => {},
+  };
   const uiServiceMock: any = {
     add: () => {},
   };
@@ -58,6 +73,7 @@ describe('Controller test', () => {
       .spyOn(process, 'exit')
       .mockImplementation(() => ({} as never));
     controller = new Controller(
+      loggerServiceMock,
       linuxFilesServiceMock,
       spinnerServiceMock,
       consoleService,
