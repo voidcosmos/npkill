@@ -1,11 +1,17 @@
 import ansiEscapes from 'ansi-escapes';
+import { IKeyPress } from 'src/interfaces';
 
 export interface Position {
   x: number;
   y: number;
 }
 
+export interface InteractiveUi {
+  onKeyInput(key: IKeyPress): void;
+}
+
 export abstract class Ui {
+  public freezed = false;
   protected _position: Position;
   protected _visible = true;
   protected stdout: NodeJS.WriteStream = process.stdout;
@@ -22,6 +28,9 @@ export abstract class Ui {
   }
 
   protected print(text: string): void {
+    if (this.freezed) {
+      return;
+    }
     process.stdout.write.bind(process.stdout)(text);
   }
 

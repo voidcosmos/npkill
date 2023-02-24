@@ -1,9 +1,7 @@
 import {
   DEFAULT_CONFIG,
-  MARGINS,
   MIN_CLI_COLUMNS_SIZE,
   UI_POSITIONS,
-  VALID_KEYS,
 } from './constants/index.js';
 import { COLORS } from './constants/cli.constants.js';
 import {
@@ -18,7 +16,6 @@ import {
   IConfig,
   IFolder,
   IKeyPress,
-  IKeysCommand,
   IListDirParams,
 } from './interfaces/index.js';
 import { Observable, from } from 'rxjs';
@@ -44,6 +41,9 @@ import { GeneralUi } from './ui/general.ui.js';
 import { HelpUi } from './ui/help.ui.js';
 import { StatsUi } from './ui/header/stats.ui.js';
 import { StatusUi } from './ui/header/status.ui.js';
+import { LoggerService } from './services/logger.service.js';
+import { LogsUi } from './ui/logs.ui.js';
+import { InteractiveUi } from './ui/ui.js';
 
 export class Controller {
   private folderRoot = '';
@@ -53,14 +53,16 @@ export class Controller {
   private searchStart: number;
   private searchDuration: number;
 
+  private uiHeader: HeaderUi;
   private uiGeneral: GeneralUi;
   private uiStats: StatsUi;
   private uiStatus: StatusUi;
   private uiResults: ResultsUi;
-
-  private KEYS: IKeysCommand;
+  private uiLogs: LogsUi;
+  private activeComponent: InteractiveUi;
 
   constructor(
+    private logger: LoggerService,
     private fileService: FileService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
@@ -70,23 +72,11 @@ export class Controller {
   ) {}
 
   init(): void {
-    const uiHeader = new HeaderUi();
-    this.uiService.add(uiHeader);
-    this.uiResults = new ResultsUi(
-      this.resultsService,
-      this.consoleService,
-      this.fileService,
-    );
-    this.uiService.add(this.uiResults);
-    this.uiStats = new StatsUi(this.resultsService);
-    this.uiService.add(this.uiStats);
-    this.uiStatus = new StatusUi(this.spinnerService);
-    this.uiService.add(this.uiStatus);
-    this.uiGeneral = new GeneralUi();
-    this.uiService.add(this.uiGeneral);
-
+    this.logger.info(process.argv.join(' '));
+    this.logger.info(`Npkill started! v${this.getVersion()}`);
+    this.initUi();
     if (this.consoleService.isRunningBuild()) {
-      uiHeader.programVersion = this.getVersion();
+      this.uiHeader.programVersion = this.getVersion();
     }
 
     keypress(process.stdin);
@@ -97,8 +87,34 @@ export class Controller {
     this.uiStatus.start();
     if (this.config.checkUpdates) this.checkVersion();
 
-    this.setupKeysCommand();
     this.scan();
+  }
+
+  private initUi() {
+    this.uiHeader = new HeaderUi();
+    this.uiService.add(this.uiHeader);
+    this.uiResults = new ResultsUi(
+      this.resultsService,
+      this.consoleService,
+      this.fileService,
+    );
+    this.uiService.add(this.uiResults);
+    this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
+    this.uiService.add(this.uiStats);
+    this.uiStatus = new StatusUi(this.spinnerService);
+    this.uiService.add(this.uiStatus);
+    this.uiGeneral = new GeneralUi();
+    this.uiService.add(this.uiGeneral);
+    this.uiLogs = new LogsUi(this.logger);
+    this.uiService.add(this.uiLogs);
+
+    // Set Events
+    this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
+    this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
+    this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
+
+    // Activate the main interactive component
+    this.activeComponent = this.uiResults;
   }
 
   private getArguments(): void {
@@ -135,7 +151,7 @@ export class Controller {
       ? options['directory']
       : process.cwd();
     if (options['full-scan']) this.folderRoot = homedir();
-    if (options['show-errors']) this.config.showErrors = true;
+    if (options['hide-errors']) this.config.showErrors = false;
     if (options['gb']) this.config.folderSizeInGB = true;
     if (options['no-check-updates']) this.config.checkUpdates = false;
     if (options['target-folder'])
@@ -148,27 +164,20 @@ export class Controller {
     this.folderRoot = this.folderRoot.replace(/[\/\\]$/, '');
   }
 
-  private setupKeysCommand() {
-    this.KEYS = {
-      up: () => this.uiResults.moveCursorUp(),
-      // tslint:disable-next-line: object-literal-sort-keys
-      down: () => this.uiResults.moveCursorDown(),
-      space: () => this.delete(),
-      j: () => this.uiResults.moveCursorDown(),
-      k: () => this.uiResults.moveCursorUp(),
-      h: () => this.uiResults.moveCursorPageDown(),
-      l: () => this.uiResults.moveCursorPageUp(),
-      d: () => this.uiResults.moveCursorPageDown(),
-      u: () => this.uiResults.moveCursorPageUp(),
-      pageup: () => this.uiResults.moveCursorPageUp(),
-      pagedown: () => this.uiResults.moveCursorPageDown(),
-      home: () => this.uiResults.moveCursorFirstResult(),
-      end: () => this.uiResults.moveCursorLastResult(),
-
-      execute(command: string, params: string[]) {
-        return this[command](params);
-      },
-    };
+  private showErrorPopup(visible: boolean) {
+    this.uiLogs.setVisible(visible);
+    // Need convert to pattern and have a stack for recover latest
+    // component.
+    this.uiResults.freezed = visible;
+    this.uiStats.freezed = visible;
+    this.uiStatus.freezed = visible;
+    if (visible) {
+      this.activeComponent = this.uiLogs;
+      this.uiLogs.render();
+    } else {
+      this.activeComponent = this.uiResults;
+      this.uiService.renderAll();
+    }
   }
 
   private invalidSortParam(): void {
@@ -230,19 +239,25 @@ export class Controller {
   }
 
   private checkVersion(): void {
+    this.logger.info('Checking updates...');
     this.updateService
       .isUpdated(this.getVersion())
       .then((isUpdated: boolean) => {
-        if (!isUpdated) this.showNewInfoMessage();
+        if (isUpdated) {
+          this.showUpdateMessage();
+          this.logger.info('New version found!');
+        } else {
+          this.logger.info('Npkill is update');
+        }
       })
       .catch((err) => {
         const errorMessage =
           ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
-        this.printError(errorMessage);
+        this.newError(errorMessage);
       });
   }
 
-  private showNewInfoMessage(): void {
+  private showUpdateMessage(): void {
     const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
     this.uiService.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
@@ -274,18 +289,20 @@ export class Controller {
 
     if (this.isQuitKey(ctrl, name)) this.quit();
 
-    const command = this.getCommand(name);
-    if (command) this.KEYS.execute(name);
+    if (!this.activeComponent) {
+      this.logger.error('activeComponent is NULL in Controller.');
+      return;
+    }
 
-    if (name !== 'space') this.printFoldersSection();
+    this.activeComponent.onKeyInput(key);
   }
 
   private setErrorEvents(): void {
     process.on('uncaughtException', (err) => {
-      this.printError(err.message);
+      this.newError(err.message);
     });
     process.on('unhandledRejection', (reason: {}) => {
-      this.printError(reason['stack']);
+      this.newError(reason['stack']);
     });
   }
 
@@ -301,10 +318,11 @@ export class Controller {
     this.searchStart = Date.now();
     const folders$ = this.fileService.listDir(params);
 
+    this.logger.info(`Scan started in ${params.path}`);
     folders$
       .pipe(
         catchError((error, caught) => {
-          this.printFolderError(error.message);
+          this.newError(error.message);
           return caught;
         }),
         mergeMap((dataFolder) =>
@@ -323,6 +341,7 @@ export class Controller {
         }),
         tap((nodeFolder) => {
           this.resultsService.addResult(nodeFolder);
+          this.logger.info(`Folder found: ${nodeFolder.path}`);
 
           if (this.config.sortBy === 'path') {
             this.resultsService.sortResults(this.config.sortBy);
@@ -333,7 +352,7 @@ export class Controller {
       )
       .subscribe(
         () => this.printFoldersSection(),
-        (error) => this.printError(error),
+        (error) => this.newError(error),
         () => this.completeSearch(),
       );
   }
@@ -352,16 +371,13 @@ export class Controller {
     return params;
   }
 
-  private printFolderError(err: string) {
-    if (!this.config.showErrors) return;
-
-    const messages = this.consoleService.splitData(err);
-    messages.map((msg) => this.printError(msg));
-  }
-
   private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
+    this.logger.info(`Calculating stats for ${nodeFolder.path}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
-      tap((size) => (nodeFolder.size = this.fileService.convertKbToGB(+size))),
+      tap((size) => {
+        nodeFolder.size = this.fileService.convertKbToGB(+size);
+        this.logger.info(`Size of ${nodeFolder.path}: ${size}kb`);
+      }),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
@@ -373,6 +389,7 @@ export class Controller {
           parentFolder,
         );
         nodeFolder.modificationTime = result;
+        this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
       }),
       tap(() => this.finishFolderStats()),
     );
@@ -392,6 +409,7 @@ export class Controller {
   private completeSearch(): void {
     this.setSearchDuration();
     this.uiStatus.completeSearch(this.searchDuration);
+    this.logger.info(`Search completed after ${this.searchDuration}s`);
     if (!this.resultsService.results.length) this.showNoResults();
   }
 
@@ -405,14 +423,17 @@ export class Controller {
   }
 
   private isQuitKey(ctrl, name): boolean {
-    return (ctrl && name === 'c') || name === 'q' || name === 'escape';
+    return (ctrl && name === 'c') || name === 'q';
   }
 
   private quit(): void {
     this.uiService.setRawMode(false);
     this.uiService.clear();
-    this.printExitMessage();
     this.uiService.setCursorVisible(true);
+    this.printExitMessage();
+    this.logger.info('Thank for using npkill. Bye!');
+    const logPath = this.logger.getSuggestLogfilePath();
+    this.logger.saveToFile(logPath);
     process.exit();
   }
 
@@ -421,29 +442,18 @@ export class Controller {
     new GeneralUi().printExitMessage({ spaceReleased });
   }
 
-  private getCommand(keyName: string): string {
-    return VALID_KEYS.find((name) => name === keyName);
-  }
-
-  private delete(): void {
-    const nodeFolder =
-      this.resultsService.results[
-        this.uiResults.cursorPosY - MARGINS.ROW_RESULTS_START
-      ];
-    this.clearErrors();
-    this.deleteFolder(nodeFolder);
-  }
-
   private deleteFolder(folder: IFolder): void {
     const isSafeToDelete = this.fileService.isSafeToDelete(
       folder.path,
       this.config.targetFolder,
     );
+
     if (!isSafeToDelete) {
-      this.printError('Folder not safe to delete');
+      this.newError(`Folder not safe to delete: ${folder.path}`);
       return;
     }
 
+    this.logger.info(`Deleting ${folder.path}`);
     folder.status = 'deleting';
     this.printFoldersSection();
 
@@ -453,36 +463,17 @@ export class Controller {
         folder.status = 'deleted';
         this.uiStats.render();
         this.printFoldersSection();
+        this.logger.info(`Deleted ${folder.path}`);
       })
       .catch((e) => {
         folder.status = 'error-deleting';
         this.printFoldersSection();
-        this.printError(e.message);
+        this.newError(e.message);
       });
   }
 
-  private printError(error: string): void {
-    const errorText = (() => {
-      const margin = MARGINS.FOLDER_COLUMN_START;
-      const width = this.stdout.columns - margin - 3;
-      return this.consoleService.shortenText(error, width, width);
-    })();
-
-    // TODO create ErrorUi component
-    this.uiService.printAt(colors.red(errorText), {
-      x: 0,
-      y: this.stdout.rows,
-    });
-  }
-
-  private prepareErrorMsg(errMessage: string): string {
-    const margin = MARGINS.FOLDER_COLUMN_START;
-    const width = this.stdout.columns - margin - 3;
-    return this.consoleService.shortenText(errMessage, width, width);
-  }
-
-  private clearErrors(): void {
-    const lineOfErrors = this.stdout.rows;
-    this.uiService.clearLine(lineOfErrors);
+  private newError(error: string): void {
+    this.logger.error(error);
+    this.uiStats.render();
   }
 }

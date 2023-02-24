@@ -27,7 +27,10 @@ export class UiService {
   }
 
   renderAll() {
-    this.uiComponents.forEach((component) => component.render());
+    this.clear();
+    this.uiComponents.forEach((component) => {
+      if (component.visible) component.render();
+    });
   }
 
   clear(): void {

@@ -16,7 +16,7 @@ export const DEFAULT_CONFIG: IConfig = {
   excludeHiddenDirectories: false,
   folderSizeInGB: false,
   maxSimultaneousSearch: 6,
-  showErrors: false,
+  showErrors: true,
   sortBy: '',
   targetFolder: 'node_modules',
 };
@@ -42,24 +42,26 @@ export const UI_POSITIONS: IUiPosition = {
   SPACE_RELEASED: { x: 50, y: 4 },
   STATUS: { x: 50, y: 5 },
   TOTAL_SPACE: { x: 50, y: 3 },
+  ERRORS_COUNT: { x: 50, y: 2 },
   TUTORIAL_TIP: { x: 4, y: 7 },
 };
 
-export const VALID_KEYS: string[] = [
-  'up', // Move up
-  'down', // Move down
-  'space', // Delete
-  'j', // Move down
-  'k', // Move up
-  'h', // Move page down
-  'l', // Move page up
-  'u', // Move page up
-  'd', // Move page down
-  'pageup',
-  'pagedown',
-  'home', // Move to the first result
-  'end', // Move to the last result
-];
+// export const VALID_KEYS: string[] = [
+//   'up', // Move up
+//   'down', // Move down
+//   'space', // Delete
+//   'j', // Move down
+//   'k', // Move up
+//   'h', // Move page down
+//   'l', // Move page up
+//   'u', // Move page up
+//   'd', // Move page down
+//   'pageup',
+//   'pagedown',
+//   'home', // Move to the first result
+//   'end', // Move to the last result
+//   'e', // Show errors
+// ];
 
 export const BANNER = `-----                    __   .__.__  .__
 -           ____ ______ |  | _|__|  | |  |

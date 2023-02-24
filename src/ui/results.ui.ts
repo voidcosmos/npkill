@@ -7,18 +7,40 @@ import {
 import { INFO_MSGS } from '../constants/messages.constants.js';
 import { IFolder } from '../interfaces/folder.interface.js';
 import { ResultsService } from '../services/results.service.js';
-import { Ui } from './ui.js';
+import { InteractiveUi, Ui } from './ui.js';
 import colors from 'colors';
 import { ConsoleService } from '../services/console.service.js';
 import { FileService } from '../services/index.js';
 import { IConfig } from '../interfaces/config.interface.js';
+import { Subject } from 'rxjs';
+import { IKeyPress } from 'src/interfaces/key-press.interface.js';
 
-export class ResultsUi extends Ui {
+export class ResultsUi extends Ui implements InteractiveUi {
   public haveResultsAfterCompleted = true;
   public cursorPosY = MARGINS.ROW_RESULTS_START;
   public previusCursorPosY = MARGINS.ROW_RESULTS_START;
   public scroll: number = 0;
+
+  public readonly delete$ = new Subject<IFolder>();
+  public readonly showErrors$ = new Subject<null>();
+
   private config: IConfig = DEFAULT_CONFIG;
+  private KEYS = {
+    up: () => this.moveCursorUp(),
+    down: () => this.moveCursorDown(),
+    space: () => this.delete(),
+    j: () => this.moveCursorDown(),
+    k: () => this.moveCursorUp(),
+    h: () => this.moveCursorPageDown(),
+    l: () => this.moveCursorPageUp(),
+    d: () => this.moveCursorPageDown(),
+    u: () => this.moveCursorPageUp(),
+    pageup: () => this.moveCursorPageUp(),
+    pagedown: () => this.moveCursorPageDown(),
+    home: () => this.moveCursorFirstResult(),
+    end: () => this.moveCursorLastResult(),
+    e: () => this.showErrorsPopup(),
+  };
 
   constructor(
     private resultsService: ResultsService,
@@ -26,6 +48,15 @@ export class ResultsUi extends Ui {
     private fileService: FileService,
   ) {
     super();
+  }
+
+  onKeyInput({ name }: IKeyPress): void {
+    const action = this.KEYS[name];
+    if (!action) {
+      return;
+    }
+    action();
+    this.render();
   }
 
   render() {
@@ -300,6 +331,16 @@ export class ResultsUi extends Ui {
       x: startPaint,
       y: row,
     });
+  }
+
+  private delete() {
+    const folder =
+      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
+    this.delete$.next(folder);
+  }
+
+  private showErrorsPopup() {
+    this.showErrors$.next(null);
   }
 
   private clamp(num: number, min: number, max: number) {
