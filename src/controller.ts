@@ -345,11 +345,11 @@ export class Controller {
         }),
         mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 2),
       )
-      .subscribe(
-        () => this.printFoldersSection(),
-        (error) => this.newError(error),
-        () => this.completeSearch(),
-      );
+      .subscribe({
+        next: () => this.printFoldersSection(),
+        error: (error) => this.newError(error),
+        complete: () => this.completeSearch(),
+      });
   }
 
   private prepareListDirParams(): IListDirParams {
