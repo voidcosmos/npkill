@@ -11,6 +11,7 @@ export interface InteractiveUi {
 }
 
 export abstract class Ui {
+  public freeze = false;
   protected _position: Position;
   protected _visible = true;
   protected stdout: NodeJS.WriteStream = process.stdout;
@@ -27,6 +28,9 @@ export abstract class Ui {
   }
 
   protected print(text: string): void {
+    if (this.freeze) {
+      return;
+    }
     process.stdout.write.bind(process.stdout)(text);
   }
 

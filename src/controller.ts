@@ -168,8 +168,16 @@ export class Controller {
     this.uiLogs.setVisible(visible);
     // Need convert to pattern and have a stack for recover latest
     // component.
-    this.activeComponent = visible ? this.uiLogs : this.uiResults;
-    this.uiService.renderAll();
+    this.uiResults.freeze = visible;
+    this.uiStats.freeze = visible;
+    this.uiStatus.freeze = visible;
+    if (visible) {
+      this.activeComponent = this.uiLogs;
+      this.uiLogs.render();
+    } else {
+      this.activeComponent = this.uiResults;
+      this.uiService.renderAll();
+    }
   }
 
   private invalidSortParam(): void {
