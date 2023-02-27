@@ -66,7 +66,9 @@ export abstract class FileService implements IFileService {
         if (item.name === 'node_modules') continue;
         files = [
           ...files,
-          ...(await this.getFileStatsInDir(`${dirname}/${item.name}`)),
+          ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(
+            () => [],
+          )),
         ];
       } else {
         const path = `${dirname}/${item.name}`;
