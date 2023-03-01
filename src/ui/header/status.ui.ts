@@ -8,7 +8,7 @@ import {
   SPINNER_INTERVAL,
 } from '../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../constants/main.constants.js';
-import { SearchState } from 'src/models/search-state.model.js';
+import { SearchStatus } from 'src/models/search-state.model.js';
 
 export class StatusUi extends Ui {
   private text = '';
@@ -16,7 +16,7 @@ export class StatusUi extends Ui {
 
   constructor(
     private spinnerService: SpinnerService,
-    private searchState: SearchState,
+    private searchStatus: SearchStatus,
   ) {
     super();
   }
@@ -48,7 +48,7 @@ export class StatusUi extends Ui {
       completedSearchTasks,
       completedStatsCalculation,
       pendingStatsCalculation,
-    } = this.searchState;
+    } = this.searchStatus;
 
     const barParts = {
       bg: colors.gray('🮂'),

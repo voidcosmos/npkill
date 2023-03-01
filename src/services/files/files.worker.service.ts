@@ -3,7 +3,7 @@ import { dirname, extname } from 'path';
 import { BehaviorSubject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { Worker } from 'worker_threads';
-import { SearchState } from 'src/models/search-state.model.js';
+import { SearchStatus } from 'src/models/search-state.model.js';
 
 type WorkerStatus = 'stopped' | 'scanning' | 'finished';
 
@@ -12,7 +12,7 @@ export class FileWorkerService {
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
 
-  constructor(private searchState: SearchState) {}
+  constructor(private searchStatus: SearchStatus) {}
 
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
     this.scanWorker.postMessage({
@@ -27,8 +27,9 @@ export class FileWorkerService {
       }
 
       if (data?.type === 'stats') {
-        this.searchState.pendingSearchTasks = data.value.pendingSearchTasks;
-        this.searchState.completedSearchTasks = data.value.completedSearchTasks;
+        this.searchStatus.pendingSearchTasks = data.value.pendingSearchTasks;
+        this.searchStatus.completedSearchTasks =
+          data.value.completedSearchTasks;
       }
 
       if (data?.type === 'scan-job-completed') {

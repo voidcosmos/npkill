@@ -1,4 +1,4 @@
-export class SearchState {
+export class SearchStatus {
   public pendingSearchTasks = 0;
   public completedSearchTasks = 0;
   public pendingStatsCalculation = 0;
