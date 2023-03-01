@@ -14,6 +14,7 @@ import { BAR_PARTS, BAR_WIDTH } from '../../constants/status.constants.js';
 export class StatusUi extends Ui {
   private text = '';
   private searchEnd$ = new Subject();
+  private progressBarWidthForInit = 0;
 
   constructor(
     private spinnerService: SpinnerService,
@@ -52,14 +53,12 @@ export class StatusUi extends Ui {
     } = this.searchStatus;
 
     const proportional = (a: number, b: number, c: number) => (a * b) / c;
-    const printProgressBar = (progressBar: string) =>
-      this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
 
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
 
     if (barSearchMax === 0) {
-      printProgressBar(BAR_PARTS.bg.repeat(BAR_WIDTH));
+      this.animateProgressBar();
       return;
     }
 
@@ -86,7 +85,23 @@ export class StatusUi extends Ui {
       BAR_PARTS.searchTask.repeat(searchBarLenght) +
       BAR_PARTS.bg.repeat(barLenght);
 
-    printProgressBar(progressBar);
+    this.printProgressBar(progressBar);
+  }
+
+  /** Executing only during the startup, when no data is available.*/
+  private animateProgressBar() {
+    if (this.progressBarWidthForInit > 1) {
+      return;
+    }
+    this.progressBarWidthForInit += 0.05;
+    // easeInOut formula
+    const width =
+      (-(Math.cos(Math.PI * this.progressBarWidthForInit) - 1) / 2) * BAR_WIDTH;
+    this.printProgressBar(BAR_PARTS.bg.repeat(width));
+  }
+
+  private printProgressBar(progressBar: string) {
+    this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
   }
 
   private nextFrame() {
