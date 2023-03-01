@@ -16,6 +16,11 @@ interface Task {
 }
 
 (() => {
+  parentPort.postMessage({
+    type: 'alive',
+    value: null,
+  });
+
   parentPort.on('message', (data) => {
     if (data?.type === 'start-explore') {
       startExplore(data.value.path);

@@ -15,6 +15,12 @@ export class StatusUi extends Ui {
   private text = '';
   private searchEnd$ = new Subject();
   private progressBarWidthForInit = 0;
+  private SEARCH_STATES = {
+    stopped: () => this.startingSearch(),
+    scanning: () => this.continueSearching(),
+    dead: () => this.fatalError(),
+    finished: () => this.continueFinishing(),
+  };
 
   constructor(
     private spinnerService: SpinnerService,
@@ -27,7 +33,9 @@ export class StatusUi extends Ui {
     this.spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.searchEnd$))
-      .subscribe(() => this.nextFrame());
+      .subscribe(() => {
+        this.SEARCH_STATES[this.searchStatus.workerStatus]();
+      });
   }
 
   completeSearch(duration: number) {
@@ -104,8 +112,24 @@ export class StatusUi extends Ui {
     this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
   }
 
-  private nextFrame() {
+  private startingSearch() {
+    this.text = INFO_MSGS.STARTING;
+    this.render();
+  }
+
+  private continueSearching() {
     this.text = INFO_MSGS.SEARCHING + this.spinnerService.nextFrame();
+    this.render();
+  }
+
+  private fatalError() {
+    this.text = colors.red(INFO_MSGS.FATAL_ERROR);
+    this.searchEnd$.next(null);
+    this.render();
+  }
+
+  private continueFinishing() {
+    this.text = INFO_MSGS.CALCULATING_STATS + this.spinnerService.nextFrame();
     this.render();
   }
 }

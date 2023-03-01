@@ -5,10 +5,9 @@ import { IListDirParams } from '../../interfaces/index.js';
 import { Worker } from 'worker_threads';
 import { SearchStatus } from 'src/models/search-state.model.js';
 
-type WorkerStatus = 'stopped' | 'scanning' | 'finished';
+export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 
 export class FileWorkerService {
-  public status: WorkerStatus = 'stopped';
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
 
@@ -19,7 +18,6 @@ export class FileWorkerService {
       type: 'start-explore',
       value: { path: params.path },
     });
-    this.status = 'scanning';
 
     this.scanWorker.on('message', (data) => {
       if (data?.type === 'scan-result') {
@@ -32,20 +30,25 @@ export class FileWorkerService {
           data.value.completedSearchTasks;
       }
 
+      if (data?.type === 'alive') {
+        this.searchStatus.workerStatus = 'scanning';
+      }
+
       if (data?.type === 'scan-job-completed') {
         stream$.complete();
-        this.status = 'finished';
+        this.searchStatus.workerStatus = 'finished';
       }
     });
 
     this.scanWorker.on('error', (error) => {
-      this.status = 'stopped';
+      this.searchStatus.workerStatus = 'dead';
       this.scanWorker.terminate();
       throw error;
     });
 
     this.scanWorker.on('exit', (code) => {
       if (code !== 0) {
+        this.searchStatus.workerStatus = 'dead';
         this.scanWorker.terminate();
         return;
       }
