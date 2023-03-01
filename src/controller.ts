@@ -243,7 +243,7 @@ export class Controller {
     this.updateService
       .isUpdated(this.getVersion())
       .then((isUpdated: boolean) => {
-        if (isUpdated) {
+        if (!isUpdated) {
           this.showUpdateMessage();
           this.logger.info('New version found!');
         } else {

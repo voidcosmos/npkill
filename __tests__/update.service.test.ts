@@ -89,6 +89,11 @@ describe('update Service', () => {
         localVersion: '0.10.0',
         remoteVersion: '0.9.0',
       },
+      {
+        isUpdated: true,
+        localVersion: '0.11.0',
+        remoteVersion: '0.9.0',
+      },
     ];
 
     cases.forEach((cas) => {
