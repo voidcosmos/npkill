@@ -8,8 +8,8 @@ import {
   SPINNER_INTERVAL,
 } from '../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../constants/main.constants.js';
-import { SearchStatus } from 'src/models/search-state.model.js';
-import { BAR_PARTS, BAR_WIDTH } from 'src/constants/status.constants.js';
+import { SearchStatus } from '../../models/search-state.model.js';
+import { BAR_PARTS, BAR_WIDTH } from '../../constants/status.constants.js';
 
 export class StatusUi extends Ui {
   private text = '';
