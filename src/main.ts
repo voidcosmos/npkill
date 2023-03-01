@@ -15,6 +15,7 @@ import { IFileService } from './interfaces/file-service.interface.js';
 import { FileWorkerService } from './services/files/files.worker.service.js';
 import { UiService } from './services/ui.service.js';
 import { LoggerService } from './services/logger.service.js';
+import { SearchStatus } from './models/search-state.model.js';
 
 const getOS = () => process.platform;
 
@@ -25,8 +26,9 @@ const OSService = {
 };
 
 const logger = new LoggerService();
+const searchStatus = new SearchStatus();
 
-const fileWorkerService = new FileWorkerService();
+const fileWorkerService = new FileWorkerService(searchStatus);
 const streamService: StreamService = new StreamService();
 
 const fileService: IFileService = new OSService[getOS()](
@@ -36,6 +38,7 @@ const fileService: IFileService = new OSService[getOS()](
 
 export const controller = new Controller(
   logger,
+  searchStatus,
   fileService,
   new SpinnerService(),
   new ConsoleService(),

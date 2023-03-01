@@ -43,6 +43,7 @@ import __dirname from './dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
+import { SearchStatus } from './models/search-state.model.js';
 
 export class Controller {
   private folderRoot = '';
@@ -62,6 +63,7 @@ export class Controller {
 
   constructor(
     private logger: LoggerService,
+    private searchStatus: SearchStatus,
     private fileService: FileService,
     private spinnerService: SpinnerService,
     private consoleService: ConsoleService,
@@ -99,7 +101,7 @@ export class Controller {
     this.uiService.add(this.uiResults);
     this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
     this.uiService.add(this.uiStats);
-    this.uiStatus = new StatusUi(this.spinnerService);
+    this.uiStatus = new StatusUi(this.spinnerService, this.searchStatus);
     this.uiService.add(this.uiStatus);
     this.uiGeneral = new GeneralUi();
     this.uiService.add(this.uiGeneral);
@@ -314,17 +316,30 @@ export class Controller {
     const folders$ = this.fileService.listDir(params);
 
     this.logger.info(`Scan started in ${params.path}`);
-    folders$
+    const newResults$ = folders$.pipe(
+      catchError((error, caught) => {
+        this.newError(error.message);
+        return caught;
+      }),
+      mergeMap((dataFolder) => from(this.consoleService.splitData(dataFolder))),
+      filter((path) => !!path),
+    );
+
+    const excludedResults$ = newResults$.pipe(
+      filter((path) => isExcludedDangerousDirectory(path)),
+    );
+
+    const nonExcludedResults$ = newResults$.pipe(
+      filter((path) => !isExcludedDangerousDirectory(path)),
+    );
+
+    excludedResults$.subscribe(() => {
+      // this.searchState.resultsFound++;
+      // this.searchState.completedStatsCalculation++;
+    });
+
+    nonExcludedResults$
       .pipe(
-        catchError((error, caught) => {
-          this.newError(error.message);
-          return caught;
-        }),
-        mergeMap((dataFolder) =>
-          from(this.consoleService.splitData(dataFolder)),
-        ),
-        filter((path) => !!path),
-        filter((path) => !isExcludedDangerousDirectory(path)),
         map<string, IFolder>((path) => {
           return {
             path,
@@ -335,6 +350,7 @@ export class Controller {
           };
         }),
         tap((nodeFolder) => {
+          this.searchStatus.newResult();
           this.resultsService.addResult(nodeFolder);
           this.logger.info(`Folder found: ${nodeFolder.path}`);
 
@@ -343,7 +359,10 @@ export class Controller {
             this.uiResults.clear();
           }
         }),
-        mergeMap((nodeFolder) => this.calculateFolderStats(nodeFolder), 2),
+        mergeMap((nodeFolder) => {
+          return this.calculateFolderStats(nodeFolder);
+        }, 2),
+        tap(() => this.searchStatus.completeStatCalculation()),
       )
       .subscribe({
         next: () => this.printFoldersSection(),
@@ -386,7 +405,9 @@ export class Controller {
         nodeFolder.modificationTime = result;
         this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
       }),
-      tap(() => this.finishFolderStats()),
+      tap(() => {
+        this.finishFolderStats();
+      }),
     );
   }
 
