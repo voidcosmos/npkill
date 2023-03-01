@@ -3,28 +3,42 @@ import { dirname, extname } from 'path';
 import { BehaviorSubject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { Worker } from 'worker_threads';
+import { SearchState } from 'src/models/search-state.model.js';
+
+type WorkerStatus = 'stopped' | 'scanning' | 'finished';
 
 export class FileWorkerService {
+  public status: WorkerStatus = 'stopped';
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
+
+  constructor(private searchState: SearchState) {}
 
   startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
     this.scanWorker.postMessage({
       type: 'start-explore',
       value: { path: params.path },
     });
+    this.status = 'scanning';
 
     this.scanWorker.on('message', (data) => {
       if (data?.type === 'scan-result') {
         stream$.next(data.value);
       }
 
+      if (data?.type === 'stats') {
+        this.searchState.pendingSearchTasks = data.value.pendingSearchTasks;
+        this.searchState.completedSearchTasks = data.value.completedSearchTasks;
+      }
+
       if (data?.type === 'scan-job-completed') {
         stream$.complete();
+        this.status = 'finished';
       }
     });
 
     this.scanWorker.on('error', (error) => {
+      this.status = 'stopped';
       this.scanWorker.terminate();
       throw error;
     });
