@@ -350,8 +350,7 @@ export class Controller {
           };
         }),
         tap((nodeFolder) => {
-          this.searchStatus.resultsFound++;
-          this.searchStatus.pendingStatsCalculation++;
+          this.searchStatus.newResult();
           this.resultsService.addResult(nodeFolder);
           this.logger.info(`Folder found: ${nodeFolder.path}`);
 
@@ -363,6 +362,7 @@ export class Controller {
         mergeMap((nodeFolder) => {
           return this.calculateFolderStats(nodeFolder);
         }, 2),
+        tap(() => this.searchStatus.completeStatCalculation()),
       )
       .subscribe({
         next: () => this.printFoldersSection(),
@@ -396,8 +396,6 @@ export class Controller {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
           nodeFolder.modificationTime = null;
-          this.searchStatus.pendingStatsCalculation--;
-          this.searchStatus.completedStatsCalculation++;
           return;
         }
         const parentFolder = path.join(nodeFolder.path, '../');
@@ -405,8 +403,6 @@ export class Controller {
           parentFolder,
         );
         nodeFolder.modificationTime = result;
-        this.searchStatus.pendingStatsCalculation--;
-        this.searchStatus.completedStatsCalculation++;
         this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
       }),
       tap(() => {
