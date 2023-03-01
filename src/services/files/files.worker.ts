@@ -49,7 +49,7 @@ interface Task {
       parentPort.postMessage({ type: 'scan-job-completed' });
     });
 
-    fileWalker.onStats((stats) => {
+    fileWalker.onStats((stats: WorkerStats) => {
       parentPort.postMessage({ type: 'stats', value: stats });
     });
   }
@@ -185,11 +185,17 @@ class FileWalker {
     this.events.emit('onCompleted');
   }
 
-  get stats() {
+  get stats(): WorkerStats {
     return {
       pendingSearchTasks: this.taskQueue.length,
       completedSearchTasks: this.completedTasks,
       procs: this.procs,
     };
   }
+}
+
+interface WorkerStats {
+  pendingSearchTasks: number;
+  completedSearchTasks: number;
+  procs: number;
 }

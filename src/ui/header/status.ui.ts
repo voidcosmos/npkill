@@ -8,7 +8,6 @@ import {
   SPINNER_INTERVAL,
 } from '../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../constants/main.constants.js';
-import { FileWorkerService } from 'src/services/files/files.worker.service.js';
 import { SearchState } from 'src/models/search-state.model.js';
 
 export class StatusUi extends Ui {
@@ -49,28 +48,22 @@ export class StatusUi extends Ui {
       completedSearchTasks,
       completedStatsCalculation,
       pendingStatsCalculation,
-      resultsFound,
     } = this.searchState;
-    // this.printAt('▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱', { x: 50, y: 6 });
-    // const barParts = {
-    //   bg: colors.gray('🮎'),
-    //   indexFind: colors.white('▋'),
-    //   calculatingTask: colors.blue('▋'),
-    //   completed: colors.green('▋'),
-    // };
+
     const barParts = {
       bg: colors.gray('🮂'),
       indexFind: colors.white('🮂'),
       calculatingTask: colors.blue('🮂'),
       completed: colors.green('🮂'),
     };
+
     const width = 25;
     const maxValue = pendingSearchTasks + completedSearchTasks;
     const maxDone = completedStatsCalculation + pendingStatsCalculation;
     let calculatingTaskLenght = (maxValue * width) / maxValue;
     let completedLenght = Math.round((completedSearchTasks * width) / maxValue);
     const doneLenght = Math.round(
-      (completedStatsCalculation * completedLenght) / resultsFound,
+      (completedStatsCalculation * completedLenght) / maxDone,
     );
 
     calculatingTaskLenght -= completedLenght;
@@ -94,10 +87,4 @@ export class StatusUi extends Ui {
     this.text = INFO_MSGS.SEARCHING + this.spinnerService.nextFrame();
     this.render();
   }
-}
-
-interface Dataaa {
-  pendingTasks: number;
-  completedTasks: number;
-  procs: number;
 }
