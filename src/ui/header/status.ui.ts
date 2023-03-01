@@ -52,9 +52,16 @@ export class StatusUi extends Ui {
     } = this.searchStatus;
 
     const proportional = (a: number, b: number, c: number) => (a * b) / c;
+    const printProgressBar = (progressBar: string) =>
+      this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
 
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
+
+    if (barSearchMax === 0) {
+      printProgressBar(BAR_PARTS.bg.repeat(BAR_WIDTH));
+      return;
+    }
 
     let barLenght = proportional(barSearchMax, BAR_WIDTH, barSearchMax);
 
@@ -79,7 +86,7 @@ export class StatusUi extends Ui {
       BAR_PARTS.searchTask.repeat(searchBarLenght) +
       BAR_PARTS.bg.repeat(barLenght);
 
-    this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
+    printProgressBar(progressBar);
   }
 
   private nextFrame() {
