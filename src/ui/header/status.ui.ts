@@ -9,6 +9,7 @@ import {
 } from '../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../constants/main.constants.js';
 import { SearchStatus } from 'src/models/search-state.model.js';
+import { BAR_PARTS, BAR_WIDTH } from 'src/constants/status.constants.js';
 
 export class StatusUi extends Ui {
   private text = '';
@@ -50,24 +51,22 @@ export class StatusUi extends Ui {
       pendingStatsCalculation,
     } = this.searchStatus;
 
-    const barParts = {
-      bg: colors.gray('🮂'),
-      indexFind: colors.white('🮂'),
-      calculatingTask: colors.blue('🮂'),
-      completed: colors.green('🮂'),
-    };
+    const proportional = (a: number, b: number, c: number) => (a * b) / c;
 
-    const width = 25;
-    const maxValue = pendingSearchTasks + completedSearchTasks;
-    const maxDone = completedStatsCalculation + pendingStatsCalculation;
-    let calculatingTaskLenght = (maxValue * width) / maxValue;
-    let completedLenght = Math.round((completedSearchTasks * width) / maxValue);
-    const doneLenght = Math.round(
-      (completedStatsCalculation * completedLenght) / maxDone,
+    const barSearchMax = pendingSearchTasks + completedSearchTasks;
+    const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
+
+    let barLenght = proportional(barSearchMax, BAR_WIDTH, barSearchMax);
+
+    let searchBarLenght = Math.round(
+      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax),
+    );
+    const doneBarLenght = Math.round(
+      proportional(completedStatsCalculation, searchBarLenght, barStatsMax),
     );
 
-    calculatingTaskLenght -= completedLenght;
-    completedLenght -= doneLenght;
+    barLenght -= searchBarLenght;
+    searchBarLenght -= doneBarLenght;
 
     // Debug
     // this.printAt(
@@ -76,11 +75,11 @@ export class StatusUi extends Ui {
     // );
 
     const progressBar =
-      barParts.completed.repeat(doneLenght) +
-      barParts.indexFind.repeat(completedLenght) +
-      barParts.bg.repeat(calculatingTaskLenght);
+      BAR_PARTS.completed.repeat(doneBarLenght) +
+      BAR_PARTS.searchTask.repeat(searchBarLenght) +
+      BAR_PARTS.bg.repeat(barLenght);
 
-    this.printAt(progressBar, { x: 50, y: 6 });
+    this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
   }
 
   private nextFrame() {
