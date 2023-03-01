@@ -43,6 +43,7 @@ describe('Controller test', () => {
   const spinnerServiceMock: any = jest.fn();
   const UpdateServiceMock: any = jest.fn();
   const resultServiceMock: any = jest.fn();
+  const searchStatusMock: any = jest.fn();
   const loggerServiceMock: any = {
     info: () => {},
   };
@@ -75,6 +76,7 @@ describe('Controller test', () => {
       .mockImplementation(() => ({} as never));
     controller = new Controller(
       loggerServiceMock,
+      searchStatusMock,
       linuxFilesServiceMock,
       spinnerServiceMock,
       consoleService,
