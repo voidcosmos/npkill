@@ -109,7 +109,7 @@ class FileWalker {
   private VERBOSE = false;
 
   constructor() {
-    setInterval(() => this.events.emit('onStats'), 50);
+    setInterval(() => this.events.emit('onStats'), 500);
   }
 
   onQueueEmpty(fn: () => void) {
