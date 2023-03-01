@@ -65,26 +65,28 @@ export class StatusUi extends Ui {
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
 
-    if (barSearchMax === 0) {
+    if (barSearchMax === 0 && this.searchStatus.workerStatus !== 'finished') {
       this.animateProgressBar();
       return;
     }
 
-    let barLenght = proportional(barSearchMax, BAR_WIDTH, barSearchMax);
+    let barLenght =
+      proportional(barSearchMax, BAR_WIDTH, barSearchMax) || BAR_WIDTH;
 
-    let searchBarLenght = Math.round(
-      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax),
-    );
-    const doneBarLenght = Math.round(
-      proportional(completedStatsCalculation, searchBarLenght, barStatsMax),
-    );
+    let searchBarLenght =
+      Math.round(proportional(completedSearchTasks, BAR_WIDTH, barSearchMax)) ||
+      BAR_WIDTH;
+    const doneBarLenght =
+      Math.round(
+        proportional(completedStatsCalculation, searchBarLenght, barStatsMax),
+      ) || BAR_WIDTH;
 
     barLenght -= searchBarLenght;
     searchBarLenght -= doneBarLenght;
 
     // Debug
     // this.printAt(
-    //   `V: ${maxValue},T: ${maxDone},C: ${pendingStatsCalculation},D:${completedStatsCalculation}   `,
+    //   `V: ${barSearchMax},T: ${barStatsMax},C: ${pendingStatsCalculation},D:${completedStatsCalculation}   `,
     //   { x: 60, y: 5 },
     // );
 
@@ -124,7 +126,8 @@ export class StatusUi extends Ui {
 
   private fatalError() {
     this.text = colors.red(INFO_MSGS.FATAL_ERROR);
-    this.searchEnd$.next(null);
+    this.searchEnd$.next(true);
+    this.searchEnd$.complete();
     this.render();
   }
 
