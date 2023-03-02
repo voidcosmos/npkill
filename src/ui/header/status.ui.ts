@@ -74,12 +74,12 @@ export class StatusUi extends Ui {
     barLenght = Math.floor(barLenght * modifier);
 
     let searchBarLenght =
-      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax) || BAR_WIDTH;
+      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax) || 0;
     searchBarLenght = Math.floor(searchBarLenght * modifier);
 
     let doneBarLenght =
       proportional(completedStatsCalculation, searchBarLenght, barStatsMax) ||
-      BAR_WIDTH;
+      0;
     doneBarLenght = Math.floor(doneBarLenght * modifier);
 
     barLenght -= searchBarLenght;
