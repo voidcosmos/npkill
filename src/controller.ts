@@ -82,6 +82,7 @@ export class Controller {
 
     this.consoleService.startListenKeyEvents();
     this.parseArguments();
+    this.checkRequirements();
     this.prepareScreen();
     this.setupEventsListener();
     this.uiStatus.start();
@@ -219,12 +220,16 @@ export class Controller {
   }
 
   private prepareScreen(): void {
-    this.checkScreenRequirements();
     this.uiService.setRawMode();
     this.uiService.prepareUi();
     this.uiService.setCursorVisible(false);
     this.uiService.clear();
     this.uiService.renderAll();
+  }
+
+  private checkRequirements() {
+    this.checkScreenRequirements();
+    this.checkFileRequirements();
   }
 
   private checkScreenRequirements(): void {
@@ -234,6 +239,15 @@ export class Controller {
     }
     if (!this.stdout.isTTY) {
       this.uiService.print(INFO_MSGS.NO_TTY);
+      process.exit();
+    }
+  }
+
+  private checkFileRequirements(): void {
+    try {
+      this.fileService.isValidRootFolder(this.folderRoot);
+    } catch (error: any) {
+      console.log(error.message);
       process.exit();
     }
   }
