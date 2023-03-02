@@ -183,7 +183,8 @@ export class Controller {
 
   private invalidSortParam(): void {
     this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
-    process.exit();
+    this.logger.error(INFO_MSGS.NO_VALID_SORT_NAME);
+    this.exitWithError();
   }
 
   private showHelp(): void {
@@ -235,11 +236,13 @@ export class Controller {
   private checkScreenRequirements(): void {
     if (this.isTerminalTooSmall()) {
       this.uiService.print(INFO_MSGS.MIN_CLI_CLOMUNS);
-      process.exit();
+      this.logger.error(INFO_MSGS.MIN_CLI_CLOMUNS);
+      this.exitWithError();
     }
     if (!this.stdout.isTTY) {
       this.uiService.print(INFO_MSGS.NO_TTY);
-      process.exit();
+      this.logger.error(INFO_MSGS.NO_TTY);
+      this.exitWithError();
     }
   }
 
@@ -247,8 +250,9 @@ export class Controller {
     try {
       this.fileService.isValidRootFolder(this.folderRoot);
     } catch (error: any) {
-      console.log(error.message);
-      process.exit();
+      this.uiService.print(error.message);
+      this.logger.error(error.message);
+      this.exitWithError();
     }
   }
 
@@ -449,6 +453,15 @@ export class Controller {
 
   private isQuitKey(ctrl: boolean, name: string): boolean {
     return (ctrl && name === 'c') || name === 'q';
+  }
+
+  private exitWithError(): void {
+    this.uiService.print('\n');
+    this.uiService.setRawMode(false);
+    this.uiService.setCursorVisible(true);
+    const logPath = this.logger.getSuggestLogfilePath();
+    this.logger.saveToFile(logPath);
+    process.exit(1);
   }
 
   private quit(): void {
