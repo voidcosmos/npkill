@@ -63,8 +63,12 @@ export class StatusUi extends Ui {
     } = this.searchStatus;
 
     const proportional = (a: number, b: number, c: number) => (a * b) / c;
-    // easeInOut formula
-    const modifier = -(Math.cos(Math.PI * this.barNormalizedWidth) - 1) / 2;
+
+    const modifier =
+      this.barNormalizedWidth === 1
+        ? 1
+        : // easeInOut formula
+          -(Math.cos(Math.PI * this.barNormalizedWidth) - 1) / 2;
 
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
