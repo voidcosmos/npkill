@@ -14,7 +14,7 @@ import { BAR_PARTS, BAR_WIDTH } from '../../constants/status.constants.js';
 export class StatusUi extends Ui {
   private text = '';
   private searchEnd$ = new Subject();
-  private progressBarWidthForInit = 0;
+  private barNormalizedWidth = 0;
   private SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
@@ -36,6 +36,8 @@ export class StatusUi extends Ui {
       .subscribe(() => {
         this.SEARCH_STATES[this.searchStatus.workerStatus]();
       });
+
+    this.animateProgressBar();
   }
 
   completeSearch(duration: number) {
@@ -61,32 +63,31 @@ export class StatusUi extends Ui {
     } = this.searchStatus;
 
     const proportional = (a: number, b: number, c: number) => (a * b) / c;
+    // easeInOut formula
+    const modifier = -(Math.cos(Math.PI * this.barNormalizedWidth) - 1) / 2;
 
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
 
-    if (barSearchMax === 0 && this.searchStatus.workerStatus !== 'finished') {
-      this.animateProgressBar();
-      return;
-    }
-
     let barLenght =
       proportional(barSearchMax, BAR_WIDTH, barSearchMax) || BAR_WIDTH;
+    barLenght = Math.floor(barLenght * modifier);
 
     let searchBarLenght =
-      Math.round(proportional(completedSearchTasks, BAR_WIDTH, barSearchMax)) ||
+      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax) || BAR_WIDTH;
+    searchBarLenght = Math.floor(searchBarLenght * modifier);
+
+    let doneBarLenght =
+      proportional(completedStatsCalculation, searchBarLenght, barStatsMax) ||
       BAR_WIDTH;
-    const doneBarLenght =
-      Math.round(
-        proportional(completedStatsCalculation, searchBarLenght, barStatsMax),
-      ) || BAR_WIDTH;
+    doneBarLenght = Math.floor(doneBarLenght * modifier);
 
     barLenght -= searchBarLenght;
     searchBarLenght -= doneBarLenght;
 
     // Debug
     // this.printAt(
-    //   `V: ${barSearchMax},T: ${barStatsMax},C: ${pendingStatsCalculation},D:${completedStatsCalculation}   `,
+    //   `V: ${barSearchMax},T: ${barLenght},C: ${searchBarLenght},D:${doneBarLenght}   `,
     //   { x: 60, y: 5 },
     // );
 
@@ -98,16 +99,15 @@ export class StatusUi extends Ui {
     this.printProgressBar(progressBar);
   }
 
-  /** Executing only during the startup, when no data is available.*/
   private animateProgressBar() {
-    if (this.progressBarWidthForInit > 1) {
+    if (this.barNormalizedWidth > 1) {
+      this.barNormalizedWidth = 1;
       return;
     }
-    this.progressBarWidthForInit += 0.05;
-    // easeInOut formula
-    const width =
-      (-(Math.cos(Math.PI * this.progressBarWidthForInit) - 1) / 2) * BAR_WIDTH;
-    this.printProgressBar(BAR_PARTS.bg.repeat(width));
+    this.barNormalizedWidth += 0.05;
+
+    this.renderProgressBar();
+    setTimeout(() => this.animateProgressBar(), SPINNER_INTERVAL);
   }
 
   private printProgressBar(progressBar: string) {
