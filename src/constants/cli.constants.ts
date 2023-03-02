@@ -92,7 +92,7 @@ export const HELP_PROGRESSBAR = ` ------- PROGRESS BAR --------------------
     ┌ (green) Results ready (stats calculated).
     🭲     ┌ (white) Directories examined.
     🭲     🭲      ┌ (gray) Directories pending to be analyzed.
- ${colors.green('🮄🮄🮄🮄🮄🮄🮄')}${colors.white('🮄🮄🮄🮄')}${colors.gray('🮄🮄🮄🮄🮄🮄🮄🮄🮄🮄🮄')}
+ ${colors.green('▀▀▀▀▀▀▀')}${colors.white('▀▀▀▀')}${colors.gray('▀▀▀▀▀▀▀▀▀▀▀')}
 `;
 
 export const HELP_FOOTER =
