@@ -119,7 +119,6 @@ class FileWalker {
 
   onQueueEmpty(fn: () => void) {
     this.events.on('onCompleted', () => fn());
-    this.events.emit('onStats');
   }
 
   onNewResult(fn: (result: { path: string; dirent: Dirent }) => void) {
@@ -187,6 +186,7 @@ class FileWalker {
   }
 
   private onCompleted() {
+    this.events.emit('onStats');
     this.events.emit('onCompleted');
   }
 

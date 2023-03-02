@@ -35,8 +35,8 @@ export class FileWorkerService {
       }
 
       if (data?.type === 'scan-job-completed') {
-        stream$.complete();
         this.searchStatus.workerStatus = 'finished';
+        stream$.complete();
       }
     });
 
