@@ -1,11 +1,11 @@
 import { IListDirParams } from '../interfaces/list-dir-params.interface.js';
 import { Observable } from 'rxjs';
-import { IFolder } from './folder.interface.js';
 
 export interface IFileService {
   getFolderSize(path: string): Observable<number>;
   listDir(params: IListDirParams): Observable<string>;
   deleteDir(path: string): Promise<{}>;
+  isValidRootFolder(path: string): boolean;
   convertKbToGB(kb: number): number;
   convertBytesToKB(bytes: number): number;
   convertGBToMB(gb: number): number;

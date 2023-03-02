@@ -19,7 +19,10 @@ export const INFO_MSGS = {
     // tslint:disable-next-line: max-line-length
     'Oh no! Npkill does not support this terminal (TTY is required). This is a bug, which has to be fixed. Please try another command interpreter (for example, CMD in windows)',
   NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size | last-mod',
+  STARTING: 'Initializing ',
   SEARCHING: 'searching ',
+  CALCULATING_STATS: 'calculating stats ',
+  FATAL_ERROR: 'Fatal error ',
   SEARCH_COMPLETED: 'search completed ',
   SPACE_RELEASED: 'space saved: ',
   TOTAL_SPACE: 'releasable space: ',

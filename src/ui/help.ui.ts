@@ -3,6 +3,7 @@ import {
   HELP_HEADER,
   OPTIONS,
   HELP_FOOTER,
+  HELP_PROGRESSBAR,
 } from '../constants/cli.constants.js';
 import { MARGINS, UI_HELP } from '../constants/main.constants.js';
 import { INFO_MSGS } from '../constants/messages.constants.js';
@@ -24,6 +25,7 @@ export class HelpUi extends Ui {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
     this.print(HELP_HEADER + '\n\n');
+    this.print(HELP_PROGRESSBAR + '\n\n');
 
     let lineCount = 0;
     OPTIONS.map((option, index) => {

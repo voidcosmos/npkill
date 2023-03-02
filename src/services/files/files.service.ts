@@ -1,17 +1,38 @@
+import fs from 'fs';
+import { accessSync, readFileSync, Stats, statSync } from 'fs';
 import {
   IFileService,
   IFileStat,
   IListDirParams,
 } from '../../interfaces/index.js';
-
-import { Observable } from 'rxjs';
-import { readFileSync, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
+import { Observable } from 'rxjs';
 
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<number>;
   abstract listDir(params: IListDirParams): Observable<string>;
   abstract deleteDir(path: string): Promise<{}>;
+
+  isValidRootFolder(path: string): boolean {
+    let stat: Stats;
+    try {
+      stat = statSync(path);
+    } catch (error) {
+      throw new Error('The path does not exist.');
+    }
+
+    if (!stat.isDirectory()) {
+      throw new Error('The path must point to a directory.');
+    }
+
+    try {
+      accessSync(path, fs.constants.R_OK);
+    } catch (error) {
+      throw new Error('Cannot read the specified path.');
+    }
+
+    return true;
+  }
 
   convertKbToGB(kb: number): number {
     const factorKBtoGB = 1048576;
@@ -66,7 +87,9 @@ export abstract class FileService implements IFileService {
         if (item.name === 'node_modules') continue;
         files = [
           ...files,
-          ...(await this.getFileStatsInDir(`${dirname}/${item.name}`)),
+          ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(
+            () => [],
+          )),
         ];
       } else {
         const path = `${dirname}/${item.name}`;

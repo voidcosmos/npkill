@@ -16,6 +16,11 @@ interface Task {
 }
 
 (() => {
+  parentPort.postMessage({
+    type: 'alive',
+    value: null,
+  });
+
   parentPort.on('message', (data) => {
     if (data?.type === 'start-explore') {
       startExplore(data.value.path);
@@ -47,6 +52,10 @@ interface Task {
 
     fileWalker.onQueueEmpty(() => {
       parentPort.postMessage({ type: 'scan-job-completed' });
+    });
+
+    fileWalker.onStats((stats: WorkerStats) => {
+      parentPort.postMessage({ type: 'stats', value: stats });
     });
   }
 
@@ -97,13 +106,16 @@ class FileWalker {
   readonly events = new EventEmitter();
 
   private taskQueue: Task[] = [];
+  private completedTasks = 0;
   private procs = 0;
   // More PROCS improve the speed of the search, but increment
   // but it will greatly increase the maximum ram usage.
   private readonly MAX_PROCS = 100;
   private VERBOSE = false;
 
-  constructor() {}
+  constructor() {
+    setInterval(() => this.events.emit('onStats'), 500);
+  }
 
   onQueueEmpty(fn: () => void) {
     this.events.on('onCompleted', () => fn());
@@ -111,6 +123,10 @@ class FileWalker {
 
   onNewResult(fn: (result: { path: string; dirent: Dirent }) => void) {
     this.events.on('onResult', (result) => fn(result));
+  }
+
+  onStats(fn: any) {
+    this.events.on('onStats', () => fn(this.stats));
   }
 
   enqueueTask(path: string) {
@@ -123,8 +139,7 @@ class FileWalker {
 
     opendir(path, async (err, dir) => {
       if (err) {
-        this.updateProcs(-1);
-        this.processQueue();
+        this.completeTask();
         return;
       }
 
@@ -134,8 +149,7 @@ class FileWalker {
       }
 
       await dir.close();
-      this.updateProcs(-1);
-      this.processQueue();
+      this.completeTask();
 
       if (this.taskQueue.length === 0 && this.procs === 0) {
         this.onCompleted();
@@ -143,15 +157,21 @@ class FileWalker {
     });
   }
 
+  private completeTask() {
+    this.updateProcs(-1);
+    this.processQueue();
+    this.completedTasks++;
+  }
+
   private updateProcs(value: number) {
     this.procs += value;
 
-    if (this.VERBOSE) {
-      this.events.emit('stats', {
-        type: 'proc',
-        value: { procs: this.procs, mem: memoryUsage() },
-      });
-    }
+    // if (this.VERBOSE) {
+    //   this.events.emit('stats', {
+    //     type: 'proc',
+    //     value: { procs: this.procs, mem: memoryUsage() },
+    //   });
+    // }
   }
 
   private processQueue() {
@@ -166,6 +186,21 @@ class FileWalker {
   }
 
   private onCompleted() {
+    this.events.emit('onStats');
     this.events.emit('onCompleted');
   }
+
+  get stats(): WorkerStats {
+    return {
+      pendingSearchTasks: this.taskQueue.length,
+      completedSearchTasks: this.completedTasks,
+      procs: this.procs,
+    };
+  }
+}
+
+interface WorkerStats {
+  pendingSearchTasks: number;
+  completedSearchTasks: number;
+  procs: number;
 }

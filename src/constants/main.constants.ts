@@ -41,6 +41,7 @@ export const UI_POSITIONS: IUiPosition = {
   NEW_UPDATE_FOUND: { x: 42, y: 0 },
   SPACE_RELEASED: { x: 50, y: 4 },
   STATUS: { x: 50, y: 5 },
+  STATUS_BAR: { x: 50, y: 6 },
   TOTAL_SPACE: { x: 50, y: 3 },
   ERRORS_COUNT: { x: 50, y: 2 },
   TUTORIAL_TIP: { x: 4, y: 7 },
