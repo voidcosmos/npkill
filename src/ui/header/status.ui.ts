@@ -15,6 +15,7 @@ export class StatusUi extends Ui {
   private text = '';
   private searchEnd$ = new Subject();
   private barNormalizedWidth = 0;
+  private barClosing = false;
   private SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
@@ -47,6 +48,7 @@ export class StatusUi extends Ui {
     this.text =
       colors.green(INFO_MSGS.SEARCH_COMPLETED) + colors.gray(`${duration}s`);
     this.render();
+    setTimeout(() => this.animateClose(), 2000);
   }
 
   render(): void {
@@ -114,8 +116,34 @@ export class StatusUi extends Ui {
     setTimeout(() => this.animateProgressBar(), SPINNER_INTERVAL);
   }
 
+  private animateClose() {
+    this.barClosing = true;
+    if (this.barNormalizedWidth < 0) {
+      this.barNormalizedWidth = 0;
+      return;
+    }
+    this.barNormalizedWidth -= 0.05;
+
+    this.renderProgressBar();
+    setTimeout(() => this.animateClose(), SPINNER_INTERVAL);
+  }
+
   private printProgressBar(progressBar: string) {
-    this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
+    if (this.barClosing) {
+      const postX = Math.round(
+        UI_POSITIONS.STATUS_BAR.x +
+          (BAR_WIDTH / 2) * (1 - this.barNormalizedWidth),
+      );
+      // Clear previus bar
+      this.printAt(' '.repeat(BAR_WIDTH), UI_POSITIONS.STATUS_BAR);
+
+      this.printAt(progressBar, {
+        x: postX,
+        y: UI_POSITIONS.STATUS_BAR.y,
+      });
+    } else {
+      this.printAt(progressBar, UI_POSITIONS.STATUS_BAR);
+    }
   }
 
   private startingSearch() {
