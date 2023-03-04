@@ -5,7 +5,8 @@
   "exports": "./lib/index.js",
   "type": "module",
   "engines": {
-    "node": ">=14.0.0"
+    "node": "^14.18.0 || ^16.10.0 || >=18.0.0",
+    "npm": ">=6.8.0"
   },
   "publishConfig": {
     "access": "public"
