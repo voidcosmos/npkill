@@ -3,6 +3,7 @@ import { jest } from '@jest/globals';
 jest.mock('../src/dirname.js', () => {
   return {};
 });
+
 jest.unstable_mockModule('../src/ui/header/header.ui.js', () => ({
   HeaderUi: jest.fn(),
 }));
@@ -35,10 +36,15 @@ jest.unstable_mockModule('../src/ui/ui.js', () => ({
   Ui: { setVisible: jest.fn() },
 }));
 
-xdescribe('Controller test', () => {
+const ControllerConstructor = //@ts-ignore
+  (await import('../src/controller.js')).Controller;
+class Controller extends ControllerConstructor {}
+
+describe('Controller test', () => {
   let controller;
   const linuxFilesServiceMock: any = {
     getFileContent: jest.fn().mockReturnValue('{}'),
+    isValidRootFolder: jest.fn().mockReturnValue('true'),
   };
   const spinnerServiceMock: any = jest.fn();
   const UpdateServiceMock: any = jest.fn();
@@ -75,8 +81,7 @@ xdescribe('Controller test', () => {
   let exitSpy;
   ///////////////////////////////////
 
-  beforeEach(async () => {
-    const { Controller } = await import('../src/controller.js');
+  beforeEach(() => {
     exitSpy = jest.spyOn(process, 'exit').mockImplementation((number) => {
       throw new Error('process.exit: ' + number);
     });
@@ -90,6 +95,10 @@ xdescribe('Controller test', () => {
       resultServiceMock,
       uiServiceMock,
     );
+
+    Object.defineProperty(process.stdout, 'columns', { value: 80 });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true });
+
     parseArgumentsSpy = jest.spyOn(controller, 'parseArguments');
     showHelpSpy = jest
       .spyOn(controller, 'showHelp')
@@ -146,7 +155,7 @@ xdescribe('Controller test', () => {
       const functionSpy = jest
         .spyOn(controller, 'showProgramVersion')
         .mockImplementation(() => ({}));
-      controller.init();
+      expect(() => controller.init()).toThrow();
       expect(functionSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledTimes(1);
     });
@@ -154,7 +163,7 @@ xdescribe('Controller test', () => {
     it('#showProgramVersion should called if --delete-all flag is present and exit', () => {
       mockParameters({ 'delete-all': true });
       const functionSpy = spyMethod('showObsoleteMessage');
-      controller.init();
+      expect(() => controller.init()).toThrow();
       expect(functionSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledTimes(1);
     });
