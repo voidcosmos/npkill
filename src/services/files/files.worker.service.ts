@@ -7,6 +7,12 @@ import { SearchStatus } from 'src/models/search-state.model.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 
+export interface WorkerStats {
+  pendingSearchTasks: number;
+  completedSearchTasks: number;
+  procs: number;
+}
+
 export class FileWorkerService {
   private scanWorker = new Worker(this.getWorkerPath());
   private getSizeWorker = new Worker(this.getWorkerPath());
@@ -46,15 +52,9 @@ export class FileWorkerService {
       throw error;
     });
 
-    this.scanWorker.on('exit', (code) => {
-      if (code !== 0) {
-        this.searchStatus.workerStatus = 'dead';
-        this.scanWorker.terminate();
-        return;
-      }
-    });
-
-    return this.scanWorker;
+    // this.scanWorker.on('exit', (code) => {
+    //   if (code !== 0) { this.searchStatus.workerStatus = 'dead'; return; }
+    // });
   }
 
   getSize(stream$: Subject<string>, path: string) {

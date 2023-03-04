@@ -5,6 +5,7 @@ import { Dirent, opendir } from 'fs';
 import EventEmitter from 'events';
 import { memoryUsage } from 'process';
 import { parentPort } from 'worker_threads';
+import { WorkerStats } from './files.worker.service';
 
 enum ETaskOperation {
   'explore',
@@ -197,10 +198,4 @@ class FileWalker {
       procs: this.procs,
     };
   }
-}
-
-interface WorkerStats {
-  pendingSearchTasks: number;
-  completedSearchTasks: number;
-  procs: number;
 }
