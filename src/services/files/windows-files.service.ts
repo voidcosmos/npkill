@@ -2,7 +2,7 @@ import getSize from 'get-folder-size';
 
 import { StreamService } from '../index.js';
 
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import __dirname from '../../dirname.js';
 import { FileService } from './files.service.js';
 import { WindowsStrategyManager } from '../../strategies/windows-remove-dir.strategy.js';
@@ -33,7 +33,7 @@ export class WindowsFilesService extends FileService {
   }
 
   listDir(params: IListDirParams): Observable<string> {
-    const stream$ = new BehaviorSubject(null);
+    const stream$ = new Subject<string>();
     this.fileWorkerService.startScan(stream$, params);
     return stream$;
   }

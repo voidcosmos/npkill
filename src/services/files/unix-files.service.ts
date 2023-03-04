@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 
 import { FileService } from './files.service.js';
 import { IListDirParams } from '../../interfaces/index.js';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { StreamService } from '../stream.service.js';
 import { FileWorkerService } from './files.worker.service.js';
 
@@ -17,7 +17,7 @@ export abstract class UnixFilesService extends FileService {
   abstract getFolderSize(path: string): Observable<any>;
 
   listDir(params: IListDirParams): Observable<string> {
-    const stream$ = new BehaviorSubject(null);
+    const stream$ = new Subject<string>();
     this.fileWorkerService.startScan(stream$, params);
     return stream$;
   }

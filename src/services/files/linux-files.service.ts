@@ -1,8 +1,5 @@
 import { spawn } from 'child_process';
-import { readdir, stat } from 'fs/promises';
-import path, { join } from 'path';
-
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UnixFilesService } from './unix-files.service.js';
 

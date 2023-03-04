@@ -1,8 +1,8 @@
 import { dirname, extname } from 'path';
 
-import { BehaviorSubject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
-import { Worker } from 'worker_threads';
+import { Worker } from 'node:worker_threads';
 import { SearchStatus } from 'src/models/search-state.model.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
@@ -13,7 +13,7 @@ export class FileWorkerService {
 
   constructor(private searchStatus: SearchStatus) {}
 
-  startScan(stream$: BehaviorSubject<string>, params: IListDirParams) {
+  startScan(stream$: Subject<string>, params: IListDirParams) {
     this.scanWorker.postMessage({
       type: 'start-explore',
       value: { path: params.path },
@@ -57,7 +57,7 @@ export class FileWorkerService {
     return this.scanWorker;
   }
 
-  getSize(stream$: BehaviorSubject<string>, path: string) {
+  getSize(stream$: Subject<string>, path: string) {
     const id = Math.random();
     this.getSizeWorker.postMessage({
       type: 'start-getSize',
