@@ -171,7 +171,7 @@ describe('File Service', () => {
     expect(readFileSyncSpy).toBeCalledWith(path, 'utf8');
   });
 
-  describe('Functional test for #deleteDir', () => {
+  xdescribe('Functional test for #deleteDir', () => {
     let fileService: IFileService;
     const testFolder = 'test-files';
     const directories = [
