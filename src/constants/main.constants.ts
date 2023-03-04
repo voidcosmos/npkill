@@ -44,7 +44,7 @@ export const UI_POSITIONS: IUiPosition = {
   STATUS_BAR: { x: 50, y: 6 },
   TOTAL_SPACE: { x: 50, y: 3 },
   ERRORS_COUNT: { x: 50, y: 2 },
-  TUTORIAL_TIP: { x: 4, y: 7 },
+  TUTORIAL_TIP: { x: 1, y: 7 },
 };
 
 // export const VALID_KEYS: string[] = [

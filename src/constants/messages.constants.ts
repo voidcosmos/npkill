@@ -1,5 +1,5 @@
 export const HELP_MSGS = {
-  BASIC_USAGE: '> select with CURSORS and press SPACE key to delete <',
+  BASIC_USAGE: '> CURSORS for select; SPACE to delete <',
 };
 
 export const INFO_MSGS = {
