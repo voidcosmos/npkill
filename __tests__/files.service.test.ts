@@ -1,18 +1,31 @@
 import { jest } from '@jest/globals';
 
-const readFileSyncSpy = jest.fn();
-// const mockFs = jest.mock('fs', () => ({ readFileSync: readFileSyncSpy }));
 import rimraf from 'rimraf';
 import { IFileService } from '../src/interfaces/file-service.interface.js';
-import {
-  FileService,
-  LinuxFilesService,
-  MacFilesService,
-  WindowsFilesService,
-} from '../src/services/files/index.js';
 
-import { StreamService } from '../src/services/stream.service.js';
+let statSyncReturnMock = () => null;
+let accessSyncReturnMock = () => null;
+const readFileSyncSpy = jest.fn();
+jest.unstable_mockModule('fs', () => {
+  return {
+    statSync: (path) => statSyncReturnMock(),
+    accessSync: (path, flag) => accessSyncReturnMock(),
+    readFileSync: readFileSyncSpy,
+    default: { constants: { R_OK: 4 } },
+  };
+});
+
+const FileServiceConstructor = //@ts-ignore
+  (await import('../src/services/files/files.service.js')).FileService;
+abstract class FileService extends FileServiceConstructor {}
+
+const LinuxFilesServiceConstructor = //@ts-ignore
+  (await import('../src/services/files/linux-files.service.js'))
+    .LinuxFilesService;
+class LinuxFilesService extends LinuxFilesServiceConstructor {}
+
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
+import { StreamService } from '../src/services/stream.service.js';
 
 jest.mock('../src/dirname.js', () => {
   return { __esModule: true };
@@ -25,6 +38,57 @@ describe('File Service', () => {
 
   beforeEach(() => {
     fileService = new LinuxFilesService(new StreamService(), fileWorkerService);
+  });
+
+  describe('isValidRootFolder', () => {
+    const path = '/sample/path';
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      statSyncReturnMock = () => null;
+      statSyncReturnMock = () => null;
+    });
+
+    it('should throw error if statSync fail', () => {
+      statSyncReturnMock = () => {
+        throw new Error('ENOENT');
+      };
+      expect(() => fileService.isValidRootFolder(path)).toThrowError(
+        'The path does not exist.',
+      );
+    });
+
+    it('should throw error if is not directory', () => {
+      statSyncReturnMock = () => ({
+        isDirectory: () => false,
+      });
+
+      expect(() => fileService.isValidRootFolder(path)).toThrowError(
+        'The path must point to a directory.',
+      );
+    });
+
+    it('should throw error if cant read dir', () => {
+      statSyncReturnMock = () => ({
+        isDirectory: () => true,
+      });
+      accessSyncReturnMock = () => {
+        throw new Error();
+      };
+
+      expect(() => fileService.isValidRootFolder(path)).toThrowError(
+        'Cannot read the specified path.',
+      );
+    });
+
+    it('should return true if is valid rootfolder', () => {
+      statSyncReturnMock = () => ({
+        isDirectory: () => true,
+      });
+      accessSyncReturnMock = () => true;
+
+      expect(fileService.isValidRootFolder(path)).toBeTruthy();
+    });
   });
 
   describe('Conversion methods', () => {
@@ -87,7 +151,7 @@ describe('File Service', () => {
     });
   });
 
-  xit('#getFileContent should read file content with utf8 encoding', () => {
+  it('#getFileContent should read file content with utf8 encoding', () => {
     const path = 'file.json';
     fileService.getFileContent(path);
     expect(readFileSyncSpy).toBeCalledWith(path, 'utf8');
@@ -113,8 +177,8 @@ describe('File Service', () => {
       const getOS = () => process.platform;
       const OSService = {
         linux: LinuxFilesService,
-        win32: WindowsFilesService,
-        darwin: MacFilesService,
+        win32: jest.fn(),
+        darwin: jest.fn(),
       };
       const streamService: StreamService = new StreamService();
       fileService = new OSService[getOS()](streamService);
