@@ -2,23 +2,6 @@
   "name": "npkill",
   "version": "0.11.0-1",
   "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
-  "exports": "./lib/index.js",
-  "type": "module",
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "bin": {
-    "npkill": "lib/index.js"
-  },
-  "author": "Nya Garcia & Juan Torres",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/zaldih/npkill"
-  },
-  "license": "MIT",
   "keywords": [
     "cli",
     "free up space",
@@ -31,20 +14,47 @@
     "find",
     "interactive"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zaldih/npkill"
+  },
+  "license": "MIT",
+  "author": "Nya Garcia & Juan Torres",
+  "type": "module",
+  "exports": "./lib/index.js",
+  "bin": {
+    "npkill": "lib/index.js"
+  },
   "files": [
     "lib/**/*"
   ],
   "scripts": {
     "build": "gulp",
     "build-go-bin": "gulp buildGo",
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/index.ts",
+    "format": "prettier --write .",
+    "prepare": "husky install",
+    "release": "npm run build && np",
     "start": "node --loader ts-node/esm --no-warnings ./src/index.ts",
     "test": "node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js --verbose",
-    "test:watch": "npm run test -- --watch",
     "test:mutant": "stryker run",
-    "release": "npm run build && np",
-    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/index.ts",
-    "prepare": "husky install",
-    "format": "prettier --write ."
+    "test:watch": "npm run test -- --watch"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "lint-staged": {
+    "*.{js,ts,css,json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "ansi-escapes": "^6.0.0",
@@ -79,21 +89,11 @@
     "tslint": "^6.1.0",
     "typescript": "^4.8.4"
   },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged"
-    }
+  "engines": {
+    "node": ">=14.0.0"
   },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  },
-  "lint-staged": {
-    "*.{js,ts,css,json,md}": [
-      "prettier --write"
-    ]
+  "publishConfig": {
+    "access": "public"
   },
   "ethereum": "0x7668e86c8bdb52034606db5aa0d2d4d73a0d4259"
 }
