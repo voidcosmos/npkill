@@ -15,7 +15,6 @@ jest.unstable_mockModule('node:worker_threads', () => ({
     postMessage: workerPostMessageMock,
     on: (eventName: string, listener: (...args: any[]) => void) =>
       eventEmitter.on(eventName, listener),
-    emit: jest.fn(),
     terminate: workerTerminateMock,
   })),
 }));
@@ -141,6 +140,55 @@ describe('FileWorkerService', () => {
         eventEmitter.emit('error');
         expect(searchStatus.workerStatus).toBe('dead');
       }).toThrowError();
+    });
+  });
+
+  describe('getSize', () => {
+    let stream$: Subject<string>;
+    const path = '/sample/file/path';
+
+    const mockRandom = (value: number) =>
+      jest.spyOn(global.Math, 'random').mockReturnValue(value);
+
+    beforeEach(() => {
+      stream$ = new Subject<string>();
+      workerPostMessageMock.mockClear();
+    });
+
+    it('should emit "start-explore" and parameters to the worker', () => {
+      const randomNumber = 0.12341234;
+      mockRandom(randomNumber);
+
+      fileWorkerService.getSize(stream$, path);
+      expect(workerPostMessageMock).toBeCalledWith({
+        type: 'start-getSize',
+        value: { path: path, id: randomNumber },
+      });
+    });
+
+    it('should received "job completed" with same id, emit to the stream and complete it', (done) => {
+      const randomNumber = 0.8832342;
+      const response = 42342;
+      mockRandom(randomNumber);
+
+      fileWorkerService.getSize(stream$, path);
+
+      let streamValues = [];
+      stream$.subscribe({
+        next: (data) => {
+          streamValues.push(data);
+        },
+        complete: () => {
+          expect(streamValues.length).toBe(1);
+          expect(streamValues[0]).toBe(response);
+          done();
+        },
+      });
+
+      eventEmitter.emit('message', {
+        type: `getsize-job-completed-${randomNumber}`,
+        value: response,
+      });
     });
   });
 });
