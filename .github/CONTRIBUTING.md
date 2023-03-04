@@ -11,9 +11,7 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 - Following this protocol helps to avoid working in vain. It would be a shame to dedicate hours to a pull request and have to reject it because there is already someone working on a similar issue.
 
-
 -Unless they are minor and fast modifications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
-
 
 - Change only the necessary lines for your modification. This will help to avoid conflicts, and in case of there being any, it will be easier to solve them.
 
@@ -37,7 +35,7 @@ Yay! Green light to work!
 
 6. Write code and create commits regularly following the [recommended convention]()
 
-7. Create a PULL REQUEST using **DEVELOP as the base branch**.
+7. Create a PULL REQUEST using **master as the base branch**.
    As a title, use the same (or similar) one you used in the creation of the issue, and in the description, any information that you consider relevant next to the link of the issue and "close" text (example: close #issueNumber) [more info](https://help.github.com/en/articles/closing-issues-using-keywords)
 
 # Conventions
