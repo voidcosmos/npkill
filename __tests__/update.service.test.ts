@@ -100,7 +100,7 @@ describe('update Service', () => {
       it(`should check the local version ${cas.localVersion} is up to date with the remote ${cas.remoteVersion}`, (done) => {
         const mockResponse = `{"last-recomended-version": "${cas.remoteVersion}"}`;
         jest
-          .spyOn(httpsService, 'get')
+          .spyOn(httpsService, 'getJson')
           .mockImplementation(() => Promise.resolve(JSON.parse(mockResponse)));
 
         updateService

@@ -1,7 +1,7 @@
-import * as https from 'https';
+import * as https from 'node:https';
 
 export class HttpsService {
-  get(url: string): Promise<{}> {
+  getJson(url: string): Promise<{}> {
     return new Promise((resolve, reject) => {
       const fail = (err) => {
         reject(err);
@@ -9,7 +9,9 @@ export class HttpsService {
       };
 
       const request = https.get(url, (res) => {
-        if (!this.isCorrectResponse(res.statusCode)) fail(res.statusMessage);
+        if (!this.isCorrectResponse(res.statusCode)) {
+          fail(res.statusMessage);
+        }
 
         res.setEncoding('utf8');
         let body = '';
