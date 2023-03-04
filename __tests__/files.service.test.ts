@@ -11,6 +11,11 @@ jest.unstable_mockModule('fs', () => {
     statSync: (path) => statSyncReturnMock(),
     accessSync: (path, flag) => accessSyncReturnMock(),
     readFileSync: readFileSyncSpy,
+    lstat: jest.fn(),
+    readdir: jest.fn(),
+    rmdir: jest.fn(),
+    unlink: jest.fn(),
+    rm: jest.fn(),
     default: { constants: { R_OK: 4 } },
   };
 });
@@ -24,7 +29,16 @@ const LinuxFilesServiceConstructor = //@ts-ignore
     .LinuxFilesService;
 class LinuxFilesService extends LinuxFilesServiceConstructor {}
 
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
+const MacFilesServiceConstructor = //@ts-ignore
+  (await import('../src/services/files/mac-files.service.js')).MacFilesService;
+class MacFilesService extends MacFilesServiceConstructor {}
+
+const WindowsFilesServiceConstructor = //@ts-ignore
+  (await import('../src/services/files/windows-files.service.js'))
+    .WindowsFilesService;
+class WindowsFilesService extends WindowsFilesServiceConstructor {}
+
+import { existsSync, lstat, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../src/services/stream.service.js';
 
 jest.mock('../src/dirname.js', () => {
@@ -177,8 +191,8 @@ describe('File Service', () => {
       const getOS = () => process.platform;
       const OSService = {
         linux: LinuxFilesService,
-        win32: jest.fn(),
-        darwin: jest.fn(),
+        win32: WindowsFilesService,
+        darwin: MacFilesService,
       };
       const streamService: StreamService = new StreamService();
       fileService = new OSService[getOS()](streamService);
