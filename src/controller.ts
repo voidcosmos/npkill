@@ -481,6 +481,10 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
+    if (folder.status === 'deleted' || folder.status !== 'deleting') {
+      return;
+    }
+
     const isSafeToDelete = this.fileService.isSafeToDelete(
       folder.path,
       this.config.targetFolder,
