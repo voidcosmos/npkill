@@ -481,7 +481,7 @@ export class Controller {
   }
 
   private deleteFolder(folder: IFolder): void {
-    if (folder.status === 'deleted' || folder.status !== 'deleting') {
+    if (folder.status === 'deleted' || folder.status === 'deleting') {
       return;
     }
 
