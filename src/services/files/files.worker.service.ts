@@ -1,9 +1,11 @@
+import os from 'os';
 import { basename, dirname, extname } from 'path';
 
+import { Worker } from 'node:worker_threads';
+import { Subject } from 'rxjs';
 import { IListDirParams } from 'src/interfaces/index.js';
 import { SearchStatus } from 'src/models/search-state.model.js';
-import { Subject } from 'rxjs';
-import { Worker } from 'node:worker_threads';
+import { MAX_WORKERS } from 'src/constants';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
@@ -23,13 +25,12 @@ export class FileWorkerService {
   private workersPendingJobs: number[] = [];
   private pendingJobs = 0;
   private totalJobs = 0;
-  private readonly MAX_WORKERS = 7;
 
   constructor(private searchStatus: SearchStatus) {}
 
   startScan(stream$: Subject<string>, params: IListDirParams) {
     setInterval(() => this.updateStats(), 40);
-    this.instantiateWorkers(this.MAX_WORKERS);
+    this.instantiateWorkers(this.getOptimalNumberOfWorkers());
 
     this.workers.forEach((worker) => {
       worker.on('message', (data) => {
@@ -133,5 +134,12 @@ export class FileWorkerService {
     const workerName = 'files.worker';
 
     return new URL(`${dirPath}/${workerName}${extension}`);
+  }
+
+  private getOptimalNumberOfWorkers(): number {
+    const cores = os.cpus().length;
+    // TODO calculate amount of RAM available and take it
+    // as part on the ecuation.
+    return cores > MAX_WORKERS ? MAX_WORKERS : cores - 1;
   }
 }
