@@ -27,14 +27,11 @@ interface Task {
   });
 
   parentPort.on('message', (data) => {
-    if (fileWalker === null) {
-      fileWalker = new FileWalker();
-      initListeners();
-    }
-
     if (data?.type === 'startup') {
       id = data.value.id;
       tunnel = data.value.channel;
+      fileWalker = new FileWalker();
+      initListeners();
     }
 
     if (data?.type === 'explore') {
