@@ -23,7 +23,7 @@ export class FileWorkerService {
   private workersPendingJobs: number[] = [];
   private pendingJobs = 0;
   private totalJobs = 0;
-  private readonly MAX_WORKERS = 8;
+  private readonly MAX_WORKERS = 7;
 
   constructor(private searchStatus: SearchStatus) {}
 
@@ -34,18 +34,20 @@ export class FileWorkerService {
     this.workers.forEach((worker) => {
       worker.on('message', (data) => {
         if (data?.type === 'scan-result') {
-          const path: string = data.value.path;
+          const results: string[] = data.value.results;
           const workerId: number = data.value.workerId;
           this.workersPendingJobs[workerId] = data.value.pending;
 
-          if (basename(path) === 'node_modules') {
-            stream$.next(path);
-          } else {
-            this.addJob({
-              type: 'explore',
-              value: { path },
-            });
-          }
+          results.forEach((path) => {
+            if (basename(path) === 'node_modules') {
+              stream$.next(path);
+            } else {
+              this.addJob({
+                type: 'explore',
+                value: { path },
+              });
+            }
+          });
 
           this.pendingJobs = this.getPendingJobs();
           this.checkJobComplete(stream$);

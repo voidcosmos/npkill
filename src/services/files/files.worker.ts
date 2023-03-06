@@ -40,10 +40,10 @@ interface Task {
   });
 
   function initListeners() {
-    fileWalker.events.on('onResult', ({ path }) => {
+    fileWalker.events.on('onResult', ({ results }) => {
       parentPort.postMessage({
         type: 'scan-result',
-        value: { path, workerId: id, pending: fileWalker.pendingJobs },
+        value: { results, workerId: id, pending: fileWalker.pendingJobs },
       });
     });
 
@@ -98,16 +98,20 @@ class FileWalker {
         return;
       }
 
+      const toEmit = [];
       let entry: Dirent | null = null;
       while ((entry = await dir.read().catch(() => null)) != null) {
         if (entry.isDirectory()) {
           const subpath = (path === '/' ? '' : path) + '/' + entry.name;
-          this.onResult(subpath);
+          toEmit.push(subpath);
         } else {
-          this.events.emit('alternative-stats');
         }
       }
 
+      this.events.emit('onResult', { results: toEmit });
+      if (toEmit.length === 0) {
+        this.events.emit('alternative-stats');
+      }
       await dir.close();
       this.completeTask();
 
