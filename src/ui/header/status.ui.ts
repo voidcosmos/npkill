@@ -60,7 +60,7 @@ export class StatusUi extends Ui {
     }
 
     this.searchStatus.workersJobs.map((acc, index) => {
-      this.printAt(`${index}: ${acc}   `, { x: 80, y: index });
+      this.printAt(`${index}: ${acc}  `, { x: 80, y: index });
     });
   }
 

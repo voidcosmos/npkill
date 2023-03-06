@@ -4,8 +4,8 @@ import { Dirent, opendir } from 'fs';
 
 import EventEmitter from 'events';
 import { WorkerStats } from './files.worker.service';
-import { parentPort } from 'worker_threads';
 import { basename } from 'path';
+import { parentPort } from 'worker_threads';
 
 enum ETaskOperation {
   'explore',
@@ -71,7 +71,7 @@ class FileWalker {
   private procs = 0;
   // More PROCS improve the speed of the search, but increment
   // but it will greatly increase the maximum ram usage.
-  private readonly MAX_PROCS = 1;
+  private readonly MAX_PROCS = 100;
 
   get pendingJobs() {
     return this.taskQueue.length;
