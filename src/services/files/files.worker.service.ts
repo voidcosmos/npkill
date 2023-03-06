@@ -3,9 +3,10 @@ import { basename, dirname, extname } from 'path';
 
 import { Worker } from 'node:worker_threads';
 import { Subject } from 'rxjs';
-import { IListDirParams } from 'src/interfaces/index.js';
-import { SearchStatus } from 'src/models/search-state.model.js';
-import { MAX_WORKERS } from 'src/constants';
+import { IListDirParams } from '../../interfaces/index.js';
+import { SearchStatus } from '../../models/search-state.model.js';
+import { MAX_WORKERS } from '../../constants/index.js';
+import { MessageChannel } from 'worker_threads';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
@@ -25,6 +26,7 @@ export class FileWorkerService {
   private workersPendingJobs: number[] = [];
   private pendingJobs = 0;
   private totalJobs = 0;
+  private tunnels = [];
 
   constructor(private searchStatus: SearchStatus) {}
 
@@ -32,8 +34,8 @@ export class FileWorkerService {
     setInterval(() => this.updateStats(), 40);
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
 
-    this.workers.forEach((worker) => {
-      worker.on('message', (data) => {
+    this.tunnels.forEach((tunnel) => {
+      tunnel.on('message', (data) => {
         if (data?.type === 'scan-result') {
           const results: string[] = data.value.results;
           const workerId: number = data.value.workerId;
@@ -73,7 +75,7 @@ export class FileWorkerService {
         }
       });
 
-      worker.on('error', (error) => {
+      tunnel.on('error', (error) => {
         // this.searchStatus.workerStatus = 'dead';
         // Respawn worker.
         throw error;
@@ -89,7 +91,7 @@ export class FileWorkerService {
     this.searchStatus.workersJobs = this.workersPendingJobs;
   }
 
-  private checkJobComplete(stream$) {
+  private checkJobComplete(stream$: Subject<string>) {
     const isCompleted = this.getPendingJobs() === 0;
     if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
@@ -109,8 +111,13 @@ export class FileWorkerService {
 
   private instantiateWorkers(amount: number): void {
     for (let i = 0; i < amount; i++) {
+      const { port1, port2 } = new MessageChannel();
       const worker = new Worker(this.getWorkerPath());
-      worker.postMessage({ type: 'assign-id', value: i });
+      this.tunnels.push(port1);
+      worker.postMessage(
+        { type: 'startup', value: { channel: port2, id: i } },
+        [port2], // Prevent clone the object and pass the original.
+      );
       this.workers.push(worker);
     }
   }

@@ -19,6 +19,8 @@ interface Task {
 (() => {
   let id = 0;
   let fileWalker: FileWalker = null;
+  let tunnel: MessagePort;
+
   parentPort.postMessage({
     type: 'alive',
     value: null,
@@ -30,8 +32,9 @@ interface Task {
       initListeners();
     }
 
-    if (data?.type === 'assign-id') {
-      id = data.value;
+    if (data?.type === 'startup') {
+      id = data.value.id;
+      tunnel = data.value.channel;
     }
 
     if (data?.type === 'explore') {
@@ -41,24 +44,24 @@ interface Task {
 
   function initListeners() {
     fileWalker.events.on('onResult', ({ results }) => {
-      parentPort.postMessage({
+      tunnel.postMessage({
         type: 'scan-result',
         value: { results, workerId: id, pending: fileWalker.pendingJobs },
       });
     });
 
     fileWalker.events.on('onCompleted', () => {
-      parentPort.postMessage({ type: 'scan-job-completed' });
+      tunnel.postMessage({ type: 'scan-job-completed' });
     });
 
     fileWalker.events.on('alternative-stats', (stats: WorkerStats) => {
-      parentPort.postMessage({
+      tunnel.postMessage({
         type: 'alternative-stats',
         value: { workerId: id, pending: fileWalker.pendingJobs },
       });
     });
     fileWalker.events.on('onStats', (stats: WorkerStats) => {
-      parentPort.postMessage({ type: 'stats', value: stats });
+      tunnel.postMessage({ type: 'stats', value: stats });
     });
   }
 })();
