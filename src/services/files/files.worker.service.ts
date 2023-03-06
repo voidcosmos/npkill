@@ -73,14 +73,9 @@ export class FileWorkerService {
       });
 
       worker.on('error', (error) => {
-        this.searchStatus.workerStatus = 'dead';
-        // this.scanWorker.terminate();
+        // this.searchStatus.workerStatus = 'dead';
+        // Respawn worker.
         throw error;
-      });
-
-      worker.on('exit', (error) => {
-        this.searchStatus.workerStatus = 'dead';
-        throw new Error('Exited worker');
       });
     });
 
@@ -94,9 +89,10 @@ export class FileWorkerService {
   }
 
   private checkJobComplete(stream$) {
-    const isEmpty = this.getPendingJobs() === 0;
-    if (isEmpty) {
+    const isCompleted = this.getPendingJobs() === 0;
+    if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
+      this.killWorkers();
       stream$.complete();
     }
   }
@@ -116,6 +112,12 @@ export class FileWorkerService {
       worker.postMessage({ type: 'assign-id', value: i });
       this.workers.push(worker);
     }
+  }
+
+  private killWorkers() {
+    this.workers.forEach((worker) => {
+      worker.terminate();
+    });
   }
 
   private getPendingJobs(): number {
