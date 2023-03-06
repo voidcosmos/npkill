@@ -300,8 +300,6 @@ export class Controller {
     });
 
     process.on('uncaughtException', (err) => {
-      console.error(err);
-      process.exit();
       this.newError(err.message);
     });
 
@@ -379,10 +377,10 @@ export class Controller {
             this.uiResults.clear();
           }
         }),
-        mergeMap((nodeFolder) => {
-          return this.calculateFolderStats(nodeFolder);
-        }, 2),
-        tap(() => this.searchStatus.completeStatCalculation()),
+        // mergeMap((nodeFolder) => {
+        //   return this.calculateFolderStats(nodeFolder);
+        // }, 2),
+        // tap(() => this.searchStatus.completeStatCalculation()),
       )
       .subscribe({
         next: () => this.printFoldersSection(),

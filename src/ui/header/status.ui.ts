@@ -54,6 +54,14 @@ export class StatusUi extends Ui {
   render(): void {
     this.printAt(this.text, UI_POSITIONS.STATUS);
     this.renderProgressBar();
+
+    if (!this.searchStatus.workersJobs) {
+      return;
+    }
+
+    this.searchStatus.workersJobs.map((acc, index) => {
+      this.printAt(`${index}: ${acc}   `, { x: 80, y: index });
+    });
   }
 
   private renderProgressBar() {

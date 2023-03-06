@@ -5,6 +5,7 @@ import { Dirent, opendir } from 'fs';
 import EventEmitter from 'events';
 import { WorkerStats } from './files.worker.service';
 import { parentPort } from 'worker_threads';
+import { basename } from 'path';
 
 enum ETaskOperation {
   'explore',
@@ -16,8 +17,8 @@ interface Task {
 }
 
 (() => {
+  let id = 0;
   let fileWalker: FileWalker = null;
-
   parentPort.postMessage({
     type: 'alive',
     value: null,
@@ -29,27 +30,36 @@ interface Task {
       initListeners();
     }
 
+    if (data?.type === 'assign-id') {
+      id = data.value;
+    }
+
     if (data?.type === 'explore') {
-      explore(data.value.path);
+      fileWalker.enqueueTask(data.value.path);
     }
   });
 
   function initListeners() {
-    fileWalker.onNewResult(({ path, dirent }) => {
-      parentPort.postMessage({ type: 'scan-result', value: path });
+    fileWalker.events.on('onResult', ({ path }) => {
+      parentPort.postMessage({
+        type: 'scan-result',
+        value: { path, workerId: id, pending: fileWalker.pendingJobs },
+      });
     });
 
-    fileWalker.onQueueEmpty(() => {
+    fileWalker.events.on('onCompleted', () => {
       parentPort.postMessage({ type: 'scan-job-completed' });
     });
 
-    fileWalker.onStats((stats: WorkerStats) => {
+    fileWalker.events.on('alternative-stats', (stats: WorkerStats) => {
+      parentPort.postMessage({
+        type: 'alternative-stats',
+        value: { workerId: id, pending: fileWalker.pendingJobs },
+      });
+    });
+    fileWalker.events.on('onStats', (stats: WorkerStats) => {
       parentPort.postMessage({ type: 'stats', value: stats });
     });
-  }
-
-  function explore(path: string) {
-    fileWalker.enqueueTask(path);
   }
 })();
 
@@ -61,26 +71,20 @@ class FileWalker {
   private procs = 0;
   // More PROCS improve the speed of the search, but increment
   // but it will greatly increase the maximum ram usage.
-  private readonly MAX_PROCS = 100;
-  private VERBOSE = false;
+  private readonly MAX_PROCS = 1;
 
+  get pendingJobs() {
+    return this.taskQueue.length;
+  }
   constructor() {
-    setInterval(() => this.events.emit('onStats'), 500);
-  }
-
-  onQueueEmpty(fn: () => void) {
-    this.events.on('onCompleted', () => fn());
-  }
-
-  onNewResult(fn: (result: { path: string; dirent: Dirent }) => void) {
-    this.events.on('onResult', (result) => fn(result));
-  }
-
-  onStats(fn: any) {
-    this.events.on('onStats', () => fn(this.stats));
+    // setInterval(() => this.events.emit('onStats'), 500);
   }
 
   enqueueTask(path: string) {
+    if (basename(path) === '.git') {
+      this.processQueue();
+      return;
+    }
     this.taskQueue.push({ path, operation: ETaskOperation.explore });
     this.processQueue();
   }
@@ -98,7 +102,9 @@ class FileWalker {
       while ((entry = await dir.read().catch(() => null)) != null) {
         if (entry.isDirectory()) {
           const subpath = (path === '/' ? '' : path) + '/' + entry.name;
-          this.onResult(subpath, entry);
+          this.onResult(subpath);
+        } else {
+          this.events.emit('alternative-stats');
         }
       }
 
@@ -106,7 +112,7 @@ class FileWalker {
       this.completeTask();
 
       if (this.taskQueue.length === 0 && this.procs === 0) {
-        this.onCompleted();
+        this.completeAll();
       }
     });
   }
@@ -119,13 +125,6 @@ class FileWalker {
 
   private updateProcs(value: number) {
     this.procs += value;
-
-    // if (this.VERBOSE) {
-    //   this.events.emit('stats', {
-    //     type: 'proc',
-    //     value: { procs: this.procs, mem: memoryUsage() },
-    //   });
-    // }
   }
 
   private processQueue() {
@@ -135,11 +134,11 @@ class FileWalker {
     }
   }
 
-  private onResult(path: string, dirent: Dirent) {
-    this.events.emit('onResult', { path, dirent });
+  private onResult(path: string) {
+    this.events.emit('onResult', { path });
   }
 
-  private onCompleted() {
+  private completeAll() {
     this.events.emit('onStats');
     this.events.emit('onCompleted');
   }

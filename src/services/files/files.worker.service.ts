@@ -4,7 +4,6 @@ import { IListDirParams } from 'src/interfaces/index.js';
 import { SearchStatus } from 'src/models/search-state.model.js';
 import { Subject } from 'rxjs';
 import { Worker } from 'node:worker_threads';
-import { Dirent } from 'fs';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
@@ -21,22 +20,25 @@ export interface WorkerStats {
 export class FileWorkerService {
   private index = 0;
   private workers: Worker[] = [];
+  private workersPendingJobs: number[] = [];
   private pendingJobs = 0;
+  private totalJobs = 0;
   private readonly MAX_WORKERS = 8;
 
   constructor(private searchStatus: SearchStatus) {}
 
   startScan(stream$: Subject<string>, params: IListDirParams) {
+    setInterval(() => this.updateStats(), 40);
     this.instantiateWorkers(this.MAX_WORKERS);
 
     this.workers.forEach((worker) => {
       worker.on('message', (data) => {
         if (data?.type === 'scan-result') {
-          this.pendingJobs = this.pendingJobs - 1;
-          const path: string = data.value;
+          const path: string = data.value.path;
+          const workerId: number = data.value.workerId;
+          this.workersPendingJobs[workerId] = data.value.pending;
 
           if (basename(path) === 'node_modules') {
-            // console.log(path);
             stream$.next(path);
           } else {
             this.addJob({
@@ -45,15 +47,17 @@ export class FileWorkerService {
             });
           }
 
-          if (this.pendingJobs === 0) {
-            stream$.complete();
-          }
+          this.pendingJobs = this.getPendingJobs();
+          this.checkJobComplete(stream$);
         }
 
         if (data?.type === 'stats') {
-          this.searchStatus.pendingSearchTasks = data.value.pendingSearchTasks;
-          this.searchStatus.completedSearchTasks =
-            data.value.completedSearchTasks;
+        }
+
+        if (data?.type === 'alternative-stats') {
+          this.workersPendingJobs[data.value.workerId] = data.value.pending;
+          this.pendingJobs = this.getPendingJobs();
+          this.checkJobComplete(stream$);
         }
 
         if (data?.type === 'alive') {
@@ -71,22 +75,49 @@ export class FileWorkerService {
         // this.scanWorker.terminate();
         throw error;
       });
+
+      worker.on('exit', (error) => {
+        this.searchStatus.workerStatus = 'dead';
+        throw new Error('Exited worker');
+      });
     });
 
     this.addJob({ type: 'explore', value: { path: params.path } });
   }
 
+  private updateStats() {
+    this.searchStatus.pendingSearchTasks = this.pendingJobs;
+    this.searchStatus.completedSearchTasks = this.totalJobs;
+    this.searchStatus.workersJobs = this.workersPendingJobs;
+  }
+
+  private checkJobComplete(stream$) {
+    const isEmpty = this.getPendingJobs() === 0;
+    if (isEmpty) {
+      this.searchStatus.workerStatus = 'finished';
+      stream$.complete();
+    }
+  }
+
   private addJob(job: WorkerJob) {
     const worker = this.workers[this.index];
     worker.postMessage(job);
-    this.pendingJobs = this.pendingJobs + 1;
+    this.workersPendingJobs[this.index]++;
+    this.totalJobs++;
+    this.pendingJobs++;
     this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
   }
 
   private instantiateWorkers(amount: number): void {
     for (let i = 0; i < amount; i++) {
-      this.workers.push(new Worker(this.getWorkerPath()));
+      const worker = new Worker(this.getWorkerPath());
+      worker.postMessage({ type: 'assign-id', value: i });
+      this.workers.push(worker);
     }
+  }
+
+  private getPendingJobs(): number {
+    return this.workersPendingJobs.reduce((acc, x) => x + acc, 0);
   }
 
   private getWorkerPath(): URL {
