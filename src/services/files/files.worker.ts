@@ -3,9 +3,8 @@
 import { Dirent, opendir } from 'fs';
 
 import EventEmitter from 'events';
-import { memoryUsage } from 'process';
-import { parentPort } from 'worker_threads';
 import { WorkerStats } from './files.worker.service';
+import { parentPort } from 'worker_threads';
 
 enum ETaskOperation {
   'explore',
@@ -17,38 +16,27 @@ interface Task {
 }
 
 (() => {
+  let fileWalker: FileWalker = null;
+
   parentPort.postMessage({
     type: 'alive',
     value: null,
   });
 
   parentPort.on('message', (data) => {
-    if (data?.type === 'start-explore') {
-      startExplore(data.value.path);
+    if (fileWalker === null) {
+      fileWalker = new FileWalker();
+      initListeners();
     }
 
-    if (data?.type === 'start-getSize') {
-      // startGetSize(data.value.path, data.value.id);
-      parentPort.postMessage({
-        type: 'getsize-job-completed-' + data.value.id,
-        value: -1,
-      });
+    if (data?.type === 'explore') {
+      explore(data.value.path);
     }
   });
 
-  function startExplore(path: string) {
-    const fileWalker = new FileWalker();
-    fileWalker.enqueueTask(path);
-
+  function initListeners() {
     fileWalker.onNewResult(({ path, dirent }) => {
-      if (dirent.isDirectory()) {
-        const subpath = (path === '/' ? '' : path) + '/' + dirent.name;
-        if (dirent.name === 'node_modules') {
-          parentPort.postMessage({ type: 'scan-result', value: subpath });
-        } else {
-          fileWalker.enqueueTask(subpath);
-        }
-      }
+      parentPort.postMessage({ type: 'scan-result', value: path });
     });
 
     fileWalker.onQueueEmpty(() => {
@@ -60,47 +48,9 @@ interface Task {
     });
   }
 
-  // Unnused for now because 'du' is much faster.
-  //
-  // function startGetSize(path: string, id: number) {
-  //   const fileWalker = new FileWalker();
-  //   let size = 0;
-  //   let allFilesScanned = false;
-  //   let getSizeInProgress = false;
-  //   fileWalker.enqueueTask(path);
-
-  //   const sendResult = () => {
-  //     parentPort.postMessage({
-  //       type: 'getsize-job-completed-' + id,
-  //       value: size,
-  //     });
-  //   };
-
-  //   const getSize = async (path: string) => {
-  //     getSizeInProgress = true;
-  //     size += (await stat(path)).size;
-  //     getSizeInProgress = false;
-  //     if (allFilesScanned) {
-  //       sendResult();
-  //     }
-  //   };
-
-  //   fileWalker.onNewResult(({ path, dirent }) => {
-  //     const subpath = (path === '/' ? '' : path) + '/' + dirent.name;
-  //     if (dirent.isDirectory()) {
-  //       fileWalker.enqueueTask(subpath);
-  //     } else if (dirent.isFile()) {
-  //       getSize(subpath);
-  //     }
-  //   });
-
-  //   fileWalker.onQueueEmpty(() => {
-  //     allFilesScanned = true;
-  //     if (!getSizeInProgress) {
-  //       sendResult();
-  //     }
-  //   });
-  // }
+  function explore(path: string) {
+    fileWalker.enqueueTask(path);
+  }
 })();
 
 class FileWalker {
@@ -146,7 +96,10 @@ class FileWalker {
 
       let entry: Dirent | null = null;
       while ((entry = await dir.read().catch(() => null)) != null) {
-        this.onResult(path, entry);
+        if (entry.isDirectory()) {
+          const subpath = (path === '/' ? '' : path) + '/' + entry.name;
+          this.onResult(subpath, entry);
+        }
       }
 
       await dir.close();

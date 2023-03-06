@@ -300,6 +300,8 @@ export class Controller {
     });
 
     process.on('uncaughtException', (err) => {
+      console.error(err);
+      process.exit();
       this.newError(err.message);
     });
 
