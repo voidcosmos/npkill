@@ -7,6 +7,7 @@ import { IListDirParams } from '../../interfaces/index.js';
 import { SearchStatus } from '../../models/search-state.model.js';
 import { MAX_WORKERS } from '../../constants/index.js';
 import { MessageChannel } from 'worker_threads';
+import { LoggerService } from '../logger.service.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
@@ -28,7 +29,10 @@ export class FileWorkerService {
   private totalJobs = 0;
   private tunnels = [];
 
-  constructor(private searchStatus: SearchStatus) {}
+  constructor(
+    private logger: LoggerService,
+    private searchStatus: SearchStatus,
+  ) {}
 
   startScan(stream$: Subject<string>, params: IListDirParams) {
     setInterval(() => this.updateStats(), 40);
@@ -75,10 +79,16 @@ export class FileWorkerService {
         }
       });
 
-      tunnel.on('error', (error) => {
-        // this.searchStatus.workerStatus = 'dead';
-        // Respawn worker.
-        throw error;
+      this.workers.forEach((worker, index) => {
+        worker.on('exit', () => {
+          this.logger.info(`Worker ${index} exited.`);
+        });
+
+        worker.on('error', (error) => {
+          // this.searchStatus.workerStatus = 'dead';
+          // Respawn worker.
+          throw error;
+        });
       });
     });
 
@@ -110,6 +120,7 @@ export class FileWorkerService {
   }
 
   private instantiateWorkers(amount: number): void {
+    this.logger.info(`Instantiating ${amount} workers..`);
     for (let i = 0; i < amount; i++) {
       const { port1, port2 } = new MessageChannel();
       const worker = new Worker(this.getWorkerPath());
@@ -119,6 +130,7 @@ export class FileWorkerService {
         [port2], // Prevent clone the object and pass the original.
       );
       this.workers.push(worker);
+      this.logger.info(`Worker ${i} instantiated.`);
     }
   }
 
