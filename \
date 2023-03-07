@@ -3,11 +3,10 @@
 import { Dir, Dirent, opendir } from 'fs';
 
 import EventEmitter from 'events';
-import { WorkerMessage, WorkerStats } from './files.worker.service';
+import { WorkerStats } from './files.worker.service';
 import { basename } from 'path';
 import { parentPort } from 'worker_threads';
-import { IListDirParams } from '../../interfaces';
-import { EVENTS, MAX_PROCS } from '../../constants/workers.constants.js';
+import { IListDirParams } from 'src/interfaces';
 
 enum ETaskOperation {
   'explore',
@@ -24,14 +23,14 @@ interface Task {
   let tunnel; //: MessagePort;
 
   parentPort.postMessage({
-    type: EVENTS.alive,
+    type: 'alive',
     value: null,
   });
 
-  parentPort.on('message', (message: WorkerMessage) => {
-    if (message?.type === EVENTS.startup) {
-      id = message.value.id;
-      tunnel = message.value.channel;
+  parentPort.on('message', (data) => {
+    if (data?.type === 'startup') {
+      id = data.value.id;
+      tunnel = data.value.channel;
       fileWalker = new FileWalker();
       initTunnelListeners();
       initFileWalkerListeners();
@@ -39,23 +38,31 @@ interface Task {
   });
 
   function initTunnelListeners() {
-    tunnel.on('message', (message: WorkerMessage) => {
-      if (message?.type === EVENTS.exploreConfig) {
-        fileWalker.setSearchConfig(message.value);
+    tunnel.on('message', (data) => {
+      if (data?.type === 'explore-config') {
+        fileWalker.setSearchConfig(data.value);
       }
 
-      if (message?.type === EVENTS.explore) {
-        fileWalker.enqueueTask(message.value.path);
+      if (data?.type === 'explore') {
+        fileWalker.enqueueTask(data.value.path);
       }
     });
   }
 
   function initFileWalkerListeners() {
-    fileWalker.events.on('newResult', ({ results }) => {
+    fileWalker.events.on('onResult', ({ results }) => {
       tunnel.postMessage({
-        type: EVENTS.scanResult,
+        type: 'scan-result',
         value: { results, workerId: id, pending: fileWalker.pendingJobs },
       });
+    });
+
+    fileWalker.events.on('onCompleted', () => {
+      tunnel.postMessage({ type: 'scan-job-completed' });
+    });
+
+    fileWalker.events.on('onStats', (stats: WorkerStats) => {
+      tunnel.postMessage({ type: 'stats', value: stats });
     });
   }
 })();
@@ -69,6 +76,9 @@ class FileWalker {
   private taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
+  // More PROCS improve the speed of the search, but increment
+  // but it will greatly increase the maximum ram usage.
+  private readonly MAX_PROCS = 100;
 
   setSearchConfig(params: IListDirParams) {
     this.searchConfig = params;
@@ -100,7 +110,7 @@ class FileWalker {
       this.newDirEntry(path, entry, results);
     }
 
-    this.events.emit('newResult', { results: results });
+    this.events.emit('onResult', { results: results });
 
     await dir.close();
     this.completeTask();
@@ -143,14 +153,15 @@ class FileWalker {
   }
 
   private processQueue() {
-    while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
+    while (this.procs < this.MAX_PROCS && this.taskQueue.length > 0) {
       const path = this.taskQueue.shift().path;
       this.run(path);
     }
   }
 
   private completeAll() {
-    // Any future action.
+    this.events.emit('onStats');
+    this.events.emit('onCompleted');
   }
 
   get stats(): WorkerStats {

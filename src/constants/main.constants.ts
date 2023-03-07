@@ -6,7 +6,6 @@ export const WIDTH_OVERFLOW = '...';
 export const DEFAULT_SIZE = '0 MB';
 export const DECIMALS_SIZE = 2;
 export const OVERFLOW_CUT_FROM = 11;
-export const MAX_WORKERS = 8;
 
 export const DEFAULT_CONFIG: IConfig = {
   backgroundColor: 'bgBlue',

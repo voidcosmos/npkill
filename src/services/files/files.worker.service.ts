@@ -5,14 +5,19 @@ import { Worker } from 'node:worker_threads';
 import { Subject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { SearchStatus } from '../../models/search-state.model.js';
-import { MAX_WORKERS } from '../../constants/index.js';
 import { MessageChannel } from 'worker_threads';
 import { LoggerService } from '../logger.service.js';
+import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
-  type: 'explore';
+  job: 'explore'; //| 'getSize';
   value: { path: string };
+}
+
+export interface WorkerMessage {
+  type: EVENTS;
+  value: any;
 }
 
 export interface WorkerStats {
@@ -35,47 +40,19 @@ export class FileWorkerService {
   ) {}
 
   startScan(stream$: Subject<string>, params: IListDirParams) {
-    setInterval(() => this.updateStats(), 40);
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
+    this.listenEvents(stream$);
+    this.setWorkerConfig(params);
 
-    this.tunnels.forEach((tunnel) => {
-      tunnel.on('message', (data) => {
-        if (data?.type === 'scan-result') {
-          const results: string[] = data.value.results;
-          const workerId: number = data.value.workerId;
-          this.workersPendingJobs[workerId] = data.value.pending;
+    // Manually add the first job.
+    this.addJob({ job: 'explore', value: { path: params.path } });
+  }
 
-          results.forEach((path) => {
-            if (basename(path) === 'node_modules') {
-              stream$.next(path);
-            } else {
-              this.addJob({
-                type: 'explore',
-                value: { path },
-              });
-            }
-          });
-
-          this.pendingJobs = this.getPendingJobs();
-          this.checkJobComplete(stream$);
-        }
-
-        if (data?.type === 'stats') {
-        }
-
-        if (data?.type === 'alternative-stats') {
-          this.workersPendingJobs[data.value.workerId] = data.value.pending;
-          this.pendingJobs = this.getPendingJobs();
-          this.checkJobComplete(stream$);
-        }
-
-        if (data?.type === 'alive') {
-          this.searchStatus.workerStatus = 'scanning';
-        }
-
-        if (data?.type === 'scan-job-completed') {
-          // this.searchStatus.workerStatus = 'finished';
-          //stream$.complete();
+  private listenEvents(stream$: Subject<string>) {
+    this.tunnels.forEach((worker) => {
+      worker.on('message', (data: WorkerMessage) => {
+        if (data) {
+          this.newWorkerMessage(data, stream$);
         }
       });
 
@@ -85,38 +62,63 @@ export class FileWorkerService {
         });
 
         worker.on('error', (error) => {
-          // this.searchStatus.workerStatus = 'dead';
           // Respawn worker.
           throw error;
         });
       });
     });
-
-    this.addJob({ type: 'explore', value: { path: params.path } });
   }
 
-  private updateStats() {
-    this.searchStatus.pendingSearchTasks = this.pendingJobs;
-    this.searchStatus.completedSearchTasks = this.totalJobs;
-    this.searchStatus.workersJobs = this.workersPendingJobs;
+  private newWorkerMessage(message: WorkerMessage, stream$: Subject<string>) {
+    const { type, value } = message;
+
+    if (type === EVENTS.scanResult) {
+      const results: { path: string; isTarget: boolean }[] = value.results;
+      const workerId: number = value.workerId;
+      this.workersPendingJobs[workerId] = value.pending;
+
+      results.forEach((result) => {
+        const { path, isTarget } = result;
+        if (isTarget) {
+          stream$.next(path);
+        } else {
+          this.addJob({
+            job: 'explore',
+            value: { path },
+          });
+        }
+      });
+
+      this.pendingJobs = this.getPendingJobs();
+      this.checkJobComplete(stream$);
+    }
+
+    if (type === EVENTS.alive) {
+      this.searchStatus.workerStatus = 'scanning';
+    }
+  }
+
+  /** Jobs are distributed following the round-robin algorithm. */
+  private addJob(job: WorkerJob) {
+    if (job.job === 'explore') {
+      const tunnel = this.tunnels[this.index];
+      const message: WorkerMessage = { type: EVENTS.explore, value: job.value };
+      tunnel.postMessage(message);
+      this.workersPendingJobs[this.index]++;
+      this.totalJobs++;
+      this.pendingJobs++;
+      this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
+    }
   }
 
   private checkJobComplete(stream$: Subject<string>) {
+    this.updateStats();
     const isCompleted = this.getPendingJobs() === 0;
     if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
       this.killWorkers();
       stream$.complete();
     }
-  }
-
-  private addJob(job: WorkerJob) {
-    const worker = this.workers[this.index];
-    worker.postMessage(job);
-    this.workersPendingJobs[this.index]++;
-    this.totalJobs++;
-    this.pendingJobs++;
-    this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
   }
 
   private instantiateWorkers(amount: number): void {
@@ -126,7 +128,7 @@ export class FileWorkerService {
       const worker = new Worker(this.getWorkerPath());
       this.tunnels.push(port1);
       worker.postMessage(
-        { type: 'startup', value: { channel: port2, id: i } },
+        { type: EVENTS.startup, value: { channel: port2, id: i } },
         [port2], // Prevent clone the object and pass the original.
       );
       this.workers.push(worker);
@@ -134,14 +136,33 @@ export class FileWorkerService {
     }
   }
 
+  private setWorkerConfig(params: IListDirParams) {
+    this.tunnels.forEach((tunnel) =>
+      tunnel.postMessage({
+        type: EVENTS.exploreConfig,
+        value: params,
+      }),
+    );
+  }
+
   private killWorkers() {
-    this.workers.forEach((worker) => {
-      worker.terminate();
-    });
+    for (let i = 0; i < this.workers.length; i++) {
+      this.workers[i].removeAllListeners();
+      this.tunnels[i].removeAllListeners();
+      this.workers[i].terminate();
+    }
+    this.workers = [];
+    this.tunnels = [];
   }
 
   private getPendingJobs(): number {
     return this.workersPendingJobs.reduce((acc, x) => x + acc, 0);
+  }
+
+  private updateStats() {
+    this.searchStatus.pendingSearchTasks = this.pendingJobs;
+    this.searchStatus.completedSearchTasks = this.totalJobs;
+    this.searchStatus.workersJobs = this.workersPendingJobs;
   }
 
   private getWorkerPath(): URL {
