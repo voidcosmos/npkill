@@ -1,11 +1,10 @@
 import os from 'os';
-import { basename, dirname, extname } from 'path';
+import { dirname, extname } from 'path';
 
-import { Worker } from 'node:worker_threads';
+import { Worker, MessageChannel } from 'node:worker_threads';
 import { Subject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { SearchStatus } from '../../models/search-state.model.js';
-import { MessageChannel } from 'worker_threads';
 import { LoggerService } from '../logger.service.js';
 import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
@@ -49,8 +48,8 @@ export class FileWorkerService {
   }
 
   private listenEvents(stream$: Subject<string>) {
-    this.tunnels.forEach((worker) => {
-      worker.on('message', (data: WorkerMessage) => {
+    this.tunnels.forEach((tunnel) => {
+      tunnel.on('message', (data: WorkerMessage) => {
         if (data) {
           this.newWorkerMessage(data, stream$);
         }
@@ -180,6 +179,7 @@ export class FileWorkerService {
     const cores = os.cpus().length;
     // TODO calculate amount of RAM available and take it
     // as part on the ecuation.
-    return cores > MAX_WORKERS ? MAX_WORKERS : cores - 1;
+    const numWorkers = cores > MAX_WORKERS ? MAX_WORKERS : cores - 1;
+    return numWorkers < 1 ? 1 : numWorkers;
   }
 }
