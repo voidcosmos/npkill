@@ -28,7 +28,7 @@ const OSService = {
 const logger = new LoggerService();
 const searchStatus = new SearchStatus();
 
-const fileWorkerService = new FileWorkerService(searchStatus);
+const fileWorkerService = new FileWorkerService(logger, searchStatus);
 const streamService: StreamService = new StreamService();
 
 const fileService: IFileService = new OSService[getOS()](

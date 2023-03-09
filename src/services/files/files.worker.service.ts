@@ -1,11 +1,23 @@
+import os from 'os';
 import { dirname, extname } from 'path';
 
+import { Worker, MessageChannel } from 'node:worker_threads';
 import { Subject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
-import { Worker } from 'node:worker_threads';
-import { SearchStatus } from 'src/models/search-state.model.js';
+import { SearchStatus } from '../../models/search-state.model.js';
+import { LoggerService } from '../logger.service.js';
+import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
+interface WorkerJob {
+  job: 'explore'; //| 'getSize';
+  value: { path: string };
+}
+
+export interface WorkerMessage {
+  type: EVENTS;
+  value: any;
+}
 
 export interface WorkerStats {
   pendingSearchTasks: number;
@@ -14,62 +26,142 @@ export interface WorkerStats {
 }
 
 export class FileWorkerService {
-  private scanWorker = new Worker(this.getWorkerPath());
-  private getSizeWorker = new Worker(this.getWorkerPath());
+  private index = 0;
+  private workers: Worker[] = [];
+  private workersPendingJobs: number[] = [];
+  private pendingJobs = 0;
+  private totalJobs = 0;
+  private tunnels = [];
 
-  constructor(private searchStatus: SearchStatus) {}
+  constructor(
+    private logger: LoggerService,
+    private searchStatus: SearchStatus,
+  ) {}
 
   startScan(stream$: Subject<string>, params: IListDirParams) {
-    this.scanWorker.postMessage({
-      type: 'start-explore',
-      value: { path: params.path },
-    });
+    this.instantiateWorkers(this.getOptimalNumberOfWorkers());
+    this.listenEvents(stream$);
+    this.setWorkerConfig(params);
 
-    this.scanWorker.on('message', (data) => {
-      if (data?.type === 'scan-result') {
-        stream$.next(data.value);
-      }
-
-      if (data?.type === 'stats') {
-        this.searchStatus.pendingSearchTasks = data.value.pendingSearchTasks;
-        this.searchStatus.completedSearchTasks =
-          data.value.completedSearchTasks;
-      }
-
-      if (data?.type === 'alive') {
-        this.searchStatus.workerStatus = 'scanning';
-      }
-
-      if (data?.type === 'scan-job-completed') {
-        this.searchStatus.workerStatus = 'finished';
-        stream$.complete();
-      }
-    });
-
-    this.scanWorker.on('error', (error) => {
-      this.searchStatus.workerStatus = 'dead';
-      this.scanWorker.terminate();
-      throw error;
-    });
-
-    // this.scanWorker.on('exit', (code) => {
-    //   if (code !== 0) { this.searchStatus.workerStatus = 'dead'; return; }
-    // });
+    // Manually add the first job.
+    this.addJob({ job: 'explore', value: { path: params.path } });
   }
 
-  getSize(stream$: Subject<string>, path: string) {
-    const id = Math.random();
-    this.getSizeWorker.postMessage({
-      type: 'start-getSize',
-      value: { path, id },
-    });
+  private listenEvents(stream$: Subject<string>) {
+    this.tunnels.forEach((tunnel) => {
+      tunnel.on('message', (data: WorkerMessage) => {
+        if (data) {
+          this.newWorkerMessage(data, stream$);
+        }
+      });
 
-    this.getSizeWorker.on('message', (data) => {
-      if (data?.type === 'getsize-job-completed-' + id) {
-        stream$.next(data.value);
-        stream$.complete();
-      }
+      this.workers.forEach((worker, index) => {
+        worker.on('exit', () => {
+          this.logger.info(`Worker ${index} exited.`);
+        });
+
+        worker.on('error', (error) => {
+          // Respawn worker.
+          throw error;
+        });
+      });
     });
+  }
+
+  private newWorkerMessage(message: WorkerMessage, stream$: Subject<string>) {
+    const { type, value } = message;
+
+    if (type === EVENTS.scanResult) {
+      const results: { path: string; isTarget: boolean }[] = value.results;
+      const workerId: number = value.workerId;
+      this.workersPendingJobs[workerId] = value.pending;
+
+      results.forEach((result) => {
+        const { path, isTarget } = result;
+        if (isTarget) {
+          stream$.next(path);
+        } else {
+          this.addJob({
+            job: 'explore',
+            value: { path },
+          });
+        }
+      });
+
+      this.pendingJobs = this.getPendingJobs();
+      this.checkJobComplete(stream$);
+    }
+
+    if (type === EVENTS.alive) {
+      this.searchStatus.workerStatus = 'scanning';
+    }
+  }
+
+  /** Jobs are distributed following the round-robin algorithm. */
+  private addJob(job: WorkerJob) {
+    if (job.job === 'explore') {
+      const tunnel = this.tunnels[this.index];
+      const message: WorkerMessage = { type: EVENTS.explore, value: job.value };
+      tunnel.postMessage(message);
+      this.workersPendingJobs[this.index]++;
+      this.totalJobs++;
+      this.pendingJobs++;
+      this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
+    }
+  }
+
+  private checkJobComplete(stream$: Subject<string>) {
+    this.updateStats();
+    const isCompleted = this.getPendingJobs() === 0;
+    if (isCompleted) {
+      this.searchStatus.workerStatus = 'finished';
+      this.killWorkers();
+      stream$.complete();
+    }
+  }
+
+  private instantiateWorkers(amount: number): void {
+    this.logger.info(`Instantiating ${amount} workers..`);
+    for (let i = 0; i < amount; i++) {
+      const { port1, port2 } = new MessageChannel();
+      const worker = new Worker(this.getWorkerPath());
+      this.tunnels.push(port1);
+      worker.postMessage(
+        { type: EVENTS.startup, value: { channel: port2, id: i } },
+        [port2], // Prevent clone the object and pass the original.
+      );
+      this.workers.push(worker);
+      this.logger.info(`Worker ${i} instantiated.`);
+    }
+  }
+
+  private setWorkerConfig(params: IListDirParams) {
+    this.tunnels.forEach((tunnel) =>
+      tunnel.postMessage({
+        type: EVENTS.exploreConfig,
+        value: params,
+      }),
+    );
+  }
+
+  private killWorkers() {
+    for (let i = 0; i < this.workers.length; i++) {
+      this.workers[i].removeAllListeners();
+      this.tunnels[i].removeAllListeners();
+      this.workers[i].terminate();
+    }
+    this.workers = [];
+    this.tunnels = [];
+  }
+
+  private getPendingJobs(): number {
+    return this.workersPendingJobs.reduce((acc, x) => x + acc, 0);
+  }
+
+  private updateStats() {
+    this.searchStatus.pendingSearchTasks = this.pendingJobs;
+    this.searchStatus.completedSearchTasks = this.totalJobs;
+    this.searchStatus.workersJobs = this.workersPendingJobs;
   }
 
   private getWorkerPath(): URL {
@@ -81,5 +173,13 @@ export class FileWorkerService {
     const workerName = 'files.worker';
 
     return new URL(`${dirPath}/${workerName}${extension}`);
+  }
+
+  private getOptimalNumberOfWorkers(): number {
+    const cores = os.cpus().length;
+    // TODO calculate amount of RAM available and take it
+    // as part on the ecuation.
+    const numWorkers = cores > MAX_WORKERS ? MAX_WORKERS : cores - 1;
+    return numWorkers < 1 ? 1 : numWorkers;
   }
 }

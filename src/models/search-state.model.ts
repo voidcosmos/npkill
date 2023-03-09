@@ -7,6 +7,7 @@ export class SearchStatus {
   public completedStatsCalculation = 0;
   public resultsFound = 0;
   public workerStatus: WorkerStatus = 'stopped';
+  public workersJobs;
 
   newResult() {
     this.resultsFound++;
