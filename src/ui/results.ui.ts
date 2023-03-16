@@ -343,6 +343,11 @@ export class ResultsUi extends Ui implements InteractiveUi {
   private delete() {
     const folder =
       this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
+
+    if (!folder) {
+      return;
+    }
+
     this.delete$.next(folder);
   }
 
