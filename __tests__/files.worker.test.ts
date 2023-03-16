@@ -71,12 +71,6 @@ describe('FileWorker', () => {
 
     const { port1, port2 } = new MessageChannel();
     tunnelEmitter = port1;
-    const setExploreConfig = (params: IListDirParams) => {
-      tunnelEmitter.postMessage({
-        type: EVENTS.exploreConfig,
-        value: params,
-      });
-    };
 
     parentEmitter.emit('message', {
       type: EVENTS.startup,
@@ -88,12 +82,7 @@ describe('FileWorker', () => {
     jest.resetModules();
     jest.restoreAllMocks();
     parentEmitter.removeAllListeners();
-    // tunnelEmitter.close();
-  });
-
-  afterAll((done) => {
     tunnelEmitter.close();
-    done();
   });
 
   // it('should plant a listener over the passed MessagePort',()=>{})
@@ -137,9 +126,6 @@ describe('FileWorker', () => {
   describe('should mark "isTarget" correctly', () => {
     const sampleTargets = ['node_modules', 'dist'];
 
-    // THIS FOREACH cause: "A worker process has failed to exit
-    // gracefully and has been force exit."
-    // Should be fixed
     sampleTargets.forEach((target) => {
       it('when target is ' + target, (done) => {
         setExploreConfig({ path: basePath, target: 'node_modules' });
