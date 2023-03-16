@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import EventEmitter from 'node:events';
 import { Dir } from 'node:fs';
+import { join, normalize } from 'node:path';
 
 import { EVENTS } from '../src/constants/workers.constants';
 import { IListDirParams } from '../src/interfaces';
@@ -9,7 +10,7 @@ const parentEmitter: EventEmitter = new EventEmitter();
 let tunnelEmitter: any;
 const tunnelPostMock = jest.fn();
 
-let dirEntriesMock = [];
+let dirEntriesMock: { name: string; isDirectory: () => void }[] = [];
 const basePath = '/home/user/';
 const target = 'node_modules';
 
@@ -100,7 +101,7 @@ describe('FileWorker', () => {
     const expectedResult = subDirectories
       .filter((subdir) => subdir.isDirectory())
       .map((subdir) => ({
-        path: basePath + subdir.name,
+        path: join(basePath, subdir.name),
         isTarget: false,
       }));
 
@@ -142,7 +143,7 @@ describe('FileWorker', () => {
         const expectedResult = subDirectories
           .filter((subdir) => subdir.isDirectory())
           .map((subdir) => ({
-            path: basePath + subdir.name,
+            path: join(basePath, subdir.name),
             isTarget: subdir.name === 'node_modules',
           }));
 
@@ -189,7 +190,7 @@ describe('FileWorker', () => {
           (subdir) => subdir.isDirectory() && !excluded.includes(subdir.name),
         )
         .map((subdir) => ({
-          path: basePath + subdir.name,
+          path: join(basePath, subdir.name),
           isTarget: subdir.name === 'node_modules',
         }));
 
@@ -214,7 +215,7 @@ describe('FileWorker', () => {
       setExploreConfig({
         path: basePath,
         target: 'node_modules',
-        exclude: excluded,
+        exclude: excluded.map(normalize),
       });
       const subDirectories = [
         { name: 'file1.cs', isDirectory: () => false },
@@ -232,7 +233,7 @@ describe('FileWorker', () => {
           (subdir) => subdir.isDirectory() && subdir.name !== 'ignorethis',
         )
         .map((subdir) => ({
-          path: basePath + subdir.name,
+          path: join(basePath, subdir.name),
           isTarget: subdir.name === 'node_modules',
         }));
 
