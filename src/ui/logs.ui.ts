@@ -98,7 +98,7 @@ export class LogsUi extends Ui implements InteractiveUi {
   }
 
   private printHeader() {
-    const titleText = '▁▅█ Errors █▅▁';
+    const titleText = ' Errors ';
     this.printAt(this.stylizeText(titleText), {
       x: Math.floor((this.size.x + titleText.length / 2) / 2) - this.position.x,
       y: this.position.y,
