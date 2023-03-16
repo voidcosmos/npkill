@@ -1,11 +1,9 @@
-'use strict';
-
 import { Dir, Dirent, opendir } from 'fs';
 
 import EventEmitter from 'events';
 import { WorkerMessage, WorkerStats } from './files.worker.service';
-import { basename } from 'path';
-import { parentPort } from 'worker_threads';
+import { basename, join } from 'path';
+import { parentPort } from 'node:worker_threads';
 import { IListDirParams } from '../../interfaces';
 import { EVENTS, MAX_PROCS } from '../../constants/workers.constants.js';
 
@@ -65,6 +63,7 @@ class FileWalker {
   private searchConfig: IListDirParams = {
     path: '',
     target: '',
+    exclude: [],
   };
   private taskQueue: Task[] = [];
   private completedTasks = 0;
@@ -111,7 +110,7 @@ class FileWalker {
   }
 
   private newDirEntry(path: string, entry: Dirent, results: any[]) {
-    const subpath = (path === '/' ? '' : path) + '/' + entry.name;
+    const subpath = join(path, entry.name);
     const shouldSkip = !entry.isDirectory() || this.isExcluded(subpath);
     if (shouldSkip) {
       return;
@@ -124,7 +123,16 @@ class FileWalker {
   }
 
   private isExcluded(path: string) {
-    return basename(path) === '.git';
+    if (!this.searchConfig.exclude) {
+      return;
+    }
+    for (let i = 0; i < this.searchConfig.exclude.length; i++) {
+      const excludeString = this.searchConfig.exclude[i];
+      if (path.includes(excludeString)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private isTargetFolder(path: string): boolean {
@@ -153,13 +161,13 @@ class FileWalker {
     // Any future action.
   }
 
-  get stats(): WorkerStats {
+  /*  get stats(): WorkerStats {
     return {
       pendingSearchTasks: this.taskQueue.length,
       completedSearchTasks: this.completedTasks,
       procs: this.procs,
     };
-  }
+  } */
 
   get pendingJobs() {
     return this.taskQueue.length;

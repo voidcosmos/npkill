@@ -12,7 +12,7 @@ export const DEFAULT_CONFIG: IConfig = {
   warningColor: 'brightYellow',
   checkUpdates: true,
   deleteAll: false,
-  exclude: [],
+  exclude: ['.git'],
   excludeHiddenDirectories: false,
   folderSizeInGB: false,
   maxSimultaneousSearch: 6,
