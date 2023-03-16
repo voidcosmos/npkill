@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import EventEmitter from 'node:events';
 import { Dir } from 'node:fs';
 import { join, normalize } from 'node:path';
+import { MessageChannel } from 'node:worker_threads';
 
 import { EVENTS } from '../src/constants/workers.constants';
 import { IListDirParams } from '../src/interfaces';
