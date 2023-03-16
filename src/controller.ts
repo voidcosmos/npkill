@@ -144,8 +144,9 @@ export class Controller {
     if (exclude && typeof exclude === 'string') {
       const userExcludeList = this.consoleService
         .splitData(this.consoleService.replaceString(exclude, '"', ''), ',')
-        .map((file) => file.trim())
-        .filter(Boolean);
+        .map((path) => path.trim())
+        .filter(Boolean)
+        .map(path.normalize);
 
       // Add custom filters to the default exclude list.
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
