@@ -36,6 +36,7 @@ import { InteractiveUi } from './ui/ui.js';
 import { LoggerService } from './services/logger.service.js';
 import { LogsUi } from './ui/logs.ui.js';
 import { ResultsUi } from './ui/results.ui.js';
+import { SearchStatus } from './models/search-state.model.js';
 import { StatsUi } from './ui/header/stats.ui.js';
 import { StatusUi } from './ui/header/status.ui.js';
 import { UiService } from './services/ui.service.js';
@@ -43,7 +44,6 @@ import __dirname from './dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
-import { SearchStatus } from './models/search-state.model.js';
 
 export class Controller {
   private folderRoot = '';
@@ -299,7 +299,6 @@ export class Controller {
 
     this.stdout.on('resize', () => {
       this.uiService.clear();
-      this.uiService.renderAll();
       this.uiService.renderAll();
     });
 
