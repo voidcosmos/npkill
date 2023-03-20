@@ -67,10 +67,6 @@ export class ResultsUi extends Ui implements InteractiveUi {
     }
 
     this.printResults();
-    this.printAt(`${this.resultIndex} | ${this.getRow(this.resultIndex)}  `, {
-      x: 60,
-      y: 0,
-    });
   }
 
   clear() {
@@ -202,8 +198,11 @@ export class ResultsUi extends Ui implements InteractiveUi {
     const shouldScrollUp =
       this.getRow(this.resultIndex) <
       MARGINS.ROW_RESULTS_START + this.scroll + 1;
+
     const shouldScrollDown =
-      this.getRow(this.resultIndex) > this.stdout.rows + this.scroll - 2;
+      this.getRow(this.resultIndex) > this.stdout.rows + this.scroll - 2 &&
+      this.resultIndex < this.resultsService.results.length - 1;
+
     let scrollRequired = 0;
 
     if (shouldScrollUp)
