@@ -4,16 +4,17 @@ import {
   MARGINS,
   OVERFLOW_CUT_FROM,
 } from '../constants/main.constants.js';
-import { INFO_MSGS } from '../constants/messages.constants.js';
-import { IFolder } from '../interfaces/folder.interface.js';
-import { ResultsService } from '../services/results.service.js';
 import { InteractiveUi, Ui } from './ui.js';
-import colors from 'colors';
+
 import { ConsoleService } from '../services/console.service.js';
 import { FileService } from '../services/index.js';
 import { IConfig } from '../interfaces/config.interface.js';
-import { Subject } from 'rxjs';
+import { IFolder } from '../interfaces/folder.interface.js';
 import { IKeyPress } from 'src/interfaces/key-press.interface.js';
+import { INFO_MSGS } from '../constants/messages.constants.js';
+import { ResultsService } from '../services/results.service.js';
+import { Subject } from 'rxjs';
+import colors from 'colors';
 
 export class ResultsUi extends Ui implements InteractiveUi {
   haveResultsAfterCompleted = true;
@@ -102,6 +103,7 @@ export class ResultsUi extends Ui implements InteractiveUi {
   }
 
   private printFolderRow(folder: IFolder, row: number) {
+    this.clearLine(row);
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
 
@@ -121,12 +123,10 @@ export class ResultsUi extends Ui implements InteractiveUi {
       x: MARGINS.FOLDER_COLUMN_START,
       y: row,
     });
-
     this.printAt(lastModification, {
       x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
       y: row,
     });
-
     this.printAt(size, {
       x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
       y: row,
