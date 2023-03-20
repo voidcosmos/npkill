@@ -17,29 +17,29 @@ import { Subject } from 'rxjs';
 import colors from 'colors';
 
 export class ResultsUi extends Ui implements InteractiveUi {
-  haveResultsAfterCompleted = true;
-  cursorPosY = MARGINS.ROW_RESULTS_START;
-  previusCursorPosY = MARGINS.ROW_RESULTS_START;
+  resultIndex = 0;
+  previousIndex = 0;
   scroll: number = 0;
+  private haveResultsAfterCompleted = true;
 
   readonly delete$ = new Subject<IFolder>();
   readonly showErrors$ = new Subject<null>();
 
   private config: IConfig = DEFAULT_CONFIG;
   private KEYS = {
-    up: () => this.moveCursorUp(),
-    down: () => this.moveCursorDown(),
+    up: () => this.cursorUp(),
+    down: () => this.cursorDown(),
     space: () => this.delete(),
-    j: () => this.moveCursorDown(),
-    k: () => this.moveCursorUp(),
-    h: () => this.moveCursorPageDown(),
-    l: () => this.moveCursorPageUp(),
-    d: () => this.moveCursorPageDown(),
-    u: () => this.moveCursorPageUp(),
-    pageup: () => this.moveCursorPageUp(),
-    pagedown: () => this.moveCursorPageDown(),
-    home: () => this.moveCursorFirstResult(),
-    end: () => this.moveCursorLastResult(),
+    j: () => this.cursorDown(),
+    k: () => this.cursorUp(),
+    h: () => this.cursorPageDown(),
+    l: () => this.cursorPageUp(),
+    d: () => this.cursorPageDown(),
+    u: () => this.cursorPageUp(),
+    pageup: () => this.cursorPageUp(),
+    pagedown: () => this.cursorPageDown(),
+    home: () => this.cursorFirstResult(),
+    end: () => this.cursorLastResult(),
     e: () => this.showErrorsPopup(),
   };
 
@@ -67,6 +67,10 @@ export class ResultsUi extends Ui implements InteractiveUi {
     }
 
     this.printResults();
+    this.printAt(`${this.resultIndex} | ${this.getRow(this.resultIndex)}  `, {
+      x: 60,
+      y: 0,
+    });
   }
 
   clear() {
@@ -84,11 +88,11 @@ export class ResultsUi extends Ui implements InteractiveUi {
 
   private printResults() {
     const visibleFolders = this.getVisibleScrollFolders();
-    this.clearLine(this.previusCursorPosY);
+    this.clearLine(this.getRow(this.previousIndex));
 
     visibleFolders.map((folder: IFolder, index: number) => {
-      const folderRow = MARGINS.ROW_RESULTS_START + index;
-      this.printFolderRow(folder, folderRow);
+      const row = MARGINS.ROW_RESULTS_START + index;
+      this.printFolderRow(folder, row);
     });
   }
 
@@ -168,69 +172,54 @@ export class ResultsUi extends Ui implements InteractiveUi {
     };
   }
 
-  moveCursorUp(): void {
-    if (this.isCursorInUpperTextLimit(this.cursorPosY)) {
-      this.previusCursorPosY = this.getRealCursorPosY();
-      this.cursorPosY--;
-      this.fitScroll();
-    }
+  cursorUp(): void {
+    this.moveCursor(-1);
   }
 
-  moveCursorDown(): void {
-    if (this.isCursorInLowerTextLimit(this.cursorPosY)) {
-      this.previusCursorPosY = this.getRealCursorPosY();
-      this.cursorPosY++;
-      this.fitScroll();
-    }
+  cursorDown(): void {
+    this.moveCursor(1);
   }
 
-  moveCursorPageUp(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
-    this.cursorPosY -= resultsInPage - 1;
-    if (this.cursorPosY - MARGINS.ROW_RESULTS_START < 0)
-      this.cursorPosY = MARGINS.ROW_RESULTS_START;
-    this.fitScroll();
+  cursorPageUp(): void {
+    const resultsInPage = this.getRowsAvailable();
+    this.moveCursor(-(resultsInPage - 1));
   }
 
-  moveCursorPageDown(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    const resultsInPage = this.stdout.rows - MARGINS.ROW_RESULTS_START;
-    const foldersAmmount = this.resultsService.results.length;
-    this.cursorPosY += resultsInPage - 1;
-    if (this.cursorPosY - MARGINS.ROW_RESULTS_START > foldersAmmount)
-      this.cursorPosY = foldersAmmount + MARGINS.ROW_RESULTS_START - 1;
-    this.fitScroll();
+  cursorPageDown(): void {
+    const resultsInPage = this.getRowsAvailable();
+    this.moveCursor(resultsInPage - 1);
   }
 
-  moveCursorFirstResult(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    this.cursorPosY = MARGINS.ROW_RESULTS_START;
-    this.fitScroll();
+  cursorFirstResult(): void {
+    this.moveCursor(0);
   }
 
-  moveCursorLastResult(): void {
-    this.previusCursorPosY = this.getRealCursorPosY();
-    this.cursorPosY =
-      MARGINS.ROW_RESULTS_START + this.resultsService.results.length - 1;
-    this.fitScroll();
+  cursorLastResult(): void {
+    this.moveCursor(this.resultsService.results.length - 1);
   }
 
   fitScroll(): void {
     const shouldScrollUp =
-      this.cursorPosY < MARGINS.ROW_RESULTS_START + this.scroll + 1;
+      this.getRow(this.resultIndex) <
+      MARGINS.ROW_RESULTS_START + this.scroll + 1;
     const shouldScrollDown =
-      this.cursorPosY > this.stdout.rows + this.scroll - 2;
+      this.getRow(this.resultIndex) > this.stdout.rows + this.scroll - 2;
     let scrollRequired = 0;
 
     if (shouldScrollUp)
       scrollRequired =
-        this.cursorPosY - MARGINS.ROW_RESULTS_START - this.scroll - 1;
+        this.getRow(this.resultIndex) -
+        MARGINS.ROW_RESULTS_START -
+        this.scroll -
+        1;
     else if (shouldScrollDown) {
-      scrollRequired = this.cursorPosY - this.stdout.rows - this.scroll + 2;
+      scrollRequired =
+        this.getRow(this.resultIndex) - this.stdout.rows - this.scroll + 2;
     }
 
-    if (scrollRequired) this.scrollFolderResults(scrollRequired);
+    if (scrollRequired) {
+      this.scrollFolderResults(scrollRequired);
+    }
   }
 
   scrollFolderResults(scrollAmount: number): void {
@@ -241,6 +230,23 @@ export class ResultsUi extends Ui implements InteractiveUi {
       this.resultsService.results.length,
     );
     this.clear();
+  }
+
+  private moveCursor(index: number) {
+    this.previousIndex = this.resultIndex;
+    this.resultIndex += index;
+
+    // Upper limit
+    if (this.isCursorInLowerLimit()) {
+      this.resultIndex = 0;
+    }
+
+    // Lower limit
+    if (this.isCursorInUpperLimit()) {
+      this.resultIndex = this.resultsService.results.length - 1;
+    }
+
+    this.fitScroll();
   }
 
   private getFolderPathText(folder: IFolder): string {
@@ -305,23 +311,22 @@ export class ResultsUi extends Ui implements InteractiveUi {
       : folderString;
   }
 
-  private isCursorInLowerTextLimit(positionY: number): boolean {
-    const foldersAmmount = this.resultsService.results.length;
-    return positionY < foldersAmmount - 1 + MARGINS.ROW_RESULTS_START;
+  private isCursorInLowerLimit(): boolean {
+    return this.resultIndex < 0;
   }
 
-  private isCursorInUpperTextLimit(positionY: number): boolean {
-    return positionY > MARGINS.ROW_RESULTS_START;
+  private isCursorInUpperLimit(): boolean {
+    return this.resultIndex >= this.resultsService.results.length;
   }
 
   private getRealCursorPosY(): number {
-    return this.cursorPosY - this.scroll;
+    return this.getRow(this.resultIndex) - this.scroll;
   }
 
   private getVisibleScrollFolders(): IFolder[] {
     return this.resultsService.results.slice(
       this.scroll,
-      this.stdout.rows - MARGINS.ROW_RESULTS_START + this.scroll,
+      this.getRowsAvailable() + this.scroll,
     );
   }
 
@@ -341,14 +346,23 @@ export class ResultsUi extends Ui implements InteractiveUi {
   }
 
   private delete() {
-    const folder =
-      this.resultsService.results[this.cursorPosY - MARGINS.ROW_RESULTS_START];
+    const folder = this.resultsService.results[this.resultIndex];
 
     if (!folder) {
       return;
     }
 
     this.delete$.next(folder);
+  }
+
+  /** Returns the number of results that can be displayed. */
+  private getRowsAvailable(): number {
+    return this.stdout.rows - MARGINS.ROW_RESULTS_START;
+  }
+
+  /** Returns the row to which the index corresponds. */
+  private getRow(index: number): number {
+    return index + MARGINS.ROW_RESULTS_START;
   }
 
   private showErrorsPopup() {
