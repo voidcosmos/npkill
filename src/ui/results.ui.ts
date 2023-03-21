@@ -147,7 +147,7 @@ export class ResultsUi extends Ui implements InteractiveUi {
           ) + 'd'
         : '--';
 
-    if (folder.isDangerous) daysSinceLastModification = 'xxx';
+    if (folder.isDangerous) daysSinceLastModification = 'xx';
 
     // Align to right
     const alignMargin = 4 - daysSinceLastModification.length;
