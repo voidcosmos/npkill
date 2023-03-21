@@ -21,11 +21,6 @@ interface Task {
   let fileWalker: FileWalker = null;
   let tunnel; //: MessagePort;
 
-  parentPort.postMessage({
-    type: EVENTS.alive,
-    value: null,
-  });
-
   parentPort.on('message', (message: WorkerMessage) => {
     if (message?.type === EVENTS.startup) {
       id = message.value.id;
@@ -33,8 +28,16 @@ interface Task {
       fileWalker = new FileWalker();
       initTunnelListeners();
       initFileWalkerListeners();
+      notifyWorkerReady();
     }
   });
+
+  function notifyWorkerReady() {
+    tunnel.postMessage({
+      type: EVENTS.alive,
+      value: null,
+    });
+  }
 
   function initTunnelListeners() {
     tunnel.on('message', (message: WorkerMessage) => {
