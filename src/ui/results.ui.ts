@@ -178,16 +178,16 @@ export class ResultsUi extends Ui implements InteractiveUi {
 
   cursorPageUp(): void {
     const resultsInPage = this.getRowsAvailable();
-    this.moveCursor(-(resultsInPage - 1));
+    this.moveCursor(-(resultsInPage - 2));
   }
 
   cursorPageDown(): void {
     const resultsInPage = this.getRowsAvailable();
-    this.moveCursor(resultsInPage - 1);
+    this.moveCursor(resultsInPage - 2);
   }
 
   cursorFirstResult(): void {
-    this.moveCursor(0);
+    this.moveCursor(-this.resultIndex);
   }
 
   cursorLastResult(): void {
@@ -203,6 +203,9 @@ export class ResultsUi extends Ui implements InteractiveUi {
       this.getRow(this.resultIndex) > this.stdout.rows + this.scroll - 2 &&
       this.resultIndex < this.resultsService.results.length - 1;
 
+    const isOnBotton =
+      this.resultIndex === this.resultsService.results.length - 1;
+
     let scrollRequired = 0;
 
     if (shouldScrollUp)
@@ -214,6 +217,10 @@ export class ResultsUi extends Ui implements InteractiveUi {
     else if (shouldScrollDown) {
       scrollRequired =
         this.getRow(this.resultIndex) - this.stdout.rows - this.scroll + 2;
+
+      if (isOnBotton) {
+        scrollRequired -= 1;
+      }
     }
 
     if (scrollRequired) {
