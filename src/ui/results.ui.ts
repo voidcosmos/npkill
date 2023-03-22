@@ -156,7 +156,9 @@ export class ResultsUi extends Ui implements InteractiveUi {
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
-      folderSize = `${size.toFixed(DECIMALS_SIZE)} MB`;
+      const sizeText = size.toFixed(DECIMALS_SIZE);
+      const space = ' '.repeat(6 - sizeText.length);
+      folderSize = `${space}${size.toFixed(DECIMALS_SIZE)} MB`;
     }
 
     const folderSizeText = folder.size ? folderSize : '--';
