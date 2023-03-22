@@ -14,7 +14,7 @@ export abstract class UnixFilesService extends FileService {
     super();
   }
 
-  abstract getFolderSize(path: string): Observable<any>;
+  abstract override getFolderSize(path: string): Observable<any>;
 
   listDir(params: IListDirParams): Observable<string> {
     const stream$ = new Subject<string>();

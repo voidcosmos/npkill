@@ -10,6 +10,7 @@
     "outDir": "./lib/",
     "strict": true,
     "noImplicitAny": false,
+    "noImplicitOverride": true,
     "strictNullChecks": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

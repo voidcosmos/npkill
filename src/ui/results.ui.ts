@@ -4,7 +4,9 @@ import {
   MARGINS,
   OVERFLOW_CUT_FROM,
 } from '../constants/main.constants.js';
-import { InteractiveUi, Ui } from './ui.js';
+
+import { InteractiveUi } from './ui.js';
+import { HeavyUi } from './heavy.ui.js';
 
 import { ConsoleService } from '../services/console.service.js';
 import { FileService } from '../services/index.js';
@@ -16,7 +18,7 @@ import { ResultsService } from '../services/results.service.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
 
-export class ResultsUi extends Ui implements InteractiveUi {
+export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
   previousIndex = 0;
   scroll: number = 0;
@@ -67,6 +69,7 @@ export class ResultsUi extends Ui implements InteractiveUi {
     }
 
     this.printResults();
+    this.flush();
   }
 
   clear() {
@@ -84,7 +87,6 @@ export class ResultsUi extends Ui implements InteractiveUi {
 
   private printResults() {
     const visibleFolders = this.getVisibleScrollFolders();
-    this.clearLine(this.getRow(this.previousIndex));
 
     visibleFolders.map((folder: IFolder, index: number) => {
       const row = MARGINS.ROW_RESULTS_START + index;
