@@ -1,17 +1,17 @@
-import { Ui } from '../ui.js';
+import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
-import { SpinnerService } from '../../services/spinner.service.js';
+import { SpinnerService } from '../../../services/spinner.service.js';
 import { interval, Subject, takeUntil } from 'rxjs';
-import { INFO_MSGS } from '../../constants/messages.constants.js';
+import { INFO_MSGS } from '../../../constants/messages.constants.js';
 import {
   SPINNERS,
   SPINNER_INTERVAL,
-} from '../../constants/spinner.constants.js';
-import { UI_POSITIONS } from '../../constants/main.constants.js';
-import { SearchStatus } from '../../models/search-state.model.js';
-import { BAR_PARTS, BAR_WIDTH } from '../../constants/status.constants.js';
+} from '../../../constants/spinner.constants.js';
+import { UI_POSITIONS } from '../../../constants/main.constants.js';
+import { SearchStatus } from '../../../models/search-state.model.js';
+import { BAR_PARTS, BAR_WIDTH } from '../../../constants/status.constants.js';
 
-export class StatusUi extends Ui {
+export class StatusUi extends BaseUi {
   private text = '';
   private searchEnd$ = new Subject();
   private barNormalizedWidth = 0;

@@ -3,18 +3,18 @@ import {
   DEFAULT_CONFIG,
   MARGINS,
   OVERFLOW_CUT_FROM,
-} from '../constants/main.constants.js';
+} from '../../constants/main.constants.js';
 
-import { InteractiveUi } from './ui.js';
-import { HeavyUi } from './heavy.ui.js';
+import { InteractiveUi } from '../base.ui.js';
+import { HeavyUi } from '../heavy.ui.js';
 
-import { ConsoleService } from '../services/console.service.js';
-import { FileService } from '../services/index.js';
-import { IConfig } from '../interfaces/config.interface.js';
-import { IFolder } from '../interfaces/folder.interface.js';
+import { ConsoleService } from '../../services/console.service.js';
+import { FileService } from '../../services/index.js';
+import { IConfig } from '../../interfaces/config.interface.js';
+import { IFolder } from '../../interfaces/folder.interface.js';
 import { IKeyPress } from 'src/interfaces/key-press.interface.js';
-import { INFO_MSGS } from '../constants/messages.constants.js';
-import { ResultsService } from '../services/results.service.js';
+import { INFO_MSGS } from '../../constants/messages.constants.js';
+import { ResultsService } from '../../services/results.service.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
 
@@ -73,7 +73,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   clear() {
-    for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
+    for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
   }
@@ -99,7 +99,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       this.config.targetFolder,
     )} found!`;
     this.printAt(message, {
-      x: Math.floor(this.stdout.columns / 2 - message.length / 2),
+      x: Math.floor(this.terminal.columns / 2 - message.length / 2),
       y: MARGINS.ROW_RESULTS_START + 2,
     });
   }
@@ -126,11 +126,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       y: row,
     });
     this.printAt(lastModification, {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
+      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
       y: row,
     });
     this.printAt(size, {
-      x: this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN,
+      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN,
       y: row,
     });
   }
@@ -204,7 +204,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       MARGINS.ROW_RESULTS_START + this.scroll + 1;
 
     const shouldScrollDown =
-      this.getRow(this.resultIndex) > this.stdout.rows + this.scroll - 2 &&
+      this.getRow(this.resultIndex) > this.terminal.rows + this.scroll - 2 &&
       this.resultIndex < this.resultsService.results.length - 1;
 
     const isOnBotton =
@@ -220,7 +220,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         1;
     else if (shouldScrollDown) {
       scrollRequired =
-        this.getRow(this.resultIndex) - this.stdout.rows - this.scroll + 2;
+        this.getRow(this.resultIndex) - this.terminal.rows - this.scroll + 2;
 
       if (isOnBotton) {
         scrollRequired -= 1;
@@ -283,7 +283,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     text = this.consoleService.shortenText(
       text,
-      this.stdout.columns - MARGINS.FOLDER_COLUMN_END,
+      this.terminal.columns - MARGINS.FOLDER_COLUMN_END,
       cutFrom,
     );
 
@@ -342,7 +342,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private paintBgRow(row: number) {
     const startPaint = MARGINS.FOLDER_COLUMN_START;
-    const endPaint = this.stdout.columns - MARGINS.FOLDER_SIZE_COLUMN;
+    const endPaint = this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN;
     let paintSpaces = '';
 
     for (let i = startPaint; i < endPaint; ++i) {
@@ -367,7 +367,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   /** Returns the number of results that can be displayed. */
   private getRowsAvailable(): number {
-    return this.stdout.rows - MARGINS.ROW_RESULTS_START;
+    return this.terminal.rows - MARGINS.ROW_RESULTS_START;
   }
 
   /** Returns the row to which the index corresponds. */

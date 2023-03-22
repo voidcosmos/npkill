@@ -1,10 +1,10 @@
 import ansiEscapes from 'ansi-escapes';
-import { Position, Ui } from '../ui/ui.js';
+import { Position, BaseUi } from '../ui/index.js';
 
 export class UiService {
   stdin: NodeJS.ReadStream = process.stdin;
   // public stdout: NodeJS.WriteStream = process.stdout;
-  uiComponents: Ui[] = [];
+  uiComponents: BaseUi[] = [];
 
   constructor() {}
 
@@ -22,7 +22,7 @@ export class UiService {
     this.print(instruction);
   }
 
-  add(component: Ui) {
+  add(component: BaseUi) {
     this.uiComponents.push(component);
   }
 

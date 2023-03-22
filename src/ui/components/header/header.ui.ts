@@ -4,11 +4,11 @@ import {
   HELP_MSGS,
   INFO_MSGS,
   DEFAULT_SIZE,
-} from '../../constants/index.js';
-import { Ui } from '../ui.js';
+} from '../../../constants/index.js';
+import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
 
-export class HeaderUi extends Ui {
+export class HeaderUi extends BaseUi {
   programVersion: string;
 
   constructor() {
@@ -31,7 +31,7 @@ export class HeaderUi extends Ui {
     ///////////////////////////
     // Columns headers
     this.printAt(colors.gray(INFO_MSGS.HEADER_COLUMNS), {
-      x: this.stdout.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
+      x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 

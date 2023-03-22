@@ -1,10 +1,10 @@
-import { Ui } from './ui.js';
+import { BaseUi } from './base.ui.js';
 
 /**
  * A UI that buffers the output and prints it all at once when calling the
  * flush() function.
  */
-export abstract class HeavyUi extends Ui {
+export abstract class HeavyUi extends BaseUi {
   private buffer = '';
   private previousBuffer = '';
 

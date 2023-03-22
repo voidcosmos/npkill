@@ -10,11 +10,11 @@ export interface InteractiveUi {
   onKeyInput(key: IKeyPress): void;
 }
 
-export abstract class Ui {
+export abstract class BaseUi {
   public freezed = false;
   protected _position: Position;
   protected _visible = true;
-  protected stdout: NodeJS.WriteStream = process.stdout;
+  private stdout: NodeJS.WriteStream = process.stdout;
 
   protected printAt(message: string, position: Position): void {
     this.setCursorAt(position);
@@ -58,6 +58,13 @@ export abstract class Ui {
 
   get visible() {
     return this._visible;
+  }
+
+  get terminal() {
+    return {
+      columns: this.stdout.columns,
+      rows: this.stdout.rows,
+    };
   }
 
   abstract render(): void;

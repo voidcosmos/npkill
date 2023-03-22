@@ -1,9 +1,9 @@
 // This class in only a intermediate for the refactor.
 
-import { Ui } from './ui.js';
+import { BaseUi } from '../base.ui.js';
 import colors from 'colors';
 
-export class GeneralUi extends Ui {
+export class GeneralUi extends BaseUi {
   render() {}
 
   printExitMessage(stats: { spaceReleased: string }): void {

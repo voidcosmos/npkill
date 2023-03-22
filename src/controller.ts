@@ -29,17 +29,20 @@ import {
 
 import { COLORS } from './constants/cli.constants.js';
 import { FOLDER_SORT } from './constants/sort.result.js';
-import { GeneralUi } from './ui/general.ui.js';
-import { HeaderUi } from './ui/header/header.ui.js';
-import { HelpUi } from './ui/help.ui.js';
-import { InteractiveUi } from './ui/ui.js';
+import {
+  StatusUi,
+  StatsUi,
+  ResultsUi,
+  LogsUi,
+  InteractiveUi,
+  HelpUi,
+  HeaderUi,
+  GeneralUi,
+} from './ui/index.js';
+
 import { LoggerService } from './services/logger.service.js';
-import { LogsUi } from './ui/logs.ui.js';
-import { ResultsUi } from './ui/results.ui.js';
-import { SearchStatus } from './models/search-state.model.js';
-import { StatsUi } from './ui/header/stats.ui.js';
-import { StatusUi } from './ui/header/status.ui.js';
 import { UiService } from './services/ui.service.js';
+import { SearchStatus } from './models/search-state.model.js';
 import __dirname from './dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';

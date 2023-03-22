@@ -21,7 +21,7 @@ const mockProcess = () => {
 };
 
 const ResultsUiConstructor = //@ts-ignore
-  (await import('../../src/ui/results.ui.js')).ResultsUi;
+  (await import('../../src/ui/components/results.ui.js')).ResultsUi;
 class ResultsUi extends ResultsUiConstructor {}
 
 describe('ResultsUi', () => {

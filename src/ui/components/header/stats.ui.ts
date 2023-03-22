@@ -1,11 +1,11 @@
-import { UI_POSITIONS, INFO_MSGS } from '../../constants/index.js';
-import { Ui } from '../ui.js';
-import { ResultsService } from '../../services/results.service.js';
-import { LoggerService } from '../../services/logger.service.js';
+import { UI_POSITIONS, INFO_MSGS } from '../../../constants/index.js';
+import { BaseUi } from '../../base.ui.js';
+import { ResultsService } from '../../../services/results.service.js';
+import { LoggerService } from '../../../services/logger.service.js';
 import colors from 'colors';
 import { IConfig } from 'src/interfaces/config.interface.js';
 
-export class StatsUi extends Ui {
+export class StatsUi extends BaseUi {
   constructor(
     private config: IConfig,
     private resultsService: ResultsService,

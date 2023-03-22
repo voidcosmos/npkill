@@ -1,11 +1,11 @@
-import { LoggerService } from '../services/logger.service.js';
-import { InteractiveUi, Ui } from './ui.js';
+import { LoggerService } from '../../services/logger.service.js';
+import { InteractiveUi, BaseUi } from '../base.ui.js';
 import colors from 'colors';
-import { IPosition } from '../interfaces/ui-positions.interface.js';
+import { IPosition } from '../../interfaces/ui-positions.interface.js';
 import { Subject } from 'rxjs';
-import { IKeyPress } from '../interfaces/key-press.interface.js';
+import { IKeyPress } from '../../interfaces/key-press.interface.js';
 
-export class LogsUi extends Ui implements InteractiveUi {
+export class LogsUi extends BaseUi implements InteractiveUi {
   private size: IPosition;
   private errors = 0;
   private pages = [];
@@ -138,8 +138,8 @@ export class LogsUi extends Ui implements InteractiveUi {
     const posY = 4;
     this.setPosition({ x: posX, y: posY }, false);
     this.size = {
-      x: this.stdout.columns - posX,
-      y: this.stdout.rows - 3,
+      x: this.terminal.columns - posX,
+      y: this.terminal.rows - 3,
     };
   }
 }

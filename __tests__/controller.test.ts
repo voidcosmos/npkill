@@ -4,36 +4,39 @@ jest.mock('../src/dirname.js', () => {
   return {};
 });
 
-jest.unstable_mockModule('../src/ui/header/header.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/header/header.ui.js', () => ({
   HeaderUi: jest.fn(),
 }));
-jest.unstable_mockModule('../src/ui/header/stats.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/header/stats.ui.js', () => ({
   StatsUi: jest.fn(),
 }));
-jest.unstable_mockModule('../src/ui/header/status.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/header/status.ui.js', () => ({
   StatusUi: jest.fn(() => ({
     start: jest.fn(),
   })),
 }));
-jest.unstable_mockModule('../src/ui/general.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/general.ui.js', () => ({
   GeneralUi: jest.fn(),
 }));
-jest.unstable_mockModule('../src/ui/help.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/help.ui.js', () => ({
   HelpUi: jest.fn(),
 }));
-jest.unstable_mockModule('../src/ui/results.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/results.ui.js', () => ({
   ResultsUi: jest.fn(() => ({
     delete$: { subscribe: jest.fn() },
     showErrors$: { subscribe: jest.fn() },
   })),
 }));
-jest.unstable_mockModule('../src/ui/logs.ui.js', () => ({
+jest.unstable_mockModule('../src/ui/components/logs.ui.js', () => ({
   LogsUi: jest.fn(() => ({
     close$: { subscribe: jest.fn() },
   })),
 }));
-jest.unstable_mockModule('../src/ui/ui.js', () => ({
-  Ui: { setVisible: jest.fn() },
+jest.unstable_mockModule('../src/ui/base.ui.js', () => ({
+  BaseUi: { setVisible: jest.fn() },
+}));
+jest.unstable_mockModule('../src/ui/heavy.ui.js', () => ({
+  HeavyUi: {},
 }));
 
 const ControllerConstructor = //@ts-ignore

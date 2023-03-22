@@ -4,15 +4,15 @@ import {
   OPTIONS,
   HELP_FOOTER,
   HELP_PROGRESSBAR,
-} from '../constants/cli.constants.js';
-import { MARGINS, UI_HELP } from '../constants/main.constants.js';
-import { INFO_MSGS } from '../constants/messages.constants.js';
-import { IPosition } from '../interfaces/ui-positions.interface.js';
-import { ConsoleService } from '../services/console.service.js';
-import { Ui } from './ui.js';
+} from '../../constants/cli.constants.js';
+import { MARGINS, UI_HELP } from '../../constants/main.constants.js';
+import { INFO_MSGS } from '../../constants/messages.constants.js';
+import { IPosition } from '../../interfaces/ui-positions.interface.js';
+import { ConsoleService } from '../../services/console.service.js';
+import { BaseUi } from '../base.ui.js';
 import colors from 'colors';
 
-export class HelpUi extends Ui {
+export class HelpUi extends BaseUi {
   constructor(private consoleService: ConsoleService) {
     super();
   }
@@ -38,7 +38,7 @@ export class HelpUi extends Ui {
       );
       const description = this.consoleService.splitWordsByWidth(
         option.description,
-        this.stdout.columns - UI_HELP.X_DESCRIPTION_OFFSET,
+        this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
 
       description.map((line) => {
@@ -57,7 +57,7 @@ export class HelpUi extends Ui {
   }
 
   clear() {
-    for (let row = MARGINS.ROW_RESULTS_START; row < this.stdout.rows; row++) {
+    for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
   }
