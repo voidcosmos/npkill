@@ -204,8 +204,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       MARGINS.ROW_RESULTS_START + this.scroll + 1;
 
     const shouldScrollDown =
-      this.getRow(this.resultIndex) > this.terminal.rows + this.scroll - 2 &&
-      this.resultIndex < this.resultsService.results.length - 1;
+      this.getRow(this.resultIndex) > this.terminal.rows + this.scroll - 2;
 
     const isOnBotton =
       this.resultIndex === this.resultsService.results.length - 1;
