@@ -37,7 +37,7 @@ Esta herramienta te permite listar cualquier directorio _node_modules_ que haya 
 
 - **Libera espacio:** Elimina tus directorios _node_modules_ viejos y polvorientos que le roban espacio a tu máquina.
 
-- **Último uso del Workspace**: Check when was the last time you modified a file in the workspace (indicated in the **last_mod** column).
+- **Último uso del Workspace**: Comprueba cuándo ha sido la última vez que has modificado un fichero en el workspace (indicado en la columna **last_mod**).
 
 - **Rapidez:** NPKILL está escrito en TypeScript, pero las búsquedas se llevan a cabo a bajo nivel, lo que supone una mejora considerable del rendimiento.
 
@@ -95,9 +95,9 @@ Para salir de Npkill, utiliza <kbd>Q</kbd>, o si te sientes valiente, <kbd>Ctrl<
 | -d, --directory                  | Permite seleccionar el directorio desde el que comienza la búsqueda. Por defecto, se empieza en .                                              |
 | -D, --delete-all                 | ACTUALMENTE DESHABILITADA. Borra automáticamente todos los node_modules que se encuentran                                                      |
 | -e, --hide-errors                | Esconde los errores en el caso de que ocurra alguno                                                                                            |
-| -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2" |
-| -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
-| -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                |
+| -E, --exclude                    | Excluye directorios de la búsqueda (la lista de directorios debe estar entre comillas dobles "", cada directorio separado por ',' Ejemplo: "ignore1, ignore2")  |
+| -f, --full                       | Comienza la búsqueda en el home del usuario (ejemplo: "/home/user" en Linux) |
+| -gb                              | Muestra el tamaño en Gigabytes en lugar de en Megabytes.                                                                                                |
 | -h, --help, ?                    | Muestra esta página de ayuda y finaliza                                                                                                        |
 | -nu, --no-check-update           | No comprobar si hay actualizaciones al iniciar la aplicación                                                                                   |
 | -s, --sort                       | Ordena los resultados por: `size`, `path` or `last-mod`                                                                                        |
