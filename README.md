@@ -17,6 +17,13 @@
 
 This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
 
+
+## i18n
+
+We're making an effort to internationalize the Npkill docs. Here's a list of the available translations:
+
+- [Español](./README.es.md)
+
 ## Table of Contents
 
 - [Features](#features)
