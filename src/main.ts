@@ -17,7 +17,7 @@ import { UiService } from './services/ui.service.js';
 import { LoggerService } from './services/logger.service.js';
 import { SearchStatus } from './models/search-state.model.js';
 
-const getOS = () => process.platform;
+const getOS = (): NodeJS.Platform => process.platform;
 
 const OSService = {
   linux: LinuxFilesService,
@@ -47,4 +47,4 @@ export const controller = new Controller(
   new UiService(),
 );
 
-export default () => controller.init();
+export default (): void => controller.init();

@@ -62,7 +62,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.render();
   }
 
-  render() {
+  render(): void {
     if (!this.haveResultsAfterCompleted) {
       this.noResults();
       return;
@@ -72,20 +72,20 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.flush();
   }
 
-  clear() {
+  clear(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
   }
 
-  completeSearch() {
+  completeSearch(): void {
     if (this.resultsService.results.length === 0) {
       this.haveResultsAfterCompleted = false;
       this.render();
     }
   }
 
-  private printResults() {
+  private printResults(): void {
     const visibleFolders = this.getVisibleScrollFolders();
 
     visibleFolders.map((folder: IFolder, index: number) => {
@@ -94,7 +94,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private noResults() {
+  private noResults(): void {
     const message = `No ${colors[DEFAULT_CONFIG.warningColor](
       this.config.targetFolder,
     )} found!`;
@@ -104,7 +104,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private printFolderRow(folder: IFolder, row: number) {
+  private printFolderRow(folder: IFolder, row: number): void {
     this.clearLine(row);
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
@@ -241,7 +241,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.clear();
   }
 
-  private moveCursor(index: number) {
+  private moveCursor(index: number): void {
     this.previousIndex = this.resultIndex;
     this.resultIndex += index;
 
@@ -339,7 +339,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     );
   }
 
-  private paintBgRow(row: number) {
+  private paintBgRow(row: number): void {
     const startPaint = MARGINS.FOLDER_COLUMN_START;
     const endPaint = this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN;
     let paintSpaces = '';
@@ -354,7 +354,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private delete() {
+  private delete(): void {
     const folder = this.resultsService.results[this.resultIndex];
 
     if (!folder) {
@@ -374,11 +374,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     return index + MARGINS.ROW_RESULTS_START;
   }
 
-  private showErrorsPopup() {
+  private showErrorsPopup(): void {
     this.showErrors$.next(null);
   }
 
-  private clamp(num: number, min: number, max: number) {
+  private clamp(num: number, min: number, max: number): number {
     return Math.min(Math.max(num, min), max);
   }
 }

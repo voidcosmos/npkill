@@ -3,15 +3,15 @@ import { Observable } from 'rxjs';
 import { STREAM_ENCODING } from '../constants/index.js';
 
 export class StreamService {
-  streamToObservable<T>(stream: ChildProcessWithoutNullStreams) {
+  streamToObservable<T>(stream: ChildProcessWithoutNullStreams): Observable<T> {
     const { stdout, stderr } = stream;
 
     return new Observable<T>((observer) => {
-      const dataHandler = (data) => observer.next(data);
-      const bashErrorHandler = (error) =>
+      const dataHandler = (data): void => observer.next(data);
+      const bashErrorHandler = (error): void =>
         observer.error({ ...error, bash: true });
-      const errorHandler = (error) => observer.error(error);
-      const endHandler = () => observer.complete();
+      const errorHandler = (error): void => observer.error(error);
+      const endHandler = (): void => observer.complete();
 
       stdout.addListener('data', dataHandler);
       stdout.addListener('error', errorHandler);
@@ -39,7 +39,7 @@ export class StreamService {
   private setEncoding(
     child: ChildProcessWithoutNullStreams,
     encoding: BufferEncoding,
-  ) {
+  ): void {
     child.stdout.setEncoding(encoding);
     child.stderr.setEncoding(encoding);
   }

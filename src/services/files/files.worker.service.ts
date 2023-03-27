@@ -38,7 +38,7 @@ export class FileWorkerService {
     private searchStatus: SearchStatus,
   ) {}
 
-  startScan(stream$: Subject<string>, params: IListDirParams) {
+  startScan(stream$: Subject<string>, params: IListDirParams): void {
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);
     this.setWorkerConfig(params);
@@ -47,7 +47,7 @@ export class FileWorkerService {
     this.addJob({ job: 'explore', value: { path: params.path } });
   }
 
-  private listenEvents(stream$: Subject<string>) {
+  private listenEvents(stream$: Subject<string>): void {
     this.tunnels.forEach((tunnel) => {
       tunnel.on('message', (data: WorkerMessage) => {
         if (data) {
@@ -68,7 +68,10 @@ export class FileWorkerService {
     });
   }
 
-  private newWorkerMessage(message: WorkerMessage, stream$: Subject<string>) {
+  private newWorkerMessage(
+    message: WorkerMessage,
+    stream$: Subject<string>,
+  ): void {
     const { type, value } = message;
 
     if (type === EVENTS.scanResult) {
@@ -98,7 +101,7 @@ export class FileWorkerService {
   }
 
   /** Jobs are distributed following the round-robin algorithm. */
-  private addJob(job: WorkerJob) {
+  private addJob(job: WorkerJob): void {
     if (job.job === 'explore') {
       const tunnel = this.tunnels[this.index];
       const message: WorkerMessage = { type: EVENTS.explore, value: job.value };
@@ -110,7 +113,7 @@ export class FileWorkerService {
     }
   }
 
-  private checkJobComplete(stream$: Subject<string>) {
+  private checkJobComplete(stream$: Subject<string>): void {
     this.updateStats();
     const isCompleted = this.getPendingJobs() === 0;
     if (isCompleted) {
@@ -135,7 +138,7 @@ export class FileWorkerService {
     }
   }
 
-  private setWorkerConfig(params: IListDirParams) {
+  private setWorkerConfig(params: IListDirParams): void {
     this.tunnels.forEach((tunnel) =>
       tunnel.postMessage({
         type: EVENTS.exploreConfig,
@@ -144,7 +147,7 @@ export class FileWorkerService {
     );
   }
 
-  private killWorkers() {
+  private killWorkers(): void {
     for (let i = 0; i < this.workers.length; i++) {
       this.workers[i].removeAllListeners();
       this.tunnels[i].removeAllListeners();
@@ -158,7 +161,7 @@ export class FileWorkerService {
     return this.workersPendingJobs.reduce((acc, x) => x + acc, 0);
   }
 
-  private updateStats() {
+  private updateStats(): void {
     this.searchStatus.pendingSearchTasks = this.pendingJobs;
     this.searchStatus.completedSearchTasks = this.totalJobs;
     this.searchStatus.workersJobs = this.workersPendingJobs;

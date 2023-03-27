@@ -31,7 +31,7 @@ export class StatsUi extends BaseUi {
     }
   }
 
-  private showErrorsCount() {
+  private showErrorsCount(): void {
     const errors = this.logger.get('error').length;
 
     if (!errors) {

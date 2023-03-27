@@ -36,7 +36,7 @@ export abstract class BaseUi {
     this.printAt(ansiEscapes.eraseLine, { x: 0, y: row });
   }
 
-  setPosition(position: Position, renderOnSet = true) {
+  setPosition(position: Position, renderOnSet = true): void {
     this._position = position;
 
     if (renderOnSet) {
@@ -44,7 +44,7 @@ export abstract class BaseUi {
     }
   }
 
-  setVisible(visible: boolean, renderOnSet = true) {
+  setVisible(visible: boolean, renderOnSet = true): void {
     this._visible = visible;
 
     if (renderOnSet) {
@@ -52,15 +52,15 @@ export abstract class BaseUi {
     }
   }
 
-  get position() {
+  get position(): Position {
     return this._position;
   }
 
-  get visible() {
+  get visible(): boolean {
     return this._visible;
   }
 
-  get terminal() {
+  get terminal(): { columns: number; rows: number } {
     return {
       columns: this.stdout.columns,
       rows: this.stdout.rows,

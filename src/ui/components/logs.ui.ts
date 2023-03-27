@@ -30,11 +30,11 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     action();
   }
 
-  render() {
+  render(): void {
     this.renderPopup();
   }
 
-  private cyclePages() {
+  private cyclePages(): void {
     this.actualPage++;
     if (this.actualPage >= this.pages.length) {
       this.actualPage = 0;
@@ -45,11 +45,11 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     this.render();
   }
 
-  private close() {
+  private close(): void {
     this.close$.next(null);
   }
 
-  private renderPopup() {
+  private renderPopup(): void {
     this.calculatePosition();
     for (let x = this.position.x; x < this.size.x; x++) {
       for (let y = this.position.y; y < this.size.y; y++) {
@@ -97,7 +97,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     this.printHeader();
   }
 
-  private printHeader() {
+  private printHeader(): void {
     const titleText = ' Errors ';
     this.printAt(this.stylizeText(titleText), {
       x: Math.floor((this.size.x + titleText.length / 2) / 2) - this.position.x,
@@ -128,13 +128,13 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     return matches !== null ? [...matches] : [];
   }
 
-  private chunkArray(arr: string[], size: number) {
+  private chunkArray(arr: string[], size: number): string[][] {
     return arr.length > size
       ? [arr.slice(0, size), ...this.chunkArray(arr.slice(size), size)]
       : [arr];
   }
 
-  private calculatePosition() {
+  private calculatePosition(): void {
     const posX = 5;
     const posY = 4;
     this.setPosition({ x: posX, y: posY }, false);

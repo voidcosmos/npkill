@@ -7,7 +7,7 @@ import * as readline from 'node:readline';
 class StarParameters {
   private values: { [key: string]: string | boolean } = {};
 
-  add(key: string, value: string | boolean) {
+  add(key: string, value: string | boolean): void {
     this.values[key] = value;
   }
 
@@ -68,7 +68,7 @@ export class ConsoleService {
     text: string,
     textToReplace: string | RegExp,
     replaceValue: string,
-  ) {
+  ): string {
     return text.replace(textToReplace, replaceValue);
   }
 
@@ -86,7 +86,7 @@ export class ConsoleService {
     return extname(import.meta.url) === '.js';
   }
 
-  startListenKeyEvents() {
+  startListenKeyEvents(): void {
     readline.emitKeypressEvents(process.stdin);
   }
 
@@ -99,7 +99,11 @@ export class ConsoleService {
     return argvs.join('=').split('=');
   }
 
-  private isValidShortenParams(text: string, width: number, startCut: number) {
+  private isValidShortenParams(
+    text: string,
+    width: number,
+    startCut: number,
+  ): boolean {
     return (
       startCut <= width &&
       text.length >= width &&

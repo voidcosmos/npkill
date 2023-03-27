@@ -13,7 +13,7 @@ export class UpdateService {
    * ignoring the pre-release tag. ex: 1.3.12 = 1.3.12-21
    */
   async isUpdated(localVersion: string): Promise<boolean> {
-    const removePreReaseTag = (value: string) => value.split('-')[0];
+    const removePreReaseTag = (value: string): string => value.split('-')[0];
 
     const localVersionPrepared = removePreReaseTag(localVersion);
     const remoteVersion = await this.getRemoteVersion();
@@ -41,7 +41,8 @@ export class UpdateService {
 
   /** Valid to compare versions up to 99999.99999.99999 */
   private isLocalVersionGreater(local: string, remote: string): boolean {
-    const leadingZeros = (value: string) => ('00000' + value).substring(-5);
+    const leadingZeros = (value: string): string =>
+      ('00000' + value).substring(-5);
 
     const localLeaded = +local.split('.').map(leadingZeros).join('');
     const remoteLeaded = +remote.split('.').map(leadingZeros).join('');

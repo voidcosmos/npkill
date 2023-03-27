@@ -21,7 +21,7 @@ export class HelpUi extends BaseUi {
     throw new Error('Method not implemented.');
   }
 
-  show() {
+  show(): void {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
     this.print(HELP_HEADER + '\n\n');
@@ -56,7 +56,7 @@ export class HelpUi extends BaseUi {
     });
   }
 
-  clear() {
+  clear(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
@@ -70,7 +70,7 @@ export class HelpUi extends BaseUi {
     }
   }
 
-  private setCursorAtHelp({ x, y }: IPosition): void {
+  private setCursorAtHelp({ x }: IPosition): void {
     this.print(ansiEscapes.cursorTo(x));
   }
 }

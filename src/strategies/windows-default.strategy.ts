@@ -36,7 +36,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
     return true;
   }
 
-  private removeDirectory(path: string, callback) {
+  private removeDirectory(path: string, callback): void {
     rmdir(path, (rmDirError) => {
       //  We ignore certain error codes
       //  in order to simulate 'recursive' mode
@@ -50,7 +50,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
       callback(rmDirError);
     });
   }
-  private removeChildren(path: string, callback) {
+  private removeChildren(path: string, callback): void {
     readdir(path, (readdirError, ls) => {
       if (readdirError) {
         return callback(readdirError);

@@ -33,7 +33,7 @@ export class LoggerService {
   }
 
   saveToFile(path: string): void {
-    const convertTime = (timestamp: number) => timestamp;
+    const convertTime = (timestamp: number): number => timestamp;
 
     const content: string = this.log.reduce((log, actual) => {
       const line = `[${convertTime(actual.timestamp)}](${actual.type}) ${

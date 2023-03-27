@@ -242,7 +242,7 @@ export class Controller {
 
   private prepareScreen(): void {
     this.uiService.setRawMode();
-    this.uiService.prepareUi();
+    // this.uiService.prepareUi();
     this.uiService.setCursorVisible(false);
     this.uiService.clear();
     this.uiService.renderAll();

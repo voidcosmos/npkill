@@ -3,11 +3,11 @@ import { Observable, OperatorFunction, of } from 'rxjs';
 class Buffer<T> {
   values = '';
 
-  append(value: string) {
+  append(value: string): void {
     this.values += value;
   }
 
-  reset() {
+  reset(): void {
     this.values = '';
   }
 }

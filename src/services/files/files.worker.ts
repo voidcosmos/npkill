@@ -36,14 +36,14 @@ interface Task {
     }
   });
 
-  function notifyWorkerReady() {
+  function notifyWorkerReady(): void {
     tunnel.postMessage({
       type: EVENTS.alive,
       value: null,
     });
   }
 
-  function initTunnelListeners() {
+  function initTunnelListeners(): void {
     tunnel.on('message', (message: WorkerMessage) => {
       if (message?.type === EVENTS.exploreConfig) {
         fileWalker.setSearchConfig(message.value);
@@ -55,7 +55,7 @@ interface Task {
     });
   }
 
-  function initFileWalkerListeners() {
+  function initFileWalkerListeners(): void {
     fileWalker.events.on('newResult', ({ results }) => {
       tunnel.postMessage({
         type: EVENTS.scanResult,
@@ -76,16 +76,16 @@ class FileWalker {
   private completedTasks = 0;
   private procs = 0;
 
-  setSearchConfig(params: IListDirParams) {
+  setSearchConfig(params: IListDirParams): void {
     this.searchConfig = params;
   }
 
-  enqueueTask(path: string) {
+  enqueueTask(path: string): void {
     this.taskQueue.push({ path, operation: ETaskOperation.explore });
     this.processQueue();
   }
 
-  private run(path: string) {
+  private run(path: string): void {
     this.updateProcs(1);
 
     opendir(path, async (err, dir: Dir) => {
@@ -99,7 +99,7 @@ class FileWalker {
     });
   }
 
-  private async analizeDir(path: string, dir: Dir) {
+  private async analizeDir(path: string, dir: Dir): Promise<void> {
     const results = [];
     let entry: Dirent | null = null;
     while ((entry = await dir.read().catch(() => null)) != null) {
@@ -116,7 +116,7 @@ class FileWalker {
     }
   }
 
-  private newDirEntry(path: string, entry: Dirent, results: any[]) {
+  private newDirEntry(path: string, entry: Dirent, results: any[]): void {
     const subpath = join(path, entry.name);
     const shouldSkip = !entry.isDirectory() || this.isExcluded(subpath);
     if (shouldSkip) {
@@ -129,16 +129,18 @@ class FileWalker {
     });
   }
 
-  private isExcluded(path: string) {
+  private isExcluded(path: string): boolean {
     if (!this.searchConfig.exclude) {
-      return;
+      return false;
     }
+
     for (let i = 0; i < this.searchConfig.exclude.length; i++) {
       const excludeString = this.searchConfig.exclude[i];
       if (path.includes(excludeString)) {
         return true;
       }
     }
+
     return false;
   }
 
@@ -147,17 +149,17 @@ class FileWalker {
     return path === this.searchConfig.target;
   }
 
-  private completeTask() {
+  private completeTask(): void {
     this.updateProcs(-1);
     this.processQueue();
     this.completedTasks++;
   }
 
-  private updateProcs(value: number) {
+  private updateProcs(value: number): void {
     this.procs += value;
   }
 
-  private processQueue() {
+  private processQueue(): void {
     while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
       const path = this.taskQueue.shift()?.path;
       if (!path) {
@@ -167,9 +169,9 @@ class FileWalker {
     }
   }
 
-  private completeAll() {
-    // Any future action.
-  }
+  // private completeAll() {
+  //   // Any future action.
+  // }
 
   /*  get stats(): WorkerStats {
     return {
@@ -179,7 +181,7 @@ class FileWalker {
     };
   } */
 
-  get pendingJobs() {
+  get pendingJobs(): number {
     return this.taskQueue.length;
   }
 }

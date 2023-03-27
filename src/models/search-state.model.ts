@@ -9,12 +9,12 @@ export class SearchStatus {
   public workerStatus: WorkerStatus = 'stopped';
   public workersJobs;
 
-  newResult() {
+  newResult(): void {
     this.resultsFound++;
     this.pendingStatsCalculation++;
   }
 
-  completeStatCalculation() {
+  completeStatCalculation(): void {
     this.pendingStatsCalculation--;
     this.completedStatsCalculation++;
   }
