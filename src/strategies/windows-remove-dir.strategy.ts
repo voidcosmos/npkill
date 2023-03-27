@@ -12,7 +12,7 @@ export class WindowsStrategyManager {
       .setNextStrategy(new WindowsNode12Strategy())
       .setNextStrategy(new WindowsDefaultStrategy());
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       windowsStrategy.remove(path, (err) => {
         if (err !== null) {
           return reject(err);

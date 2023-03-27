@@ -38,6 +38,6 @@ export class WindowsFilesService extends FileService {
   }
 
   async deleteDir(path: string): Promise<boolean> {
-    return this.windowsStrategyManager.deleteDir(path);
+    return await this.windowsStrategyManager.deleteDir(path);
   }
 }

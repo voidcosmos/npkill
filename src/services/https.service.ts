@@ -2,7 +2,7 @@ import * as https from 'node:https';
 
 export class HttpsService {
   async getJson(url: string): Promise<Record<string, string>> {
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const fail = (err): void => {
         reject(err);
         return;
