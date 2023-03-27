@@ -21,8 +21,8 @@ export class WindowsFilesService extends FileService {
 
   getFolderSize(path: string): Observable<number> {
     return new Observable((observer) => {
-      getSize(path, (err, size) => {
-        if (err) {
+      getSize(path, (err: Error | null, size: number) => {
+        if (err !== null) {
           throw err;
         }
         observer.next(super.convertBytesToKB(size));

@@ -24,7 +24,7 @@ export class HeaderUi extends BaseUi {
       UI_POSITIONS.TUTORIAL_TIP,
     );
 
-    if (this.programVersion) {
+    if (this.programVersion !== undefined) {
       this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
     }
 

@@ -8,7 +8,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
   remove(dirOrFilePath: string, callback: NoParamCallback): boolean {
     lstat(dirOrFilePath, (lstatError, stats) => {
       //  No such file or directory - Done
-      if (lstatError && lstatError.code === 'ENOENT') {
+      if (lstatError !== null && lstatError.code === 'ENOENT') {
         return callback(null);
       }
 
@@ -18,11 +18,11 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
 
       unlink(dirOrFilePath, (rmError) => {
         //  No such file or directory - Done
-        if (rmError && rmError.code === 'ENOENT') {
+        if (rmError !== null && rmError.code === 'ENOENT') {
           return callback(null);
         }
 
-        if (rmError && rmError.code === 'EISDIR') {
+        if (rmError !== null && rmError.code === 'EISDIR') {
           return this.removeDirectory(dirOrFilePath, callback);
         }
 
@@ -41,7 +41,8 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
       //  We ignore certain error codes
       //  in order to simulate 'recursive' mode
       if (
-        rmDirError?.code &&
+        rmDirError !== null &&
+        rmDirError.code !== undefined &&
         RECURSIVE_RMDIR_IGNORED_ERROR_CODES.includes(rmDirError.code)
       ) {
         return this.removeChildren(path, callback);
@@ -52,7 +53,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
   }
   private removeChildren(path: string, callback): void {
     readdir(path, (readdirError, ls) => {
-      if (readdirError) {
+      if (readdirError !== null) {
         return callback(readdirError);
       }
 
@@ -61,7 +62,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
 
       //  removeDirectory only allows deleting directories
       //  that has no content inside (empty directory).
-      if (!contentInDirectory) {
+      if (contentInDirectory === 0) {
         return rmdir(path, callback);
       }
 
@@ -73,7 +74,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
             return;
           }
 
-          if (error) {
+          if (error !== null) {
             done = true;
             return callback(error);
           }
@@ -81,7 +82,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
           contentInDirectory--;
           //  No more content inside.
           //  Remove the directory.
-          if (!contentInDirectory) {
+          if (contentInDirectory === 0) {
             rmdir(path, callback);
           }
         });

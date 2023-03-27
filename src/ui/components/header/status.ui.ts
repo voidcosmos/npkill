@@ -64,8 +64,12 @@ export class StatusUi extends BaseUi {
       pendingStatsCalculation,
     } = this.searchStatus;
 
-    const proportional = (a: number, b: number, c: number): number =>
-      (a * b) / c;
+    const proportional = (a: number, b: number, c: number): number => {
+      if (c === 0) {
+        return 0;
+      }
+      return (a * b) / c;
+    };
 
     const modifier =
       this.barNormalizedWidth === 1
@@ -76,17 +80,24 @@ export class StatusUi extends BaseUi {
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
 
-    let barLenght =
-      proportional(barSearchMax, BAR_WIDTH, barSearchMax) || BAR_WIDTH;
+    let barLenght = proportional(barSearchMax, BAR_WIDTH, barSearchMax);
+    if (barLenght === 0) {
+      barLenght = BAR_WIDTH;
+    }
     barLenght = Math.floor(barLenght * modifier);
 
-    let searchBarLenght =
-      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax) || 0;
+    let searchBarLenght = proportional(
+      completedSearchTasks,
+      BAR_WIDTH,
+      barSearchMax,
+    );
     searchBarLenght = Math.floor(searchBarLenght * modifier);
 
-    let doneBarLenght =
-      proportional(completedStatsCalculation, searchBarLenght, barStatsMax) ||
-      0;
+    let doneBarLenght = proportional(
+      completedStatsCalculation,
+      searchBarLenght,
+      barStatsMax,
+    );
     doneBarLenght = Math.floor(doneBarLenght * modifier);
 
     barLenght -= searchBarLenght;

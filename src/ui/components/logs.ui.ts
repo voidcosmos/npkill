@@ -21,9 +21,10 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     super();
     this.setVisible(false, false);
   }
+
   onKeyInput({ name }: IKeyPress): void {
     const action = this.KEYS[name];
-    if (!action) {
+    if (action === undefined) {
       return;
     }
     action();

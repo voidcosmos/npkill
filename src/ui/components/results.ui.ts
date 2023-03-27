@@ -54,8 +54,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   onKeyInput({ name }: IKeyPress): void {
-    const action = this.KEYS[name];
-    if (!action) {
+    const action: Function | undefined = this.KEYS[name];
+    if (action === undefined) {
       return;
     }
     action();
@@ -163,7 +163,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       folderSize = `${space}${size.toFixed(DECIMALS_SIZE)} MB`;
     }
 
-    const folderSizeText = folder.size ? folderSize : '--';
+    const folderSizeText = folder.size > 0 ? folderSize : '--';
 
     return {
       path: folderText,
@@ -226,7 +226,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       }
     }
 
-    if (scrollRequired) {
+    if (scrollRequired !== 0) {
       this.scrollFolderResults(scrollRequired);
     }
   }
@@ -278,7 +278,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       },
     };
 
-    if (ACTIONS[folder.status]) ACTIONS[folder.status]();
+    if (ACTIONS[folder.status] !== undefined) {
+      ACTIONS[folder.status]();
+    }
 
     text = this.consoleService.shortenText(
       text,
@@ -315,7 +317,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         ),
     };
 
-    return TRANSFORMATIONS[action]
+    return TRANSFORMATIONS[action] !== undefined
       ? TRANSFORMATIONS[action](folderString)
       : folderString;
   }
@@ -356,11 +358,6 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private delete(): void {
     const folder = this.resultsService.results[this.resultIndex];
-
-    if (!folder) {
-      return;
-    }
-
     this.delete$.next(folder);
   }
 

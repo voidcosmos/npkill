@@ -21,7 +21,7 @@ interface Task {
   let fileWalker: FileWalker;
   let tunnel: MessagePort;
 
-  if (!parentPort) {
+  if (parentPort === null) {
     throw new Error('Worker must be spawned from a parent thread.');
   }
 
@@ -89,7 +89,7 @@ class FileWalker {
     this.updateProcs(1);
 
     opendir(path, async (err, dir: Dir) => {
-      if (err) {
+      if (err !== null) {
         // Should notify important errors
         this.completeTask();
         return;
@@ -130,7 +130,7 @@ class FileWalker {
   }
 
   private isExcluded(path: string): boolean {
-    if (!this.searchConfig.exclude) {
+    if (this.searchConfig.exclude === undefined) {
       return false;
     }
 
@@ -162,7 +162,7 @@ class FileWalker {
   private processQueue(): void {
     while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
       const path = this.taskQueue.shift()?.path;
-      if (!path) {
+      if (path === undefined || path === '') {
         return;
       }
       this.run(path);

@@ -50,9 +50,7 @@ export class FileWorkerService {
   private listenEvents(stream$: Subject<string>): void {
     this.tunnels.forEach((tunnel) => {
       tunnel.on('message', (data: WorkerMessage) => {
-        if (data) {
-          this.newWorkerMessage(data, stream$);
-        }
+        this.newWorkerMessage(data, stream$);
       });
 
       this.workers.forEach((worker, index) => {

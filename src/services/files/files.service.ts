@@ -75,7 +75,7 @@ export abstract class FileService implements IFileService {
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
     );
-    return sorted[0]?.modificationTime || -1;
+    return sorted.length > 0 ? sorted[0].modificationTime : -1;
   }
 
   async getFileStatsInDir(dirname: string): Promise<IFileStat[]> {

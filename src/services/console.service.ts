@@ -36,11 +36,13 @@ export class ConsoleService {
     argvs.map((argv, index) => {
       if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
       const nextArgv = argvs[index + 1];
-      const optionName = this.getOption(argv)?.name;
-      if (!optionName) {
+      const option = this.getOption(argv);
+
+      if (option === undefined) {
         throw new Error('Invalid option name.');
       }
 
+      const optionName = option.name;
       options.add(
         optionName,
         this.isArgHavingParams(nextArgv) ? nextArgv : true,
@@ -60,7 +62,7 @@ export class ConsoleService {
   }
 
   splitData(data: string, separator = '\n'): string[] {
-    if (!data) return [];
+    if (data === '') return [];
     return data.split(separator);
   }
 

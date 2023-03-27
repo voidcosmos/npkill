@@ -26,8 +26,12 @@ export abstract class UnixFilesService extends FileService {
     return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;
       exec(command, (error, stdout, stderr) => {
-        if (error) return reject(error);
-        if (stderr) return reject(stderr);
+        if (error !== null) {
+          return reject(error);
+        }
+        if (stderr !== '') {
+          return reject(stderr);
+        }
         resolve(stdout);
       });
     });
@@ -37,7 +41,7 @@ export abstract class UnixFilesService extends FileService {
     const { path, target, exclude } = params;
     let args: string[] = [path];
 
-    if (exclude) {
+    if (exclude !== undefined && exclude.length > 0) {
       args = [...args, this.prepareExcludeArgs(exclude)].flat();
     }
 
