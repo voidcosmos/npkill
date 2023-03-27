@@ -54,7 +54,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   onKeyInput({ name }: IKeyPress): void {
-    const action: Function | undefined = this.KEYS[name];
+    const action: (() => void) | undefined = this.KEYS[name];
     if (action === undefined) {
       return;
     }
@@ -95,9 +95,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private noResults(): void {
-    const message = `No ${colors[DEFAULT_CONFIG.warningColor](
+    const targetFolderColored: string = colors[DEFAULT_CONFIG.warningColor](
       this.config.targetFolder,
-    )} found!`;
+    );
+    const message = `No ${targetFolderColored} found!`;
     this.printAt(message, {
       x: Math.floor(this.terminal.columns / 2 - message.length / 2),
       y: MARGINS.ROW_RESULTS_START + 2,
@@ -142,12 +143,15 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   } {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
-    let daysSinceLastModification =
-      folder.modificationTime !== null && folder.modificationTime > 0
-        ? Math.floor(
-            (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
-          ) + 'd'
-        : '--';
+    let daysSinceLastModification: string;
+
+    if (folder.modificationTime !== null && folder.modificationTime > 0) {
+      daysSinceLastModification = `${Math.floor(
+        (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+      )}d`;
+    } else {
+      daysSinceLastModification = '--';
+    }
 
     if (folder.isDangerous) daysSinceLastModification = 'xx';
 

@@ -73,7 +73,7 @@ export class FileWorkerService {
     const { type, value } = message;
 
     if (type === EVENTS.scanResult) {
-      const results: { path: string; isTarget: boolean }[] = value.results;
+      const results: Array<{ path: string; isTarget: boolean }> = value.results;
       const workerId: number = value.workerId;
       this.workersPendingJobs[workerId] = value.pending;
 
@@ -116,8 +116,8 @@ export class FileWorkerService {
     const isCompleted = this.getPendingJobs() === 0;
     if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
-      this.killWorkers();
       stream$.complete();
+      void this.killWorkers();
     }
   }
 
@@ -145,11 +145,13 @@ export class FileWorkerService {
     );
   }
 
-  private killWorkers(): void {
+  private async killWorkers(): Promise<void> {
     for (let i = 0; i < this.workers.length; i++) {
       this.workers[i].removeAllListeners();
       this.tunnels[i].removeAllListeners();
-      this.workers[i].terminate();
+      await this.workers[i]
+        .terminate()
+        .catch((error) => this.logger.error(error));
     }
     this.workers = [];
     this.tunnels = [];

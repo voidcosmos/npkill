@@ -1,4 +1,5 @@
-import { Dir, Dirent, opendir } from 'fs';
+import { Dir, Dirent } from 'fs';
+import { opendir } from 'fs/promises';
 
 import EventEmitter from 'events';
 import { WorkerMessage } from './files.worker.service';
@@ -86,18 +87,15 @@ class FileWalker {
     this.processQueue();
   }
 
-  private run(path: string): void {
+  private async run(path: string): Promise<void> {
     this.updateProcs(1);
 
-    opendir(path, async (err, dir: Dir) => {
-      if (err !== null) {
-        // Should notify important errors
-        this.completeTask();
-        return;
-      }
-
-      this.analizeDir(path, dir);
-    });
+    try {
+      const dir = await opendir(path);
+      await this.analizeDir(path, dir);
+    } catch (_) {
+      this.completeTask();
+    }
   }
 
   private async analizeDir(path: string, dir: Dir): Promise<void> {
@@ -107,7 +105,7 @@ class FileWalker {
       this.newDirEntry(path, entry, results);
     }
 
-    this.events.emit('newResult', { results: results });
+    this.events.emit('newResult', { results });
 
     await dir.close();
     this.completeTask();
@@ -166,7 +164,13 @@ class FileWalker {
       if (path === undefined || path === '') {
         return;
       }
-      this.run(path);
+
+      // Ignore as other mechanisms (pending/completed tasks) are used to
+      // check the progress of this.
+      this.run(path).then(
+        () => {},
+        () => {},
+      );
     }
   }
 

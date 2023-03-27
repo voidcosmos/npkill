@@ -71,7 +71,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
 
     const messagesByLine: string[] = this.logger
       .get('error')
-      .map((entry, index) => index + '. ' + entry.message)
+      .map((entry, index) => `${index}. ${entry.message}`)
       .reduce((acc: string[], line) => {
         acc = [...acc, ...this.chunkString(line, width)];
         return acc;
@@ -124,7 +124,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
   }
 
   private chunkString(str: string, length: number): string[] {
-    const matches = str.match(new RegExp('.{1,' + length + '}', 'g'));
+    const matches = str.match(new RegExp(`.{1,${length}}`, 'g'));
     return matches !== null ? [...matches] : [];
   }
 

@@ -41,8 +41,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
       //  We ignore certain error codes
       //  in order to simulate 'recursive' mode
       if (
-        rmDirError !== null &&
-        rmDirError.code !== undefined &&
+        rmDirError?.code !== undefined &&
         RECURSIVE_RMDIR_IGNORED_ERROR_CODES.includes(rmDirError.code)
       ) {
         return this.removeChildren(path, callback);
