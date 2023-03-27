@@ -9,6 +9,7 @@
     "rootDir": "./src/",
     "outDir": "./lib/",
     "strict": true,
+    "strictFunctionTypes": true,
     "noImplicitAny": false,
     "noImplicitOverride": true,
     "strictNullChecks": true,

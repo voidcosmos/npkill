@@ -7,7 +7,7 @@ export interface Position {
 }
 
 export interface InteractiveUi {
-  onKeyInput(key: IKeyPress): void;
+  onKeyInput: (key: IKeyPress) => void;
 }
 
 export abstract class BaseUi {
