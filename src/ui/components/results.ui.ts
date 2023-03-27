@@ -88,7 +88,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   private printResults(): void {
     const visibleFolders = this.getVisibleScrollFolders();
 
-    visibleFolders.map((folder: IFolder, index: number) => {
+    visibleFolders.forEach((folder: IFolder, index: number) => {
       const row = MARGINS.ROW_RESULTS_START + index;
       this.printFolderRow(folder, row);
     });
