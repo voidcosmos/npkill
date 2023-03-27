@@ -1,5 +1,5 @@
 export class StartParameters {
-  private values: { [key: string]: string | boolean } = {};
+  private values: Record<string, string | boolean> = {};
 
   add(key: string, value: string | boolean): void {
     this.values[key] = value;
