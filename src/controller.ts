@@ -43,7 +43,7 @@ import {
 import { LoggerService } from './services/logger.service.js';
 import { UiService } from './services/ui.service.js';
 import { SearchStatus } from './models/search-state.model.js';
-import __dirname from './dirname.js';
+import _dirname from './dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
@@ -232,7 +232,7 @@ export class Controller {
   }
 
   private getVersion(): string {
-    const packageJson = __dirname + '/../package.json';
+    const packageJson = _dirname + '/../package.json';
 
     const packageData = JSON.parse(
       this.fileService.getFileContent(packageJson),
