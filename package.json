@@ -66,6 +66,7 @@
     "commitlint": "^17.1.2",
     "del": "^7.0.0",
     "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-config-standard-with-typescript": "^34.0.1",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^15.6.1",

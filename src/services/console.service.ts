@@ -4,19 +4,47 @@ import { ICliOptions } from '../interfaces/cli-options.interface.js';
 import { extname } from 'path';
 import * as readline from 'node:readline';
 
+class StarParameters {
+  private values: { [key: string]: string | boolean } = {};
+
+  add(key: string, value: string | boolean) {
+    this.values[key] = value;
+  }
+
+  isTrue(key: string): boolean {
+    const value = this.values[key];
+    return value === true;
+  }
+
+  getString(key: string): string {
+    const value = this.values[key];
+    if (typeof value === 'boolean') {
+      return value.toString();
+    }
+
+    return value;
+  }
+}
+
 export class ConsoleService {
-  getParameters(rawArgv: string[]): {} {
+  getParameters(rawArgv: string[]): StarParameters {
     // This needs a refactor, but fck, is a urgent update
     const rawProgramArgvs = this.removeSystemArgvs(rawArgv);
     const argvs = this.normalizeParams(rawProgramArgvs);
-    const options = {};
+    const options: StarParameters = new StarParameters();
 
     argvs.map((argv, index) => {
       if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
       const nextArgv = argvs[index + 1];
-      const optionName = this.getOption(argv).name;
+      const optionName = this.getOption(argv)?.name;
+      if (!optionName) {
+        throw new Error('Invalid option name.');
+      }
 
-      options[optionName] = this.isArgHavingParams(nextArgv) ? nextArgv : true;
+      options.add(
+        optionName,
+        this.isArgHavingParams(nextArgv) ? nextArgv : true,
+      );
     });
 
     return options;
@@ -80,21 +108,18 @@ export class ConsoleService {
     );
   }
 
-  private getValidArgvs(rawArgv: string[]): ICliOptions[] {
-    const argvs = rawArgv.map((argv) => this.getOption(argv));
-    return argvs.filter((argv) => argv);
-  }
-
   private removeSystemArgvs(allArgv: string[]): string[] {
     return allArgv.slice(2);
   }
 
   private isArgOption(argv: string): boolean {
-    return !!argv && argv.charAt(0) === '-';
+    return argv.charAt(0) === '-';
   }
 
   private isArgHavingParams(nextArgv: string): boolean {
-    return nextArgv && !this.isArgOption(nextArgv);
+    return (
+      nextArgv !== undefined && nextArgv !== '' && !this.isArgOption(nextArgv)
+    );
   }
 
   private isValidOption(arg: string): boolean {
