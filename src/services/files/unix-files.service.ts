@@ -22,7 +22,7 @@ export abstract class UnixFilesService extends FileService {
     return stream$;
   }
 
-  async deleteDir(path: string): Promise<{}> {
+  async deleteDir(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;
       exec(command, (error, stdout, stderr) => {
@@ -32,7 +32,7 @@ export abstract class UnixFilesService extends FileService {
         if (stderr !== '') {
           return reject(stderr);
         }
-        resolve(stdout);
+        resolve(true);
       });
     });
   }

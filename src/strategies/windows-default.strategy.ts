@@ -51,6 +51,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
       callback(rmDirError);
     });
   }
+
   private removeChildren(path: string, callback): void {
     readdir(path, (readdirError, ls) => {
       if (readdirError !== null) {

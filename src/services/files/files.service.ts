@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { accessSync, readFileSync, Stats, statSync } from 'fs';
+import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
 import {
   IFileService,
   IFileStat,
@@ -11,7 +10,7 @@ import { Observable } from 'rxjs';
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<number>;
   abstract listDir(params: IListDirParams): Observable<string>;
-  abstract deleteDir(path: string): Promise<{}>;
+  abstract deleteDir(path: string): Promise<boolean>;
 
   isValidRootFolder(path: string): boolean {
     let stat: Stats;
@@ -66,7 +65,7 @@ export abstract class FileService implements IFileService {
    * would imply breaking the application (until the dependencies are reinstalled).
    */
   isDangerous(path: string): boolean {
-    const hiddenFilePattern = /(^|\/)\.[^\/\.]/g;
+    const hiddenFilePattern = /(^|\/)\.[^/.]/g;
     return hiddenFilePattern.test(path);
   }
 

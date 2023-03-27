@@ -29,9 +29,7 @@ export class UpdateService {
   }
 
   private async getRemoteVersion(): Promise<string> {
-    const response: {} = await this.httpsService.getJson(
-      VERSION_CHECK_DIRECTION,
-    );
+    const response = await this.httpsService.getJson(VERSION_CHECK_DIRECTION);
     return response[VERSION_KEY];
   }
 
