@@ -60,7 +60,7 @@
     "@types/colors": "^1.2.1",
     "@types/gulp": "^4.0.9",
     "@types/jest": "^29.1.2",
-    "@types/node": "^18.8.3",
+    "@types/node": "^18.15.10",
     "@types/rimraf": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "commitlint": "^17.1.2",

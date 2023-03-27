@@ -8,7 +8,7 @@ import { IKeyPress } from '../../interfaces/key-press.interface.js';
 export class LogsUi extends BaseUi implements InteractiveUi {
   private size: IPosition;
   private errors = 0;
-  private pages = [];
+  private pages: string[][] = [];
   private actualPage = 0;
 
   readonly close$ = new Subject<null>();
@@ -124,7 +124,8 @@ export class LogsUi extends BaseUi implements InteractiveUi {
   }
 
   private chunkString(str: string, length: number): string[] {
-    return [...str.match(new RegExp('.{1,' + length + '}', 'g'))];
+    const matches = str.match(new RegExp('.{1,' + length + '}', 'g'));
+    return matches !== null ? [...matches] : [];
   }
 
   private chunkArray(arr: string[], size: number) {

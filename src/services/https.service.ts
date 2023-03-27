@@ -9,7 +9,7 @@ export class HttpsService {
       };
 
       const request = https.get(url, (res) => {
-        if (!this.isCorrectResponse(res.statusCode)) {
+        if (!this.isCorrectResponse(res.statusCode ?? -1)) {
           fail(res.statusMessage);
         }
 

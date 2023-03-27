@@ -1,7 +1,7 @@
 import os from 'os';
 import { dirname, extname } from 'path';
 
-import { Worker, MessageChannel } from 'node:worker_threads';
+import { Worker, MessageChannel, MessagePort } from 'node:worker_threads';
 import { Subject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { SearchStatus } from '../../models/search-state.model.js';
@@ -31,7 +31,7 @@ export class FileWorkerService {
   private workersPendingJobs: number[] = [];
   private pendingJobs = 0;
   private totalJobs = 0;
-  private tunnels = [];
+  private tunnels: MessagePort[] = [];
 
   constructor(
     private logger: LoggerService,

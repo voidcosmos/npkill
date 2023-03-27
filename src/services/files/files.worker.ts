@@ -3,7 +3,7 @@ import { Dir, Dirent, opendir } from 'fs';
 import EventEmitter from 'events';
 import { WorkerMessage, WorkerStats } from './files.worker.service';
 import { basename, join } from 'path';
-import { parentPort } from 'node:worker_threads';
+import { MessagePort, parentPort } from 'node:worker_threads';
 import { IListDirParams } from '../../interfaces';
 import { EVENTS, MAX_PROCS } from '../../constants/workers.constants.js';
 
@@ -18,8 +18,12 @@ interface Task {
 
 (() => {
   let id = 0;
-  let fileWalker: FileWalker = null;
-  let tunnel; //: MessagePort;
+  let fileWalker: FileWalker;
+  let tunnel: MessagePort;
+
+  if (!parentPort) {
+    throw new Error('Worker must be spawned from a parent thread.');
+  }
 
   parentPort.on('message', (message: WorkerMessage) => {
     if (message?.type === EVENTS.startup) {
@@ -155,7 +159,10 @@ class FileWalker {
 
   private processQueue() {
     while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
-      const path = this.taskQueue.shift().path;
+      const path = this.taskQueue.shift()?.path;
+      if (!path) {
+        return;
+      }
       this.run(path);
     }
   }
