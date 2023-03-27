@@ -169,9 +169,9 @@ class FileWalker {
     }
   }
 
-  // private completeAll() {
-  //   // Any future action.
-  // }
+  private completeAll(): void {
+    // Any future action.
+  }
 
   /*  get stats(): WorkerStats {
     return {
