@@ -10,7 +10,7 @@ import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
-  job: 'explore'; //| 'getSize';
+  job: 'explore'; // | 'getSize';
   value: { path: string };
 }
 

@@ -6,8 +6,6 @@ export class UiService {
   // public stdout: NodeJS.WriteStream = process.stdout;
   uiComponents: BaseUi[] = [];
 
-  constructor() {}
-
   setRawMode(set = true): void {
     this.stdin.setRawMode(set);
     process.stdin.resume();

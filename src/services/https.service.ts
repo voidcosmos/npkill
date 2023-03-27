@@ -5,12 +5,12 @@ export class HttpsService {
     return await new Promise((resolve, reject) => {
       const fail = (err): void => {
         reject(err);
-        return;
       };
 
       const request = https.get(url, (res) => {
         if (!this.isCorrectResponse(res.statusCode ?? -1)) {
           fail(res.statusMessage);
+          return;
         }
 
         res.setEncoding('utf8');
