@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { StartParameters } from '../src/models/start-parameters.model.js';
 
 jest.mock('../src/dirname.js', () => {
   return {};
@@ -66,9 +67,7 @@ describe('Controller test', () => {
     setCursorVisible: () => {},
   };
   const consoleService: any = {
-    getParameters: () => {
-      return {};
-    },
+    getParameters: () => new StartParameters(),
     isRunningBuild: () => false,
     startListenKeyEvents: jest.fn(),
   };
@@ -127,9 +126,13 @@ describe('Controller test', () => {
   });
 
   describe('#getArguments', () => {
-    const mockParameters = (parameters) => {
+    const mockParameters = (parameters: Object) => {
       consoleService.getParameters = () => {
-        return parameters;
+        const startParameters = new StartParameters();
+        Object.keys(parameters).forEach((key) => {
+          startParameters.add(key, parameters[key]);
+        });
+        return startParameters;
       };
       /*  jest
       .spyOn(consoleService, 'getParameters')

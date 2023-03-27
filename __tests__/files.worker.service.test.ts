@@ -102,7 +102,7 @@ describe('FileWorkerService', () => {
       const val1 = ['/sample/path1/node_modules'];
       const val2 = ['/sample/path2/node_modules', '/sample/path3/otherDir'];
 
-      const result = [];
+      const result: string[] = [];
       stream$.subscribe((data) => {
         result.push(data);
         if (result.length === 3) {

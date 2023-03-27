@@ -3,37 +3,16 @@ import { OPTIONS, WIDTH_OVERFLOW } from '../constants/index.js';
 import { ICliOptions } from '../interfaces/cli-options.interface.js';
 import { extname } from 'path';
 import * as readline from 'node:readline';
-
-class StarParameters {
-  private values: { [key: string]: string | boolean } = {};
-
-  add(key: string, value: string | boolean): void {
-    this.values[key] = value;
-  }
-
-  isTrue(key: string): boolean {
-    const value = this.values[key];
-    return value === true;
-  }
-
-  getString(key: string): string {
-    const value = this.values[key];
-    if (typeof value === 'boolean') {
-      return value.toString();
-    }
-
-    return value;
-  }
-}
+import { StartParameters } from '../models/start-parameters.model.js';
 
 export class ConsoleService {
-  getParameters(rawArgv: string[]): StarParameters {
+  getParameters(rawArgv: string[]): StartParameters {
     // This needs a refactor, but fck, is a urgent update
     const rawProgramArgvs = this.removeSystemArgvs(rawArgv);
     const argvs = this.normalizeParams(rawProgramArgvs);
-    const options: StarParameters = new StarParameters();
+    const options: StartParameters = new StartParameters();
 
-    argvs.map((argv, index) => {
+    argvs.forEach((argv, index) => {
       if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
       const nextArgv = argvs[index + 1];
       const option = this.getOption(argv);

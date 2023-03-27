@@ -23,13 +23,13 @@ describe('Console Service', () => {
 
       const result = consoleService.getParameters(argvs);
 
-      expect(result['help']).not.toBeFalsy();
-      expect(result['directory']).toBe('/sample/path');
-      expect(result['delete-all']).not.toBeFalsy();
-      expect(result['lala']).toBeUndefined();
-      expect(result['inexistent']).toBeUndefined();
-      expect(result['full-scan']).not.toBeFalsy();
-      expect(result['exclude-hidden-directories']).not.toBeFalsy();
+      expect(result.isTrue('help')).not.toBeFalsy();
+      expect(result.getString('directory')).toBe('/sample/path');
+      expect(result.isTrue('delete-all')).not.toBeFalsy();
+      expect(result.isTrue('lala')).toBeFalsy();
+      expect(result.isTrue('inexistent')).toBeFalsy();
+      expect(result.isTrue('full-scan')).not.toBeFalsy();
+      expect(result.isTrue('exclude-hidden-directories')).not.toBeFalsy();
     });
     it('should get valid parameters 2', () => {
       const argvs = [
@@ -43,11 +43,11 @@ describe('Console Service', () => {
       ];
 
       const result = consoleService.getParameters(argvs);
-      expect(result['help']).toBeFalsy();
-      expect(result['full-scan']).not.toBeFalsy();
-      expect(result['bg-color']).toBe('red');
-      expect(result['sort-by']).toBe('size');
-      expect(result['exclude-hidden-directories']).toBeFalsy();
+      expect(result.isTrue('help')).toBeFalsy();
+      expect(result.isTrue('full-scan')).not.toBeFalsy();
+      expect(result.getString('bg-color')).toBe('red');
+      expect(result.getString('sort-by')).toBe('size');
+      expect(result.isTrue('exclude-hidden-directories')).toBeFalsy();
     });
   });
 

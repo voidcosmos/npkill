@@ -1,10 +1,11 @@
 import { jest } from '@jest/globals';
+import fs from 'fs';
 
 import rimraf from 'rimraf';
 import { IFileService } from '../src/interfaces/file-service.interface.js';
 
-let statSyncReturnMock = () => null;
-let accessSyncReturnMock = () => null;
+let statSyncReturnMock = (): { isDirectory: () => boolean } | null => null;
+let accessSyncReturnMock = (): boolean | null => null;
 const readFileSyncSpy = jest.fn();
 jest.unstable_mockModule('fs', () => {
   return {
@@ -38,7 +39,7 @@ const WindowsFilesServiceConstructor = //@ts-ignore
     .WindowsFilesService;
 class WindowsFilesService extends WindowsFilesServiceConstructor {}
 
-import { existsSync, lstat, mkdirSync, readdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../src/services/stream.service.js';
 
 jest.mock('../src/dirname.js', () => {
