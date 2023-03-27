@@ -3,7 +3,6 @@ import getSize from 'get-folder-size';
 import { StreamService } from '../index.js';
 
 import { Subject, Observable } from 'rxjs';
-import __dirname from '../../dirname.js';
 import { FileService } from './files.service.js';
 import { WindowsStrategyManager } from '../../strategies/windows-remove-dir.strategy.js';
 import { FileWorkerService } from './files.worker.service.js';

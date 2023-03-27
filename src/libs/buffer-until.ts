@@ -1,6 +1,6 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
 
-class Buffer<T> {
+class Buffer {
   values = '';
 
   append(value: string): void {
@@ -12,12 +12,12 @@ class Buffer<T> {
   }
 }
 
-export function bufferUntil<T>(
+export function bufferUntil(
   filter: (buffer: string) => boolean,
   resetNotifier: Observable<any> = of(),
 ): OperatorFunction<string, string> {
   return function (source$: Observable<string>): Observable<string> {
-    const buffer = new Buffer<T>();
+    const buffer = new Buffer();
 
     return new Observable((observer) => {
       const resetNotifierSubscription = resetNotifier.subscribe(() =>

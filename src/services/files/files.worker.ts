@@ -1,8 +1,8 @@
 import { Dir, Dirent, opendir } from 'fs';
 
 import EventEmitter from 'events';
-import { WorkerMessage, WorkerStats } from './files.worker.service';
-import { basename, join } from 'path';
+import { WorkerMessage } from './files.worker.service';
+import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { IListDirParams } from '../../interfaces';
 import { EVENTS, MAX_PROCS } from '../../constants/workers.constants.js';
