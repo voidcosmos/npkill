@@ -262,12 +262,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
     const ACTIONS = {
-      // tslint:disable-next-line: object-literal-key-quotes
       deleted: () => {
         cutFrom += INFO_MSGS.DELETED_FOLDER.length;
         text = INFO_MSGS.DELETED_FOLDER + text;
       },
-      // tslint:disable-next-line: object-literal-key-quotes
       deleting: () => {
         cutFrom += INFO_MSGS.DELETING_FOLDER.length;
         text = INFO_MSGS.DELETING_FOLDER + text;
@@ -298,13 +296,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private paintStatusFolderPath(folderString: string, action: string): string {
     const TRANSFORMATIONS = {
-      // tslint:disable-next-line: object-literal-key-quotes
       deleted: (text) =>
         text.replace(
           INFO_MSGS.DELETED_FOLDER,
           colors.green(INFO_MSGS.DELETED_FOLDER),
         ),
-      // tslint:disable-next-line: object-literal-key-quotes
       deleting: (text) =>
         text.replace(
           INFO_MSGS.DELETING_FOLDER,
