@@ -6,19 +6,18 @@ import { Subject } from 'rxjs';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 
 export class LogsUi extends BaseUi implements InteractiveUi {
+  readonly close$ = new Subject<null>();
   private size: IPosition;
   private errors = 0;
   private pages: string[][] = [];
   private actualPage = 0;
 
-  readonly close$ = new Subject<null>();
-
-  private KEYS = {
+  private readonly KEYS = {
     e: () => this.cyclePages(),
     escape: () => this.close(),
   };
 
-  constructor(private logger: LoggerService) {
+  constructor(private readonly logger: LoggerService) {
     super();
     this.setVisible(false, false);
   }

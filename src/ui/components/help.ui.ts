@@ -13,7 +13,7 @@ import { BaseUi } from '../base.ui.js';
 import colors from 'colors';
 
 export class HelpUi extends BaseUi {
-  constructor(private consoleService: ConsoleService) {
+  constructor(private readonly consoleService: ConsoleService) {
     super();
   }
 

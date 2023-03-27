@@ -34,8 +34,8 @@ export class FileWorkerService {
   private tunnels: MessagePort[] = [];
 
   constructor(
-    private logger: LoggerService,
-    private searchStatus: SearchStatus,
+    private readonly logger: LoggerService,
+    private readonly searchStatus: SearchStatus,
   ) {}
 
   startScan(stream$: Subject<string>, params: IListDirParams): void {

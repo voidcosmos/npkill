@@ -7,9 +7,9 @@ import { IConfig } from 'src/interfaces/config.interface.js';
 
 export class StatsUi extends BaseUi {
   constructor(
-    private config: IConfig,
-    private resultsService: ResultsService,
-    private logger: LoggerService,
+    private readonly config: IConfig,
+    private readonly resultsService: ResultsService,
+    private readonly logger: LoggerService,
   ) {
     super();
   }

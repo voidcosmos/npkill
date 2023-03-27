@@ -27,8 +27,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   readonly delete$ = new Subject<IFolder>();
   readonly showErrors$ = new Subject<null>();
 
-  private config: IConfig = DEFAULT_CONFIG;
-  private KEYS = {
+  private readonly config: IConfig = DEFAULT_CONFIG;
+  private readonly KEYS = {
     up: () => this.cursorUp(),
     down: () => this.cursorDown(),
     space: () => this.delete(),
@@ -46,9 +46,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   };
 
   constructor(
-    private resultsService: ResultsService,
-    private consoleService: ConsoleService,
-    private fileService: FileService,
+    private readonly resultsService: ResultsService,
+    private readonly consoleService: ConsoleService,
+    private readonly fileService: FileService,
   ) {
     super();
   }

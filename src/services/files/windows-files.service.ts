@@ -9,11 +9,11 @@ import { FileWorkerService } from './files.worker.service.js';
 import { IListDirParams } from '../../interfaces/list-dir-params.interface.js';
 
 export class WindowsFilesService extends FileService {
-  private windowsStrategyManager: WindowsStrategyManager =
+  private readonly windowsStrategyManager: WindowsStrategyManager =
     new WindowsStrategyManager();
 
   constructor(
-    private streamService: StreamService,
+    private readonly streamService: StreamService,
     protected fileWorkerService: FileWorkerService,
   ) {
     super();

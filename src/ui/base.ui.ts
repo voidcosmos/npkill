@@ -14,7 +14,7 @@ export abstract class BaseUi {
   public freezed = false;
   protected _position: Position;
   protected _visible = true;
-  private stdout: NodeJS.WriteStream = process.stdout;
+  private readonly stdout: NodeJS.WriteStream = process.stdout;
 
   protected printAt(message: string, position: Position): void {
     this.setCursorAt(position);

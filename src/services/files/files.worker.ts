@@ -72,7 +72,7 @@ class FileWalker {
     target: '',
     exclude: [],
   };
-  private taskQueue: Task[] = [];
+  private readonly taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
 

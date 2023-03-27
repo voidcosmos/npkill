@@ -13,10 +13,10 @@ import { BAR_PARTS, BAR_WIDTH } from '../../../constants/status.constants.js';
 
 export class StatusUi extends BaseUi {
   private text = '';
-  private searchEnd$ = new Subject();
   private barNormalizedWidth = 0;
   private barClosing = false;
-  private SEARCH_STATES = {
+  private readonly searchEnd$ = new Subject();
+  private readonly SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
     dead: () => this.fatalError(),
@@ -24,8 +24,8 @@ export class StatusUi extends BaseUi {
   };
 
   constructor(
-    private spinnerService: SpinnerService,
-    private searchStatus: SearchStatus,
+    private readonly spinnerService: SpinnerService,
+    private readonly searchStatus: SearchStatus,
   ) {
     super();
   }

@@ -6,7 +6,7 @@ import {
 import { HttpsService } from './https.service.js';
 
 export class UpdateService {
-  constructor(private httpsService: HttpsService) {}
+  constructor(private readonly httpsService: HttpsService) {}
 
   /**
    * Check if localVersion is greater or equal to remote version
