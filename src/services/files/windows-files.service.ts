@@ -37,7 +37,7 @@ export class WindowsFilesService extends FileService {
     return stream$;
   }
 
-  deleteDir(path: string): Promise<boolean> {
+  async deleteDir(path: string): Promise<boolean> {
     return this.windowsStrategyManager.deleteDir(path);
   }
 }

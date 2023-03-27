@@ -22,7 +22,7 @@ export abstract class UnixFilesService extends FileService {
     return stream$;
   }
 
-  deleteDir(path: string): Promise<{}> {
+  async deleteDir(path: string): Promise<{}> {
     return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;
       exec(command, (error, stdout, stderr) => {

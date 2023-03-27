@@ -6,7 +6,7 @@ import {
 import { WindowsStrategy } from './windows-strategy.abstract.js';
 
 export class WindowsStrategyManager {
-  deleteDir(path: string): Promise<boolean> {
+  async deleteDir(path: string): Promise<boolean> {
     const windowsStrategy: WindowsStrategy = new WindowsNode14Strategy();
     windowsStrategy
       .setNextStrategy(new WindowsNode12Strategy())
