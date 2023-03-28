@@ -3,13 +3,14 @@ import * as https from 'node:https';
 export class HttpsService {
   async getJson(url: string): Promise<Record<string, string>> {
     return await new Promise((resolve, reject) => {
-      const fail = (err: string): void => {
+      const fail = (err: Error): void => {
         reject(err);
       };
 
       const request = https.get(url, (res) => {
         if (!this.isCorrectResponse(res.statusCode ?? -1)) {
-          fail(res.statusMessage ?? 'Unknown error');
+          const error = new Error(res.statusMessage ?? 'Unknown error');
+          fail(error);
           return;
         }
 
@@ -23,7 +24,7 @@ export class HttpsService {
         });
       });
 
-      request.on('error', (err) => fail(err.message));
+      request.on('error', (error) => fail(error));
     });
   }
 

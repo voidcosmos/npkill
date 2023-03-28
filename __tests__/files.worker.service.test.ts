@@ -12,7 +12,9 @@ const workerEmitter: EventEmitter = new EventEmitter();
 const port1Emitter: EventEmitter = new EventEmitter();
 const port2Emitter: EventEmitter = new EventEmitter();
 const workerPostMessageMock = jest.fn();
-const workerTerminateMock = jest.fn();
+const workerTerminateMock = jest
+  .fn()
+  .mockImplementation(() => new Promise(() => {}));
 const messageChannelPort1Mock = jest.fn();
 const messageChannelPort2Mock = jest.fn();
 
