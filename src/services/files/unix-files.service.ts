@@ -27,10 +27,12 @@ export abstract class UnixFilesService extends FileService {
       const command = `rm -rf "${path}"`;
       exec(command, (error, stdout, stderr) => {
         if (error !== null) {
-          return reject(error);
+          reject(error);
+          return;
         }
         if (stderr !== '') {
-          return reject(stderr);
+          reject(stderr);
+          return;
         }
         resolve(true);
       });

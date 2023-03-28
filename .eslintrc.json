@@ -13,7 +13,12 @@
   "rules": {
     "@typescript-eslint/consistent-type-imports": "off",
     "@typescript-eslint/dot-notation": "off",
-    "@typescript-eslint/no-confusing-void-expression": "off",
+    "@typescript-eslint/no-confusing-void-expression": [
+      2,
+      {
+        "ignoreArrowShorthand": true
+      }
+    ],
     "@typescript-eslint/return-await": [2, "in-try-catch"],
     "@typescript-eslint/semi": "off"
   }

@@ -15,7 +15,8 @@ export class WindowsStrategyManager {
     return new Promise((resolve, reject) => {
       windowsStrategy.remove(path, (err) => {
         if (err !== null) {
-          return reject(err);
+          reject(err);
+          return;
         }
         resolve(true);
       });

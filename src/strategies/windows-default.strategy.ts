@@ -9,21 +9,25 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
     lstat(dirOrFilePath, (lstatError, stats) => {
       //  No such file or directory - Done
       if (lstatError !== null && lstatError.code === 'ENOENT') {
-        return callback(null);
+        callback(null);
+        return;
       }
 
       if (stats.isDirectory()) {
-        return this.removeDirectory(dirOrFilePath, callback);
+        this.removeDirectory(dirOrFilePath, callback);
+        return;
       }
 
       unlink(dirOrFilePath, (rmError) => {
         //  No such file or directory - Done
         if (rmError !== null && rmError.code === 'ENOENT') {
-          return callback(null);
+          callback(null);
+          return;
         }
 
         if (rmError !== null && rmError.code === 'EISDIR') {
-          return this.removeDirectory(dirOrFilePath, callback);
+          this.removeDirectory(dirOrFilePath, callback);
+          return;
         }
 
         callback(rmError);
@@ -44,7 +48,8 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
         rmDirError?.code !== undefined &&
         RECURSIVE_RMDIR_IGNORED_ERROR_CODES.includes(rmDirError.code)
       ) {
-        return this.removeChildren(path, callback);
+        this.removeChildren(path, callback);
+        return;
       }
 
       callback(rmDirError);
@@ -63,7 +68,8 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
       //  removeDirectory only allows deleting directories
       //  that has no content inside (empty directory).
       if (contentInDirectory === 0) {
-        return rmdir(path, callback);
+        rmdir(path, callback);
+        return;
       }
 
       ls.forEach((dirOrFile) => {
