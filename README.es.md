@@ -209,7 +209,7 @@ npm run start -- -f -e
 
 # :revolving_hearts: Cómo contribuir
 
-Si quieres contribuir, échale un vistazo al [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+Si quieres contribuir, échale un vistazo al [CONTRIBUTING.md](.github/CONTRIBUTING.es.md)
 
 <a name="donations"></a>
 
