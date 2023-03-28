@@ -89,7 +89,9 @@ export class Controller {
     this.prepareScreen();
     this.setupEventsListener();
     this.uiStatus.start();
-    if (this.config.checkUpdates) this.checkVersion();
+    if (this.config.checkUpdates) {
+      this.checkVersion();
+    }
 
     this.scan();
   }
@@ -220,7 +222,9 @@ export class Controller {
   }
 
   private setColor(color: string): void {
-    if (this.isValidColor(color)) this.config.backgroundColor = COLORS[color];
+    if (this.isValidColor(color)) {
+      this.config.backgroundColor = COLORS[color];
+    }
   }
 
   private isValidColor(color: string): boolean {

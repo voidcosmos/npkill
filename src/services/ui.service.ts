@@ -25,7 +25,9 @@ export class UiService {
   renderAll(): void {
     this.clear();
     this.uiComponents.forEach((component) => {
-      if (component.visible) component.render();
+      if (component.visible) {
+        component.render();
+      }
     });
   }
 

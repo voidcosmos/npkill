@@ -13,7 +13,9 @@ export class ConsoleService {
     const options: StartParameters = new StartParameters();
 
     argvs.forEach((argv, index) => {
-      if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
+      if (!this.isArgOption(argv) || !this.isValidOption(argv)) {
+        return;
+      }
       const nextArgv = argvs[index + 1];
       const option = this.getOption(argv);
 
@@ -41,7 +43,9 @@ export class ConsoleService {
   }
 
   splitData(data: string, separator = '\n'): string[] {
-    if (data === '') return [];
+    if (data === '') {
+      return [];
+    }
     return data.split(separator);
   }
 
@@ -54,7 +58,9 @@ export class ConsoleService {
   }
 
   shortenText(text: string, width: number, startCut = 0): string {
-    if (!this.isValidShortenParams(text, width, startCut)) return text;
+    if (!this.isValidShortenParams(text, width, startCut)) {
+      return text;
+    }
 
     const startPartB = text.length - (width - startCut - WIDTH_OVERFLOW.length);
     const partA = text.substring(startCut, -1);

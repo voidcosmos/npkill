@@ -119,8 +119,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       this.paintBgRow(row);
     }
 
-    if (folder.isDangerous)
+    if (folder.isDangerous) {
       path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
+    }
 
     this.printAt(path, {
       x: MARGINS.FOLDER_COLUMN_START,
@@ -153,7 +154,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       daysSinceLastModification = '--';
     }
 
-    if (folder.isDangerous) daysSinceLastModification = 'xx';
+    if (folder.isDangerous) {
+      daysSinceLastModification = 'xx';
+    }
 
     // Align to right
     const alignMargin = 4 - daysSinceLastModification.length;
@@ -215,13 +218,13 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     let scrollRequired = 0;
 
-    if (shouldScrollUp)
+    if (shouldScrollUp) {
       scrollRequired =
         this.getRow(this.resultIndex) -
         MARGINS.ROW_RESULTS_START -
         this.scroll -
         1;
-    else if (shouldScrollDown) {
+    } else if (shouldScrollDown) {
       scrollRequired =
         this.getRow(this.resultIndex) - this.terminal.rows - this.scroll + 2;
 

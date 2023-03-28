@@ -54,13 +54,27 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     for (let x = this.position.x; x < this.size.x; x++) {
       for (let y = this.position.y; y < this.size.y; y++) {
         let char = ' ';
-        if (x === this.position.x || x === this.size.x - 1) char = '│';
-        if (y === this.position.y) char = '═';
-        if (y === this.size.y - 1) char = '─';
-        if (x === this.position.x && y === this.position.y) char = '╒';
-        if (x === this.size.x - 1 && y === this.position.y) char = '╕';
-        if (x === this.position.x && y === this.size.y - 1) char = '╰';
-        if (x === this.size.x - 1 && y === this.size.y - 1) char = '╯';
+        if (x === this.position.x || x === this.size.x - 1) {
+          char = '│';
+        }
+        if (y === this.position.y) {
+          char = '═';
+        }
+        if (y === this.size.y - 1) {
+          char = '─';
+        }
+        if (x === this.position.x && y === this.position.y) {
+          char = '╒';
+        }
+        if (x === this.size.x - 1 && y === this.position.y) {
+          char = '╕';
+        }
+        if (x === this.position.x && y === this.size.y - 1) {
+          char = '╰';
+        }
+        if (x === this.size.x - 1 && y === this.size.y - 1) {
+          char = '╯';
+        }
 
         this.printAt(colors['bgBlack'](char), { x, y });
       }

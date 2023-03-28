@@ -83,7 +83,9 @@ export abstract class FileService implements IFileService {
 
     for (const item of items) {
       if (item.isDirectory()) {
-        if (item.name === 'node_modules') continue;
+        if (item.name === 'node_modules') {
+          continue;
+        }
         files = [
           ...files,
           ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(

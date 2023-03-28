@@ -27,7 +27,9 @@ export class LoggerService {
   }
 
   get(type: 'all' | 'info' | 'error' = 'all'): LogEntry[] {
-    if (type === 'all') return this.log;
+    if (type === 'all') {
+      return this.log;
+    }
 
     return this.log.filter((entry) => entry.type === type);
   }
