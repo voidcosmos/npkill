@@ -23,7 +23,7 @@ export abstract class UnixFilesService extends FileService {
   }
 
   async deleteDir(path: string): Promise<boolean> {
-    return await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;
       exec(command, (error, stdout, stderr) => {
         if (error !== null) {
