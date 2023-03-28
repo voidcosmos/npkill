@@ -19,7 +19,6 @@
         "ignoreArrowShorthand": true
       }
     ],
-    "@typescript-eslint/return-await": [2, "in-try-catch"],
-    "@typescript-eslint/semi": "off"
+    "@typescript-eslint/return-await": [2, "in-try-catch"]
   }
 }
