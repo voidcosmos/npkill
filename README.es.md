@@ -144,7 +144,7 @@ npkill -d '~/more projects' -gb --sort size --target vendor
 npkill -d 'projects' --exclude "progress, ignore-this"
 ```
 
-- Borra automáticamente todos los node*modules que se encuentren en el directorio \_backups*:
+- Borra automáticamente todos los **node_modules** que se encuentren en el directorio _backups_:
 
 ```bash
 # Deshabilitado por razones de seguridad (puedes utilizar esta opción en la versión 0.2.4 bajo tu propia responsabilidad)
