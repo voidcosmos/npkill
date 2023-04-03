@@ -3,20 +3,31 @@ import { OPTIONS, WIDTH_OVERFLOW } from '../constants/index.js';
 import { ICliOptions } from '../interfaces/cli-options.interface.js';
 import { extname } from 'path';
 import * as readline from 'node:readline';
+import { StartParameters } from '../models/start-parameters.model.js';
 
 export class ConsoleService {
-  getParameters(rawArgv: string[]): {} {
+  getParameters(rawArgv: string[]): StartParameters {
     // This needs a refactor, but fck, is a urgent update
     const rawProgramArgvs = this.removeSystemArgvs(rawArgv);
     const argvs = this.normalizeParams(rawProgramArgvs);
-    const options = {};
+    const options: StartParameters = new StartParameters();
 
-    argvs.map((argv, index) => {
-      if (!this.isArgOption(argv) || !this.isValidOption(argv)) return;
+    argvs.forEach((argv, index) => {
+      if (!this.isArgOption(argv) || !this.isValidOption(argv)) {
+        return;
+      }
       const nextArgv = argvs[index + 1];
-      const optionName = this.getOption(argv).name;
+      const option = this.getOption(argv);
 
-      options[optionName] = this.isArgHavingParams(nextArgv) ? nextArgv : true;
+      if (option === undefined) {
+        throw new Error('Invalid option name.');
+      }
+
+      const optionName = option.name;
+      options.add(
+        optionName,
+        this.isArgHavingParams(nextArgv) ? nextArgv : true,
+      );
     });
 
     return options;
@@ -32,7 +43,9 @@ export class ConsoleService {
   }
 
   splitData(data: string, separator = '\n'): string[] {
-    if (!data) return [];
+    if (data === '') {
+      return [];
+    }
     return data.split(separator);
   }
 
@@ -40,12 +53,14 @@ export class ConsoleService {
     text: string,
     textToReplace: string | RegExp,
     replaceValue: string,
-  ) {
+  ): string {
     return text.replace(textToReplace, replaceValue);
   }
 
   shortenText(text: string, width: number, startCut = 0): string {
-    if (!this.isValidShortenParams(text, width, startCut)) return text;
+    if (!this.isValidShortenParams(text, width, startCut)) {
+      return text;
+    }
 
     const startPartB = text.length - (width - startCut - WIDTH_OVERFLOW.length);
     const partA = text.substring(startCut, -1);
@@ -58,7 +73,7 @@ export class ConsoleService {
     return extname(import.meta.url) === '.js';
   }
 
-  startListenKeyEvents() {
+  startListenKeyEvents(): void {
     readline.emitKeypressEvents(process.stdin);
   }
 
@@ -71,7 +86,11 @@ export class ConsoleService {
     return argvs.join('=').split('=');
   }
 
-  private isValidShortenParams(text: string, width: number, startCut: number) {
+  private isValidShortenParams(
+    text: string,
+    width: number,
+    startCut: number,
+  ): boolean {
     return (
       startCut <= width &&
       text.length >= width &&
@@ -80,21 +99,18 @@ export class ConsoleService {
     );
   }
 
-  private getValidArgvs(rawArgv: string[]): ICliOptions[] {
-    const argvs = rawArgv.map((argv) => this.getOption(argv));
-    return argvs.filter((argv) => argv);
-  }
-
   private removeSystemArgvs(allArgv: string[]): string[] {
     return allArgv.slice(2);
   }
 
   private isArgOption(argv: string): boolean {
-    return !!argv && argv.charAt(0) === '-';
+    return argv.charAt(0) === '-';
   }
 
   private isArgHavingParams(nextArgv: string): boolean {
-    return nextArgv && !this.isArgOption(nextArgv);
+    return (
+      nextArgv !== undefined && nextArgv !== '' && !this.isArgOption(nextArgv)
+    );
   }
 
   private isValidOption(arg: string): boolean {

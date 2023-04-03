@@ -9,9 +9,11 @@
     "rootDir": "./src/",
     "outDir": "./lib/",
     "strict": true,
+    "strictFunctionTypes": true,
     "noImplicitAny": false,
     "noImplicitOverride": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "."

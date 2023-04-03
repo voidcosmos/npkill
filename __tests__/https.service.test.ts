@@ -38,11 +38,11 @@ describe('Http Service', () => {
       httpsService
         .getJson('http://sampleUrl')
         .then()
-        .catch((error) => {
-          expect(error).toBe(errorMsg);
+        .catch((error: Error) => {
+          expect(error.message).toBe(errorMsg);
           done();
         });
-      eventEmitter.emit('error', errorMsg);
+      eventEmitter.emit('error', new Error(errorMsg));
     });
 
     it('should reject if the code of the response indicate error (101)', (done) => {

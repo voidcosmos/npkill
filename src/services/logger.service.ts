@@ -27,13 +27,15 @@ export class LoggerService {
   }
 
   get(type: 'all' | 'info' | 'error' = 'all'): LogEntry[] {
-    if (type === 'all') return this.log;
+    if (type === 'all') {
+      return this.log;
+    }
 
     return this.log.filter((entry) => entry.type === type);
   }
 
   saveToFile(path: string): void {
-    const convertTime = (timestamp: number) => timestamp;
+    const convertTime = (timestamp: number): number => timestamp;
 
     const content: string = this.log.reduce((log, actual) => {
       const line = `[${convertTime(actual.timestamp)}](${actual.type}) ${

@@ -2,6 +2,5 @@ export interface IPosition {
   x: number;
   y: number;
 }
-export interface IUiPosition {
-  [key: string]: IPosition;
-}
+
+export type IUiPosition = Record<string, IPosition>;

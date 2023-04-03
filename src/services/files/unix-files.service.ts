@@ -22,13 +22,19 @@ export abstract class UnixFilesService extends FileService {
     return stream$;
   }
 
-  deleteDir(path: string): Promise<{}> {
+  async deleteDir(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;
       exec(command, (error, stdout, stderr) => {
-        if (error) return reject(error);
-        if (stderr) return reject(stderr);
-        resolve(stdout);
+        if (error !== null) {
+          reject(error);
+          return;
+        }
+        if (stderr !== '') {
+          reject(stderr);
+          return;
+        }
+        resolve(true);
       });
     });
   }
@@ -37,7 +43,7 @@ export abstract class UnixFilesService extends FileService {
     const { path, target, exclude } = params;
     let args: string[] = [path];
 
-    if (exclude) {
+    if (exclude !== undefined && exclude.length > 0) {
       args = [...args, this.prepareExcludeArgs(exclude)].flat();
     }
 

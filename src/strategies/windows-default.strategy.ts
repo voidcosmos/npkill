@@ -8,22 +8,26 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
   remove(dirOrFilePath: string, callback: NoParamCallback): boolean {
     lstat(dirOrFilePath, (lstatError, stats) => {
       //  No such file or directory - Done
-      if (lstatError && lstatError.code === 'ENOENT') {
-        return callback(null);
+      if (lstatError !== null && lstatError.code === 'ENOENT') {
+        callback(null);
+        return;
       }
 
       if (stats.isDirectory()) {
-        return this.removeDirectory(dirOrFilePath, callback);
+        this.removeDirectory(dirOrFilePath, callback);
+        return;
       }
 
       unlink(dirOrFilePath, (rmError) => {
         //  No such file or directory - Done
-        if (rmError && rmError.code === 'ENOENT') {
-          return callback(null);
+        if (rmError !== null && rmError.code === 'ENOENT') {
+          callback(null);
+          return;
         }
 
-        if (rmError && rmError.code === 'EISDIR') {
-          return this.removeDirectory(dirOrFilePath, callback);
+        if (rmError !== null && rmError.code === 'EISDIR') {
+          this.removeDirectory(dirOrFilePath, callback);
+          return;
         }
 
         callback(rmError);
@@ -36,23 +40,25 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
     return true;
   }
 
-  private removeDirectory(path: string, callback) {
+  private removeDirectory(path: string, callback): void {
     rmdir(path, (rmDirError) => {
       //  We ignore certain error codes
       //  in order to simulate 'recursive' mode
       if (
-        rmDirError &&
+        rmDirError?.code !== undefined &&
         RECURSIVE_RMDIR_IGNORED_ERROR_CODES.includes(rmDirError.code)
       ) {
-        return this.removeChildren(path, callback);
+        this.removeChildren(path, callback);
+        return;
       }
 
       callback(rmDirError);
     });
   }
-  private removeChildren(path: string, callback) {
+
+  private removeChildren(path: string, callback): void {
     readdir(path, (readdirError, ls) => {
-      if (readdirError) {
+      if (readdirError !== null) {
         return callback(readdirError);
       }
 
@@ -61,8 +67,9 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
 
       //  removeDirectory only allows deleting directories
       //  that has no content inside (empty directory).
-      if (!contentInDirectory) {
-        return rmdir(path, callback);
+      if (contentInDirectory === 0) {
+        rmdir(path, callback);
+        return;
       }
 
       ls.forEach((dirOrFile) => {
@@ -73,7 +80,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
             return;
           }
 
-          if (error) {
+          if (error !== null) {
             done = true;
             return callback(error);
           }
@@ -81,7 +88,7 @@ export class WindowsDefaultStrategy extends WindowsStrategy {
           contentInDirectory--;
           //  No more content inside.
           //  Remove the directory.
-          if (!contentInDirectory) {
+          if (contentInDirectory === 0) {
             rmdir(path, callback);
           }
         });

@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { accessSync, readFileSync, Stats, statSync } from 'fs';
+import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
 import {
   IFileService,
   IFileStat,
@@ -11,7 +10,7 @@ import { Observable } from 'rxjs';
 export abstract class FileService implements IFileService {
   abstract getFolderSize(path: string): Observable<number>;
   abstract listDir(params: IListDirParams): Observable<string>;
-  abstract deleteDir(path: string): Promise<{}>;
+  abstract deleteDir(path: string): Promise<boolean>;
 
   isValidRootFolder(path: string): boolean {
     let stat: Stats;
@@ -44,7 +43,7 @@ export abstract class FileService implements IFileService {
     return bytes / factorBytestoKB;
   }
 
-  convertGBToMB(gb: number) {
+  convertGBToMB(gb: number): number {
     const factorGBtoMB = 1024;
     return gb * factorGBtoMB;
   }
@@ -66,7 +65,7 @@ export abstract class FileService implements IFileService {
    * would imply breaking the application (until the dependencies are reinstalled).
    */
   isDangerous(path: string): boolean {
-    const hiddenFilePattern = /(^|\/)\.[^\/\.]/g;
+    const hiddenFilePattern = /(^|\/)\.[^/.]/g;
     return hiddenFilePattern.test(path);
   }
 
@@ -75,7 +74,7 @@ export abstract class FileService implements IFileService {
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
     );
-    return sorted[0]?.modificationTime || null;
+    return sorted.length > 0 ? sorted[0].modificationTime : -1;
   }
 
   async getFileStatsInDir(dirname: string): Promise<IFileStat[]> {
@@ -84,7 +83,9 @@ export abstract class FileService implements IFileService {
 
     for (const item of items) {
       if (item.isDirectory()) {
-        if (item.name === 'node_modules') continue;
+        if (item.name === 'node_modules') {
+          continue;
+        }
         files = [
           ...files,
           ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(

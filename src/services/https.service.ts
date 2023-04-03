@@ -1,21 +1,22 @@
 import * as https from 'node:https';
 
 export class HttpsService {
-  getJson(url: string): Promise<{}> {
+  async getJson(url: string): Promise<Record<string, string>> {
     return new Promise((resolve, reject) => {
-      const fail = (err) => {
+      const fail = (err: Error): void => {
         reject(err);
-        return;
       };
 
       const request = https.get(url, (res) => {
-        if (!this.isCorrectResponse(res.statusCode)) {
-          fail(res.statusMessage);
+        if (!this.isCorrectResponse(res.statusCode ?? -1)) {
+          const error = new Error(res.statusMessage ?? 'Unknown error');
+          fail(error);
+          return;
         }
 
         res.setEncoding('utf8');
         let body = '';
-        res.on('data', (data) => {
+        res.on('data', (data: string) => {
           body += data;
         });
         res.on('end', () => {
@@ -23,7 +24,7 @@ export class HttpsService {
         });
       });
 
-      request.on('error', (err) => fail(err));
+      request.on('error', (error) => fail(error));
     });
   }
 

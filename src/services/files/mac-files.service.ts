@@ -10,6 +10,6 @@ export class MacFilesService extends UnixFilesService {
 
     du.stdout.pipe(cut.stdin);
 
-    return this.streamService.getStream(cut).pipe(map((size) => +size));
+    return this.streamService.getStream<string>(cut).pipe(map((size) => +size));
   }
 }

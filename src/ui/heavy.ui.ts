@@ -17,7 +17,7 @@ export abstract class HeavyUi extends BaseUi {
   }
 
   /** Prints the buffer (if have any change) to stdout and clears it. */
-  protected flush() {
+  protected flush(): void {
     if (this.freezed) {
       return;
     }
@@ -31,7 +31,7 @@ export abstract class HeavyUi extends BaseUi {
     this.clearBuffer();
   }
 
-  private clearBuffer() {
+  private clearBuffer(): void {
     this.previousBuffer = this.buffer;
     this.buffer = '';
   }

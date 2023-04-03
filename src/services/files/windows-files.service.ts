@@ -3,18 +3,17 @@ import getSize from 'get-folder-size';
 import { StreamService } from '../index.js';
 
 import { Subject, Observable } from 'rxjs';
-import __dirname from '../../dirname.js';
 import { FileService } from './files.service.js';
 import { WindowsStrategyManager } from '../../strategies/windows-remove-dir.strategy.js';
 import { FileWorkerService } from './files.worker.service.js';
 import { IListDirParams } from '../../interfaces/list-dir-params.interface.js';
 
 export class WindowsFilesService extends FileService {
-  private windowsStrategyManager: WindowsStrategyManager =
+  private readonly windowsStrategyManager: WindowsStrategyManager =
     new WindowsStrategyManager();
 
   constructor(
-    private streamService: StreamService,
+    private readonly streamService: StreamService,
     protected fileWorkerService: FileWorkerService,
   ) {
     super();
@@ -22,8 +21,8 @@ export class WindowsFilesService extends FileService {
 
   getFolderSize(path: string): Observable<number> {
     return new Observable((observer) => {
-      getSize(path, (err, size) => {
-        if (err) {
+      getSize(path, (err: Error | null, size: number) => {
+        if (err !== null) {
           throw err;
         }
         observer.next(super.convertBytesToKB(size));
@@ -38,7 +37,7 @@ export class WindowsFilesService extends FileService {
     return stream$;
   }
 
-  deleteDir(path: string): Promise<boolean> {
+  async deleteDir(path: string): Promise<boolean> {
     return this.windowsStrategyManager.deleteDir(path);
   }
 }

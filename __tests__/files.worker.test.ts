@@ -2,13 +2,13 @@ import { jest } from '@jest/globals';
 import EventEmitter from 'node:events';
 import { Dir } from 'node:fs';
 import { join, normalize } from 'node:path';
-import { MessageChannel } from 'node:worker_threads';
+import { MessageChannel, MessagePort } from 'node:worker_threads';
 
 import { EVENTS } from '../src/constants/workers.constants';
 import { IListDirParams } from '../src/interfaces';
 
 const parentEmitter: EventEmitter = new EventEmitter();
-let tunnelEmitter: any;
+let tunnelEmitter: MessagePort;
 const tunnelPostMock = jest.fn();
 
 let dirEntriesMock: { name: string; isDirectory: () => void }[] = [];
@@ -48,8 +48,8 @@ const mockDir = {
   close: () => {},
 } as unknown as Dir;
 
-jest.unstable_mockModule('fs', () => ({
-  opendir: (path: string, cb: (err, dir) => void) => cb(null, mockDir),
+jest.unstable_mockModule('fs/promises', () => ({
+  opendir: (path: string) => new Promise((resolve) => resolve(mockDir)),
 }));
 
 jest.unstable_mockModule('node:worker_threads', () => ({

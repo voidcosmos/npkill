@@ -15,13 +15,14 @@ export abstract class WindowsStrategy {
     this.major = major;
     this.minor = minor;
   }
+
   setNextStrategy(next: WindowsStrategy): WindowsStrategy {
     this.next = next;
     return next;
   }
 
   protected checkNext(path: string, callback): boolean {
-    if (!this.next) {
+    if (this.next === undefined) {
       return true;
     }
     return this.next.remove(path, callback);
@@ -31,7 +32,7 @@ export abstract class WindowsStrategy {
     const releaseVersionsRegExp: RegExp = /^v(\d{1,2})\.(\d{1,2})\.(\d{1,2})/;
     const versionMatch = version.match(releaseVersionsRegExp);
 
-    if (!versionMatch) {
+    if (versionMatch === null) {
       throw new Error(`Unable to parse Node version: ${version}`);
     }
 

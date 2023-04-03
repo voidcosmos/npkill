@@ -13,10 +13,10 @@ import { BAR_PARTS, BAR_WIDTH } from '../../../constants/status.constants.js';
 
 export class StatusUi extends BaseUi {
   private text = '';
-  private searchEnd$ = new Subject();
   private barNormalizedWidth = 0;
   private barClosing = false;
-  private SEARCH_STATES = {
+  private readonly searchEnd$ = new Subject();
+  private readonly SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
     dead: () => this.fatalError(),
@@ -24,13 +24,13 @@ export class StatusUi extends BaseUi {
   };
 
   constructor(
-    private spinnerService: SpinnerService,
-    private searchStatus: SearchStatus,
+    private readonly spinnerService: SpinnerService,
+    private readonly searchStatus: SearchStatus,
   ) {
     super();
   }
 
-  start() {
+  start(): void {
     this.spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.searchEnd$))
@@ -41,7 +41,7 @@ export class StatusUi extends BaseUi {
     this.animateProgressBar();
   }
 
-  completeSearch(duration: number) {
+  completeSearch(duration: number): void {
     this.searchEnd$.next(true);
     this.searchEnd$.complete();
 
@@ -56,7 +56,7 @@ export class StatusUi extends BaseUi {
     this.renderProgressBar();
   }
 
-  private renderProgressBar() {
+  private renderProgressBar(): void {
     const {
       pendingSearchTasks,
       completedSearchTasks,
@@ -64,7 +64,12 @@ export class StatusUi extends BaseUi {
       pendingStatsCalculation,
     } = this.searchStatus;
 
-    const proportional = (a: number, b: number, c: number) => (a * b) / c;
+    const proportional = (a: number, b: number, c: number): number => {
+      if (c === 0) {
+        return 0;
+      }
+      return (a * b) / c;
+    };
 
     const modifier =
       this.barNormalizedWidth === 1
@@ -75,17 +80,24 @@ export class StatusUi extends BaseUi {
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
     const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
 
-    let barLenght =
-      proportional(barSearchMax, BAR_WIDTH, barSearchMax) || BAR_WIDTH;
+    let barLenght = proportional(barSearchMax, BAR_WIDTH, barSearchMax);
+    if (barLenght === 0) {
+      barLenght = BAR_WIDTH;
+    }
     barLenght = Math.floor(barLenght * modifier);
 
-    let searchBarLenght =
-      proportional(completedSearchTasks, BAR_WIDTH, barSearchMax) || 0;
+    let searchBarLenght = proportional(
+      completedSearchTasks,
+      BAR_WIDTH,
+      barSearchMax,
+    );
     searchBarLenght = Math.floor(searchBarLenght * modifier);
 
-    let doneBarLenght =
-      proportional(completedStatsCalculation, searchBarLenght, barStatsMax) ||
-      0;
+    let doneBarLenght = proportional(
+      completedStatsCalculation,
+      searchBarLenght,
+      barStatsMax,
+    );
     doneBarLenght = Math.floor(doneBarLenght * modifier);
 
     barLenght -= searchBarLenght;
@@ -105,7 +117,7 @@ export class StatusUi extends BaseUi {
     this.printProgressBar(progressBar);
   }
 
-  private animateProgressBar() {
+  private animateProgressBar(): void {
     if (this.barNormalizedWidth > 1) {
       this.barNormalizedWidth = 1;
       return;
@@ -116,7 +128,7 @@ export class StatusUi extends BaseUi {
     setTimeout(() => this.animateProgressBar(), SPINNER_INTERVAL);
   }
 
-  private animateClose() {
+  private animateClose(): void {
     this.barClosing = true;
     if (this.barNormalizedWidth < 0) {
       this.barNormalizedWidth = 0;
@@ -128,7 +140,7 @@ export class StatusUi extends BaseUi {
     setTimeout(() => this.animateClose(), SPINNER_INTERVAL);
   }
 
-  private printProgressBar(progressBar: string) {
+  private printProgressBar(progressBar: string): void {
     if (this.barClosing) {
       const postX = Math.round(
         UI_POSITIONS.STATUS_BAR.x +
@@ -146,24 +158,24 @@ export class StatusUi extends BaseUi {
     }
   }
 
-  private startingSearch() {
+  private startingSearch(): void {
     this.text = INFO_MSGS.STARTING;
     this.render();
   }
 
-  private continueSearching() {
+  private continueSearching(): void {
     this.text = INFO_MSGS.SEARCHING + this.spinnerService.nextFrame();
     this.render();
   }
 
-  private fatalError() {
+  private fatalError(): void {
     this.text = colors.red(INFO_MSGS.FATAL_ERROR);
     this.searchEnd$.next(true);
     this.searchEnd$.complete();
     this.render();
   }
 
-  private continueFinishing() {
+  private continueFinishing(): void {
     this.text = INFO_MSGS.CALCULATING_STATS + this.spinnerService.nextFrame();
     this.render();
   }

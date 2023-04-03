@@ -1,7 +1,7 @@
 import os from 'os';
 import { dirname, extname } from 'path';
 
-import { Worker, MessageChannel } from 'node:worker_threads';
+import { Worker, MessageChannel, MessagePort } from 'node:worker_threads';
 import { Subject } from 'rxjs';
 import { IListDirParams } from '../../interfaces/index.js';
 import { SearchStatus } from '../../models/search-state.model.js';
@@ -10,7 +10,7 @@ import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
-  job: 'explore'; //| 'getSize';
+  job: 'explore'; // | 'getSize';
   value: { path: string };
 }
 
@@ -31,14 +31,14 @@ export class FileWorkerService {
   private workersPendingJobs: number[] = [];
   private pendingJobs = 0;
   private totalJobs = 0;
-  private tunnels = [];
+  private tunnels: MessagePort[] = [];
 
   constructor(
-    private logger: LoggerService,
-    private searchStatus: SearchStatus,
+    private readonly logger: LoggerService,
+    private readonly searchStatus: SearchStatus,
   ) {}
 
-  startScan(stream$: Subject<string>, params: IListDirParams) {
+  startScan(stream$: Subject<string>, params: IListDirParams): void {
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);
     this.setWorkerConfig(params);
@@ -47,12 +47,10 @@ export class FileWorkerService {
     this.addJob({ job: 'explore', value: { path: params.path } });
   }
 
-  private listenEvents(stream$: Subject<string>) {
+  private listenEvents(stream$: Subject<string>): void {
     this.tunnels.forEach((tunnel) => {
       tunnel.on('message', (data: WorkerMessage) => {
-        if (data) {
-          this.newWorkerMessage(data, stream$);
-        }
+        this.newWorkerMessage(data, stream$);
       });
 
       this.workers.forEach((worker, index) => {
@@ -68,11 +66,14 @@ export class FileWorkerService {
     });
   }
 
-  private newWorkerMessage(message: WorkerMessage, stream$: Subject<string>) {
+  private newWorkerMessage(
+    message: WorkerMessage,
+    stream$: Subject<string>,
+  ): void {
     const { type, value } = message;
 
     if (type === EVENTS.scanResult) {
-      const results: { path: string; isTarget: boolean }[] = value.results;
+      const results: Array<{ path: string; isTarget: boolean }> = value.results;
       const workerId: number = value.workerId;
       this.workersPendingJobs[workerId] = value.pending;
 
@@ -98,7 +99,7 @@ export class FileWorkerService {
   }
 
   /** Jobs are distributed following the round-robin algorithm. */
-  private addJob(job: WorkerJob) {
+  private addJob(job: WorkerJob): void {
     if (job.job === 'explore') {
       const tunnel = this.tunnels[this.index];
       const message: WorkerMessage = { type: EVENTS.explore, value: job.value };
@@ -110,13 +111,13 @@ export class FileWorkerService {
     }
   }
 
-  private checkJobComplete(stream$: Subject<string>) {
+  private checkJobComplete(stream$: Subject<string>): void {
     this.updateStats();
     const isCompleted = this.getPendingJobs() === 0;
     if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
-      this.killWorkers();
       stream$.complete();
+      void this.killWorkers();
     }
   }
 
@@ -135,7 +136,7 @@ export class FileWorkerService {
     }
   }
 
-  private setWorkerConfig(params: IListDirParams) {
+  private setWorkerConfig(params: IListDirParams): void {
     this.tunnels.forEach((tunnel) =>
       tunnel.postMessage({
         type: EVENTS.exploreConfig,
@@ -144,11 +145,13 @@ export class FileWorkerService {
     );
   }
 
-  private killWorkers() {
+  private async killWorkers(): Promise<void> {
     for (let i = 0; i < this.workers.length; i++) {
       this.workers[i].removeAllListeners();
       this.tunnels[i].removeAllListeners();
-      this.workers[i].terminate();
+      await this.workers[i]
+        .terminate()
+        .catch((error) => this.logger.error(error));
     }
     this.workers = [];
     this.tunnels = [];
@@ -158,7 +161,7 @@ export class FileWorkerService {
     return this.workersPendingJobs.reduce((acc, x) => x + acc, 0);
   }
 
-  private updateStats() {
+  private updateStats(): void {
     this.searchStatus.pendingSearchTasks = this.pendingJobs;
     this.searchStatus.completedSearchTasks = this.totalJobs;
     this.searchStatus.workersJobs = this.workersPendingJobs;

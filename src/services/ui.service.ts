@@ -6,10 +6,6 @@ export class UiService {
   // public stdout: NodeJS.WriteStream = process.stdout;
   uiComponents: BaseUi[] = [];
 
-  constructor() {}
-
-  prepareUi() {}
-
   setRawMode(set = true): void {
     this.stdin.setRawMode(set);
     process.stdin.resume();
@@ -22,14 +18,16 @@ export class UiService {
     this.print(instruction);
   }
 
-  add(component: BaseUi) {
+  add(component: BaseUi): void {
     this.uiComponents.push(component);
   }
 
-  renderAll() {
+  renderAll(): void {
     this.clear();
     this.uiComponents.forEach((component) => {
-      if (component.visible) component.render();
+      if (component.visible) {
+        component.render();
+      }
     });
   }
 

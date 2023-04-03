@@ -4,7 +4,7 @@ import { BaseUi } from '../base.ui.js';
 import colors from 'colors';
 
 export class GeneralUi extends BaseUi {
-  render() {}
+  render(): void {}
 
   printExitMessage(stats: { spaceReleased: string }): void {
     const { spaceReleased } = stats;

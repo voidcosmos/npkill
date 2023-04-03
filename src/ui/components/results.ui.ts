@@ -27,8 +27,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   readonly delete$ = new Subject<IFolder>();
   readonly showErrors$ = new Subject<null>();
 
-  private config: IConfig = DEFAULT_CONFIG;
-  private KEYS = {
+  private readonly config: IConfig = DEFAULT_CONFIG;
+  private readonly KEYS = {
     up: () => this.cursorUp(),
     down: () => this.cursorDown(),
     space: () => this.delete(),
@@ -46,23 +46,23 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   };
 
   constructor(
-    private resultsService: ResultsService,
-    private consoleService: ConsoleService,
-    private fileService: FileService,
+    private readonly resultsService: ResultsService,
+    private readonly consoleService: ConsoleService,
+    private readonly fileService: FileService,
   ) {
     super();
   }
 
   onKeyInput({ name }: IKeyPress): void {
-    const action = this.KEYS[name];
-    if (!action) {
+    const action: (() => void) | undefined = this.KEYS[name];
+    if (action === undefined) {
       return;
     }
     action();
     this.render();
   }
 
-  render() {
+  render(): void {
     if (!this.haveResultsAfterCompleted) {
       this.noResults();
       return;
@@ -72,39 +72,40 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.flush();
   }
 
-  clear() {
+  clear(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
   }
 
-  completeSearch() {
+  completeSearch(): void {
     if (this.resultsService.results.length === 0) {
       this.haveResultsAfterCompleted = false;
       this.render();
     }
   }
 
-  private printResults() {
+  private printResults(): void {
     const visibleFolders = this.getVisibleScrollFolders();
 
-    visibleFolders.map((folder: IFolder, index: number) => {
+    visibleFolders.forEach((folder: IFolder, index: number) => {
       const row = MARGINS.ROW_RESULTS_START + index;
       this.printFolderRow(folder, row);
     });
   }
 
-  private noResults() {
-    const message = `No ${colors[DEFAULT_CONFIG.warningColor](
+  private noResults(): void {
+    const targetFolderColored: string = colors[DEFAULT_CONFIG.warningColor](
       this.config.targetFolder,
-    )} found!`;
+    );
+    const message = `No ${targetFolderColored} found!`;
     this.printAt(message, {
       x: Math.floor(this.terminal.columns / 2 - message.length / 2),
       y: MARGINS.ROW_RESULTS_START + 2,
     });
   }
 
-  private printFolderRow(folder: IFolder, row: number) {
+  private printFolderRow(folder: IFolder, row: number): void {
     this.clearLine(row);
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
@@ -118,8 +119,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       this.paintBgRow(row);
     }
 
-    if (folder.isDangerous)
+    if (folder.isDangerous) {
       path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
+    }
 
     this.printAt(path, {
       x: MARGINS.FOLDER_COLUMN_START,
@@ -142,14 +144,19 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   } {
     const folderText = this.getFolderPathText(folder);
     let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
-    let daysSinceLastModification =
-      folder.modificationTime !== null && folder.modificationTime > 0
-        ? Math.floor(
-            (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
-          ) + 'd'
-        : '--';
+    let daysSinceLastModification: string;
 
-    if (folder.isDangerous) daysSinceLastModification = 'xx';
+    if (folder.modificationTime !== null && folder.modificationTime > 0) {
+      daysSinceLastModification = `${Math.floor(
+        (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+      )}d`;
+    } else {
+      daysSinceLastModification = '--';
+    }
+
+    if (folder.isDangerous) {
+      daysSinceLastModification = 'xx';
+    }
 
     // Align to right
     const alignMargin = 4 - daysSinceLastModification.length;
@@ -163,7 +170,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       folderSize = `${space}${size.toFixed(DECIMALS_SIZE)} MB`;
     }
 
-    const folderSizeText = folder.size ? folderSize : '--';
+    const folderSizeText = folder.size > 0 ? folderSize : '--';
 
     return {
       path: folderText,
@@ -211,13 +218,13 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     let scrollRequired = 0;
 
-    if (shouldScrollUp)
+    if (shouldScrollUp) {
       scrollRequired =
         this.getRow(this.resultIndex) -
         MARGINS.ROW_RESULTS_START -
         this.scroll -
         1;
-    else if (shouldScrollDown) {
+    } else if (shouldScrollDown) {
       scrollRequired =
         this.getRow(this.resultIndex) - this.terminal.rows - this.scroll + 2;
 
@@ -226,7 +233,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       }
     }
 
-    if (scrollRequired) {
+    if (scrollRequired !== 0) {
       this.scrollFolderResults(scrollRequired);
     }
   }
@@ -241,7 +248,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.clear();
   }
 
-  private moveCursor(index: number) {
+  private moveCursor(index: number): void {
     this.previousIndex = this.resultIndex;
     this.resultIndex += index;
 
@@ -262,12 +269,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
     const ACTIONS = {
-      // tslint:disable-next-line: object-literal-key-quotes
       deleted: () => {
         cutFrom += INFO_MSGS.DELETED_FOLDER.length;
         text = INFO_MSGS.DELETED_FOLDER + text;
       },
-      // tslint:disable-next-line: object-literal-key-quotes
       deleting: () => {
         cutFrom += INFO_MSGS.DELETING_FOLDER.length;
         text = INFO_MSGS.DELETING_FOLDER + text;
@@ -278,7 +283,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       },
     };
 
-    if (ACTIONS[folder.status]) ACTIONS[folder.status]();
+    if (ACTIONS[folder.status] !== undefined) {
+      ACTIONS[folder.status]();
+    }
 
     text = this.consoleService.shortenText(
       text,
@@ -296,13 +303,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private paintStatusFolderPath(folderString: string, action: string): string {
     const TRANSFORMATIONS = {
-      // tslint:disable-next-line: object-literal-key-quotes
       deleted: (text) =>
         text.replace(
           INFO_MSGS.DELETED_FOLDER,
           colors.green(INFO_MSGS.DELETED_FOLDER),
         ),
-      // tslint:disable-next-line: object-literal-key-quotes
       deleting: (text) =>
         text.replace(
           INFO_MSGS.DELETING_FOLDER,
@@ -315,7 +320,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         ),
     };
 
-    return TRANSFORMATIONS[action]
+    return TRANSFORMATIONS[action] !== undefined
       ? TRANSFORMATIONS[action](folderString)
       : folderString;
   }
@@ -339,7 +344,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     );
   }
 
-  private paintBgRow(row: number) {
+  private paintBgRow(row: number): void {
     const startPaint = MARGINS.FOLDER_COLUMN_START;
     const endPaint = this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN;
     let paintSpaces = '';
@@ -354,13 +359,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private delete() {
+  private delete(): void {
     const folder = this.resultsService.results[this.resultIndex];
-
-    if (!folder) {
-      return;
-    }
-
     this.delete$.next(folder);
   }
 
@@ -374,11 +374,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     return index + MARGINS.ROW_RESULTS_START;
   }
 
-  private showErrorsPopup() {
+  private showErrorsPopup(): void {
     this.showErrors$.next(null);
   }
 
-  private clamp(num: number, min: number, max: number) {
+  private clamp(num: number, min: number, max: number): number {
     return Math.min(Math.max(num, min), max);
   }
 }

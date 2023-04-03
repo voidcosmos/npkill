@@ -12,7 +12,9 @@ const workerEmitter: EventEmitter = new EventEmitter();
 const port1Emitter: EventEmitter = new EventEmitter();
 const port2Emitter: EventEmitter = new EventEmitter();
 const workerPostMessageMock = jest.fn();
-const workerTerminateMock = jest.fn();
+const workerTerminateMock = jest
+  .fn()
+  .mockImplementation(() => new Promise(() => {}));
 const messageChannelPort1Mock = jest.fn();
 const messageChannelPort2Mock = jest.fn();
 
@@ -102,7 +104,7 @@ describe('FileWorkerService', () => {
       const val1 = ['/sample/path1/node_modules'];
       const val2 = ['/sample/path2/node_modules', '/sample/path3/otherDir'];
 
-      const result = [];
+      const result: string[] = [];
       stream$.subscribe((data) => {
         result.push(data);
         if (result.length === 3) {

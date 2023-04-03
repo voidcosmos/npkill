@@ -6,35 +6,35 @@ import { Subject } from 'rxjs';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 
 export class LogsUi extends BaseUi implements InteractiveUi {
+  readonly close$ = new Subject<null>();
   private size: IPosition;
   private errors = 0;
-  private pages = [];
+  private pages: string[][] = [];
   private actualPage = 0;
 
-  readonly close$ = new Subject<null>();
-
-  private KEYS = {
+  private readonly KEYS = {
     e: () => this.cyclePages(),
     escape: () => this.close(),
   };
 
-  constructor(private logger: LoggerService) {
+  constructor(private readonly logger: LoggerService) {
     super();
     this.setVisible(false, false);
   }
+
   onKeyInput({ name }: IKeyPress): void {
     const action = this.KEYS[name];
-    if (!action) {
+    if (action === undefined) {
       return;
     }
     action();
   }
 
-  render() {
+  render(): void {
     this.renderPopup();
   }
 
-  private cyclePages() {
+  private cyclePages(): void {
     this.actualPage++;
     if (this.actualPage >= this.pages.length) {
       this.actualPage = 0;
@@ -45,22 +45,36 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     this.render();
   }
 
-  private close() {
+  private close(): void {
     this.close$.next(null);
   }
 
-  private renderPopup() {
+  private renderPopup(): void {
     this.calculatePosition();
     for (let x = this.position.x; x < this.size.x; x++) {
       for (let y = this.position.y; y < this.size.y; y++) {
         let char = ' ';
-        if (x === this.position.x || x === this.size.x - 1) char = '│';
-        if (y === this.position.y) char = '═';
-        if (y === this.size.y - 1) char = '─';
-        if (x === this.position.x && y === this.position.y) char = '╒';
-        if (x === this.size.x - 1 && y === this.position.y) char = '╕';
-        if (x === this.position.x && y === this.size.y - 1) char = '╰';
-        if (x === this.size.x - 1 && y === this.size.y - 1) char = '╯';
+        if (x === this.position.x || x === this.size.x - 1) {
+          char = '│';
+        }
+        if (y === this.position.y) {
+          char = '═';
+        }
+        if (y === this.size.y - 1) {
+          char = '─';
+        }
+        if (x === this.position.x && y === this.position.y) {
+          char = '╒';
+        }
+        if (x === this.size.x - 1 && y === this.position.y) {
+          char = '╕';
+        }
+        if (x === this.position.x && y === this.size.y - 1) {
+          char = '╰';
+        }
+        if (x === this.size.x - 1 && y === this.size.y - 1) {
+          char = '╯';
+        }
 
         this.printAt(colors['bgBlack'](char), { x, y });
       }
@@ -71,7 +85,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
 
     const messagesByLine: string[] = this.logger
       .get('error')
-      .map((entry, index) => index + '. ' + entry.message)
+      .map((entry, index) => `${index}. ${entry.message}`)
       .reduce((acc: string[], line) => {
         acc = [...acc, ...this.chunkString(line, width)];
         return acc;
@@ -97,7 +111,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
     this.printHeader();
   }
 
-  private printHeader() {
+  private printHeader(): void {
     const titleText = ' Errors ';
     this.printAt(this.stylizeText(titleText), {
       x: Math.floor((this.size.x + titleText.length / 2) / 2) - this.position.x,
@@ -124,16 +138,17 @@ export class LogsUi extends BaseUi implements InteractiveUi {
   }
 
   private chunkString(str: string, length: number): string[] {
-    return [...str.match(new RegExp('.{1,' + length + '}', 'g'))];
+    const matches = str.match(new RegExp(`.{1,${length}}`, 'g'));
+    return matches !== null ? [...matches] : [];
   }
 
-  private chunkArray(arr: string[], size: number) {
+  private chunkArray(arr: string[], size: number): string[][] {
     return arr.length > size
       ? [arr.slice(0, size), ...this.chunkArray(arr.slice(size), size)]
       : [arr];
   }
 
-  private calculatePosition() {
+  private calculatePosition(): void {
     const posX = 5;
     const posY = 4;
     this.setPosition({ x: posX, y: posY }, false);

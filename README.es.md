@@ -76,12 +76,11 @@ $ npx npkill
 
 Por defecto, Npkill comenzará la búsqueda de node_modules comenzando en la ruta donde se ejecute el comando `npkill`.
 
-Muévete por los distintos directorios listados con  <kbd>↓</kbd> <kbd>↑</kbd>, y utiliza <kbd>Space</kbd> para borrar el directorio seleccionado.
+Muévete por los distintos directorios listados con <kbd>↓</kbd> <kbd>↑</kbd>, y utiliza <kbd>Space</kbd> para borrar el directorio seleccionado.
 
 También puedes usar <kbd>j</kbd> y <kbd>k</kbd> para moverte por los resultados.
 
 Para salir de Npkill, utiliza <kbd>Q</kbd>, o si te sientes valiente, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
-
 
 **¡Importante!** Algunas aplicaciones que están instaladas en el sistema necesitan su directorio node_modules para funcionar, y borrarlo puede romperlas. NPKILL te mostrará un :warning: para que sepas que tienes que tener cuidado.
 
@@ -89,21 +88,21 @@ Para salir de Npkill, utiliza <kbd>Q</kbd>, o si te sientes valiente, <kbd>Ctrl<
 
 ## Opciones
 
-| ARGUMENTO                        | DESCRIPCIÓN                                                                                                                                    |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| -c, --bg-color                   | Cambia el color de selección de la fila. _(Colores disponibles: **azul**, cyan, magenta, blanco, rojo y amarillo)_                             |
-| -d, --directory                  | Permite seleccionar el directorio desde el que comienza la búsqueda. Por defecto, se empieza en .                                              |
-| -D, --delete-all                 | ACTUALMENTE DESHABILITADA. Borra automáticamente todos los node_modules que se encuentran                                                      |
-| -e, --hide-errors                | Esconde los errores en el caso de que ocurra alguno                                                                                            |
-| -E, --exclude                    | Excluye directorios de la búsqueda (la lista de directorios debe estar entre comillas dobles "", cada directorio separado por ',' Ejemplo: "ignore1, ignore2")  |
-| -f, --full                       | Comienza la búsqueda en el home del usuario (ejemplo: "/home/user" en Linux) |
-| -gb                              | Muestra el tamaño en Gigabytes en lugar de en Megabytes.                                                                                                |
-| -h, --help, ?                    | Muestra esta página de ayuda y finaliza                                                                                                        |
-| -nu, --no-check-update           | No comprobar si hay actualizaciones al iniciar la aplicación                                                                                   |
-| -s, --sort                       | Ordena los resultados por: `size`, `path` or `last-mod`                                                                                        |
-| -t, --target                     | Especifica el nombre del directorio que se buscará (por defecto es node_modules)                                                               |
-| -x, --exclude-hidden-directories | Excluye directorios ocultos (directorios "dot") de la búsqueda                                                                                 |
-| -v, --version                    | Muestra la versión de Npkill                                                                                                                   |
+| ARGUMENTO                        | DESCRIPCIÓN                                                                                                                                                    |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -c, --bg-color                   | Cambia el color de selección de la fila. _(Colores disponibles: **azul**, cyan, magenta, blanco, rojo y amarillo)_                                             |
+| -d, --directory                  | Permite seleccionar el directorio desde el que comienza la búsqueda. Por defecto, se empieza en .                                                              |
+| -D, --delete-all                 | ACTUALMENTE DESHABILITADA. Borra automáticamente todos los node_modules que se encuentran                                                                      |
+| -e, --hide-errors                | Esconde los errores en el caso de que ocurra alguno                                                                                                            |
+| -E, --exclude                    | Excluye directorios de la búsqueda (la lista de directorios debe estar entre comillas dobles "", cada directorio separado por ',' Ejemplo: "ignore1, ignore2") |
+| -f, --full                       | Comienza la búsqueda en el home del usuario (ejemplo: "/home/user" en Linux)                                                                                   |
+| -gb                              | Muestra el tamaño en Gigabytes en lugar de en Megabytes.                                                                                                       |
+| -h, --help, ?                    | Muestra esta página de ayuda y finaliza                                                                                                                        |
+| -nu, --no-check-update           | No comprobar si hay actualizaciones al iniciar la aplicación                                                                                                   |
+| -s, --sort                       | Ordena los resultados por: `size`, `path` or `last-mod`                                                                                                        |
+| -t, --target                     | Especifica el nombre del directorio que se buscará (por defecto es node_modules)                                                                               |
+| -x, --exclude-hidden-directories | Excluye directorios ocultos (directorios "dot") de la búsqueda                                                                                                 |
+| -v, --version                    | Muestra la versión de Npkill                                                                                                                                   |
 
 **Precaución:** _Algunos comandos pueden cambiar en versiones futuras_
 
@@ -145,7 +144,7 @@ npkill -d '~/more projects' -gb --sort size --target vendor
 npkill -d 'projects' --exclude "progress, ignore-this"
 ```
 
-- Borra automáticamente todos los node_modules que se encuentren en el directorio _backups_:
+- Borra automáticamente todos los **node_modules** que se encuentren en el directorio _backups_:
 
 ```bash
 # Deshabilitado por razones de seguridad (puedes utilizar esta opción en la versión 0.2.4 bajo tu propia responsabilidad)

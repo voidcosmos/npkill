@@ -11,12 +11,7 @@ import colors from 'colors';
 export class HeaderUi extends BaseUi {
   programVersion: string;
 
-  constructor() {
-    super();
-  }
-
   render(): void {
-    ///////////////////////////
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
     this.printAt(
@@ -24,18 +19,16 @@ export class HeaderUi extends BaseUi {
       UI_POSITIONS.TUTORIAL_TIP,
     );
 
-    if (this.programVersion) {
+    if (this.programVersion !== undefined) {
       this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
     }
 
-    ///////////////////////////
     // Columns headers
     this.printAt(colors.gray(INFO_MSGS.HEADER_COLUMNS), {
       x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
 
-    ///////////////////////////
     // npkill stats
     this.printAt(
       colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),

@@ -13,7 +13,7 @@ import { BaseUi } from '../base.ui.js';
 import colors from 'colors';
 
 export class HelpUi extends BaseUi {
-  constructor(private consoleService: ConsoleService) {
+  constructor(private readonly consoleService: ConsoleService) {
     super();
   }
 
@@ -21,14 +21,14 @@ export class HelpUi extends BaseUi {
     throw new Error('Method not implemented.');
   }
 
-  show() {
+  show(): void {
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
     this.print(HELP_HEADER + '\n\n');
     this.print(HELP_PROGRESSBAR + '\n\n');
 
     let lineCount = 0;
-    OPTIONS.map((option, index) => {
+    OPTIONS.forEach((option, index) => {
       this.printAtHelp(
         option.arg.reduce((text, arg) => text + ', ' + arg),
         {
@@ -41,7 +41,7 @@ export class HelpUi extends BaseUi {
         this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
       );
 
-      description.map((line) => {
+      description.forEach((line) => {
         this.printAtHelp(line, {
           x: UI_HELP.X_DESCRIPTION_OFFSET,
           y: index + UI_HELP.Y_OFFSET + lineCount,
@@ -56,7 +56,7 @@ export class HelpUi extends BaseUi {
     });
   }
 
-  clear() {
+  clear(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
@@ -70,7 +70,7 @@ export class HelpUi extends BaseUi {
     }
   }
 
-  private setCursorAtHelp({ x, y }: IPosition): void {
+  private setCursorAtHelp({ x }: IPosition): void {
     this.print(ansiEscapes.cursorTo(x));
   }
 }
