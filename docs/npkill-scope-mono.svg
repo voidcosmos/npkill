@@ -2,20 +2,20 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="58.724789mm"
    height="58.724789mm"
    viewBox="0 0 58.724789 58.724789"
    version="1.1"
    id="svg5272"
-   inkscape:version="0.92.4 5da689c313, 2019-01-14"
-   sodipodi:docname="npkill-scope-mono.svg">
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="npkill-scope-mono.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs5266" />
   <sodipodi:namedview
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="74.162919"
-     inkscape:cy="101.77427"
+     inkscape:zoom="3.959798"
+     inkscape:cx="94.954339"
+     inkscape:cy="75.130096"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -35,11 +35,14 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1366"
-     inkscape:window-height="724"
+     inkscape:window-width="1920"
+     inkscape:window-height="1039"
      inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1" />
+     inkscape:window-y="20"
+     inkscape:window-maximized="1"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata5269">
     <rdf:RDF>
@@ -57,6 +60,12 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-21.286415,-207.91737)">
+    <circle
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.07;stroke-linecap:round;stop-color:#000000"
+       id="path938"
+       cx="50.648808"
+       cy="237.27985"
+       r="29.362394" />
     <path
        style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#ce0b10;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.54912162;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        d="m 50.648199,207.91737 c -16.201114,0 -29.361785,13.1619 -29.361784,29.36301 0,16.20111 13.160672,29.36178 29.361784,29.36178 16.201112,0 29.363005,-13.16067 29.363005,-29.36178 6e-6,-16.20111 -13.161893,-29.36301 -29.363005,-29.36301 z m 0,2.55 c 14.823463,0 26.813007,11.98954 26.813007,26.81301 0,14.82346 -11.989544,26.813 -26.813007,26.813 -14.823465,0 -26.813005,-11.98954 -26.813005,-26.813 -2e-6,-14.82347 11.989539,-26.81301 26.813005,-26.81301 z"

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://npkill.js.org/img/npkill-text-clean.svg" width="320" alt="npkill logo" />
+  <img src="https://npkill.js.org/img/npkill-text-outlined.svg" width="320" alt="npkill logo" />
   <img src="https://npkill.js.org/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
 </p>
 <p align="center">
