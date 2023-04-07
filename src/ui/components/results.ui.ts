@@ -165,9 +165,12 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     if (!this.config.folderSizeInGB) {
       const size = this.fileService.convertGBToMB(folder.size);
-      const sizeText = size.toFixed(DECIMALS_SIZE);
-      const space = ' '.repeat(6 - sizeText.length);
-      folderSize = `${space}${size.toFixed(DECIMALS_SIZE)} MB`;
+      // Prevent app crash when folder size is +999MB.
+      const decimals = size < 999 ? DECIMALS_SIZE : 1;
+      const sizeText = size.toFixed(decimals);
+      const OFFSET_COLUMN = 6;
+      const space = ' '.repeat(OFFSET_COLUMN - sizeText.length);
+      folderSize = `${space}${sizeText} MB`;
     }
 
     const folderSizeText = folder.size > 0 ? folderSize : '--';
