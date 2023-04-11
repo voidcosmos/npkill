@@ -52,8 +52,9 @@ export class LoggerService {
     writeFileSync(path, content);
   }
 
-  getSuggestLogfilePath(): string {
-    return `${tmpdir()}/npkill-${LATEST_TAG}.log`;
+  getSuggestLogFilePath(): string {
+    const filename = `npkill-${LATEST_TAG}.log`;
+    return join(tmpdir(), filename);
   }
 
   private rotateLogFile(newLogPath: string): void {

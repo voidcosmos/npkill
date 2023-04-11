@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { normalize } from 'path';
 
 const writeFileSyncMock = jest.fn();
 const renameFileSyncMock = jest.fn();
@@ -101,22 +102,22 @@ describe('LoggerService', () => {
 
   describe('getSuggestLogfilePath', () => {
     it('the path should includes the os tmp dir', () => {
-      const path = logger.getSuggestLogfilePath();
-      expect(path.includes('/tmpDir')).toBeTruthy();
+      const path = logger.getSuggestLogFilePath();
+      expect(path.includes(normalize('/tmpDir'))).toBeTruthy();
     });
   });
 
   describe('LogFile rotation', () => {
     it('should not rotate file if not exist', () => {
       existsSyncMock.mockReturnValue(false);
-      const path = logger.getSuggestLogfilePath();
+      const path = logger.getSuggestLogFilePath();
       logger.saveToFile(path);
       expect(renameFileSyncMock).not.toBeCalled();
     });
 
     it('should rotate file if exist', () => {
       existsSyncMock.mockReturnValue(true);
-      const path = logger.getSuggestLogfilePath();
+      const path = logger.getSuggestLogFilePath();
       logger.saveToFile(path);
       const expectedOldPath = path.replace('latest', 'old');
       expect(renameFileSyncMock).toBeCalledWith(path, expectedOldPath);

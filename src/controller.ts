@@ -487,7 +487,7 @@ export class Controller {
     this.uiService.print('\n');
     this.uiService.setRawMode(false);
     this.uiService.setCursorVisible(true);
-    const logPath = this.logger.getSuggestLogfilePath();
+    const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
     process.exit(1);
   }
@@ -498,7 +498,7 @@ export class Controller {
     this.uiService.setCursorVisible(true);
     this.printExitMessage();
     this.logger.info('Thank for using npkill. Bye!');
-    const logPath = this.logger.getSuggestLogfilePath();
+    const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
     process.exit();
   }
