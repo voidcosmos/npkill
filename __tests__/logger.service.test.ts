@@ -1,9 +1,13 @@
 import { jest } from '@jest/globals';
 
 const writeFileSyncMock = jest.fn();
+const renameFileSyncMock = jest.fn();
+const existsSyncMock = jest.fn();
 jest.unstable_mockModule('fs', () => {
   return {
     writeFileSync: writeFileSyncMock,
+    existsSync: existsSyncMock,
+    renameSync: renameFileSyncMock,
     default: jest.fn(),
   };
 });
@@ -100,22 +104,22 @@ describe('LoggerService', () => {
       const path = logger.getSuggestLogfilePath();
       expect(path.includes('/tmpDir')).toBeTruthy();
     });
+  });
 
-    it('should return uniq paths', () => {
-      const changeDate = (date: string) =>
-        jest.useFakeTimers().setSystemTime(new Date(date));
-      changeDate('2026-01-01 10:20:16:36');
+  describe('LogFile rotation', () => {
+    it('should not rotate file if not exist', () => {
+      existsSyncMock.mockReturnValue(false);
+      const path = logger.getSuggestLogfilePath();
+      logger.saveToFile(path);
+      expect(renameFileSyncMock).not.toBeCalled();
+    });
 
-      const path1 = logger.getSuggestLogfilePath();
-      changeDate('2026-01-01 10:20:16:37');
-
-      const path2 = logger.getSuggestLogfilePath();
-      changeDate('2026-01-01 10:20:16:38');
-
-      const path3 = logger.getSuggestLogfilePath();
-
-      const isSamePath = path1 === path2 || path1 === path3 || path2 === path3;
-      expect(isSamePath).not.toBeTruthy();
+    it('should rotate file if exist', () => {
+      existsSyncMock.mockReturnValue(true);
+      const path = logger.getSuggestLogfilePath();
+      logger.saveToFile(path);
+      const expectedOldPath = path.replace('latest', 'old');
+      expect(renameFileSyncMock).toBeCalledWith(path, expectedOldPath);
     });
   });
 
