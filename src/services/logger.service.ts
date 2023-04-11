@@ -1,11 +1,15 @@
 import { tmpdir } from 'os';
-import { writeFileSync } from 'fs';
+import { existsSync, renameSync, writeFileSync } from 'fs';
+import { basename, dirname, join } from 'path';
 
 interface LogEntry {
   type: 'info' | 'error';
   timestamp: number;
   message: string;
 }
+
+const LATEST_TAG = 'latest';
+const OLD_TAG = 'old';
 
 export class LoggerService {
   private log: LogEntry[] = [];
@@ -44,12 +48,23 @@ export class LoggerService {
       return log + line;
     }, '');
 
+    this.rotateLogFile(path);
     writeFileSync(path, content);
   }
 
   getSuggestLogfilePath(): string {
-    const timestamp = new Date().getTime();
-    return `${tmpdir()}/npkill-${timestamp}.log`;
+    return `${tmpdir()}/npkill-${LATEST_TAG}.log`;
+  }
+
+  private rotateLogFile(newLogPath: string): void {
+    if (!existsSync(newLogPath)) {
+      return; // Rotation is not necessary
+    }
+    const basePath = dirname(newLogPath);
+    const logName = basename(newLogPath);
+    const oldLogName = logName.replace(LATEST_TAG, OLD_TAG);
+    const oldLogPath = join(basePath, oldLogName);
+    renameSync(newLogPath, oldLogPath);
   }
 
   private addToLog(entry: LogEntry): void {
