@@ -50,10 +50,7 @@ export class HelpUi extends BaseUi {
       });
     });
 
-    this.printAt(HELP_FOOTER + '\n', {
-      x: 0,
-      y: lineCount * 2 + 2,
-    });
+    this.print(HELP_FOOTER + '\n');
   }
 
   clear(): void {
