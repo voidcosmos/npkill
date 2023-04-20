@@ -78,7 +78,7 @@ export const OPTIONS: ICliOptions[] = [
 
 export const HELP_HEADER = `This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.
  ┌------ CONTROLS --------------------
- 🭲 SPACE:                 delete selected result
+ 🭲 SPACE, DEL:            delete selected result
  🭲 Cursor UP, k:          move up
  🭲 Cursor DOWN, j:        move down
  🭲 h, d, Ctrl+d, PgUp:    move one page down
