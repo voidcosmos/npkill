@@ -82,7 +82,7 @@ $ npx npkill
 
 By default, npkill will scan for node_modules starting at the path where `npkill` command is executed.
 
-Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> to delete the selected folder.
+Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> or <kbd>Del</kbd> to delete the selected folder.
 You can also use <kbd>j</kbd> and <kbd>k</kbd> to move between the results
 
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.

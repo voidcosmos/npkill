@@ -32,6 +32,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     up: () => this.cursorUp(),
     down: () => this.cursorDown(),
     space: () => this.delete(),
+    delete: () => this.delete(),
     j: () => this.cursorDown(),
     k: () => this.cursorUp(),
     h: () => this.cursorPageDown(),
