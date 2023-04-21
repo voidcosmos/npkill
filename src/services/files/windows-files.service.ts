@@ -23,7 +23,10 @@ export class WindowsFilesService extends FileService {
     return new Observable((observer) => {
       getSize(path, (err: Error | null, size: number) => {
         if (err !== null) {
-          throw err;
+          // It seems that sometimes err returns undefined?
+          const error =
+            err ?? new Error(`Could not calculate the size of ${path}`);
+          throw error;
         }
         observer.next(super.convertBytesToKB(size));
         observer.complete();
