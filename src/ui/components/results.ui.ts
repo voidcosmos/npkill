@@ -26,6 +26,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   readonly delete$ = new Subject<IFolder>();
   readonly showErrors$ = new Subject<null>();
+  readonly openFolder$ = new Subject<void>();
 
   private readonly config: IConfig = DEFAULT_CONFIG;
   private readonly KEYS = {
@@ -44,6 +45,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     home: () => this.cursorFirstResult(),
     end: () => this.cursorLastResult(),
     e: () => this.showErrorsPopup(),
+    o: () => this.openFolder(),
   };
 
   constructor(
@@ -52,6 +54,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     private readonly fileService: FileService,
   ) {
     super();
+  }
+
+  private openFolder() {
+    this.openFolder$.next();
   }
 
   onKeyInput({ name }: IKeyPress): void {
