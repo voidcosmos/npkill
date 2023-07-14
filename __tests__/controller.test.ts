@@ -26,6 +26,7 @@ jest.unstable_mockModule('../src/ui/components/results.ui.js', () => ({
   ResultsUi: jest.fn(() => ({
     delete$: { subscribe: jest.fn() },
     showErrors$: { subscribe: jest.fn() },
+    openFolder$: { subscribe: jest.fn() },
   })),
 }));
 jest.unstable_mockModule('../src/ui/components/logs.ui.js', () => ({
