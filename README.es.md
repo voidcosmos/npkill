@@ -80,6 +80,8 @@ Muévete por los distintos directorios listados con <kbd>↓</kbd> <kbd>↑</kbd
 
 También puedes usar <kbd>j</kbd> y <kbd>k</kbd> para moverte por los resultados.
 
+Puedes abrir el directorio donde se aloja el resultado seleccionado pulsando <kbd>o</kbd>.
+
 Para salir de Npkill, utiliza <kbd>Q</kbd>, o si te sientes valiente, <kbd>Ctrl</kbd> + <kbd>c</kbd>.
 
 **¡Importante!** Algunas aplicaciones que están instaladas en el sistema necesitan su directorio node_modules para funcionar, y borrarlo puede romperlas. NPKILL te mostrará un :warning: para que sepas que tienes que tener cuidado.
