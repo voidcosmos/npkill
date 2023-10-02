@@ -84,6 +84,7 @@ export const HELP_HEADER = `This tool allows you to list any node_modules direct
  🭲 h, d, Ctrl+d, PgUp:    move one page down
  🭲 l, u, Ctrl+u, PgDown:  move one page up
  🭲 home, end:             move to the first and last result
+ 🭲 o:                     open the parent directory of the selected result
  🭲 e:                     show errors popup, next page`;
 
 export const HELP_PROGRESSBAR = ` ------- PROGRESS BAR --------------------

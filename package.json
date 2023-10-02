@@ -51,6 +51,7 @@
     "colors": "1.4.0",
     "get-folder-size": "^2.0.0",
     "node-emoji": "^1.10.0",
+    "open-file-explorer": "^1.0.2",
     "rxjs": "^7.5.7"
   },
   "devDependencies": {

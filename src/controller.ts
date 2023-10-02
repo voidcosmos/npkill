@@ -47,6 +47,7 @@ import _dirname from './dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
+import openExplorer from 'open-file-explorer';
 
 export class Controller {
   private folderRoot = '';
@@ -118,6 +119,7 @@ export class Controller {
     this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
     this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
     this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
+    this.uiResults.openFolder$.subscribe((path) => openExplorer(path));
 
     // Activate the main interactive component
     this.activeComponent = this.uiResults;
