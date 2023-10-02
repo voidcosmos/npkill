@@ -17,6 +17,7 @@ import { INFO_MSGS } from '../../constants/messages.constants.js';
 import { ResultsService } from '../../services/results.service.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
+import { resolve } from 'node:path';
 
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
@@ -26,7 +27,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   readonly delete$ = new Subject<IFolder>();
   readonly showErrors$ = new Subject<null>();
-  readonly openFolder$ = new Subject<void>();
+  readonly openFolder$ = new Subject<string>();
 
   private readonly config: IConfig = DEFAULT_CONFIG;
   private readonly KEYS = {
@@ -56,8 +57,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     super();
   }
 
-  private openFolder() {
-    this.openFolder$.next();
+  private openFolder(): void {
+    const folder = this.resultsService.results[this.resultIndex];
+    const parentPath = resolve(folder.path, '..');
+    this.openFolder$.next(parentPath);
   }
 
   onKeyInput({ name }: IKeyPress): void {
