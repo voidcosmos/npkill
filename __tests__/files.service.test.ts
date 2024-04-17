@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 import fs from 'fs';
 
-import rimraf from 'rimraf';
 import { IFileService } from '../src/interfaces/file-service.interface.js';
+import * as rimraf from 'rimraf';
 
 let statSyncReturnMock = (): { isDirectory: () => boolean } | null => null;
 let accessSyncReturnMock = (): boolean | null => null;
