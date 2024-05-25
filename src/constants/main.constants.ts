@@ -42,6 +42,7 @@ export const UI_POSITIONS: IUiPosition = {
   SPACE_RELEASED: { x: 50, y: 4 },
   STATUS: { x: 50, y: 5 },
   STATUS_BAR: { x: 50, y: 6 },
+  PENDING_TASKS: { x: 50, y: 7 }, //Starting position. It will then be replaced.
   TOTAL_SPACE: { x: 50, y: 3 },
   ERRORS_COUNT: { x: 50, y: 2 },
   TUTORIAL_TIP: { x: 1, y: 7 },

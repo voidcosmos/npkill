@@ -6,6 +6,7 @@ export class SearchStatus {
   public pendingStatsCalculation = 0;
   public completedStatsCalculation = 0;
   public resultsFound = 0;
+  public pendingDeletions = 0;
   public workerStatus: WorkerStatus = 'stopped';
   public workersJobs;
 

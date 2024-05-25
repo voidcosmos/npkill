@@ -15,6 +15,8 @@ export class StatusUi extends BaseUi {
   private text = '';
   private barNormalizedWidth = 0;
   private barClosing = false;
+  private showProgressBar = true;
+  private pendingTasksPosition = { ...UI_POSITIONS.PENDING_TASKS };
   private readonly searchEnd$ = new Subject();
   private readonly SEARCH_STATES = {
     stopped: () => this.startingSearch(),
@@ -53,7 +55,31 @@ export class StatusUi extends BaseUi {
 
   render(): void {
     this.printAt(this.text, UI_POSITIONS.STATUS);
-    this.renderProgressBar();
+
+    if (this.showProgressBar) {
+      this.renderProgressBar();
+    }
+
+    this.renderPendingTasks();
+  }
+
+  private renderPendingTasks(): void {
+    this.clearPendingTasks();
+    if (this.searchStatus.pendingDeletions === 0) {
+      return;
+    }
+
+    const { pendingDeletions } = this.searchStatus;
+    const text = pendingDeletions > 1 ? 'pending tasks' : 'pending task ';
+    this.printAt(
+      colors.yellow(`${pendingDeletions} ${text}`),
+      this.pendingTasksPosition,
+    );
+  }
+
+  private clearPendingTasks(): void {
+    const PENDING_TASK_LENGHT = 15;
+    this.printAt(' '.repeat(PENDING_TASK_LENGHT), this.pendingTasksPosition);
   }
 
   private renderProgressBar(): void {
@@ -128,12 +154,23 @@ export class StatusUi extends BaseUi {
     this.barClosing = true;
     if (this.barNormalizedWidth < 0) {
       this.barNormalizedWidth = 0;
+      this.showProgressBar = false;
+
+      this.movePendingTaskToTop();
       return;
     }
     this.barNormalizedWidth -= 0.05;
 
     this.renderProgressBar();
     setTimeout(() => this.animateClose(), SPINNER_INTERVAL);
+  }
+
+  /** When the progress bar disappears, "pending tasks" will move up one
+      position. */
+  private movePendingTaskToTop(): void {
+    this.clearPendingTasks();
+    this.pendingTasksPosition = { ...UI_POSITIONS.STATUS_BAR };
+    this.renderPendingTasks();
   }
 
   private printProgressBar(progressBar: string): void {

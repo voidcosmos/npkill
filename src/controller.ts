@@ -447,9 +447,8 @@ export class Controller {
           return;
         }
         const parentFolder = path.join(nodeFolder.path, '../');
-        const result = await this.fileService.getRecentModificationInDir(
-          parentFolder,
-        );
+        const result =
+          await this.fileService.getRecentModificationInDir(parentFolder);
         nodeFolder.modificationTime = result;
         this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
       }),
@@ -527,18 +526,23 @@ export class Controller {
 
     this.logger.info(`Deleting ${folder.path}`);
     folder.status = 'deleting';
+    this.searchStatus.pendingDeletions++;
+    this.uiStatus.render();
     this.printFoldersSection();
 
     this.fileService
       .deleteDir(folder.path)
       .then(() => {
         folder.status = 'deleted';
-        this.uiStats.render();
+        this.searchStatus.pendingDeletions--;
+        this.uiStatus.render();
         this.printFoldersSection();
         this.logger.info(`Deleted ${folder.path}`);
       })
       .catch((e) => {
         folder.status = 'error-deleting';
+        this.searchStatus.pendingDeletions--;
+        this.uiStatus.render();
         this.printFoldersSection();
         this.newError(e.message);
       });
