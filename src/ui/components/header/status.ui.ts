@@ -78,20 +78,16 @@ export class StatusUi extends BaseUi {
           -(Math.cos(Math.PI * this.barNormalizedWidth) - 1) / 2;
 
     const barSearchMax = pendingSearchTasks + completedSearchTasks;
-    const barStatsMax = completedStatsCalculation + pendingStatsCalculation;
+    const barStatsMax = pendingStatsCalculation + completedStatsCalculation;
 
-    let barLenght = proportional(barSearchMax, BAR_WIDTH, barSearchMax);
-    if (barLenght === 0) {
-      barLenght = BAR_WIDTH;
-    }
-    barLenght = Math.floor(barLenght * modifier);
+    let barLenght = Math.ceil(BAR_WIDTH * modifier);
 
     let searchBarLenght = proportional(
       completedSearchTasks,
       BAR_WIDTH,
       barSearchMax,
     );
-    searchBarLenght = Math.floor(searchBarLenght * modifier);
+    searchBarLenght = Math.ceil(searchBarLenght * modifier);
 
     let doneBarLenght = proportional(
       completedStatsCalculation,
@@ -142,10 +138,10 @@ export class StatusUi extends BaseUi {
 
   private printProgressBar(progressBar: string): void {
     if (this.barClosing) {
-      const postX = Math.round(
-        UI_POSITIONS.STATUS_BAR.x +
-          (BAR_WIDTH / 2) * (1 - this.barNormalizedWidth),
-      );
+      const postX =
+        UI_POSITIONS.STATUS_BAR.x -
+        1 +
+        Math.round((BAR_WIDTH / 2) * (1 - this.barNormalizedWidth));
       // Clear previus bar
       this.printAt(' '.repeat(BAR_WIDTH), UI_POSITIONS.STATUS_BAR);
 
