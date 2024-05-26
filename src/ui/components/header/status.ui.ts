@@ -78,7 +78,7 @@ export class StatusUi extends BaseUi {
   }
 
   private clearPendingTasks(): void {
-    const PENDING_TASK_LENGHT = 15;
+    const PENDING_TASK_LENGHT = 17;
     this.printAt(' '.repeat(PENDING_TASK_LENGHT), this.pendingTasksPosition);
   }
 

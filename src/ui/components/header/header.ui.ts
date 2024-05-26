@@ -14,17 +14,14 @@ export class HeaderUi extends BaseUi {
   render(): void {
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
-    this.printAt(
-      colors.yellow(colors.inverse(HELP_MSGS.BASIC_USAGE)),
-      UI_POSITIONS.TUTORIAL_TIP,
-    );
+    this.renderHeader();
 
     if (this.programVersion !== undefined) {
       this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
     }
 
     // Columns headers
-    this.printAt(colors.gray(INFO_MSGS.HEADER_COLUMNS), {
+    this.printAt(colors.bgYellow(colors.black(INFO_MSGS.HEADER_COLUMNS)), {
       x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
       y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
     });
@@ -37,6 +34,16 @@ export class HeaderUi extends BaseUi {
     this.printAt(
       colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
       UI_POSITIONS.SPACE_RELEASED,
+    );
+  }
+
+  private renderHeader(): void {
+    const { columns } = this.terminal;
+    const spaceToFill = Math.max(0, columns - HELP_MSGS.BASIC_USAGE.length - 2);
+    const text = HELP_MSGS.BASIC_USAGE + ' '.repeat(spaceToFill);
+    this.printAt(
+      colors.yellow(colors.inverse(text)),
+      UI_POSITIONS.TUTORIAL_TIP,
     );
   }
 }

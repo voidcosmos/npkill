@@ -535,6 +535,7 @@ export class Controller {
       .then(() => {
         folder.status = 'deleted';
         this.searchStatus.pendingDeletions--;
+        this.uiStats.render();
         this.uiStatus.render();
         this.printFoldersSection();
         this.logger.info(`Deleted ${folder.path}`);
