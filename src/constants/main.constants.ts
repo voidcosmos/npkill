@@ -39,12 +39,12 @@ export const UI_POSITIONS: IUiPosition = {
   INITIAL: { x: 0, y: 0 },
   VERSION: { x: 38, y: 5 },
   NEW_UPDATE_FOUND: { x: 42, y: 0 },
-  SPACE_RELEASED: { x: 50, y: 4 },
-  STATUS: { x: 50, y: 5 },
-  STATUS_BAR: { x: 50, y: 6 },
-  PENDING_TASKS: { x: 50, y: 7 }, //Starting position. It will then be replaced.
-  TOTAL_SPACE: { x: 50, y: 3 },
-  ERRORS_COUNT: { x: 50, y: 2 },
+  SPACE_RELEASED: { x: 50, y: 3 },
+  STATUS: { x: 50, y: 4 },
+  STATUS_BAR: { x: 50, y: 5 },
+  PENDING_TASKS: { x: 50, y: 6 }, //Starting position. It will then be replaced.
+  TOTAL_SPACE: { x: 50, y: 2 },
+  ERRORS_COUNT: { x: 50, y: 1 },
   TUTORIAL_TIP: { x: 1, y: 7 },
 };
 
