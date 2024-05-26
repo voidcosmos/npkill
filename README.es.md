@@ -104,6 +104,7 @@ Para salir de Npkill, utiliza <kbd>Q</kbd>, o si te sientes valiente, <kbd>Ctrl<
 | -s, --sort                       | Ordena los resultados por: `size`, `path` or `last-mod`                                                                                                        |
 | -t, --target                     | Especifica el nombre del directorio que se buscará (por defecto es node_modules)                                                                               |
 | -x, --exclude-hidden-directories | Excluye directorios ocultos (directorios "dot") de la búsqueda                                                                                                 |
+| --dry-run                        | No borra nada (simula un tiempo de borrado aleatorio)                                                                                                          |
 | -v, --version                    | Muestra la versión de Npkill                                                                                                                                   |
 
 **Precaución:** _Algunos comandos pueden cambiar en versiones futuras_

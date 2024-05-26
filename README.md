@@ -109,6 +109,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                  |
 | -t, --target                     | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
 | -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                    |
+| --dry-run                        | It does not delete anything (will simulate it with a random delay).                                                                            |
 | -v, --version                    | Show npkill version                                                                                                                            |
 
 **Warning:** _In future versions some commands may change_

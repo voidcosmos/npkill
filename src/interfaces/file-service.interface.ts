@@ -5,6 +5,7 @@ export interface IFileService {
   getFolderSize: (path: string) => Observable<number>;
   listDir: (params: IListDirParams) => Observable<string>;
   deleteDir: (path: string) => Promise<boolean>;
+  fakeDeleteDir: (_path: string) => Promise<boolean>;
   isValidRootFolder: (path: string) => boolean;
   convertKbToGB: (kb: number) => number;
   convertBytesToKB: (bytes: number) => number;

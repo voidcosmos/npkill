@@ -28,6 +28,7 @@ export const INFO_MSGS = {
   SEARCH_COMPLETED: 'Search completed ',
   SPACE_RELEASED: 'Space saved: ',
   TOTAL_SPACE: 'Releasable space: ',
+  DRY_RUN: 'Dry run mode',
 };
 
 export const ERROR_MSG = {

@@ -12,6 +12,13 @@ export abstract class FileService implements IFileService {
   abstract listDir(params: IListDirParams): Observable<string>;
   abstract deleteDir(path: string): Promise<boolean>;
 
+  /** Used for dry-run or testing. */
+  async fakeDeleteDir(_path: string): Promise<boolean> {
+    const randomDelay = Math.floor(Math.random() * 4000 + 200);
+    await new Promise((r) => setTimeout(r, randomDelay));
+    return true;
+  }
+
   isValidRootFolder(path: string): boolean {
     let stat: Stats;
     try {

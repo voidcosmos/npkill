@@ -56,7 +56,7 @@ Estamos fazendo esforço para internacionalizar a documentação do Npkill. Aqui
 
 # :cloud: Instalação
 
-Você nem precisa instalá-lo para usar! 
+Você nem precisa instalá-lo para usar!
 Basta usar o seguinte comando:
 
 ```bash
@@ -96,21 +96,22 @@ Para sair, use <kbd>Q</kbd> ou <kbd>Ctrl</kbd> + <kbd>c</kbd> se você estiver s
 
 ## Opções
 
-| Comando                         | Descrição                                                                                                                                    |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| -c, --bg-color                   | Troca a cor de destaque da linha. _(Disponível: **blue**, cyan, magenta, white, red e yellow)_                                                      |
-| -d, --directory                  | Defina o diretório a partir do qual iniciar a pesquisa. Por padrão, o ponto de partida é a raiz is .                                                               |
-| -D, --delete-all                 | DESABILITADO. Apaga automaticamente todas pastas node_modules que foram encontradas                                                               |
-| -e, --hide-errors                | Oculta erros                                                                                                                             |
+| Comando                          | Descrição                                                                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -c, --bg-color                   | Troca a cor de destaque da linha. _(Disponível: **blue**, cyan, magenta, white, red e yellow)_                                                                      |
+| -d, --directory                  | Defina o diretório a partir do qual iniciar a pesquisa. Por padrão, o ponto de partida é a raiz is .                                                                |
+| -D, --delete-all                 | DESABILITADO. Apaga automaticamente todas pastas node_modules que foram encontradas                                                                                 |
+| -e, --hide-errors                | Oculta erros                                                                                                                                                        |
 | -E, --exclude                    | Excluir diretórios da pesquisa (a lista de diretórios deve estar entre aspas duplas "", com cada diretório separado por vírgula ','). Exemplo: "ignorar1, ignorar2" |
-| -f, --full                       | Iniciar a pesquisa a partir do diretório pessoal do usuário (exemplo: "/home/user" no Linux)                                                                     |
-| -gb                              | Mostra as pastas em Gigabytes ao invés de Megabytes.                                                                                                |
-| -h, --help, ?                    | Mostrar a página de ajuda e sair                                                                                                                   |
-| -nu, --no-check-update           | Não verificar atualizações na inicialização                                                                                                             |
-| -s, --sort                       | Ordenar resultados por: `size` (tamanho), `path`(localização) ou `last-mod`(última modificação)                                                                                                  |
-| -t, --target                     | Especifique o nome dos diretórios que deseja pesquisar (por padrão, é node_modules)                                                          |
-| -x, --exclude-hidden-directories | Excluir diretórios ocultos ("diretórios com ponto") da pesquisa.                                                                                    |
-| -v, --version                    | Mostrar versão do npkill                                                                                                                             |
+| -f, --full                       | Iniciar a pesquisa a partir do diretório pessoal do usuário (exemplo: "/home/user" no Linux)                                                                        |
+| -gb                              | Mostra as pastas em Gigabytes ao invés de Megabytes.                                                                                                                |
+| -h, --help, ?                    | Mostrar a página de ajuda e sair                                                                                                                                    |
+| -nu, --no-check-update           | Não verificar atualizações na inicialização                                                                                                                         |
+| -s, --sort                       | Ordenar resultados por: `size` (tamanho), `path`(localização) ou `last-mod`(última modificação)                                                                     |
+| -t, --target                     | Especifique o nome dos diretórios que deseja pesquisar (por padrão, é node_modules)                                                                                 |
+| -x, --exclude-hidden-directories | Excluir diretórios ocultos ("diretórios com ponto") da pesquisa.                                                                                                    |
+| --dry-run                        | Não exclui nada (irá simular com um atraso aleatório).                                                                                                              |
+| -v, --version                    | Mostrar versão do npkill                                                                                                                                            |
 
 **Aviso:** _No futuro alguns comandos podem mudar_
 

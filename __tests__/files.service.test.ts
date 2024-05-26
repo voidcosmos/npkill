@@ -21,6 +21,8 @@ jest.unstable_mockModule('fs', () => {
   };
 });
 
+jest.useFakeTimers();
+
 const FileServiceConstructor = //@ts-ignore
   (await import('../src/services/files/files.service.js')).FileService;
 abstract class FileService extends FileServiceConstructor {}
@@ -238,6 +240,13 @@ describe('File Service', () => {
         expect(existsSync(path)).toBeFalsy();
       }
       expect(isDirEmpty(testFolder)).toBeTruthy();
+    });
+  });
+
+  describe('fakeDeleteDir', () => {
+    it('Should return a Promise', () => {
+      const result = fileService.fakeDeleteDir('/sample/path');
+      expect(result).toBeInstanceOf(Promise);
     });
   });
 });

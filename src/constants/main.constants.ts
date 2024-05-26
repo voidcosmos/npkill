@@ -12,6 +12,7 @@ export const DEFAULT_CONFIG: IConfig = {
   warningColor: 'brightYellow',
   checkUpdates: true,
   deleteAll: false,
+  dryRun: false,
   exclude: ['.git'],
   excludeHiddenDirectories: false,
   folderSizeInGB: false,
@@ -38,6 +39,7 @@ export const UI_POSITIONS: IUiPosition = {
   FOLDER_SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
   INITIAL: { x: 0, y: 0 },
   VERSION: { x: 38, y: 5 },
+  DRY_RUN_NOTICE: { x: 1, y: 6 },
   NEW_UPDATE_FOUND: { x: 42, y: 0 },
   SPACE_RELEASED: { x: 50, y: 3 },
   STATUS: { x: 50, y: 4 },

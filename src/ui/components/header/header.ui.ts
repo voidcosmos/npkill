@@ -10,6 +10,7 @@ import colors from 'colors';
 
 export class HeaderUi extends BaseUi {
   programVersion: string;
+  isDryRun: boolean;
 
   render(): void {
     // banner and tutorial
@@ -18,6 +19,13 @@ export class HeaderUi extends BaseUi {
 
     if (this.programVersion !== undefined) {
       this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
+    }
+
+    if (this.isDryRun) {
+      this.printAt(
+        colors.black(colors.bgMagenta(` ${INFO_MSGS.DRY_RUN} `)),
+        UI_POSITIONS.DRY_RUN_NOTICE,
+      );
     }
 
     // Columns headers

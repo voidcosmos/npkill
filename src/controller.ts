@@ -185,6 +185,11 @@ export class Controller {
       this.config.excludeHiddenDirectories = true;
     }
 
+    if (options.isTrue('dry-run')) {
+      this.config.dryRun = true;
+      this.uiHeader.isDryRun = true;
+    }
+
     // Remove trailing slash from folderRoot for consistency
     this.folderRoot = this.folderRoot.replace(/[/\\]$/, '');
   }
@@ -530,8 +535,12 @@ export class Controller {
     this.uiStatus.render();
     this.printFoldersSection();
 
-    this.fileService
-      .deleteDir(folder.path)
+    const deleteFunction: (path: string) => Promise<boolean> = this.config
+      .dryRun
+      ? this.fileService.fakeDeleteDir
+      : this.fileService.deleteDir;
+
+    deleteFunction(folder.path)
       .then(() => {
         folder.status = 'deleted';
         this.searchStatus.pendingDeletions--;

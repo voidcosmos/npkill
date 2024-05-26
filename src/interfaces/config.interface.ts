@@ -10,4 +10,5 @@ export interface IConfig {
   targetFolder: string;
   exclude: string[];
   excludeHiddenDirectories: boolean;
+  dryRun: boolean;
 }

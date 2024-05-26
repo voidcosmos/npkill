@@ -70,6 +70,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'exclude-hidden-directories',
   },
   {
+    arg: ['--dry-run'],
+    description:
+      'It does not delete anything (will simulate it with a random delay).',
+    name: 'dry-run',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',
