@@ -136,8 +136,7 @@ export class Controller {
       process.exit();
     }
     if (options.isTrue('delete-all')) {
-      this.showObsoleteMessage();
-      process.exit();
+      this.config.deleteAll = true;
     }
     if (options.isTrue('sort-by')) {
       if (!this.isValidSortParam(options.getString('sort-by'))) {
@@ -222,10 +221,6 @@ export class Controller {
 
   private showProgramVersion(): void {
     this.uiService.print('v' + this.getVersion());
-  }
-
-  private showObsoleteMessage(): void {
-    this.uiService.print(INFO_MSGS.DISABLED);
   }
 
   private setColor(color: string): void {
@@ -416,6 +411,11 @@ export class Controller {
           return this.calculateFolderStats(nodeFolder);
         }, 2),
         tap(() => this.searchStatus.completeStatCalculation()),
+        tap((folder) => {
+          if (this.config.deleteAll) {
+            this.deleteFolder(folder);
+          }
+        }),
       )
       .subscribe({
         next: () => this.printFoldersSection(),
@@ -438,7 +438,7 @@ export class Controller {
     return params;
   }
 
-  private calculateFolderStats(nodeFolder: IFolder): Observable<void> {
+  private calculateFolderStats(nodeFolder: IFolder): Observable<IFolder> {
     this.logger.info(`Calculating stats for ${nodeFolder.path}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => {
@@ -449,13 +449,14 @@ export class Controller {
         // Saves resources by not scanning a result that is probably not of interest
         if (nodeFolder.isDangerous) {
           nodeFolder.modificationTime = -1;
-          return;
+          return nodeFolder;
         }
         const parentFolder = path.join(nodeFolder.path, '../');
         const result =
           await this.fileService.getRecentModificationInDir(parentFolder);
         nodeFolder.modificationTime = result;
         this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
+        return nodeFolder;
       }),
       tap(() => {
         this.finishFolderStats();

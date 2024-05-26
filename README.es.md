@@ -94,7 +94,7 @@ Para salir de Npkill, utiliza <kbd>Q</kbd>, o si te sientes valiente, <kbd>Ctrl<
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | -c, --bg-color                   | Cambia el color de selección de la fila. _(Colores disponibles: **azul**, cyan, magenta, blanco, rojo y amarillo)_                                             |
 | -d, --directory                  | Permite seleccionar el directorio desde el que comienza la búsqueda. Por defecto, se empieza en .                                                              |
-| -D, --delete-all                 | ACTUALMENTE DESHABILITADA. Borra automáticamente todos los node_modules que se encuentran                                                                      |
+| -D, --delete-all                 | Borra automáticamente todos los node_modules que se encuentren. Recomendable utilizar junto a `-x`                                                             |
 | -e, --hide-errors                | Esconde los errores en el caso de que ocurra alguno                                                                                                            |
 | -E, --exclude                    | Excluye directorios de la búsqueda (la lista de directorios debe estar entre comillas dobles "", cada directorio separado por ',' Ejemplo: "ignore1, ignore2") |
 | -f, --full                       | Comienza la búsqueda en el home del usuario (ejemplo: "/home/user" en Linux)                                                                                   |

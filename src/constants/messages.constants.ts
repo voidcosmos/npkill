@@ -6,10 +6,6 @@ export const INFO_MSGS = {
   DELETED_FOLDER: '[DELETED] ',
   DELETING_FOLDER: '[..deleting..] ',
   ERROR_DELETING_FOLDER: '[ ERROR ] ',
-
-  DISABLED:
-    '[-D, --delete-all] option has been disabled until future versions. ' +
-    'Please restart npkill without this option.',
   HEADER_COLUMNS: 'Last_mod   Size',
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
