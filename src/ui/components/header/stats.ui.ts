@@ -4,8 +4,27 @@ import { ResultsService } from '../../../services/results.service.js';
 import { LoggerService } from '../../../services/logger.service.js';
 import colors from 'colors';
 import { IConfig } from 'src/interfaces/config.interface.js';
+import { IPosition } from 'src/interfaces/ui-positions.interface.js';
+
+interface ShowStatProps {
+  description: string;
+  value: string;
+  lastValueKey: 'totalSpace' | 'spaceReleased';
+  position: IPosition;
+  updateColor: 'green' | 'yellow';
+}
 
 export class StatsUi extends BaseUi {
+  private lastValues = {
+    totalSpace: '',
+    spaceReleased: '',
+  };
+
+  private timeouts = {
+    totalSpace: setTimeout(() => {}),
+    spaceReleased: setTimeout(() => {}),
+  };
+
   constructor(
     private readonly config: IConfig,
     private readonly resultsService: ResultsService,
@@ -17,18 +36,62 @@ export class StatsUi extends BaseUi {
   render(): void {
     const { totalSpace, spaceReleased } = this.resultsService.getStats();
 
-    const totalSpacePosition = { ...UI_POSITIONS.TOTAL_SPACE };
-    const spaceReleasedPosition = { ...UI_POSITIONS.SPACE_RELEASED };
+    this.showStat({
+      description: INFO_MSGS.TOTAL_SPACE,
+      value: totalSpace,
+      lastValueKey: 'totalSpace',
+      position: UI_POSITIONS.TOTAL_SPACE,
+      updateColor: 'yellow',
+    });
 
-    totalSpacePosition.x += INFO_MSGS.TOTAL_SPACE.length;
-    spaceReleasedPosition.x += INFO_MSGS.SPACE_RELEASED.length;
-
-    this.printAt(totalSpace, totalSpacePosition);
-    this.printAt(spaceReleased, spaceReleasedPosition);
+    this.showStat({
+      description: INFO_MSGS.SPACE_RELEASED,
+      value: spaceReleased,
+      lastValueKey: 'spaceReleased',
+      position: UI_POSITIONS.SPACE_RELEASED,
+      updateColor: 'green',
+    });
 
     if (this.config.showErrors) {
       this.showErrorsCount();
     }
+  }
+
+  /** Print the value of the stat and if it is a different value from the
+   * previous run, highlight it for a while.
+   */
+  private showStat({
+    description,
+    value,
+    lastValueKey,
+    position,
+    updateColor,
+  }: ShowStatProps): void {
+    if (value === this.lastValues[lastValueKey]) {
+      return;
+    }
+
+    const statPosition = { ...position };
+    statPosition.x += description.length;
+
+    // If is first render, initialize.
+    if (!this.lastValues[lastValueKey]) {
+      this.printAt(value, statPosition);
+      this.lastValues[lastValueKey] = value;
+      return;
+    }
+
+    this.printAt(colors[updateColor](`${value} ▲`), statPosition);
+
+    if (this.timeouts[lastValueKey]) {
+      clearTimeout(this.timeouts[lastValueKey]);
+    }
+
+    this.timeouts[lastValueKey] = setTimeout(() => {
+      this.printAt(value + '  ', statPosition);
+    }, 700);
+
+    this.lastValues[lastValueKey] = value;
   }
 
   private showErrorsCount(): void {
