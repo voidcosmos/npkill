@@ -1,5 +1,9 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../src/models/start-parameters.model.js';
+import { Subject } from 'rxjs';
+import { IFolder } from '../src/interfaces/index.js';
+
+const resultsUiDeleteMock$ = new Subject<IFolder>();
 
 jest.mock('../src/dirname.js', () => {
   return {};
@@ -9,11 +13,12 @@ jest.unstable_mockModule('../src/ui/components/header/header.ui.js', () => ({
   HeaderUi: jest.fn(),
 }));
 jest.unstable_mockModule('../src/ui/components/header/stats.ui.js', () => ({
-  StatsUi: jest.fn(),
+  StatsUi: jest.fn(() => ({ render: jest.fn() })),
 }));
 jest.unstable_mockModule('../src/ui/components/header/status.ui.js', () => ({
   StatusUi: jest.fn(() => ({
     start: jest.fn(),
+    render: jest.fn(),
   })),
 }));
 jest.unstable_mockModule('../src/ui/components/general.ui.js', () => ({
@@ -24,9 +29,10 @@ jest.unstable_mockModule('../src/ui/components/help.ui.js', () => ({
 }));
 jest.unstable_mockModule('../src/ui/components/results.ui.js', () => ({
   ResultsUi: jest.fn(() => ({
-    delete$: { subscribe: jest.fn() },
+    delete$: resultsUiDeleteMock$,
     showErrors$: { subscribe: jest.fn() },
     openFolder$: { subscribe: jest.fn() },
+    render: jest.fn(),
   })),
 }));
 jest.unstable_mockModule('../src/ui/components/logs.ui.js', () => ({
@@ -47,9 +53,20 @@ class Controller extends ControllerConstructor {}
 
 describe('Controller test', () => {
   let controller;
+
+  const filesServiceDeleteMock = jest
+    .fn<() => Promise<boolean>>()
+    .mockResolvedValue(true);
+  const filesServiceFakeDeleteMock = jest
+    .fn<() => Promise<boolean>>()
+    .mockResolvedValue(true);
+
   const linuxFilesServiceMock: any = {
     getFileContent: jest.fn().mockReturnValue('{}'),
     isValidRootFolder: jest.fn().mockReturnValue('true'),
+    isSafeToDelete: jest.fn().mockReturnValue('true'),
+    deleteDir: filesServiceDeleteMock,
+    fakeDeleteDir: filesServiceFakeDeleteMock,
   };
   const spinnerServiceMock: any = jest.fn();
   const UpdateServiceMock: any = jest.fn();
@@ -148,6 +165,7 @@ describe('Controller test', () => {
 
     afterEach(() => {
       jest.spyOn(process, 'exit').mockReset();
+      mockParameters({});
     });
 
     it('#showHelp should called if --help flag is present and exit', () => {
@@ -162,14 +180,6 @@ describe('Controller test', () => {
       const functionSpy = jest
         .spyOn(controller, 'showProgramVersion')
         .mockImplementation(() => ({}));
-      expect(() => controller.init()).toThrow();
-      expect(functionSpy).toHaveBeenCalledTimes(1);
-      expect(exitSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('#showProgramVersion should called if --delete-all flag is present and exit', () => {
-      mockParameters({ 'delete-all': true });
-      const functionSpy = spyMethod('showObsoleteMessage');
       expect(() => controller.init()).toThrow();
       expect(functionSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledTimes(1);
@@ -192,6 +202,50 @@ describe('Controller test', () => {
       });
 
       // TODO test that check sortBy property is changed
+    });
+
+    describe('--dry-run', () => {
+      let testFolder: IFolder;
+
+      beforeEach(() => {
+        testFolder = {
+          path: '/my/path',
+          size: 0,
+          modificationTime: 0,
+          isDangerous: false,
+          status: 'live',
+        };
+        jest.clearAllMocks();
+      });
+
+      it('Should call normal deleteDir function when no --dry-run is included', () => {
+        controller.init();
+
+        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
+        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
+
+        resultsUiDeleteMock$.next(testFolder);
+
+        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
+        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(1);
+        expect(filesServiceDeleteMock).toHaveBeenCalledWith(testFolder.path);
+      });
+
+      it('Should call fake deleteDir function instead of deleteDir', () => {
+        mockParameters({ 'dry-run': true });
+        controller.init();
+
+        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
+        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
+
+        resultsUiDeleteMock$.next(testFolder);
+
+        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
+        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(1);
+        expect(filesServiceFakeDeleteMock).toHaveBeenCalledWith(
+          testFolder.path,
+        );
+      });
     });
   });
 });
