@@ -20,6 +20,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'delete-all',
   },
   {
+    arg: ['-y'],
+    description: 'Avoid displaying a warning when executing --delete-all.',
+    name: 'yes',
+  },
+  {
     arg: ['-e', '--hide-errors'],
     description: 'Hide errors if any.',
     name: 'hide-errors',

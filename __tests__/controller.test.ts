@@ -1,9 +1,10 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../src/models/start-parameters.model.js';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { IFolder } from '../src/interfaces/index.js';
 
 const resultsUiDeleteMock$ = new Subject<IFolder>();
+const setDeleteAllWarningVisibilityMock = jest.fn();
 
 jest.mock('../src/dirname.js', () => {
   return {};
@@ -38,6 +39,13 @@ jest.unstable_mockModule('../src/ui/components/results.ui.js', () => ({
 jest.unstable_mockModule('../src/ui/components/logs.ui.js', () => ({
   LogsUi: jest.fn(() => ({
     close$: { subscribe: jest.fn() },
+  })),
+}));
+jest.unstable_mockModule('../src/ui/components/warning.ui.js', () => ({
+  WarningUi: jest.fn(() => ({
+    setDeleteAllWarningVisibility: setDeleteAllWarningVisibilityMock,
+    render: jest.fn(),
+    confirm$: new Subject(),
   })),
 }));
 jest.unstable_mockModule('../src/ui/base.ui.js', () => ({
@@ -202,6 +210,32 @@ describe('Controller test', () => {
       });
 
       // TODO test that check sortBy property is changed
+    });
+
+    describe('--delete-all', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('Should show a warning before start scan', () => {
+        mockParameters({ 'delete-all': true });
+        expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
+        expect(scanSpy).toHaveBeenCalledTimes(0);
+
+        controller.init();
+        expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(1);
+        expect(scanSpy).toHaveBeenCalledTimes(0);
+      });
+
+      it('Should no show a warning if -y is given', () => {
+        mockParameters({ 'delete-all': true, yes: true });
+        expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
+        expect(scanSpy).toHaveBeenCalledTimes(0);
+
+        controller.init();
+        expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
+        expect(scanSpy).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe('--dry-run', () => {

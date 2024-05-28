@@ -20,6 +20,7 @@ export const DEFAULT_CONFIG: IConfig = {
   showErrors: true,
   sortBy: '',
   targetFolder: 'node_modules',
+  yes: false,
 };
 
 export const MARGINS = {
@@ -35,7 +36,7 @@ export const UI_HELP = {
   Y_OFFSET: 2,
 };
 
-export const UI_POSITIONS: IUiPosition = {
+export const UI_POSITIONS = {
   FOLDER_SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
   INITIAL: { x: 0, y: 0 },
   VERSION: { x: 38, y: 5 },
@@ -48,6 +49,7 @@ export const UI_POSITIONS: IUiPosition = {
   TOTAL_SPACE: { x: 50, y: 2 },
   ERRORS_COUNT: { x: 50, y: 1 },
   TUTORIAL_TIP: { x: 1, y: 7 },
+  WARNINGS: { x: 0, y: 9 },
 };
 
 // export const VALID_KEYS: string[] = [

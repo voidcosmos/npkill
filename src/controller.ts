@@ -38,6 +38,7 @@ import {
   HelpUi,
   HeaderUi,
   GeneralUi,
+  WarningUi,
 } from './ui/index.js';
 
 import { LoggerService } from './services/logger.service.js';
@@ -63,6 +64,7 @@ export class Controller {
   private uiStatus: StatusUi;
   private uiResults: ResultsUi;
   private uiLogs: LogsUi;
+  private uiWarning: WarningUi;
   private activeComponent: InteractiveUi | null = null;
 
   constructor(
@@ -89,12 +91,31 @@ export class Controller {
     this.checkRequirements();
     this.prepareScreen();
     this.setupEventsListener();
-    this.uiStatus.start();
     if (this.config.checkUpdates) {
       this.checkVersion();
     }
 
+    if (this.config.deleteAll && !this.config.yes) {
+      this.showDeleteAllWarning();
+      this.uiWarning.confirm$
+        .pipe(
+          tap(() => {
+            this.activeComponent = this.uiResults;
+            this.uiWarning.setDeleteAllWarningVisibility(false);
+            this.uiService.renderAll();
+            this.scan();
+          }),
+        )
+        .subscribe();
+      return;
+    }
+
     this.scan();
+  }
+
+  private showDeleteAllWarning(): void {
+    this.uiWarning.setDeleteAllWarningVisibility(true);
+    this.activeComponent = this.uiWarning;
   }
 
   private initUi(): void {
@@ -114,6 +135,8 @@ export class Controller {
     this.uiService.add(this.uiGeneral);
     this.uiLogs = new LogsUi(this.logger);
     this.uiService.add(this.uiLogs);
+    this.uiWarning = new WarningUi();
+    this.uiService.add(this.uiWarning);
 
     // Set Events
     this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
@@ -187,6 +210,10 @@ export class Controller {
     if (options.isTrue('dry-run')) {
       this.config.dryRun = true;
       this.uiHeader.isDryRun = true;
+    }
+
+    if (options.isTrue('yes')) {
+      this.config.yes = true;
     }
 
     // Remove trailing slash from folderRoot for consistency
@@ -356,6 +383,7 @@ export class Controller {
   }
 
   private scan(): void {
+    this.uiStatus.start();
     const params: IListDirParams = this.prepareListDirParams();
 
     const isExcludedDangerousDirectory = (path: string): boolean =>
