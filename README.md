@@ -155,7 +155,6 @@ npkill -d 'projects' --exclude "progress, ignore-this"
 - Automatically delete all node_modules that have sneaked into your backups:
 
 ```bash
-# Disabled for security reasons (you can use it in version 0.2.4 at your risk)
 npkill -d ~/backups/ --delete-all
 ```
 

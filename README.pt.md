@@ -156,7 +156,6 @@ npkill -d 'projetos' --exclude "progresso, ignorar"
 - Exclua automaticamente todos os node_modules que tenham entrado em seus backups:
 
 ```bash
-# Desativado por razões de segurança (você pode usar na versão 0.2.4 por sua conta e risco)
 npkill -d ~/backups/ --delete-all
 ```
 
