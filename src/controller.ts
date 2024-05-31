@@ -566,8 +566,8 @@ export class Controller {
 
     const deleteFunction: (path: string) => Promise<boolean> = this.config
       .dryRun
-      ? this.fileService.fakeDeleteDir
-      : this.fileService.deleteDir;
+      ? this.fileService.fakeDeleteDir.bind(this.fileService)
+      : this.fileService.deleteDir.bind(this.fileService);
 
     deleteFunction(folder.path)
       .then(() => {
