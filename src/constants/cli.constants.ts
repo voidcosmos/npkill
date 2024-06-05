@@ -59,7 +59,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-s', '--sort'],
     description:
-      'Sort results by: size, path or date (last time the most recent file was modified in the workspace)',
+      'Sort results by: size, path or last-mod (last time the most recent file was modified in the workspace)',
     name: 'sort-by',
   },
   {
