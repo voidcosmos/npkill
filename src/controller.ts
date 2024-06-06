@@ -434,6 +434,7 @@ export class Controller {
             this.resultsService.sortResults(this.config.sortBy);
             this.uiResults.clear();
           }
+          this.printFoldersSection();
         }),
         mergeMap((nodeFolder) => {
           return this.calculateFolderStats(nodeFolder);
