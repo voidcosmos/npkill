@@ -147,7 +147,7 @@ describe('File Service', () => {
   });
 
   describe('#isDangerous', () => {
-    it('should get false if is considered dangerous', () => {
+    it('should return false for paths that are not considered dangerous', () => {
       expect(
         fileService.isDangerous('/home/apps/myapp/node_modules'),
       ).toBeFalsy();
@@ -155,15 +155,29 @@ describe('File Service', () => {
       expect(
         fileService.isDangerous('/home/user/projects/a/node_modules'),
       ).toBeFalsy();
+      expect(
+        fileService.isDangerous('/Applications/NotAnApp/node_modules'),
+      ).toBeFalsy();
+      expect(
+        fileService.isDangerous('C:\\Users\\User\\Documents\\node_modules'),
+      ).toBeFalsy();
     });
 
-    it('should get true if is not considered dangerous ', () => {
+    it('should return true for paths that are considered dangerous', () => {
       expect(
         fileService.isDangerous('/home/.config/myapp/node_modules'),
       ).toBeTruthy();
       expect(fileService.isDangerous('.apps/node_modules')).toBeTruthy();
       expect(
         fileService.isDangerous('.apps/.sample/node_modules'),
+      ).toBeTruthy();
+      expect(
+        fileService.isDangerous('/Applications/MyApp.app/node_modules'),
+      ).toBeTruthy();
+      expect(
+        fileService.isDangerous(
+          'C:\\Users\\User\\AppData\\Local\\node_modules',
+        ),
       ).toBeTruthy();
     });
   });

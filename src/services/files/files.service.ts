@@ -64,16 +64,26 @@ export abstract class FileService implements IFileService {
     return path.includes(targetFolder);
   }
 
-  /** We consider a directory to be dangerous if it is hidden.
-   *
+  /**
    * > Why dangerous?
    * It is probable that if the node_module is included in some hidden directory, it is
    * required by some application like "spotify", "vscode" or "Discord" and deleting it
    * would imply breaking the application (until the dependencies are reinstalled).
+   *
+   * In the case of macOS applications and Windows AppData directory, these locations often contain
+   * application-specific data or configurations that should not be tampered with. Deleting node_modules
+   * from these locations could potentially disrupt the normal operation of these applications.
    */
   isDangerous(path: string): boolean {
     const hiddenFilePattern = /(^|\/)\.[^/.]/g;
-    return hiddenFilePattern.test(path);
+    const macAppsPattern = /(^|\/)Applications\/[^/]+\.app\//g;
+    const windowsAppDataPattern = /(^|\\)AppData\\/g;
+
+    return (
+      hiddenFilePattern.test(path) ||
+      macAppsPattern.test(path) ||
+      windowsAppDataPattern.test(path)
+    );
   }
 
   async getRecentModificationInDir(path: string): Promise<number> {
