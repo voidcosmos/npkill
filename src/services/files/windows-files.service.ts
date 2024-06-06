@@ -1,8 +1,6 @@
-import getFolderSize from 'get-folder-size';
-
 import { StreamService } from '../index.js';
 
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, map } from 'rxjs';
 import { FileService } from './files.service.js';
 import { WindowsStrategyManager } from '../../strategies/windows-remove-dir.strategy.js';
 import { FileWorkerService } from './files.worker.service.js';
@@ -20,12 +18,9 @@ export class WindowsFilesService extends FileService {
   }
 
   getFolderSize(path: string): Observable<number> {
-    return new Observable((observer) => {
-      getFolderSize.loose(path).then((size) => {
-        observer.next(super.convertBytesToKB(size));
-        observer.complete();
-      });
-    });
+    const stream$ = new Subject<number>();
+    this.fileWorkerService.getFolderSize(stream$, path);
+    return stream$.pipe(map((data) => +data));
   }
 
   listDir(params: IListDirParams): Observable<string> {

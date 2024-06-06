@@ -10,7 +10,7 @@ import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 interface WorkerJob {
-  job: 'explore'; // | 'getSize';
+  job: EVENTS;
   value: { path: string };
 }
 
@@ -29,6 +29,9 @@ export class FileWorkerService {
   private index = 0;
   private workers: Worker[] = [];
   private workersPendingJobs: number[] = [];
+  private getSizePendings: Array<{ path: string; stream$: Subject<number> }> =
+    [];
+
   private pendingJobs = 0;
   private totalJobs = 0;
   private tunnels: MessagePort[] = [];
@@ -44,7 +47,13 @@ export class FileWorkerService {
     this.setWorkerConfig(params);
 
     // Manually add the first job.
-    this.addJob({ job: 'explore', value: { path: params.path } });
+    this.addJob({ job: EVENTS.explore, value: { path: params.path } });
+  }
+
+  getFolderSize(stream$: Subject<number>, path: string): void {
+    //   this.listenEvents(stream$);
+    this.getSizePendings = [...this.getSizePendings, { path, stream$ }];
+    this.addJob({ job: EVENTS.getFolderSize, value: { path } });
   }
 
   private listenEvents(stream$: Subject<string>): void {
@@ -83,9 +92,25 @@ export class FileWorkerService {
           stream$.next(path);
         } else {
           this.addJob({
-            job: 'explore',
+            job: EVENTS.explore,
             value: { path },
           });
+        }
+      });
+
+      this.pendingJobs = this.getPendingJobs();
+      this.checkJobComplete(stream$);
+    }
+
+    if (type === EVENTS.getFolderSizeResult) {
+      const result: { path: string; size: number } = value.results;
+      const workerId: number = value.workerId;
+      this.workersPendingJobs[workerId] = value.pending;
+
+      this.getSizePendings.forEach((pending, index) => {
+        if (pending.path === result.path) {
+          pending.stream$.next(result.size);
+          this.getSizePendings.splice(index, 1);
         }
       });
 
@@ -100,21 +125,20 @@ export class FileWorkerService {
 
   /** Jobs are distributed following the round-robin algorithm. */
   private addJob(job: WorkerJob): void {
-    if (job.job === 'explore') {
-      const tunnel = this.tunnels[this.index];
-      const message: WorkerMessage = { type: EVENTS.explore, value: job.value };
-      tunnel.postMessage(message);
-      this.workersPendingJobs[this.index]++;
-      this.totalJobs++;
-      this.pendingJobs++;
-      this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
-    }
+    const tunnel = this.tunnels[this.index];
+    const message: WorkerMessage = { type: job.job, value: job.value };
+    tunnel.postMessage(message);
+    this.workersPendingJobs[this.index]++;
+    this.totalJobs++;
+    this.pendingJobs++;
+    this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
   }
 
   private checkJobComplete(stream$: Subject<string>): void {
     this.updateStats();
     const isCompleted = this.getPendingJobs() === 0;
-    if (isCompleted) {
+    // TODO &&false only for development purposes.
+    if (isCompleted && false) {
       this.searchStatus.workerStatus = 'finished';
       stream$.complete();
       void this.killWorkers();

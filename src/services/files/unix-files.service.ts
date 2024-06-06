@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 
 import { FileService } from './files.service.js';
 import { IListDirParams } from '../../interfaces/index.js';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, map, tap } from 'rxjs';
 import { StreamService } from '../stream.service.js';
 import { FileWorkerService } from './files.worker.service.js';
 
@@ -14,7 +14,14 @@ export abstract class UnixFilesService extends FileService {
     super();
   }
 
-  abstract override getFolderSize(path: string): Observable<any>;
+  getFolderSize(path: string): Observable<number> {
+    const stream$ = new Subject<number>();
+    this.fileWorkerService.getFolderSize(stream$, path);
+    return stream$.pipe(
+      map((data) => data),
+      // tap((data) => console.log(data)),
+    );
+  }
 
   listDir(params: IListDirParams): Observable<string> {
     const stream$ = new Subject<string>();

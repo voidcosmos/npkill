@@ -7,8 +7,8 @@ export interface IFileService {
   deleteDir: (path: string) => Promise<boolean>;
   fakeDeleteDir: (_path: string) => Promise<boolean>;
   isValidRootFolder: (path: string) => boolean;
-  convertKbToGB: (kb: number) => number;
   convertBytesToKB: (bytes: number) => number;
+  convertBytesToGb: (bytes: number) => number;
   convertGBToMB: (gb: number) => number;
   getFileContent: (path: string) => string;
   isSafeToDelete: (path: string, targetFolder: string) => boolean;

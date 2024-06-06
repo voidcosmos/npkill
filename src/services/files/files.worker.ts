@@ -1,5 +1,5 @@
 import { Dir, Dirent } from 'fs';
-import { opendir } from 'fs/promises';
+import { lstat, opendir, readdir, stat } from 'fs/promises';
 
 import EventEmitter from 'events';
 import { WorkerMessage } from './files.worker.service';
@@ -10,7 +10,7 @@ import { EVENTS, MAX_PROCS } from '../../constants/workers.constants.js';
 
 enum ETaskOperation {
   'explore',
-  'getSize',
+  'getFolderSize',
 }
 interface Task {
   operation: ETaskOperation;
@@ -51,7 +51,15 @@ interface Task {
       }
 
       if (message?.type === EVENTS.explore) {
-        fileWalker.enqueueTask(message.value.path);
+        fileWalker.enqueueTask(message.value.path, ETaskOperation.explore);
+      }
+
+      if (message?.type === EVENTS.getFolderSize) {
+        fileWalker.enqueueTask(
+          message.value.path,
+          ETaskOperation.getFolderSize,
+          true,
+        );
       }
     });
   }
@@ -63,6 +71,20 @@ interface Task {
         value: { results, workerId: id, pending: fileWalker.pendingJobs },
       });
     });
+
+    fileWalker.events.on(
+      'folderSizeResult',
+      (result: { path: string; size: number }) => {
+        tunnel.postMessage({
+          type: EVENTS.getFolderSizeResult,
+          value: {
+            results: result,
+            workerId: id,
+            pending: fileWalker.pendingJobs,
+          },
+        });
+      },
+    );
   }
 })();
 
@@ -82,8 +104,17 @@ class FileWalker {
     this.searchConfig = params;
   }
 
-  enqueueTask(path: string): void {
-    this.taskQueue.push({ path, operation: ETaskOperation.explore });
+  enqueueTask(
+    path: string,
+    operation: ETaskOperation,
+    priorize: boolean = false,
+  ): void {
+    if (priorize) {
+      this.taskQueue.unshift({ path, operation });
+    } else {
+      this.taskQueue.push({ path, operation });
+    }
+
     this.processQueue();
   }
 
@@ -113,6 +144,42 @@ class FileWalker {
     if (this.taskQueue.length === 0 && this.procs === 0) {
       this.completeAll();
     }
+  }
+
+  private async runGetFolderSize(path: string): Promise<void> {
+    this.updateProcs(1);
+
+    try {
+      const size = await this.getFolderSize(path).catch(() => 0);
+      this.events.emit('folderSizeResult', { path, size });
+    } catch (_) {
+      this.completeTask();
+    }
+  }
+
+  async getFolderSize(dir: string): Promise<number> {
+    async function calculateDirectorySize(directory: string): Promise<number> {
+      const entries = await readdir(directory, { withFileTypes: true });
+
+      const tasks = entries.map(async (entry) => {
+        const fullPath = join(directory, entry.name);
+
+        if (entry.isDirectory()) {
+          // Ignore errors.
+          return calculateDirectorySize(fullPath).catch(() => 0);
+        } else if (entry.isFile()) {
+          const fileStat = await lstat(fullPath);
+          return fileStat.size;
+        }
+
+        return 0;
+      });
+
+      const sizes = await Promise.all(tasks);
+      return sizes.reduce((total, size) => total + size, 0);
+    }
+
+    return calculateDirectorySize(dir);
   }
 
   private newDirEntry(path: string, entry: Dirent, results: any[]): void {
@@ -160,17 +227,31 @@ class FileWalker {
 
   private processQueue(): void {
     while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
-      const path = this.taskQueue.shift()?.path;
+      const task = this.taskQueue.shift();
+
+      if (task === null || task === undefined) {
+        return;
+      }
+
+      const path = task.path;
+
       if (path === undefined || path === '') {
         return;
       }
 
-      // Ignore as other mechanisms (pending/completed tasks) are used to
-      // check the progress of this.
-      this.run(path).then(
-        () => {},
-        () => {},
-      );
+      if (task.operation === ETaskOperation.explore) {
+        this.run(path).then(
+          () => {},
+          () => {},
+        );
+      }
+
+      if (task.operation === ETaskOperation.getFolderSize) {
+        this.runGetFolderSize(path).then(
+          () => {},
+          () => {},
+        );
+      }
     }
   }
 
