@@ -1,4 +1,4 @@
-import getSize from 'get-folder-size';
+import getFolderSize from 'get-folder-size';
 
 import { StreamService } from '../index.js';
 
@@ -21,13 +21,7 @@ export class WindowsFilesService extends FileService {
 
   getFolderSize(path: string): Observable<number> {
     return new Observable((observer) => {
-      getSize(path, (err: Error | null, size: number) => {
-        if (err !== null) {
-          // It seems that sometimes err returns undefined?
-          const error =
-            err ?? new Error(`Could not calculate the size of ${path}`);
-          throw error;
-        }
+      getFolderSize.loose(path).then((size) => {
         observer.next(super.convertBytesToKB(size));
         observer.complete();
       });
