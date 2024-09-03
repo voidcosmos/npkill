@@ -25,7 +25,7 @@ npm run release
 
 The release script takes care of 2 things:
 
-- Execute the compilation tasks specified in the gulp file (transpiling, copying the binary, etc.) and leaving the artifact ready in lib
+- Execute the compilation tasks (`npm run build`).
 
 - Start the interactive release process itself.
 
