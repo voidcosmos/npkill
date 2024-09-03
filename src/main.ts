@@ -1,50 +1,34 @@
 import {
   ConsoleService,
   HttpsService,
-  LinuxFilesService,
-  MacFilesService,
   ResultsService,
   SpinnerService,
-  StreamService,
   UpdateService,
-  WindowsFilesService,
-} from './services/index.js';
+} from './cli/services/index.js';
 
-import { Controller } from './controller.js';
-import { IFileService } from './interfaces/file-service.interface.js';
-import { FileWorkerService } from './services/files/files.worker.service.js';
-import { UiService } from './services/ui.service.js';
-import { LoggerService } from './services/logger.service.js';
-import { SearchStatus } from './models/search-state.model.js';
+import { Controller } from './cli/controller.js';
+import { UiService } from './cli/services/ui.service.js';
+import { LoggerService } from './core/services/logger.service.js';
+import { SearchStatus } from './core/interfaces/search-status.model.js';
+import { Npkill } from './core/index.js';
 
-const getOS = (): NodeJS.Platform => process.platform;
+export default (): void => {
+  const logger = new LoggerService();
+  const searchStatus = new SearchStatus();
+  const resultsService = new ResultsService();
 
-const OSService = {
-  linux: LinuxFilesService,
-  win32: WindowsFilesService,
-  darwin: MacFilesService,
+  const npkill = new Npkill({ logger, searchStatus, resultsService });
+
+  const controller = new Controller(
+    npkill,
+    logger,
+    searchStatus,
+    resultsService,
+    new SpinnerService(),
+    new ConsoleService(),
+    new UpdateService(new HttpsService()),
+    new UiService(),
+  );
+
+  controller.init();
 };
-
-const logger = new LoggerService();
-const searchStatus = new SearchStatus();
-
-const fileWorkerService = new FileWorkerService(logger, searchStatus);
-const streamService: StreamService = new StreamService();
-
-const fileService: IFileService = new OSService[getOS()](
-  streamService,
-  fileWorkerService,
-);
-
-export const controller = new Controller(
-  logger,
-  searchStatus,
-  fileService,
-  new SpinnerService(),
-  new ConsoleService(),
-  new UpdateService(new HttpsService()),
-  new ResultsService(),
-  new UiService(),
-);
-
-export default (): void => controller.init();
