@@ -1,4 +1,4 @@
-import { LoggerService } from '../../../core/services/logger.service.js';
+import { LoggerService } from '@core/services/logger.service.js';
 import { InteractiveUi, BaseUi } from '../base.ui.js';
 import colors from 'colors';
 import { IPosition } from '../../interfaces/ui-positions.interface.js';

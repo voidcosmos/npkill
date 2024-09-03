@@ -10,7 +10,7 @@ import { HeavyUi } from '../heavy.ui.js';
 
 import { ConsoleService } from '../../services/console.service.js';
 import { IConfig } from '../../interfaces/config.interface.js';
-import { Folder } from '../../../core/interfaces/folder.interface.js';
+import { Folder } from '@core/interfaces/folder.interface.js';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { INFO_MSGS } from '../../../constants/messages.constants.js';
 import { ResultsService } from '../../services/results.service.js';

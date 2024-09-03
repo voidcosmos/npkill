@@ -34,10 +34,10 @@ import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { FindFolderOptions, Npkill } from '../core/index.js';
-import { LoggerService } from '../core/services/logger.service.js';
-import { SearchStatus } from '../core/interfaces/search-status.model.js';
-import { FileService } from '../core/services/files/files.service.js';
+import { FindFolderOptions, Npkill } from '@core/index.js';
+import { LoggerService } from '@core/services/logger.service.js';
+import { SearchStatus } from '@core/interfaces/search-status.model.js';
+import { FileService } from '@core/services/files/files.service.js';
 
 export class Controller {
   private folderRoot = '';

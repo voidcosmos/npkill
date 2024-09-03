@@ -8,7 +8,7 @@ import {
   SPINNER_INTERVAL,
 } from '../../../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../../../constants/main.constants.js';
-import { SearchStatus } from '../../../../core/interfaces/search-status.model.js';
+import { SearchStatus } from '@core/interfaces/search-status.model.js';
 import {
   BAR_PARTS,
   BAR_WIDTH,
