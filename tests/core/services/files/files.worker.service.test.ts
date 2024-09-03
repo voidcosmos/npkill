@@ -3,7 +3,7 @@ import EventEmitter from 'node:events';
 
 import { Subject } from 'rxjs';
 import { EVENTS } from '../src/constants/workers.constants';
-import { IListDirParams } from '../src/interfaces';
+import { IListDirParams } from '../src/interfaces.js';
 import { SearchStatus } from '../src/models/search-state.model';
 import { WorkerMessage } from '../src/services/files/files.worker.service';
 import { LoggerService } from '../src/services/logger.service';

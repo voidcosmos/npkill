@@ -4,8 +4,8 @@ import { Dir } from 'node:fs';
 import { join, normalize } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
-import { EVENTS } from '../src/constants/workers.constants';
-import { IListDirParams } from '../src/interfaces';
+import { EVENTS } from '../../../../src/constants/workers.constants.js';
+import { IListDirParams } from '../src/interfaces.js';
 
 const parentEmitter: EventEmitter = new EventEmitter();
 let tunnelEmitter: MessagePort;
