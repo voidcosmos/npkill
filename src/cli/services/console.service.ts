@@ -3,7 +3,7 @@ import { OPTIONS, WIDTH_OVERFLOW } from '../../constants/index.js';
 import { ICliOptions } from '../interfaces/cli-options.interface.js';
 import { extname } from 'path';
 import * as readline from 'node:readline';
-import { StartParameters } from '../../models/start-parameters.model.js';
+import { StartParameters } from '../models/start-parameters.model.js';
 
 export class ConsoleService {
   getParameters(rawArgv: string[]): StartParameters {
