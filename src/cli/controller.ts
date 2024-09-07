@@ -257,7 +257,7 @@ export class Controller {
   }
 
   private getVersion(): string {
-    const packageJson = _dirname + '/../../package.json';
+    const packageJson = _dirname + '/../package.json';
 
     const packageData = JSON.parse(
       this.fileService.getFileContent(packageJson),
