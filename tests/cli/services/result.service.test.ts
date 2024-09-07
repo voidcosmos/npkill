@@ -1,5 +1,5 @@
-import { IFolder } from '../src/interfaces/folder.interface.js';
-import { ResultsService } from '../src/services/results.service.js';
+import { Folder } from '../../../src/core/interfaces/folder.interface.js';
+import { ResultsService } from '../../../src/cli/services/results.service.js';
 
 describe('Result Service', () => {
   let resultService;
@@ -9,7 +9,7 @@ describe('Result Service', () => {
 
   describe('#addResult', () => {
     it('should add folder if that is the first', () => {
-      const newResult: IFolder = {
+      const newResult: Folder = {
         path: 'path',
         size: 5,
         status: 'live',
@@ -21,7 +21,7 @@ describe('Result Service', () => {
       expect(resultService.results).toMatchObject(resultExpected);
     });
     it('should add folders', () => {
-      const newResults: IFolder[] = [
+      const newResults: Folder[] = [
         {
           path: 'path',
           size: 1,
@@ -53,7 +53,7 @@ describe('Result Service', () => {
   });
 
   describe('#sortResults', () => {
-    let mockResults: IFolder[];
+    let mockResults: Folder[];
     beforeEach(() => {
       mockResults = [
         {
@@ -198,7 +198,7 @@ describe('Result Service', () => {
   });
 
   describe('#getStats', () => {
-    let mockResults: IFolder[];
+    let mockResults: Folder[];
     beforeEach(() => {
       mockResults = [
         {

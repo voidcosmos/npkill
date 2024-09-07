@@ -19,7 +19,7 @@ jest.unstable_mockModule('node:https', () => ({
 }));
 
 const HttpsServiceConstructor = //@ts-ignore
-  (await import('../src/services/https.service.js')).HttpsService;
+  (await import('../../../src/cli/services/https.service')).HttpsService;
 class HttpsService extends HttpsServiceConstructor {}
 
 describe('Http Service', () => {

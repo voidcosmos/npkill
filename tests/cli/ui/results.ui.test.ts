@@ -1,7 +1,8 @@
-import { ConsoleService, FileService } from '../../src/services/index.js';
+import { ConsoleService } from '../../../src/cli/services/index.js';
+import { FileService } from '../../../src/core/services/files/files.service.js';
 
-import { IFolder } from '../../src/interfaces/folder.interface.js';
-import { ResultsService } from '../../src/services/results.service.js';
+import { Folder } from '../../../src/core/interfaces/folder.interface.js';
+import { ResultsService } from '../../../src/cli/services/results.service.js';
 import { jest } from '@jest/globals';
 
 const stdoutWriteMock = jest.fn() as any;
@@ -21,7 +22,7 @@ const mockProcess = () => {
 };
 
 const ResultsUiConstructor = //@ts-ignore
-  (await import('../../src/ui/components/results.ui.js')).ResultsUi;
+  (await import('../../../src/cli/ui/components/results.ui.js')).ResultsUi;
 class ResultsUi extends ResultsUiConstructor {}
 
 describe('ResultsUi', () => {
@@ -66,7 +67,7 @@ describe('ResultsUi', () => {
           size: 1,
           status: 'live',
         },
-      ] as IFolder[];
+      ] as Folder[];
 
       resultsUi.render();
 
@@ -86,7 +87,7 @@ describe('ResultsUi', () => {
             path: `path/folder/${i}`,
             size: 1,
             status: 'live',
-          } as IFolder);
+          } as Folder);
         }
       };
 

@@ -29,7 +29,7 @@ import {
 } from './ui/index.js';
 
 import { UiService } from './services/ui.service.js';
-import _dirname from './dirname.js';
+import _dirname from '../dirname.js';
 import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';

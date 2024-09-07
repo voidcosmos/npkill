@@ -1,34 +1,44 @@
 import { jest } from '@jest/globals';
-import { StartParameters } from '../src/models/start-parameters.model.js';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { IFolder } from '../src/interfaces/index.js';
+import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
+import { Subject } from 'rxjs';
+import { Folder } from '../../src/core/interfaces/folder.interface.js';
+import { Npkill } from '../../src/core/index.js';
 
-const resultsUiDeleteMock$ = new Subject<IFolder>();
+const resultsUiDeleteMock$ = new Subject<Folder>();
 const setDeleteAllWarningVisibilityMock = jest.fn();
 
-jest.mock('../src/dirname.js', () => {
+jest.mock('../../src/dirname.js', () => {
   return {};
 });
 
-jest.unstable_mockModule('../src/ui/components/header/header.ui.js', () => ({
-  HeaderUi: jest.fn(),
-}));
-jest.unstable_mockModule('../src/ui/components/header/stats.ui.js', () => ({
-  StatsUi: jest.fn(() => ({ render: jest.fn() })),
-}));
-jest.unstable_mockModule('../src/ui/components/header/status.ui.js', () => ({
-  StatusUi: jest.fn(() => ({
-    start: jest.fn(),
-    render: jest.fn(),
-  })),
-}));
-jest.unstable_mockModule('../src/ui/components/general.ui.js', () => ({
+jest.unstable_mockModule(
+  '../../src/cli/ui/components/header/header.ui.js',
+  () => ({
+    HeaderUi: jest.fn(),
+  }),
+);
+jest.unstable_mockModule(
+  '../../src/cli/ui/components/header/stats.ui.js',
+  () => ({
+    StatsUi: jest.fn(() => ({ render: jest.fn() })),
+  }),
+);
+jest.unstable_mockModule(
+  '../../src/cli/ui/components/header/status.ui.js',
+  () => ({
+    StatusUi: jest.fn(() => ({
+      start: jest.fn(),
+      render: jest.fn(),
+    })),
+  }),
+);
+jest.unstable_mockModule('../../src/cli/ui/components/general.ui.js', () => ({
   GeneralUi: jest.fn(),
 }));
-jest.unstable_mockModule('../src/ui/components/help.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/components/help.ui.js', () => ({
   HelpUi: jest.fn(),
 }));
-jest.unstable_mockModule('../src/ui/components/results.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/components/results.ui.js', () => ({
   ResultsUi: jest.fn(() => ({
     delete$: resultsUiDeleteMock$,
     showErrors$: { subscribe: jest.fn() },
@@ -36,27 +46,27 @@ jest.unstable_mockModule('../src/ui/components/results.ui.js', () => ({
     render: jest.fn(),
   })),
 }));
-jest.unstable_mockModule('../src/ui/components/logs.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/components/logs.ui.js', () => ({
   LogsUi: jest.fn(() => ({
     close$: { subscribe: jest.fn() },
   })),
 }));
-jest.unstable_mockModule('../src/ui/components/warning.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/components/warning.ui.js', () => ({
   WarningUi: jest.fn(() => ({
     setDeleteAllWarningVisibility: setDeleteAllWarningVisibilityMock,
     render: jest.fn(),
     confirm$: new Subject(),
   })),
 }));
-jest.unstable_mockModule('../src/ui/base.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/base.ui.js', () => ({
   BaseUi: { setVisible: jest.fn() },
 }));
-jest.unstable_mockModule('../src/ui/heavy.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/heavy.ui.js', () => ({
   HeavyUi: {},
 }));
 
 const ControllerConstructor = //@ts-ignore
-  (await import('../src/controller.js')).Controller;
+  (await import('../../src/cli/controller.js')).Controller;
 class Controller extends ControllerConstructor {}
 
 describe('Controller test', () => {
@@ -77,26 +87,31 @@ describe('Controller test', () => {
     fakeDeleteDir: filesServiceFakeDeleteMock,
   };
   const spinnerServiceMock: any = jest.fn();
-  const UpdateServiceMock: any = jest.fn();
+  const updateServiceMock: any = jest.fn();
   const resultServiceMock: any = jest.fn();
   const searchStatusMock: any = jest.fn();
   const loggerServiceMock: any = {
-    info: () => {},
-    error: () => {},
-    getSuggestLogfilePath: () => {},
-    saveToFile: () => {},
+    info: jest.fn(),
+    error: jest.fn(),
+    getSuggestLogFilePath: jest.fn(),
+    saveToFile: jest.fn(),
   };
   const uiServiceMock: any = {
-    add: () => {},
-    print: () => {},
-    setRawMode: () => {},
-    setCursorVisible: () => {},
+    add: jest.fn(),
+    print: jest.fn(),
+    setRawMode: jest.fn(),
+    setCursorVisible: jest.fn(),
   };
-  const consoleService: any = {
+  const consoleServiceMock: any = {
     getParameters: () => new StartParameters(),
     isRunningBuild: () => false,
     startListenKeyEvents: jest.fn(),
   };
+
+  const npkillMock: Npkill = {
+    logger: loggerServiceMock,
+    getFileService: () => linuxFilesServiceMock,
+  } as unknown as Npkill;
 
   ////////// mocked Controller Methods
   let parseArgumentsSpy;
@@ -114,13 +129,13 @@ describe('Controller test', () => {
       throw new Error('process.exit: ' + number);
     });
     controller = new Controller(
+      npkillMock,
       loggerServiceMock,
       searchStatusMock,
-      linuxFilesServiceMock,
-      spinnerServiceMock,
-      consoleService,
-      UpdateServiceMock,
       resultServiceMock,
+      spinnerServiceMock,
+      consoleServiceMock,
+      updateServiceMock,
       uiServiceMock,
     );
 
@@ -153,7 +168,7 @@ describe('Controller test', () => {
 
   describe('#getArguments', () => {
     const mockParameters = (parameters: Object) => {
-      consoleService.getParameters = () => {
+      consoleServiceMock.getParameters = () => {
         const startParameters = new StartParameters();
         Object.keys(parameters).forEach((key) => {
           startParameters.add(key, parameters[key]);
@@ -239,7 +254,7 @@ describe('Controller test', () => {
     });
 
     describe('--dry-run', () => {
-      let testFolder: IFolder;
+      let testFolder: Folder;
 
       beforeEach(() => {
         testFolder = {

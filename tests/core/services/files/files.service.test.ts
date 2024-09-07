@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import fs from 'fs';
 
-import { IFileService } from '../src/interfaces/file-service.interface.js';
+import { IFileService } from '../../../../src/core/interfaces/file-service.interface.js';
 import * as rimraf from 'rimraf';
 
 let statSyncReturnMock = (): { isDirectory: () => boolean } | null => null;
@@ -24,27 +24,29 @@ jest.unstable_mockModule('fs', () => {
 jest.useFakeTimers();
 
 const FileServiceConstructor = //@ts-ignore
-  (await import('../src/services/files/files.service.js')).FileService;
+  (await import('../../../../src/core/services/files/files.service.js'))
+    .FileService;
 abstract class FileService extends FileServiceConstructor {}
 
 const LinuxFilesServiceConstructor = //@ts-ignore
-  (await import('../src/services/files/linux-files.service.js'))
+  (await import('../../../../src/core/services/files/linux-files.service.js'))
     .LinuxFilesService;
 class LinuxFilesService extends LinuxFilesServiceConstructor {}
 
 const MacFilesServiceConstructor = //@ts-ignore
-  (await import('../src/services/files/mac-files.service.js')).MacFilesService;
+  (await import('../../../../src/core/services/files/mac-files.service.js'))
+    .MacFilesService;
 class MacFilesService extends MacFilesServiceConstructor {}
 
 const WindowsFilesServiceConstructor = //@ts-ignore
-  (await import('../src/services/files/windows-files.service.js'))
+  (await import('../../../../src/core/services/files/windows-files.service.js'))
     .WindowsFilesService;
 class WindowsFilesService extends WindowsFilesServiceConstructor {}
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
-import { StreamService } from '../src/services/stream.service.js';
+import { StreamService } from '../../../../src/core/services/stream.service.js';
 
-jest.mock('../src/dirname.js', () => {
+jest.mock('../../../../src/dirname.js', () => {
   return { __esModule: true };
 });
 

@@ -2,11 +2,11 @@ import { jest } from '@jest/globals';
 import EventEmitter from 'node:events';
 
 import { Subject } from 'rxjs';
-import { EVENTS } from '../src/constants/workers.constants';
-import { IListDirParams } from '../src/interfaces.js';
-import { SearchStatus } from '../src/models/search-state.model';
-import { WorkerMessage } from '../src/services/files/files.worker.service';
-import { LoggerService } from '../src/services/logger.service';
+import { EVENTS } from '../../../../src/constants/workers.constants';
+import { FindFolderOptions } from '../../../../src/core/index.js';
+import { SearchStatus } from '../../../../src/core/interfaces/search-status.model.js';
+import { WorkerMessage } from '../../../../src/core/services/files/index.js';
+import { LoggerService } from '../../../../src/core/services/logger.service.js';
 
 const workerEmitter: EventEmitter = new EventEmitter();
 const port1Emitter: EventEmitter = new EventEmitter();
@@ -51,15 +51,15 @@ const logger = {
   info: jest.fn(),
 } as unknown as jest.Mocked<LoggerService>;
 
-const FileWorkerServiceConstructor = //@ts-ignore
-  (await import('../src/services/files/files.worker.service.js'))
-    .FileWorkerService;
+const FileWorkerServiceConstructor = (
+  await import('../../../../src/core/services/files/files.worker.service.js')
+).FileWorkerService;
 class FileWorkerService extends FileWorkerServiceConstructor {}
 
 describe('FileWorkerService', () => {
   let fileWorkerService: FileWorkerService;
   let searchStatus: SearchStatus;
-  let params: IListDirParams;
+  let params: FindFolderOptions;
 
   beforeEach(async () => {
     const aa = new URL('http://127.0.0.1'); // Any valid URL. Is not used

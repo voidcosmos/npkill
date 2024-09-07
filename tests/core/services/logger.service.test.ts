@@ -21,7 +21,7 @@ jest.unstable_mockModule('os', () => {
 });
 
 const LoggerServiceConstructor = //@ts-ignore
-  (await import('../src/services/logger.service.js')).LoggerService;
+  (await import('../../../src/core/services/logger.service.js')).LoggerService;
 class LoggerService extends LoggerServiceConstructor {}
 
 describe('LoggerService', () => {

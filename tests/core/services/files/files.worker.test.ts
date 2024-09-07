@@ -5,7 +5,7 @@ import { join, normalize } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
 import { EVENTS } from '../../../../src/constants/workers.constants.js';
-import { IListDirParams } from '../src/interfaces.js';
+import { FindFolderOptions } from '../../../../src/core/index.js';
 
 const parentEmitter: EventEmitter = new EventEmitter();
 let tunnelEmitter: MessagePort;
@@ -61,7 +61,7 @@ jest.unstable_mockModule('node:worker_threads', () => ({
 }));
 
 describe('FileWorker', () => {
-  const setExploreConfig = (params: IListDirParams) => {
+  const setExploreConfig = (params: FindFolderOptions) => {
     tunnelEmitter.postMessage({
       type: EVENTS.exploreConfig,
       value: params,
@@ -69,7 +69,7 @@ describe('FileWorker', () => {
   };
 
   beforeEach(async () => {
-    await import('../src/services/files/files.worker.js');
+    await import('../../../../src/core/services/files/files.worker.js');
 
     const { port1, port2 } = new MessageChannel();
     tunnelEmitter = port1;

@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
-import { HttpsService } from '../src/services/https.service.js';
-import { UpdateService } from '../src/services/update.service.js';
+import { HttpsService } from '../../../src/cli/services/https.service.js';
+import { UpdateService } from '../../../src/cli/services/update.service.js';
 
 describe('update Service', () => {
   let updateService: UpdateService;
