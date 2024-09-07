@@ -85,7 +85,7 @@ export class Npkill {
 
     return fileService.listDir(options).pipe(
       catchError((_error, caught) => {
-        return caught;
+        throw new Error('Error while listing directories');
       }),
       mergeMap((dataFolder) => from(splitData(dataFolder))),
       filter((path) => path !== ''),
