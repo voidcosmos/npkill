@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 
 import { of, throwError } from 'rxjs';
-import { Npkill } from '../../src/core/index';
 import { FileService } from '../../src/core/services/files/files.service';
+import { Npkill } from '../../src/core/index';
 
 describe('Npkill', () => {
   let npkill: Npkill;

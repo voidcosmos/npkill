@@ -5,3 +5,9 @@ export interface Folder {
   isDangerous: boolean;
   status: 'live' | 'deleting' | 'error-deleting' | 'deleted';
 }
+
+export interface FindFolderOptions {
+  path: string;
+  target: string;
+  exclude?: string[];
+}
