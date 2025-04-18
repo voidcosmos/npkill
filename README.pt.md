@@ -15,7 +15,7 @@
   <img src="/docs/npkill-demo-0.10.0.gif" alt="npkill demo GIF" />
 </p>
 
-Esta ferramenta permite que você liste as pastas _node_modules_ em seu sistema, bem como o espaço que ocupam. Então você pode selecionar quais deles deseja apagar para liberar espaço!
+Esta ferramenta permite que você liste as pastas _node_modules_ em seu sistema, bem como o espaço que ocupam. Então você pode selecionar quais deles deseja apagar para liberar espaço. ¡Yay!
 
 ## i18n
 
@@ -138,7 +138,7 @@ npkill --target dist -e
 - Exibe o cursor na cor magenta... porque eu gosto de magenta!
 
 ```bash
-npkill --color magenta
+npkill --bg-color magenta
 ```
 
 - Listar pastas **vendor** no seu diretório de _projetos_, ordenar por tamanho e mostrar o tamanho em GB:
