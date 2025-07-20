@@ -468,7 +468,7 @@ export class Controller {
     return params;
   }
 
-  private calculateFolderStats(nodeFolder: IFolder): Observable {
+  private calculateFolderStats(nodeFolder: IFolder): Observable<IFolder> {
     this.logger.info(`Calculating stats for ${nodeFolder.path}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => {
@@ -566,7 +566,8 @@ export class Controller {
     this.uiStatus.render();
     this.printFoldersSection();
 
-    const deleteFunction: (path: string) => Promise = this.config.dryRun
+    const deleteFunction: (path: string) => Promise<boolean> = this.config
+      .dryRun
       ? this.fileService.fakeDeleteDir.bind(this.fileService)
       : this.fileService.deleteDir.bind(this.fileService);
 
