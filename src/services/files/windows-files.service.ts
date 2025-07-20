@@ -17,6 +17,7 @@ export class WindowsFilesService extends FileService {
     super();
   }
 
+  // TODO this is the same as unix. Move to FileService.
   getFolderSize(path: string): Observable<number> {
     const stream$ = new Subject<number>();
     this.fileWorkerService.getFolderSize(stream$, path);

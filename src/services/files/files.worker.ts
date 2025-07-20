@@ -150,9 +150,11 @@ class FileWalker {
     this.updateProcs(1);
 
     try {
-      const size = await this.getFolderSize(path).catch(() => 0);
+      const size = await this.getFolderSize(path);
       this.events.emit('folderSizeResult', { path, size });
     } catch (_) {
+      this.events.emit('folderSizeResult', { path, size: 0 });
+    } finally {
       this.completeTask();
     }
   }

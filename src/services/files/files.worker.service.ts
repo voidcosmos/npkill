@@ -110,6 +110,7 @@ export class FileWorkerService {
       this.getSizePendings.forEach((pending, index) => {
         if (pending.path === result.path) {
           pending.stream$.next(result.size);
+          pending.stream$.complete();
           this.getSizePendings.splice(index, 1);
         }
       });
@@ -137,8 +138,7 @@ export class FileWorkerService {
   private checkJobComplete(stream$: Subject<string>): void {
     this.updateStats();
     const isCompleted = this.getPendingJobs() === 0;
-    // TODO &&false only for development purposes.
-    if (isCompleted && false) {
+    if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
       stream$.complete();
       void this.killWorkers();

@@ -439,7 +439,7 @@ export class Controller {
         }),
         mergeMap((nodeFolder) => {
           return this.calculateFolderStats(nodeFolder);
-        }, 2),
+        }),
         tap(() => this.searchStatus.completeStatCalculation()),
         tap((folder) => {
           if (this.config.deleteAll) {
