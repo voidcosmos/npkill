@@ -93,7 +93,7 @@ describe('FileWorkerService', () => {
 
     it('should emit "explore" and parameters to the worker', () => {
       fileWorkerService.startScan(stream$, params);
-      expect(messageChannelPort1Mock).toBeCalledWith({
+      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
         type: EVENTS.explore,
         value: { path: params.path },
       });
@@ -159,7 +159,7 @@ describe('FileWorkerService', () => {
         },
       } as WorkerMessage);
 
-      expect(messageChannelPort1Mock).toBeCalledWith({
+      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
         type: EVENTS.explore,
         value: { path: val[0] },
       });
@@ -210,7 +210,7 @@ describe('FileWorkerService', () => {
         fileWorkerService.startScan(stream$, params);
         workerEmitter.emit('error');
         expect(searchStatus.workerStatus).toBe('dead');
-      }).toThrowError();
+      }).toThrow();
     });
 
     it('should register worker exit on "exit"', () => {
@@ -218,7 +218,7 @@ describe('FileWorkerService', () => {
 
       logger.info.mockReset();
       workerEmitter.emit('exit');
-      expect(logger.info).toBeCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledTimes(1);
     });
   });
 });
@@ -240,7 +240,7 @@ describe('FileWorkerService', () => {
 //     mockRandom(randomNumber);
 
 //     fileWorkerService.getSize(stream$, path);
-//     expect(workerPostMessageMock).toBeCalledWith({
+//     expect(workerPostMessageMock).toHaveBeenCalledWith({
 //       type: 'start-getSize',
 //       value: { path: path, id: randomNumber },
 //     });

@@ -14,7 +14,7 @@ describe('Spinner Service', () => {
     it('should reset count', () => {
       const resetFn = (spinnerService.reset = jest.fn());
       spinnerService.setSpinner([]);
-      expect(resetFn).toBeCalled();
+      expect(resetFn).toHaveBeenCalled();
     });
   });
 

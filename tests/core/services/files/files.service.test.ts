@@ -72,7 +72,7 @@ describe('File Service', () => {
       statSyncReturnMock = () => {
         throw new Error('ENOENT');
       };
-      expect(() => fileService.isValidRootFolder(path)).toThrowError(
+      expect(() => fileService.isValidRootFolder(path)).toThrow(
         'The path does not exist.',
       );
     });
@@ -82,7 +82,7 @@ describe('File Service', () => {
         isDirectory: () => false,
       });
 
-      expect(() => fileService.isValidRootFolder(path)).toThrowError(
+      expect(() => fileService.isValidRootFolder(path)).toThrow(
         'The path must point to a directory.',
       );
     });
@@ -95,7 +95,7 @@ describe('File Service', () => {
         throw new Error();
       };
 
-      expect(() => fileService.isValidRootFolder(path)).toThrowError(
+      expect(() => fileService.isValidRootFolder(path)).toThrow(
         'Cannot read the specified path.',
       );
     });
@@ -111,10 +111,6 @@ describe('File Service', () => {
   });
 
   describe('Conversion methods', () => {
-    it('#convertKbToGB', () => {
-      expect(fileService.convertKbToGB(100000)).toBe(0.095367431640625);
-      expect(fileService.convertKbToGB(140000)).toBe(0.133514404296875);
-    });
     it('#convertBytesToKB', () => {
       expect(fileService.convertBytesToKB(1)).toBe(0.0009765625);
       expect(fileService.convertBytesToKB(100)).toBe(0.09765625);
@@ -187,7 +183,7 @@ describe('File Service', () => {
   it('#getFileContent should read file content with utf8 encoding', () => {
     const path = 'file.json';
     fileService.getFileContent(path);
-    expect(readFileSyncSpy).toBeCalledWith(path, 'utf8');
+    expect(readFileSyncSpy).toHaveBeenCalledWith(path, 'utf8');
   });
 
   xdescribe('Functional test for #deleteDir', () => {

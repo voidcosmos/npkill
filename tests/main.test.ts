@@ -69,12 +69,12 @@ xdescribe('main', () => {
       let servicesThatShouldNotBeCalled = [...SERVICES_MOCKS].filter(
         (service) => service !== serviceMock,
       );
-      expect(serviceMock).toBeCalledTimes(0);
+      expect(serviceMock).toHaveBeenCalledTimes(0);
       main = await import('../src/main');
       main.default();
-      expect(serviceMock).toBeCalledTimes(1);
+      expect(serviceMock).toHaveBeenCalledTimes(1);
       servicesThatShouldNotBeCalled.forEach((service) =>
-        expect(service).toBeCalledTimes(0),
+        expect(service).toHaveBeenCalledTimes(0),
       );
     };
 

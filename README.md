@@ -22,6 +22,8 @@ This tool allows you to list any _node_modules_ directories in your system, as w
 We're making an effort to internationalize the Npkill docs. Here's a list of the available translations:
 
 - [Español](./README.es.md)
+- [Português](./README.pt.md)
+- [Indonesian](./README.id.md)
 
 ## Table of Contents
 
@@ -137,7 +139,7 @@ npkill --target dist -e
 - Displays the magenta color cursor... because I like magenta!
 
 ```bash
-npkill --color magenta
+npkill --bg-color magenta
 ```
 
 - List **vendor** directories in your _projects_ directory, sort by size, and show size in gb:

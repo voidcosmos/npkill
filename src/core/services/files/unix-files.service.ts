@@ -9,12 +9,10 @@ import { FindFolderOptions } from '@core/index.js';
 export abstract class UnixFilesService extends FileService {
   constructor(
     protected streamService: StreamService,
-    protected fileWorkerService: FileWorkerService,
+    public override fileWorkerService: FileWorkerService,
   ) {
-    super();
+    super(fileWorkerService);
   }
-
-  abstract override getFolderSize(path: string): Observable<any>;
 
   listDir(params: FindFolderOptions): Observable<string> {
     const stream$ = new Subject<string>();
