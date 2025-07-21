@@ -71,10 +71,10 @@ describe('ResultsUi', () => {
       resultsUi.render();
 
       // With stringContaining we can ignore the terminal color codes.
-      expect(stdoutWriteMock).toBeCalledWith(
+      expect(stdoutWriteMock).toHaveBeenCalledWith(
         expect.stringContaining('path/folder/1'),
       );
-      expect(stdoutWriteMock).toBeCalledWith(
+      expect(stdoutWriteMock).toHaveBeenCalledWith(
         expect.stringContaining('path/folder/2'),
       );
     });
@@ -94,10 +94,10 @@ describe('ResultsUi', () => {
       resultsUi.render();
 
       // With stringContaining we can ignore the terminal color codes.
-      expect(stdoutWriteMock).toBeCalledWith(
+      expect(stdoutWriteMock).toHaveBeenCalledWith(
         expect.stringContaining('path/folder/1'),
       );
-      expect(stdoutWriteMock).not.toBeCalledWith(
+      expect(stdoutWriteMock).not.toHaveBeenCalledWith(
         expect.stringContaining('path/folder/64'),
       );
     });
