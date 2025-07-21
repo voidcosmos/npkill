@@ -112,7 +112,7 @@ describe('LoggerService', () => {
       existsSyncMock.mockReturnValue(false);
       const path = logger.getSuggestLogFilePath();
       logger.saveToFile(path);
-      expect(renameFileSyncMock).not.toBeCalled();
+      expect(renameFileSyncMock).not.toHaveBeenCalled();
     });
 
     it('should rotate file if exist', () => {
@@ -120,7 +120,7 @@ describe('LoggerService', () => {
       const path = logger.getSuggestLogFilePath();
       logger.saveToFile(path);
       const expectedOldPath = path.replace('latest', 'old');
-      expect(renameFileSyncMock).toBeCalledWith(path, expectedOldPath);
+      expect(renameFileSyncMock).toHaveBeenCalledWith(path, expectedOldPath);
     });
   });
 
@@ -136,7 +136,7 @@ describe('LoggerService', () => {
         '[1767225600000](info) world\n';
 
       logger.saveToFile(path);
-      expect(writeFileSyncMock).toBeCalledWith(path, expected);
+      expect(writeFileSyncMock).toHaveBeenCalledWith(path, expected);
     });
   });
 });
