@@ -252,7 +252,7 @@ class FileWalker {
   }
 
   private isExcluded(path: string): boolean {
-    if (!this.searchConfig.exclude) {
+    if (this.searchConfig.exclude == null) {
       return false;
     }
     return this.searchConfig.exclude.some((ex) => path.includes(ex));
@@ -275,22 +275,23 @@ class FileWalker {
   private processQueue(): void {
     while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
       const task = this.taskQueue.shift();
-      if (!task || !task.path) continue;
+      if (!task?.path) {
+        continue;
+      }
 
       switch (task.operation) {
         case ETaskOperation.explore:
           this.run(task.path).catch((error) => {
-            console.warn(`Explore task failed for ${task.path}:`, error);
             this.completeTask();
           });
           break;
         case ETaskOperation.getFolderSize:
-          this.runGetFolderSize(task.path);
+          this.runGetFolderSize(task.path).catch(() => {});
           break;
         case ETaskOperation.getFolderSizeChild:
-          this.runGetFolderSizeChild(task.path, task.sizeCollector!).catch(
-            (error) => {
-              if (!task.sizeCollector) {
+          this.runGetFolderSizeChild(task.path, task.sizeCollector).catch(
+            () => {
+              if (task.sizeCollector == null) {
                 return;
               }
 
