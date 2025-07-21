@@ -1,6 +1,6 @@
 import { StreamService } from '../index.js';
 
-import { Subject, Observable, map } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { FileService } from './files.service.js';
 import { WindowsStrategyManager } from '../../strategies/windows-remove-dir.strategy.js';
 import { FileWorkerService } from './files.worker.service.js';
@@ -12,16 +12,9 @@ export class WindowsFilesService extends FileService {
 
   constructor(
     private readonly streamService: StreamService,
-    protected fileWorkerService: FileWorkerService,
+    public override fileWorkerService: FileWorkerService,
   ) {
-    super();
-  }
-
-  // TODO this is the same as unix. Move to FileService.
-  getFolderSize(path: string): Observable<number> {
-    const stream$ = new Subject<number>();
-    this.fileWorkerService.getFolderSize(stream$, path);
-    return stream$.pipe(map((data) => +data));
+    super(fileWorkerService);
   }
 
   listDir(params: IListDirParams): Observable<string> {

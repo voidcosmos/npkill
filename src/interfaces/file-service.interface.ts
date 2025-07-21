@@ -1,7 +1,9 @@
+import { FileWorkerService } from 'src/services/index.js';
 import { IListDirParams } from '../interfaces/list-dir-params.interface.js';
 import { Observable } from 'rxjs';
 
 export interface IFileService {
+  fileWorkerService: FileWorkerService;
   getFolderSize: (path: string) => Observable<number>;
   listDir: (params: IListDirParams) => Observable<string>;
   deleteDir: (path: string) => Promise<boolean>;

@@ -5,12 +5,24 @@ import {
   IListDirParams,
 } from '../../interfaces/index.js';
 import { readdir, stat } from 'fs/promises';
-import { Observable } from 'rxjs';
+import { map, Observable, Subject } from 'rxjs';
+import { FileWorkerService } from './files.worker.service.js';
 
 export abstract class FileService implements IFileService {
+  public fileWorkerService: FileWorkerService;
+
+  constructor(fileWorkerService: FileWorkerService) {
+    this.fileWorkerService = fileWorkerService;
+  }
+
   abstract listDir(params: IListDirParams): Observable<string>;
   abstract deleteDir(path: string): Promise<boolean>;
-  abstract getFolderSize(path: string): Observable<number>;
+
+  getFolderSize(path: string): Observable<number> {
+    const stream$ = new Subject<number>();
+    this.fileWorkerService.getFolderSize(stream$, path);
+    return stream$.pipe(map((data) => data));
+  }
 
   /** Used for dry-run or testing. */
   async fakeDeleteDir(_path: string): Promise<boolean> {
