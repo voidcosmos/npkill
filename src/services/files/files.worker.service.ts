@@ -9,15 +9,32 @@ import { LoggerService } from '../logger.service.js';
 import { MAX_WORKERS, EVENTS } from '../../constants/workers.constants.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
-interface WorkerJob {
-  job: EVENTS;
+type WorkerJob = {
+  job: EVENTS.explore | EVENTS.getFolderSize;
   value: { path: string };
-}
+};
 
-export interface WorkerMessage {
-  type: EVENTS;
-  value: any;
-}
+export type WorkerMessage =
+  | {
+      type: EVENTS.scanResult;
+      value: {
+        results: Array<{ path: string; isTarget: boolean }>;
+        workerId: number;
+        pending: number;
+      };
+    }
+  | {
+      type: EVENTS.getFolderSizeResult;
+      value: {
+        results: { path: string; size: number };
+        workerId: number;
+        pending: number;
+      };
+    }
+  | { type: EVENTS.explore | EVENTS.getFolderSize; value: { path: string } }
+  | { type: EVENTS.exploreConfig; value: IListDirParams }
+  | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
+  | { type: EVENTS.alive; value?: undefined };
 
 export interface WorkerStats {
   pendingSearchTasks: number;
