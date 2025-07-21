@@ -343,22 +343,18 @@ class FileWalker {
           });
           break;
         case ETaskOperation.getFolderSize:
-          this.runGetFolderSize(task.path).catch((error) => {
-            console.warn(`GetFolderSize task failed for ${task.path}:`, error);
-          });
+          this.runGetFolderSize(task.path);
           break;
         case ETaskOperation.getFolderSizeChild:
           this.runGetFolderSizeChild(task.path, task.sizeCollector!).catch(
             (error) => {
-              console.warn(
-                `GetFolderSizeChild task failed for ${task.path}:`,
-                error,
-              );
-              if (task.sizeCollector) {
-                task.sizeCollector.pending -= 1;
-                if (task.sizeCollector.pending === 0) {
-                  task.sizeCollector.onComplete(task.sizeCollector.total);
-                }
+              if (!task.sizeCollector) {
+                return;
+              }
+
+              task.sizeCollector.pending -= 1;
+              if (task.sizeCollector.pending === 0) {
+                task.sizeCollector.onComplete(task.sizeCollector.total);
               }
             },
           );
