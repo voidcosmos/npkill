@@ -50,6 +50,14 @@ const mockDir = {
 
 jest.unstable_mockModule('fs/promises', () => ({
   opendir: (path: string) => new Promise((resolve) => resolve(mockDir)),
+  lstat: (path: string) =>
+    Promise.resolve({
+      blocks: 1,
+      size: 100,
+      isDirectory: () => false,
+      isSymbolicLink: () => false,
+    }),
+  readdir: (path: string, opts: any) => Promise.resolve([]),
 }));
 
 jest.unstable_mockModule('node:worker_threads', () => ({
@@ -84,7 +92,9 @@ describe('FileWorker', () => {
     jest.resetModules();
     jest.restoreAllMocks();
     parentEmitter.removeAllListeners();
-    tunnelEmitter.close();
+    if (tunnelEmitter && typeof tunnelEmitter.close === 'function') {
+      tunnelEmitter.close();
+    }
   });
 
   // it('should plant a listener over the passed MessagePort',()=>{})

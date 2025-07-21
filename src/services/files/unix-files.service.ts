@@ -9,12 +9,10 @@ import { FileWorkerService } from './files.worker.service.js';
 export abstract class UnixFilesService extends FileService {
   constructor(
     protected streamService: StreamService,
-    protected fileWorkerService: FileWorkerService,
+    public override fileWorkerService: FileWorkerService,
   ) {
-    super();
+    super(fileWorkerService);
   }
-
-  abstract override getFolderSize(path: string): Observable<any>;
 
   listDir(params: IListDirParams): Observable<string> {
     const stream$ = new Subject<string>();

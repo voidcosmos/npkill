@@ -5,17 +5,29 @@ import {
   IListDirParams,
 } from '../../interfaces/index.js';
 import { readdir, stat } from 'fs/promises';
-import { Observable } from 'rxjs';
+import { map, Observable, Subject } from 'rxjs';
+import { FileWorkerService } from './files.worker.service.js';
 
 export abstract class FileService implements IFileService {
-  abstract getFolderSize(path: string): Observable<number>;
+  public fileWorkerService: FileWorkerService;
+
+  constructor(fileWorkerService: FileWorkerService) {
+    this.fileWorkerService = fileWorkerService;
+  }
+
   abstract listDir(params: IListDirParams): Observable<string>;
   abstract deleteDir(path: string): Promise<boolean>;
+
+  getFolderSize(path: string): Observable<number> {
+    const stream$ = new Subject<number>();
+    this.fileWorkerService.getFolderSize(stream$, path);
+    return stream$.pipe(map((data) => data));
+  }
 
   /** Used for dry-run or testing. */
   async fakeDeleteDir(_path: string): Promise<boolean> {
     const randomDelay = Math.floor(Math.random() * 4000 + 200);
-    await new Promise((r) => setTimeout(r, randomDelay));
+    await new Promise((resolve) => setTimeout(resolve, randomDelay));
     return true;
   }
 
@@ -40,14 +52,13 @@ export abstract class FileService implements IFileService {
     return true;
   }
 
-  convertKbToGB(kb: number): number {
-    const factorKBtoGB = 1048576;
-    return kb / factorKBtoGB;
-  }
-
   convertBytesToKB(bytes: number): number {
     const factorBytestoKB = 1024;
     return bytes / factorBytestoKB;
+  }
+
+  convertBytesToGb(bytes: number): number {
+    return bytes / Math.pow(1024, 3);
   }
 
   convertGBToMB(gb: number): number {

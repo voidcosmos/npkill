@@ -8,4 +8,6 @@ export enum EVENTS {
   exploreConfig = 'exploreConfig',
   explore = 'explore',
   scanResult = 'scanResult',
+  getFolderSize = 'getFolderSize',
+  getFolderSizeResult = 'getFolderSizeResult',
 }

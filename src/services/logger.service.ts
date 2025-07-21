@@ -3,7 +3,7 @@ import { existsSync, renameSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
 
 interface LogEntry {
-  type: 'info' | 'error';
+  type: 'info' | 'warn' | 'error';
   timestamp: number;
   message: string;
 }
@@ -22,6 +22,14 @@ export class LoggerService {
     });
   }
 
+  warn(message: string): void {
+    this.addToLog({
+      type: 'warn',
+      timestamp: this.getTimestamp(),
+      message,
+    });
+  }
+
   error(message: string): void {
     this.addToLog({
       type: 'error',
@@ -30,7 +38,7 @@ export class LoggerService {
     });
   }
 
-  get(type: 'all' | 'info' | 'error' = 'all'): LogEntry[] {
+  get(type: 'all' | 'info' | 'warn' | 'error' = 'all'): LogEntry[] {
     if (type === 'all') {
       return this.log;
     }

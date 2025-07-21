@@ -1,5 +1,3 @@
-import getFolderSize from 'get-folder-size';
-
 import { StreamService } from '../index.js';
 
 import { Subject, Observable } from 'rxjs';
@@ -14,18 +12,9 @@ export class WindowsFilesService extends FileService {
 
   constructor(
     private readonly streamService: StreamService,
-    protected fileWorkerService: FileWorkerService,
+    public override fileWorkerService: FileWorkerService,
   ) {
-    super();
-  }
-
-  getFolderSize(path: string): Observable<number> {
-    return new Observable((observer) => {
-      getFolderSize.loose(path).then((size) => {
-        observer.next(super.convertBytesToKB(size));
-        observer.complete();
-      });
-    });
+    super(fileWorkerService);
   }
 
   listDir(params: IListDirParams): Observable<string> {

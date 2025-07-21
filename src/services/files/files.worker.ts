@@ -1,6 +1,5 @@
 import { Dir, Dirent } from 'fs';
-import { opendir } from 'fs/promises';
-
+import { lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import { WorkerMessage } from './files.worker.service';
 import { join } from 'path';
@@ -10,11 +9,18 @@ import { EVENTS, MAX_PROCS } from '../../constants/workers.constants.js';
 
 enum ETaskOperation {
   'explore',
-  'getSize',
+  'getFolderSize',
+  'getFolderSizeChild',
 }
+
 interface Task {
   operation: ETaskOperation;
   path: string;
+  sizeCollector?: {
+    total: number;
+    pending: number;
+    onComplete: (total: number) => void;
+  };
 }
 
 (() => {
@@ -51,7 +57,15 @@ interface Task {
       }
 
       if (message?.type === EVENTS.explore) {
-        fileWalker.enqueueTask(message.value.path);
+        fileWalker.enqueueTask(message.value.path, ETaskOperation.explore);
+      }
+
+      if (message?.type === EVENTS.getFolderSize) {
+        fileWalker.enqueueTask(
+          message.value.path,
+          ETaskOperation.getFolderSize,
+          true,
+        );
       }
     });
   }
@@ -63,6 +77,20 @@ interface Task {
         value: { results, workerId: id, pending: fileWalker.pendingJobs },
       });
     });
+
+    fileWalker.events.on(
+      'folderSizeResult',
+      (result: { path: string; size: number }) => {
+        tunnel.postMessage({
+          type: EVENTS.getFolderSizeResult,
+          value: {
+            results: result,
+            workerId: id,
+            pending: fileWalker.pendingJobs,
+          },
+        });
+      },
+    );
   }
 })();
 
@@ -82,8 +110,23 @@ class FileWalker {
     this.searchConfig = params;
   }
 
-  enqueueTask(path: string): void {
-    this.taskQueue.push({ path, operation: ETaskOperation.explore });
+  enqueueTask(
+    path: string,
+    operation: ETaskOperation,
+    priorize: boolean = false,
+    sizeCollector?: Task['sizeCollector'],
+  ): void {
+    const task: Task = { path, operation };
+    if (sizeCollector) {
+      task.sizeCollector = sizeCollector;
+    }
+
+    if (priorize) {
+      this.taskQueue.unshift(task);
+    } else {
+      this.taskQueue.push(task);
+    }
+
     this.processQueue();
   }
 
@@ -106,12 +149,92 @@ class FileWalker {
     }
 
     this.events.emit('newResult', { results });
-
     await dir.close();
     this.completeTask();
 
     if (this.taskQueue.length === 0 && this.procs === 0) {
       this.completeAll();
+    }
+  }
+
+  private async runGetFolderSize(path: string): Promise<void> {
+    this.updateProcs(1);
+
+    const collector = {
+      total: 0,
+      pending: 1,
+      onComplete: (finalSize: number) => {
+        this.events.emit('folderSizeResult', { path, size: finalSize });
+      },
+    };
+
+    this.enqueueTask(path, ETaskOperation.getFolderSizeChild, false, collector);
+    this.completeTask();
+  }
+
+  private async runGetFolderSizeChild(
+    path: string,
+    collector: Task['sizeCollector'],
+  ): Promise<void> {
+    if (!collector) {
+      // Should not happen with proper initiation, but safe.
+      this.completeTask();
+      return;
+    }
+
+    this.updateProcs(1);
+
+    try {
+      const entries = await readdir(path, { withFileTypes: true });
+      let currentLevelSize = 0;
+      const directoriesToProcess: string[] = [];
+
+      await Promise.all(
+        entries.map(async (entry) => {
+          const fullPath = join(path, entry.name);
+          try {
+            if (entry.isSymbolicLink()) {
+              return;
+            }
+
+            const stats = await lstat(fullPath);
+            const size =
+              typeof stats.blocks === 'number'
+                ? stats.blocks * 512
+                : stats.size;
+
+            currentLevelSize += size;
+
+            if (stats.isDirectory()) {
+              directoriesToProcess.push(fullPath);
+            }
+          } catch {
+            // Ignore permissions errors.
+          }
+        }),
+      );
+
+      collector.total += currentLevelSize;
+      collector.pending += directoriesToProcess.length;
+
+      for (const dirPath of directoriesToProcess) {
+        this.enqueueTask(
+          dirPath,
+          ETaskOperation.getFolderSizeChild,
+          false,
+          collector,
+        );
+      }
+    } catch (error) {
+      // Ignore permissions errors.
+    } finally {
+      collector.pending -= 1;
+
+      if (collector.pending === 0) {
+        collector.onComplete(collector.total);
+      }
+
+      this.completeTask();
     }
   }
 
@@ -129,22 +252,13 @@ class FileWalker {
   }
 
   private isExcluded(path: string): boolean {
-    if (this.searchConfig.exclude === undefined) {
+    if (this.searchConfig.exclude == null) {
       return false;
     }
-
-    for (let i = 0; i < this.searchConfig.exclude.length; i++) {
-      const excludeString = this.searchConfig.exclude[i];
-      if (path.includes(excludeString)) {
-        return true;
-      }
-    }
-
-    return false;
+    return this.searchConfig.exclude.some((ex) => path.includes(ex));
   }
 
   private isTargetFolder(path: string): boolean {
-    // return basename(path) === this.searchConfig.target;
     return path === this.searchConfig.target;
   }
 
@@ -160,17 +274,35 @@ class FileWalker {
 
   private processQueue(): void {
     while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
-      const path = this.taskQueue.shift()?.path;
-      if (path === undefined || path === '') {
-        return;
+      const task = this.taskQueue.shift();
+      if (!task?.path) {
+        continue;
       }
 
-      // Ignore as other mechanisms (pending/completed tasks) are used to
-      // check the progress of this.
-      this.run(path).then(
-        () => {},
-        () => {},
-      );
+      switch (task.operation) {
+        case ETaskOperation.explore:
+          this.run(task.path).catch((error) => {
+            this.completeTask();
+          });
+          break;
+        case ETaskOperation.getFolderSize:
+          this.runGetFolderSize(task.path).catch(() => {});
+          break;
+        case ETaskOperation.getFolderSizeChild:
+          this.runGetFolderSizeChild(task.path, task.sizeCollector).catch(
+            () => {
+              if (task.sizeCollector == null) {
+                return;
+              }
+
+              task.sizeCollector.pending -= 1;
+              if (task.sizeCollector.pending === 0) {
+                task.sizeCollector.onComplete(task.sizeCollector.total);
+              }
+            },
+          );
+          break;
+      }
     }
   }
 

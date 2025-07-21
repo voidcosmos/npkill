@@ -109,10 +109,6 @@ describe('File Service', () => {
   });
 
   describe('Conversion methods', () => {
-    it('#convertKbToGB', () => {
-      expect(fileService.convertKbToGB(100000)).toBe(0.095367431640625);
-      expect(fileService.convertKbToGB(140000)).toBe(0.133514404296875);
-    });
     it('#convertBytesToKB', () => {
       expect(fileService.convertBytesToKB(1)).toBe(0.0009765625);
       expect(fileService.convertBytesToKB(100)).toBe(0.09765625);

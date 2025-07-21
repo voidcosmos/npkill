@@ -434,11 +434,12 @@ export class Controller {
             this.resultsService.sortResults(this.config.sortBy);
             this.uiResults.clear();
           }
-          this.printFoldersSection();
+
+          this.uiResults.render();
         }),
         mergeMap((nodeFolder) => {
           return this.calculateFolderStats(nodeFolder);
-        }, 2),
+        }),
         tap(() => this.searchStatus.completeStatCalculation()),
         tap((folder) => {
           if (this.config.deleteAll) {
@@ -471,8 +472,8 @@ export class Controller {
     this.logger.info(`Calculating stats for ${nodeFolder.path}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => {
-        nodeFolder.size = this.fileService.convertKbToGB(+size);
-        this.logger.info(`Size of ${nodeFolder.path}: ${size}kb`);
+        this.logger.info(`Size of ${nodeFolder.path}: ${size}bytes`);
+        nodeFolder.size = this.fileService.convertBytesToGb(size);
       }),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
