@@ -162,64 +162,14 @@ class FileWalker {
 
     const collector = {
       total: 0,
-      pending: 0,
+      pending: 1,
       onComplete: (finalSize: number) => {
         this.events.emit('folderSizeResult', { path, size: finalSize });
       },
     };
 
-    this.calculateFolderSizeRecursive(path, collector);
+    this.enqueueTask(path, ETaskOperation.getFolderSizeChild, false, collector);
     this.completeTask();
-  }
-
-  private async calculateFolderSizeRecursive(
-    path: string,
-    collector: Task['sizeCollector'],
-  ): Promise<void> {
-    if (!collector) return;
-
-    collector.pending += 1;
-    this.updateProcs(1);
-
-    try {
-      const entries = await readdir(path, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const fullPath = join(path, entry.name);
-
-        let stats;
-        try {
-          stats = await lstat(fullPath);
-        } catch {
-          continue; // Skip files we can't access
-        }
-
-        if (stats.isSymbolicLink()) {
-          continue;
-        }
-
-        const size =
-          typeof stats.blocks === 'number' ? stats.blocks * 512 : stats.size;
-        collector.total += size;
-
-        if (stats.isDirectory()) {
-          // Process subdirectory recursively
-          this.calculateFolderSizeRecursive(fullPath, collector);
-        }
-      }
-    } catch (error) {
-      // Handle directory access errors gracefully
-      console.warn(`Failed to read directory: ${path}`, error);
-    } finally {
-      // Always decrement pending count
-      collector.pending -= 1;
-      this.updateProcs(-1);
-
-      // Check if all work is complete
-      if (collector.pending === 0) {
-        collector.onComplete(collector.total);
-      }
-    }
   }
 
   private async runGetFolderSizeChild(
@@ -227,6 +177,7 @@ class FileWalker {
     collector: Task['sizeCollector'],
   ): Promise<void> {
     if (!collector) {
+      // Should not happen with proper initiation, but safe.
       this.completeTask();
       return;
     }
@@ -235,47 +186,37 @@ class FileWalker {
 
     try {
       const entries = await readdir(path, { withFileTypes: true });
+      let currentLevelSize = 0;
       const directoriesToProcess: string[] = [];
-      const promises: Promise<void>[] = [];
 
-      for (const entry of entries) {
-        const fullPath = join(path, entry.name);
+      await Promise.all(
+        entries.map(async (entry) => {
+          const fullPath = join(path, entry.name);
+          try {
+            if (entry.isSymbolicLink()) {
+              return;
+            }
 
-        if (entry.isSymbolicLink()) {
-          continue;
-        }
+            const stats = await lstat(fullPath);
+            const size =
+              typeof stats.blocks === 'number'
+                ? stats.blocks * 512
+                : stats.size;
 
-        if (entry.isDirectory()) {
-          directoriesToProcess.push(fullPath);
-          promises.push(
-            lstat(fullPath)
-              .then((stats) => {
-                const size =
-                  typeof stats.blocks === 'number'
-                    ? stats.blocks * 512
-                    : stats.size;
-                collector.total += size;
-              })
-              .catch(() => {}),
-          );
-        } else if (entry.isFile()) {
-          promises.push(
-            lstat(fullPath)
-              .then((stats) => {
-                const size =
-                  typeof stats.blocks === 'number'
-                    ? stats.blocks * 512
-                    : stats.size;
-                collector.total += size;
-              })
-              .catch(() => {}),
-          );
-        }
-      }
+            currentLevelSize += size;
 
-      await Promise.all(promises);
+            if (stats.isDirectory()) {
+              directoriesToProcess.push(fullPath);
+            }
+          } catch {
+            // Ignore permissions errors.
+          }
+        }),
+      );
 
+      collector.total += currentLevelSize;
       collector.pending += directoriesToProcess.length;
+
       for (const dirPath of directoriesToProcess) {
         this.enqueueTask(
           dirPath,
@@ -285,6 +226,7 @@ class FileWalker {
         );
       }
     } catch (error) {
+      // Ignore permissions errors.
     } finally {
       collector.pending -= 1;
 
