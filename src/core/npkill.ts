@@ -14,7 +14,10 @@ export class Npkill {
   private readonly services: Services;
 
   constructor(customServices?: Partial<Services>) {
-    const defaultServices = createDefaultServices();
+    const defaultServices = createDefaultServices(
+      customServices?.searchStatus,
+      customServices?.logger,
+    );
     this.services = { ...defaultServices, ...customServices };
   }
 
@@ -50,10 +53,16 @@ export class Npkill {
   }
 }
 
-function createDefaultServices(): Services {
-  const logger = new LoggerService();
-  const searchStatus = new SearchStatus();
-  const fileWorkerService = new FileWorkerService(logger, searchStatus);
+function createDefaultServices(
+  searchStatus?: SearchStatus,
+  logger?: LoggerService,
+): Services {
+  const actualLogger = logger || new LoggerService();
+  const actualSearchStatus = searchStatus || new SearchStatus();
+  const fileWorkerService = new FileWorkerService(
+    actualLogger,
+    actualSearchStatus,
+  );
   const streamService = new StreamService();
   const resultsService = null as any;
 
@@ -66,8 +75,8 @@ function createDefaultServices(): Services {
   const fileService = new OSService(streamService, fileWorkerService);
 
   return {
-    logger,
-    searchStatus,
+    logger: actualLogger,
+    searchStatus: actualSearchStatus,
     fileService,
     fileWorkerService,
     streamService,
