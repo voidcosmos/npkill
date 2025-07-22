@@ -2,7 +2,10 @@ import { tmpdir } from 'os';
 import { existsSync, renameSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
 
-interface LogEntry {
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+export interface LogEntry {
   type: 'info' | 'warn' | 'error';
   timestamp: number;
   message: string;
@@ -13,6 +16,7 @@ const OLD_TAG = 'old';
 
 export class LoggerService {
   private log: LogEntry[] = [];
+  private logSubject = new BehaviorSubject<LogEntry[]>([]);
 
   info(message: string): void {
     this.addToLog({
@@ -44,6 +48,24 @@ export class LoggerService {
     }
 
     return this.log.filter((entry) => entry.type === type);
+  }
+
+  getLog$(): Observable<LogEntry[]> {
+    return this.logSubject.asObservable();
+  }
+
+  getLogByType$(
+    type: 'all' | 'info' | 'warn' | 'error' = 'all',
+  ): Observable<LogEntry[]> {
+    return this.logSubject
+      .asObservable()
+      .pipe(
+        map((entries) =>
+          type === 'all'
+            ? entries
+            : entries.filter((entry) => entry.type === type),
+        ),
+      );
   }
 
   saveToFile(path: string): void {
@@ -78,6 +100,7 @@ export class LoggerService {
 
   private addToLog(entry: LogEntry): void {
     this.log = [...this.log, entry];
+    this.logSubject.next(this.log);
   }
 
   private getTimestamp(): number {

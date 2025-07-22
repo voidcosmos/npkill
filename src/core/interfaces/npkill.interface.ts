@@ -8,6 +8,7 @@ import {
   ScanOptions,
 } from './folder.interface';
 import { IFileService } from '.';
+import { LogEntry } from '@core/services/logger.service';
 
 export interface NpkillInterface {
   startScan$(options: ScanOptions): Observable<ScanFoundFolder>;
@@ -23,6 +24,7 @@ export interface NpkillInterface {
   ): Promise<GetFolderLastModificationResult>;
   deleteFolder$(folder: DeleteOptions): Observable<DeleteResult>;
   deleteFolder(folder: DeleteOptions): Promise<DeleteResult>;
+  getLogs$(): Observable<LogEntry[]>;
   getFileService(): IFileService;
 }
 

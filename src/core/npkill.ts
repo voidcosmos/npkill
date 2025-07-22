@@ -1,9 +1,9 @@
 import { FileWorkerService } from './services/files/index.js';
 import { firstValueFrom, from, Observable } from 'rxjs';
-import { catchError, filter, map, mergeMap, take } from 'rxjs/operators';
+import { catchError, filter, map, mergeMap, take, tap } from 'rxjs/operators';
 import { IFileService } from './interfaces/file-service.interface.js';
 import { ScanStatus } from './interfaces/search-status.model.js';
-
+import _dirname from '../dirname.js';
 import { LoggerService } from './services/logger.service.js';
 import { StreamService } from './services/stream.service.js';
 import { Services } from './interfaces/services.interface.js';
@@ -22,6 +22,8 @@ import {
   NpkillInterface,
 } from './interfaces/npkill.interface.js';
 
+import { LogEntry } from './services/logger.service.js';
+
 export class Npkill implements NpkillInterface {
   private readonly services: Services;
 
@@ -31,10 +33,16 @@ export class Npkill implements NpkillInterface {
       customServices?.logger,
     );
     this.services = { ...defaultServices, ...customServices };
+    this.logger.info(process.argv.join(' '));
+    this.logger.info(`Npkill started! v${this.getVersion()}`);
   }
+
+  private searchDuration = 0;
 
   startScan$(options: ScanOptions): Observable<ScanFoundFolder> {
     const { fileService } = this.services;
+    this.logger.info(`Scan started in ${options.rootPath}`);
+    const startTime = Date.now();
 
     return fileService.listDir(options).pipe(
       catchError((_error, caught) => {
@@ -43,6 +51,15 @@ export class Npkill implements NpkillInterface {
       mergeMap((dataFolder) => from(splitData(dataFolder))),
       filter((path) => path !== ''),
       map((path) => ({ path })),
+      tap((nodeFolder) =>
+        this.logger.info(`Folder found: ${String(nodeFolder.path)}`),
+      ),
+      tap({
+        complete: () => {
+          this.searchDuration = (Date.now() - startTime) / 1000;
+          this.logger.info(`Search completed after ${this.searchDuration}s`);
+        },
+      }),
     );
   }
 
@@ -50,9 +67,13 @@ export class Npkill implements NpkillInterface {
     options: GetFolderSizeOptions,
   ): Observable<GetFolderSizeResult> {
     const { fileService } = this.services;
+    this.logger.info(`Calculating folder size for ${String(options.path)}`);
     return fileService.getFolderSize(options.path).pipe(
       take(1),
       map((size) => ({ size })),
+      tap(({ size }) =>
+        this.logger.info(`Size of ${options.path}: ${size} bytes`),
+      ),
     );
   }
 
@@ -70,7 +91,9 @@ export class Npkill implements NpkillInterface {
     options: GetFolderLastModificationOptions,
   ): Promise<GetFolderLastModificationResult> {
     const { fileService } = this.services;
+    this.logger.info(`Calculating last mod. of ${options.path}`);
     const result = await fileService.getRecentModificationInDir(options.path);
+    this.logger.info(`Last mod. of ${options.path}: ${result}`);
     return { timestamp: result };
   }
 
@@ -80,7 +103,14 @@ export class Npkill implements NpkillInterface {
 
   async deleteFolder(folder: DeleteOptions): Promise<DeleteResult> {
     const { fileService } = this.services;
+    this.logger.info(`Deleting ${String(folder.path)}...`);
     const result = await fileService.deleteDir(folder.path);
+    if (!result) {
+      this.logger.error(`Failed to delete ${String(folder.path)}`);
+      return { path: folder.path, success: false };
+    }
+
+    this.logger.info(`Deleted ${String(folder.path)}: ${result}`);
     return {
       path: folder.path,
       success: result,
@@ -91,6 +121,23 @@ export class Npkill implements NpkillInterface {
 
   getFileService(): IFileService {
     return this.services.fileService;
+  }
+
+  getLogs$(): Observable<LogEntry[]> {
+    return this.services.logger.getLog$();
+  }
+
+  private getVersion(): string {
+    const packageJson = _dirname + '/../package.json';
+
+    const packageData = JSON.parse(
+      this.services.fileService.getFileContent(packageJson),
+    );
+    return packageData.version;
+  }
+
+  get logger(): LoggerService {
+    return this.services.logger;
   }
 }
 

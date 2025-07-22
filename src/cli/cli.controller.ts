@@ -71,8 +71,7 @@ export class CliController {
   }
 
   init(): void {
-    this.logger.info(process.argv.join(' '));
-    this.logger.info(`Npkill started! v${this.getVersion()}`);
+    this.logger.info(`Npkill CLI started! v${this.getVersion()}`);
     this.initUi();
     if (this.consoleService.isRunningBuild()) {
       this.uiHeader.programVersion = this.getVersion();
@@ -380,8 +379,6 @@ export class CliController {
       this.fileService.isDangerous(path);
 
     this.searchStart = Date.now();
-    this.logger.info(`Scan started in ${params.rootPath}`);
-
     const results$ = this.npkill
       .startScan$(params)
       .pipe(map((folder) => folder.path));
@@ -401,7 +398,6 @@ export class CliController {
         tap((nodeFolder) => {
           this.searchStatus.newResult();
           this.resultsService.addResult(nodeFolder);
-          this.logger.info(`Folder found: ${String(nodeFolder.path)}`); // Why i need cast to String?
 
           if (this.config.sortBy === 'path') {
             this.resultsService.sortResults(this.config.sortBy);
@@ -444,10 +440,8 @@ export class CliController {
   private calculateFolderStats(
     nodeFolder: CliScanFoundFolder,
   ): Observable<CliScanFoundFolder> {
-    this.logger.info(`Calculating stats for ${String(nodeFolder.path)}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => {
-        this.logger.info(`Size of ${nodeFolder.path}: ${size}bytes`);
         nodeFolder.size = this.fileService.convertBytesToGb(size);
       }),
       switchMap(async () => {
@@ -460,7 +454,6 @@ export class CliController {
         const result =
           await this.fileService.getRecentModificationInDir(parentFolder);
         nodeFolder.modificationTime = result;
-        this.logger.info(`Last mod. of ${nodeFolder.path}: ${result}`);
         return nodeFolder;
       }),
       tap(() => {
@@ -484,7 +477,6 @@ export class CliController {
     this.setSearchDuration();
     this.uiResults.completeSearch();
     this.uiStatus.completeSearch(this.searchDuration);
-    this.logger.info(`Search completed after ${this.searchDuration}s`);
   }
 
   private setSearchDuration(): void {
@@ -535,7 +527,6 @@ export class CliController {
       return;
     }
 
-    this.logger.info(`Deleting ${String(folder.path)}`);
     folder.status = 'deleting';
     this.searchStatus.pendingDeletions++;
     this.uiStatus.render();
@@ -553,7 +544,6 @@ export class CliController {
         this.uiStats.render();
         this.uiStatus.render();
         this.printFoldersSection();
-        this.logger.info(`Deleted ${String(folder.path)}`);
       })
       .catch((e) => {
         folder.status = 'error-deleting';
