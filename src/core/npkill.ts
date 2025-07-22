@@ -103,8 +103,12 @@ export class Npkill implements NpkillInterface {
 
   async deleteFolder(folder: DeleteOptions): Promise<DeleteResult> {
     const { fileService } = this.services;
-    this.logger.info(`Deleting ${String(folder.path)}...`);
-    const result = await fileService.deleteDir(folder.path);
+    this.logger.info(
+      `Deleting ${String(folder.path)} ${folder.dryRun ? '(dry run)' : ''}...`,
+    );
+    const result = folder.dryRun
+      ? await fileService.fakeDeleteDir(folder.path)
+      : await fileService.deleteDir(folder.path);
     if (!result) {
       this.logger.error(`Failed to delete ${String(folder.path)}`);
       return { path: folder.path, success: false };

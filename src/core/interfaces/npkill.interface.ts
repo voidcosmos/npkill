@@ -30,6 +30,7 @@ export interface NpkillInterface {
 
 export interface DeleteOptions {
   path: string;
+  dryRun?: boolean;
 }
 
 export interface DeleteResult {
