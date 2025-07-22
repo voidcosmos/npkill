@@ -49,8 +49,7 @@
     "ansi-escapes": "^7.0.0",
     "colors": "1.4.0",
     "node-emoji": "^2.1.3",
-    "open-file-explorer": "^1.0.2",
-    "rxjs": "^7.8.2"
+    "open-file-explorer": "^1.0.2"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.8.1",
@@ -83,6 +82,9 @@
     "ts-node": "^10.9.2",
     "tslint": "^6.1.3",
     "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "rxjs": "^7.8.2"
   },
   "husky": {
     "hooks": {
