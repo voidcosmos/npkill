@@ -32,6 +32,7 @@ We're making an effort to internationalize the Npkill docs. Here's a list of the
   - [Options](#options)
   - [Examples](#examples)
 - [Set Up Locally](#setup-locally)
+- [API](#API)
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
@@ -180,6 +181,12 @@ npm run start
 # -- If you want to run it with some parameter, you will have to add "--" as in the following example:
 npm run start -- -f -e
 ```
+
+<a name="API"></a>
+
+# :bookmark_tabs: API
+
+// TODO
 
 <a name="roadmap"></a>
 
