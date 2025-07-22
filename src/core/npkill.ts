@@ -1,6 +1,6 @@
 import { FileWorkerService } from './services/files/index.js';
 import { firstValueFrom, from, Observable } from 'rxjs';
-import { catchError, filter, map, mergeMap } from 'rxjs/operators';
+import { catchError, filter, map, mergeMap, take } from 'rxjs/operators';
 import { IFileService } from './interfaces/file-service.interface.js';
 import { ScanStatus } from './interfaces/search-status.model.js';
 
@@ -46,11 +46,24 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult> {
+  getFolderSize$(
+    options: GetFolderSizeOptions,
+  ): Observable<GetFolderSizeResult> {
     const { fileService } = this.services;
-    return firstValueFrom(
-      fileService.getFolderSize(options.path).pipe(map((size) => ({ size }))),
+    return fileService.getFolderSize(options.path).pipe(
+      take(1),
+      map((size) => ({ size })),
     );
+  }
+
+  getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult> {
+    return firstValueFrom(this.getFolderSize$(options));
+  }
+
+  getFolderLastModification$(
+    options: GetFolderLastModificationOptions,
+  ): Observable<GetFolderLastModificationResult> {
+    return from(this.getFolderLastModification(options));
   }
 
   async getFolderLastModification(
@@ -59,6 +72,10 @@ export class Npkill implements NpkillInterface {
     const { fileService } = this.services;
     const result = await fileService.getRecentModificationInDir(options.path);
     return { timestamp: result };
+  }
+
+  deleteFolder$(folder: DeleteOptions): Observable<DeleteResult> {
+    return from(this.deleteFolder(folder));
   }
 
   async deleteFolder(folder: DeleteOptions): Promise<DeleteResult> {

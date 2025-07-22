@@ -11,10 +11,17 @@ import { IFileService } from '.';
 
 export interface NpkillInterface {
   startScan$(options: ScanOptions): Observable<ScanFoundFolder>;
+  getFolderSize$(
+    options: GetFolderSizeOptions,
+  ): Observable<GetFolderSizeResult>;
   getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult>;
+  getFolderLastModification$(
+    options: GetFolderLastModificationOptions,
+  ): Observable<GetFolderLastModificationResult>;
   getFolderLastModification(
     options: GetFolderLastModificationOptions,
   ): Promise<GetFolderLastModificationResult>;
+  deleteFolder$(folder: DeleteOptions): Observable<DeleteResult>;
   deleteFolder(folder: DeleteOptions): Promise<DeleteResult>;
   getFileService(): IFileService;
 }
