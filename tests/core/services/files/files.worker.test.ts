@@ -5,7 +5,7 @@ import { join, normalize } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
 import { EVENTS } from '../../../../src/constants/workers.constants.js';
-import { FindFolderOptions } from '../../../../src/core/index.js';
+import { ScanOptions } from '../../../../src/core/index.js';
 
 const parentEmitter: EventEmitter = new EventEmitter();
 let tunnelEmitter: MessagePort;
@@ -69,7 +69,7 @@ jest.unstable_mockModule('node:worker_threads', () => ({
 }));
 
 describe('FileWorker', () => {
-  const setExploreConfig = (params: FindFolderOptions) => {
+  const setExploreConfig = (params: ScanOptions) => {
     tunnelEmitter.postMessage({
       type: EVENTS.exploreConfig,
       value: params,
@@ -100,7 +100,7 @@ describe('FileWorker', () => {
   // it('should plant a listener over the passed MessagePort',()=>{})
 
   it('should return only sub-directories from given parent', (done) => {
-    setExploreConfig({ path: basePath, target });
+    setExploreConfig({ rootPath: basePath, target });
     const subDirectories = [
       { name: 'file1.txt', isDirectory: () => false },
       { name: 'file2.txt', isDirectory: () => false },
@@ -140,7 +140,7 @@ describe('FileWorker', () => {
 
     sampleTargets.forEach((target) => {
       it('when target is ' + target, (done) => {
-        setExploreConfig({ path: basePath, target: 'node_modules' });
+        setExploreConfig({ rootPath: basePath, target: 'node_modules' });
         const subDirectories = [
           { name: 'file1.cs', isDirectory: () => false },
           { name: '.gitignore', isDirectory: () => false },
@@ -181,7 +181,7 @@ describe('FileWorker', () => {
     it('when a simple patterns is gived', (done) => {
       const excluded = ['ignorethis', 'andignorethis'];
       setExploreConfig({
-        path: basePath,
+        rootPath: basePath,
         target: 'node_modules',
         exclude: excluded,
       });
@@ -224,7 +224,7 @@ describe('FileWorker', () => {
     it('when a part of path is gived', (done) => {
       const excluded = ['user/ignorethis'];
       setExploreConfig({
-        path: basePath,
+        rootPath: basePath,
         target: 'node_modules',
         exclude: excluded.map(normalize),
       });

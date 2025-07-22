@@ -7,8 +7,8 @@ const mackServiceConstructorMock = jest.fn();
 const windowsServiceConstructorMock = jest.fn();
 const fileWorkerServiceConstructorMock = jest.fn();
 
-jest.mock('../src/cli/controller', () => ({
-  Controller: controllerConstructorMock.mockImplementation(() => ({
+jest.mock('../src/cli/cli.controller', () => ({
+  CliController: controllerConstructorMock.mockImplementation(() => ({
     init: constructorInitMock,
     fileService: {
       getFileContent: jest.fn().mockReturnValue('{}'),

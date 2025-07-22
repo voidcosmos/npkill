@@ -1,10 +1,11 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
 import { Subject } from 'rxjs';
-import { Folder } from '../../src/core/interfaces/folder.interface.js';
 import { Npkill } from '../../src/core/index.js';
+import { CliScanFoundFolder } from '../../src/cli/interfaces/stats.interface.js';
+import { DeleteResult } from '../../src/core/interfaces/npkill.interface.js';
 
-const resultsUiDeleteMock$ = new Subject<Folder>();
+const resultsUiDeleteMock$ = new Subject<DeleteResult>();
 const setDeleteAllWarningVisibilityMock = jest.fn();
 
 jest.mock('../../src/dirname.js', () => {
@@ -65,12 +66,12 @@ jest.unstable_mockModule('../../src/cli/ui/heavy.ui.js', () => ({
   HeavyUi: {},
 }));
 
-const ControllerConstructor = //@ts-ignore
-  (await import('../../src/cli/controller.js')).Controller;
-class Controller extends ControllerConstructor {}
+const CliControllerConstructor = //@ts-ignore
+  (await import('../../src/cli/cli.controller.js')).CliController;
+class CliController extends CliControllerConstructor {}
 
-describe('Controller test', () => {
-  let controller;
+describe('CliController test', () => {
+  let cliController;
 
   const filesServiceDeleteMock = jest
     .fn<() => Promise<boolean>>()
@@ -128,7 +129,7 @@ describe('Controller test', () => {
     exitSpy = jest.spyOn(process, 'exit').mockImplementation((number) => {
       throw new Error('process.exit: ' + number);
     });
-    controller = new Controller(
+    cliController = new CliController(
       npkillMock,
       loggerServiceMock,
       searchStatusMock,
@@ -142,24 +143,24 @@ describe('Controller test', () => {
     Object.defineProperty(process.stdout, 'columns', { value: 80 });
     Object.defineProperty(process.stdout, 'isTTY', { value: true });
 
-    parseArgumentsSpy = jest.spyOn(controller, 'parseArguments');
+    parseArgumentsSpy = jest.spyOn(cliController, 'parseArguments');
     showHelpSpy = jest
-      .spyOn(controller, 'showHelp')
+      .spyOn(cliController, 'showHelp')
       .mockImplementation(() => ({}));
     prepareScreenSpy = jest
-      .spyOn(controller, 'prepareScreen')
+      .spyOn(cliController, 'prepareScreen')
       .mockImplementation(() => ({}));
     setupEventsListenerSpy = jest
-      .spyOn(controller, 'setupEventsListener')
+      .spyOn(cliController, 'setupEventsListener')
       .mockImplementation(() => ({}));
-    scanSpy = jest.spyOn(controller, 'scan').mockImplementation(() => ({}));
+    scanSpy = jest.spyOn(cliController, 'scan').mockImplementation(() => ({}));
     checkVersionSpy = jest
-      .spyOn(controller, 'checkVersion')
+      .spyOn(cliController, 'checkVersion')
       .mockImplementation(() => ({}));
   });
 
   it('#init normal start should call some methods', () => {
-    controller.init();
+    cliController.init();
     expect(showHelpSpy).toHaveBeenCalledTimes(0);
     expect(setupEventsListenerSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledTimes(1);
@@ -183,7 +184,7 @@ describe('Controller test', () => {
     };
 
     const spyMethod = (method, fn = () => {}) => {
-      return jest.spyOn(controller, method).mockImplementation(fn);
+      return jest.spyOn(cliController, method).mockImplementation(fn);
     };
 
     afterEach(() => {
@@ -193,7 +194,7 @@ describe('Controller test', () => {
 
     it('#showHelp should called if --help flag is present and exit', () => {
       mockParameters({ help: true });
-      expect(() => controller.init()).toThrow();
+      expect(() => cliController.init()).toThrow();
       expect(showHelpSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledTimes(1);
     });
@@ -201,9 +202,9 @@ describe('Controller test', () => {
     it('#showProgramVersion should called if --version flag is present and exit', () => {
       mockParameters({ version: true });
       const functionSpy = jest
-        .spyOn(controller, 'showProgramVersion')
+        .spyOn(cliController, 'showProgramVersion')
         .mockImplementation(() => ({}));
-      expect(() => controller.init()).toThrow();
+      expect(() => cliController.init()).toThrow();
       expect(functionSpy).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledTimes(1);
     });
@@ -211,7 +212,7 @@ describe('Controller test', () => {
     it('#checkVersionn should not be called if --no-check-updates is given', () => {
       mockParameters({ 'no-check-updates': true });
       const functionSpy = spyMethod('checkVersion');
-      controller.init();
+      cliController.init();
       expect(functionSpy).toHaveBeenCalledTimes(0);
     });
 
@@ -220,7 +221,7 @@ describe('Controller test', () => {
         mockParameters({ 'sort-by': 'novalid' });
         spyMethod('isValidSortParam', () => false);
         const functionSpy = spyMethod('invalidSortParam');
-        controller.init();
+        cliController.init();
         expect(functionSpy).toHaveBeenCalledTimes(1);
       });
 
@@ -237,7 +238,7 @@ describe('Controller test', () => {
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
 
-        controller.init();
+        cliController.init();
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(1);
         expect(scanSpy).toHaveBeenCalledTimes(0);
       });
@@ -247,28 +248,25 @@ describe('Controller test', () => {
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
 
-        controller.init();
+        cliController.init();
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('--dry-run', () => {
-      let testFolder: Folder;
+      let testFolder: DeleteResult;
 
       beforeEach(() => {
         testFolder = {
           path: '/my/path',
-          size: 0,
-          modificationTime: 0,
-          isDangerous: false,
-          status: 'live',
+          success: true,
         };
         jest.clearAllMocks();
       });
 
       it('Should call normal deleteDir function when no --dry-run is included', () => {
-        controller.init();
+        cliController.init();
 
         expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
         expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
@@ -282,7 +280,7 @@ describe('Controller test', () => {
 
       it('Should call fake deleteDir function instead of deleteDir', () => {
         mockParameters({ 'dry-run': true });
-        controller.init();
+        cliController.init();
 
         expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
         expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);

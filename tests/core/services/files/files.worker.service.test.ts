@@ -3,10 +3,9 @@ import EventEmitter from 'node:events';
 
 import { Subject } from 'rxjs';
 import { EVENTS } from '../../../../src/constants/workers.constants';
-import { FindFolderOptions } from '../../../../src/core/index.js';
-import { SearchStatus } from '../../../../src/core/interfaces/search-status.model.js';
 import { WorkerMessage } from '../../../../src/core/services/files/index.js';
 import { LoggerService } from '../../../../src/core/services/logger.service.js';
+import { ScanOptions, ScanStatus } from '../../../../src/core/index.js';
 
 const workerEmitter: EventEmitter = new EventEmitter();
 const port1Emitter: EventEmitter = new EventEmitter();
@@ -58,17 +57,17 @@ class FileWorkerService extends FileWorkerServiceConstructor {}
 
 describe('FileWorkerService', () => {
   let fileWorkerService: FileWorkerService;
-  let searchStatus: SearchStatus;
-  let params: FindFolderOptions;
+  let searchStatus: ScanStatus;
+  let params: ScanOptions;
 
   beforeEach(async () => {
     const aa = new URL('http://127.0.0.1'); // Any valid URL. Is not used
     jest.spyOn(global, 'URL').mockReturnValue(aa);
 
-    searchStatus = new SearchStatus();
+    searchStatus = new ScanStatus();
     fileWorkerService = new FileWorkerService(logger, searchStatus);
     params = {
-      path: '/path/to/directory',
+      rootPath: '/path/to/directory',
       target: 'node_modules',
     };
   });
@@ -95,7 +94,7 @@ describe('FileWorkerService', () => {
       fileWorkerService.startScan(stream$, params);
       expect(messageChannelPort1Mock).toHaveBeenCalledWith({
         type: EVENTS.explore,
-        value: { path: params.path },
+        value: { rootPath: params.rootPath },
       });
     });
 
