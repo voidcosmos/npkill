@@ -1,6 +1,5 @@
 <p align="center">
-  <img src="https://npkill.js.org/img/npkill-text-outlined.svg" width="320" alt="npkill logo" />
-  <img src="https://npkill.js.org/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
+  <img src="./docs/npkill-text-clean.svg" width="380" alt="npkill logo" />
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
