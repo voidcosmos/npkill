@@ -7,7 +7,7 @@ export interface ScanOptions {
   target: string;
   exclude?: string[];
   sortBy?: 'path' | 'size' | 'last-mod';
-  maxConcurrentScans?: number;
+  // maxConcurrentScans?: number; // Need to implement this.
 }
 
 export interface GetFolderSizeOptions {
