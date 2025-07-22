@@ -10,7 +10,7 @@ import {
   UI_POSITIONS,
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
-import { IConfig, ScanFolderResult, IKeyPress } from './interfaces/index.js';
+import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
 import { Observable } from 'rxjs';
 import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
@@ -391,7 +391,7 @@ export class CliController {
 
     nonExcludedResults$
       .pipe(
-        map<string, ScanFolderResult>((path) => ({
+        map<string, CliScanFoundFolder>((path) => ({
           path,
           size: 0,
           modificationTime: -1,
@@ -442,8 +442,8 @@ export class CliController {
   }
 
   private calculateFolderStats(
-    nodeFolder: ScanFolderResult,
-  ): Observable<ScanFolderResult> {
+    nodeFolder: CliScanFoundFolder,
+  ): Observable<CliScanFoundFolder> {
     this.logger.info(`Calculating stats for ${String(nodeFolder.path)}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => {
@@ -520,7 +520,7 @@ export class CliController {
     new GeneralUi().printExitMessage({ spaceReleased });
   }
 
-  private deleteFolder(folder: ScanFolderResult): void {
+  private deleteFolder(folder: CliScanFoundFolder): void {
     if (folder.status === 'deleted' || folder.status === 'deleting') {
       return;
     }

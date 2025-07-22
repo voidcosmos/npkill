@@ -8,7 +8,7 @@ import { LoggerService } from './services/logger.service.js';
 import { StreamService } from './services/stream.service.js';
 import { Services } from './interfaces/services.interface.js';
 import {
-  FoundFolder,
+  ScanFoundFolder,
   GetFolderLastModificationOptions,
   GetFolderLastModificationResult,
   GetFolderSizeOptions,
@@ -33,7 +33,7 @@ export class Npkill implements NpkillInterface {
     this.services = { ...defaultServices, ...customServices };
   }
 
-  startScan$(options: ScanOptions): Observable<FoundFolder> {
+  startScan$(options: ScanOptions): Observable<ScanFoundFolder> {
     const { fileService } = this.services;
 
     return fileService.listDir(options).pipe(

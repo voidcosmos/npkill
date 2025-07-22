@@ -1,10 +1,10 @@
-import { ScanFolderResult, IStats } from '../interfaces/index.js';
+import { CliScanFoundFolder, IStats } from '../interfaces/index.js';
 import { FOLDER_SORT } from '../../constants/sort.result.js';
 
 export class ResultsService {
-  results: ScanFolderResult[] = [];
+  results: CliScanFoundFolder[] = [];
 
-  addResult(result: ScanFolderResult): void {
+  addResult(result: CliScanFoundFolder): void {
     this.results = [...this.results, result];
   }
 

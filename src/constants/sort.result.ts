@@ -1,11 +1,11 @@
-import { ScanFolderResult } from 'src/cli/interfaces';
+import { CliScanFoundFolder } from 'src/cli/interfaces';
 
 export const FOLDER_SORT = {
-  path: (a: ScanFolderResult, b: ScanFolderResult) =>
+  path: (a: CliScanFoundFolder, b: CliScanFoundFolder) =>
     a.path > b.path ? 1 : -1,
-  size: (a: ScanFolderResult, b: ScanFolderResult) =>
+  size: (a: CliScanFoundFolder, b: CliScanFoundFolder) =>
     a.size < b.size ? 1 : -1,
-  'last-mod': (a: ScanFolderResult, b: ScanFolderResult) => {
+  'last-mod': (a: CliScanFoundFolder, b: CliScanFoundFolder) => {
     if (a.modificationTime === b.modificationTime) {
       return FOLDER_SORT.path(a, b);
     }

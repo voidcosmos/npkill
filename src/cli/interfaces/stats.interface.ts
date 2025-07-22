@@ -1,6 +1,6 @@
-import { FoundFolder } from '@core/interfaces';
+import { ScanFoundFolder } from '@core/interfaces';
 
-export interface ScanFolderResult extends FoundFolder {
+export interface CliScanFoundFolder extends ScanFoundFolder {
   size: number;
   modificationTime: number;
   isDangerous: boolean;

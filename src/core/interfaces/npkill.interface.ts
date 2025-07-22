@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import {
-  FoundFolder,
+  ScanFoundFolder,
   GetFolderLastModificationOptions,
   GetFolderLastModificationResult,
   GetFolderSizeOptions,
@@ -10,7 +10,7 @@ import {
 import { IFileService } from '.';
 
 export interface NpkillInterface {
-  startScan$(options: ScanOptions): Observable<FoundFolder>;
+  startScan$(options: ScanOptions): Observable<ScanFoundFolder>;
   getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult>;
   getFolderLastModification(
     options: GetFolderLastModificationOptions,
@@ -26,5 +26,8 @@ export interface DeleteOptions {
 export interface DeleteResult {
   path: string;
   success: boolean;
-  error?: string;
+  error?: {
+    message: string;
+    code?: string;
+  };
 }
