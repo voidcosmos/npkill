@@ -8,7 +8,7 @@ import {
   SPINNER_INTERVAL,
 } from '../../../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../../../constants/main.constants.js';
-import { SearchStatus } from '@core/interfaces/search-status.model.js';
+import { ScanStatus } from '@core/interfaces/search-status.model.js';
 import {
   BAR_PARTS,
   BAR_WIDTH,
@@ -30,7 +30,7 @@ export class StatusUi extends BaseUi {
 
   constructor(
     private readonly spinnerService: SpinnerService,
-    private readonly searchStatus: SearchStatus,
+    private readonly searchStatus: ScanStatus,
   ) {
     super();
   }

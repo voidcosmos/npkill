@@ -1,4 +1,4 @@
-import { FindFolderOptions, IFileService, IFileStat } from '@core/index.js';
+import { ScanOptions, IFileService, IFileStat } from '@core/index.js';
 import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
@@ -11,7 +11,7 @@ export abstract class FileService implements IFileService {
     this.fileWorkerService = fileWorkerService;
   }
 
-  abstract listDir(params: FindFolderOptions): Observable<string>;
+  abstract listDir(params: ScanOptions): Observable<string>;
   abstract deleteDir(path: string): Promise<boolean>;
 
   getFolderSize(path: string): Observable<number> {

@@ -9,12 +9,12 @@ import {
 import { CliController } from './cli/cli.controller.js';
 import { UiService } from './cli/services/ui.service.js';
 import { LoggerService } from './core/services/logger.service.js';
-import { SearchStatus } from './core/interfaces/search-status.model.js';
+import { ScanStatus } from './core/interfaces/search-status.model.js';
 import { Npkill } from './core/index.js';
 
 export default (): void => {
   const logger = new LoggerService();
-  const searchStatus = new SearchStatus();
+  const searchStatus = new ScanStatus();
   const resultsService = new ResultsService();
 
   const npkill = new Npkill({ logger, searchStatus, resultsService });

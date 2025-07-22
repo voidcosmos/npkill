@@ -2,7 +2,7 @@ import { Subject, Observable } from 'rxjs';
 import { FileService } from './files.service.js';
 import { FileWorkerService } from './files.worker.service.js';
 import { WindowsStrategyManager } from './strategies/windows-remove-dir.strategy.js';
-import { FindFolderOptions } from '@core/index.js';
+import { ScanOptions } from '@core/index.js';
 import { StreamService } from '../stream.service.js';
 
 export class WindowsFilesService extends FileService {
@@ -16,7 +16,7 @@ export class WindowsFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  listDir(params: FindFolderOptions): Observable<string> {
+  listDir(params: ScanOptions): Observable<string> {
     const stream$ = new Subject<string>();
     this.fileWorkerService.startScan(stream$, params);
     return stream$;

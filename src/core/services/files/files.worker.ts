@@ -5,7 +5,7 @@ import { WorkerMessage } from './files.worker.service';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
-import { FindFolderOptions } from '@core/index';
+import { ScanOptions } from '@core/index';
 
 enum ETaskOperation {
   'explore',
@@ -96,8 +96,8 @@ interface Task {
 
 class FileWalker {
   readonly events = new EventEmitter();
-  private searchConfig: FindFolderOptions = {
-    path: '',
+  private searchConfig: ScanOptions = {
+    rootPath: '',
     target: '',
     exclude: [],
   };
@@ -106,7 +106,7 @@ class FileWalker {
   private completedTasks = 0;
   private procs = 0;
 
-  setSearchConfig(params: FindFolderOptions): void {
+  setSearchConfig(params: ScanOptions): void {
     this.searchConfig = params;
   }
 

@@ -10,7 +10,7 @@ import {
   UI_POSITIONS,
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
-import { IConfig, Folder, IKeyPress } from './interfaces/index.js';
+import { IConfig, ScanFolderResult, IKeyPress } from './interfaces/index.js';
 import { Observable } from 'rxjs';
 import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
@@ -34,9 +34,9 @@ import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { FindFolderOptions, Npkill } from '@core/index.js';
+import { ScanOptions, Npkill } from '@core/index.js';
 import { LoggerService } from '@core/services/logger.service.js';
-import { SearchStatus } from '@core/interfaces/search-status.model.js';
+import { ScanStatus } from '@core/interfaces/search-status.model.js';
 import { FileService } from '@core/services/files/files.service.js';
 
 export class CliController {
@@ -60,7 +60,7 @@ export class CliController {
   constructor(
     private readonly npkill: Npkill,
     private readonly logger: LoggerService,
-    private readonly searchStatus: SearchStatus,
+    private readonly searchStatus: ScanStatus,
     private readonly resultsService: ResultsService,
     private readonly spinnerService: SpinnerService,
     private readonly consoleService: ConsoleService,
@@ -380,16 +380,18 @@ export class CliController {
       this.fileService.isDangerous(path);
 
     this.searchStart = Date.now();
-    this.logger.info(`Scan started in ${params.path}`);
+    this.logger.info(`Scan started in ${params.rootPath}`);
 
-    const results$ = this.npkill.startScan(params);
+    const results$ = this.npkill
+      .startScan$(params)
+      .pipe(map((folder) => folder.path));
     const nonExcludedResults$ = results$.pipe(
       filter((path) => !isExcludedDangerousDirectory(path)),
     );
 
     nonExcludedResults$
       .pipe(
-        map<string, Folder>((path) => ({
+        map<string, ScanFolderResult>((path) => ({
           path,
           size: 0,
           modificationTime: -1,
@@ -425,10 +427,10 @@ export class CliController {
       });
   }
 
-  private prepareListDirParams(): FindFolderOptions {
+  private prepareListDirParams(): ScanOptions {
     const target = this.config.targetFolder;
     const params = {
-      path: this.folderRoot,
+      rootPath: this.folderRoot,
       target,
     };
 
@@ -439,7 +441,9 @@ export class CliController {
     return params;
   }
 
-  private calculateFolderStats(nodeFolder: Folder): Observable<Folder> {
+  private calculateFolderStats(
+    nodeFolder: ScanFolderResult,
+  ): Observable<ScanFolderResult> {
     this.logger.info(`Calculating stats for ${String(nodeFolder.path)}`);
     return this.fileService.getFolderSize(nodeFolder.path).pipe(
       tap((size) => {
@@ -516,7 +520,7 @@ export class CliController {
     new GeneralUi().printExitMessage({ spaceReleased });
   }
 
-  private deleteFolder(folder: Folder): void {
+  private deleteFolder(folder: ScanFolderResult): void {
     if (folder.status === 'deleted' || folder.status === 'deleting') {
       return;
     }

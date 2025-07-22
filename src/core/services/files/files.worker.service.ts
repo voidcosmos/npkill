@@ -4,9 +4,9 @@ import { dirname, extname } from 'path';
 import { Worker, MessageChannel, MessagePort } from 'node:worker_threads';
 import { Subject } from 'rxjs';
 import { LoggerService } from '../logger.service.js';
-import { SearchStatus } from '@core/interfaces/search-status.model.js';
+import { ScanStatus } from '@core/interfaces/search-status.model.js';
 import { EVENTS, MAX_WORKERS } from '../../../constants/workers.constants.js';
-import { FindFolderOptions } from '@core/index.js';
+import { ScanOptions } from '@core/index.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 type WorkerJob = {
@@ -32,7 +32,7 @@ export type WorkerMessage =
       };
     }
   | { type: EVENTS.explore | EVENTS.getFolderSize; value: { path: string } }
-  | { type: EVENTS.exploreConfig; value: FindFolderOptions }
+  | { type: EVENTS.exploreConfig; value: ScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined };
 
@@ -55,16 +55,16 @@ export class FileWorkerService {
 
   constructor(
     private readonly logger: LoggerService,
-    private readonly searchStatus: SearchStatus,
+    private readonly searchStatus: ScanStatus,
   ) {}
 
-  startScan(stream$: Subject<string>, params: FindFolderOptions): void {
+  startScan(stream$: Subject<string>, params: ScanOptions): void {
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);
     this.setWorkerConfig(params);
 
     // Manually add the first job.
-    this.addJob({ job: EVENTS.explore, value: { path: params.path } });
+    this.addJob({ job: EVENTS.explore, value: { path: params.rootPath } });
   }
 
   getFolderSize(stream$: Subject<number>, path: string): void {
@@ -177,7 +177,7 @@ export class FileWorkerService {
     }
   }
 
-  private setWorkerConfig(params: FindFolderOptions): void {
+  private setWorkerConfig(params: ScanOptions): void {
     this.tunnels.forEach((tunnel) =>
       tunnel.postMessage({
         type: EVENTS.exploreConfig,

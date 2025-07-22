@@ -10,4 +10,4 @@ if (shouldStartCli) {
   main();
 }
 
-export { Npkill } from './core/index.js';
+export * from './core/index.js';

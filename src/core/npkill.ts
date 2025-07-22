@@ -1,16 +1,28 @@
 import { FileWorkerService } from './services/files/index.js';
-import { from, Observable } from 'rxjs';
-import { catchError, filter, mergeMap } from 'rxjs/operators';
+import { firstValueFrom, from, Observable } from 'rxjs';
+import { catchError, filter, map, mergeMap } from 'rxjs/operators';
 import { IFileService } from './interfaces/file-service.interface.js';
-import { SearchStatus } from './interfaces/search-status.model.js';
+import { ScanStatus } from './interfaces/search-status.model.js';
 
 import { LoggerService } from './services/logger.service.js';
 import { StreamService } from './services/stream.service.js';
 import { Services } from './interfaces/services.interface.js';
-import { FindFolderOptions } from './interfaces/folder.interface.js';
+import {
+  FoundFolder,
+  GetFolderLastModificationOptions,
+  GetFolderLastModificationResult,
+  GetFolderSizeOptions,
+  GetFolderSizeResult,
+  ScanOptions,
+} from './interfaces/folder.interface.js';
 import { OSServiceMap } from '../constants/os-service-map.constants.js';
+import {
+  DeleteOptions,
+  DeleteResult,
+  NpkillInterface,
+} from './interfaces/npkill.interface.js';
 
-export class Npkill {
+export class Npkill implements NpkillInterface {
   private readonly services: Services;
 
   constructor(customServices?: Partial<Services>) {
@@ -21,7 +33,7 @@ export class Npkill {
     this.services = { ...defaultServices, ...customServices };
   }
 
-  findFolders(options: FindFolderOptions): Observable<string> {
+  startScan$(options: ScanOptions): Observable<FoundFolder> {
     const { fileService } = this.services;
 
     return fileService.listDir(options).pipe(
@@ -30,22 +42,37 @@ export class Npkill {
       }),
       mergeMap((dataFolder) => from(splitData(dataFolder))),
       filter((path) => path !== ''),
+      map((path) => ({
+        path,
+        isDangerous: this.services.fileService.isDangerous(path),
+      })),
     );
   }
 
-  getFolderStats(folderPath: string): Observable<number> {
+  getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult> {
     const { fileService } = this.services;
-    return fileService.getFolderSize(folderPath);
+    return firstValueFrom(
+      fileService.getFolderSize(options.path).pipe(map((size) => ({ size }))),
+    );
   }
 
-  async getRecentModification(folder: string): Promise<number> {
+  async getFolderLastModification(
+    options: GetFolderLastModificationOptions,
+  ): Promise<GetFolderLastModificationResult> {
     const { fileService } = this.services;
-    return fileService.getRecentModificationInDir(folder);
+    const result = await fileService.getRecentModificationInDir(options.path);
+    return { timestamp: result };
   }
 
-  async deleteFolder(folder: string): Promise<boolean> {
+  async deleteFolder(folder: DeleteOptions): Promise<DeleteResult> {
     const { fileService } = this.services;
-    return fileService.deleteDir(folder);
+    const result = await fileService.deleteDir(folder.path);
+    return {
+      path: folder.path,
+      success: result,
+      // TODO: Modify services to return the error message and
+      // include here.
+    };
   }
 
   getFileService(): IFileService {
@@ -54,11 +81,11 @@ export class Npkill {
 }
 
 function createDefaultServices(
-  searchStatus?: SearchStatus,
+  searchStatus?: ScanStatus,
   logger?: LoggerService,
 ): Services {
   const actualLogger = logger || new LoggerService();
-  const actualSearchStatus = searchStatus || new SearchStatus();
+  const actualSearchStatus = searchStatus || new ScanStatus();
   const fileWorkerService = new FileWorkerService(
     actualLogger,
     actualSearchStatus,

@@ -1,9 +1,11 @@
-import { Folder } from '@core/interfaces/folder.interface.js';
+import { ScanFolderResult } from 'src/cli/interfaces';
 
 export const FOLDER_SORT = {
-  path: (a: Folder, b: Folder) => (a.path > b.path ? 1 : -1),
-  size: (a: Folder, b: Folder) => (a.size < b.size ? 1 : -1),
-  'last-mod': (a: Folder, b: Folder) => {
+  path: (a: ScanFolderResult, b: ScanFolderResult) =>
+    a.path > b.path ? 1 : -1,
+  size: (a: ScanFolderResult, b: ScanFolderResult) =>
+    a.size < b.size ? 1 : -1,
+  'last-mod': (a: ScanFolderResult, b: ScanFolderResult) => {
     if (a.modificationTime === b.modificationTime) {
       return FOLDER_SORT.path(a, b);
     }

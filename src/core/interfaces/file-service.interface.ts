@@ -1,11 +1,11 @@
 import { FileWorkerService } from '@core/services/files/files.worker.service.js';
-import { FindFolderOptions } from './folder.interface.js';
+import { ScanOptions } from './folder.interface.js';
 import { Observable } from 'rxjs';
 
 export interface IFileService {
   fileWorkerService: FileWorkerService;
   getFolderSize: (path: string) => Observable<number>;
-  listDir: (params: FindFolderOptions) => Observable<string>;
+  listDir: (params: ScanOptions) => Observable<string>;
   deleteDir: (path: string) => Promise<boolean>;
   fakeDeleteDir: (_path: string) => Promise<boolean>;
   isValidRootFolder: (path: string) => boolean;

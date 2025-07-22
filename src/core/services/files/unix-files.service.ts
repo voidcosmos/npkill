@@ -4,7 +4,7 @@ import { FileService } from './files.service.js';
 import { Observable, Subject } from 'rxjs';
 import { StreamService } from '../stream.service.js';
 import { FileWorkerService } from './files.worker.service.js';
-import { FindFolderOptions } from '@core/index.js';
+import { ScanOptions } from '@core/index.js';
 
 export abstract class UnixFilesService extends FileService {
   constructor(
@@ -14,7 +14,7 @@ export abstract class UnixFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  listDir(params: FindFolderOptions): Observable<string> {
+  listDir(params: ScanOptions): Observable<string> {
     const stream$ = new Subject<string>();
     this.fileWorkerService.startScan(stream$, params);
     return stream$;
@@ -37,8 +37,8 @@ export abstract class UnixFilesService extends FileService {
     });
   }
 
-  protected prepareFindArgs(params: FindFolderOptions): string[] {
-    const { path, target, exclude } = params;
+  protected prepareFindArgs(params: ScanOptions): string[] {
+    const { rootPath: path, target, exclude } = params;
     let args: string[] = [path];
 
     if (exclude !== undefined && exclude.length > 0) {

@@ -1,6 +1,6 @@
 import { WorkerStatus } from '../services/files/files.worker.service';
 
-export class SearchStatus {
+export class ScanStatus {
   public pendingSearchTasks = 0;
   public completedSearchTasks = 0;
   public pendingStatsCalculation = 0;

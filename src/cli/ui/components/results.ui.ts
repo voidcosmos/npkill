@@ -10,7 +10,6 @@ import { HeavyUi } from '../heavy.ui.js';
 
 import { ConsoleService } from '../../services/console.service.js';
 import { IConfig } from '../../interfaces/config.interface.js';
-import { Folder } from '@core/interfaces/folder.interface.js';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { INFO_MSGS } from '../../../constants/messages.constants.js';
 import { ResultsService } from '../../services/results.service.js';
@@ -18,6 +17,7 @@ import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
 import { FileService } from '@core/services/files/index.js';
+import { ScanFolderResult } from 'src/cli/interfaces/stats.interface.js';
 
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
@@ -25,7 +25,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   scroll: number = 0;
   private haveResultsAfterCompleted = true;
 
-  readonly delete$ = new Subject<Folder>();
+  readonly delete$ = new Subject<ScanFolderResult>();
   readonly showErrors$ = new Subject<null>();
   readonly openFolder$ = new Subject<string>();
 
@@ -98,7 +98,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   private printResults(): void {
     const visibleFolders = this.getVisibleScrollFolders();
 
-    visibleFolders.forEach((folder: Folder, index: number) => {
+    visibleFolders.forEach((folder: ScanFolderResult, index: number) => {
       const row = MARGINS.ROW_RESULTS_START + index;
       this.printFolderRow(folder, row);
     });
@@ -115,7 +115,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private printFolderRow(folder: Folder, row: number): void {
+  private printFolderRow(folder: ScanFolderResult, row: number): void {
     this.clearLine(row);
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
@@ -147,7 +147,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private getFolderTexts(folder: Folder): {
+  private getFolderTexts(folder: ScanFolderResult): {
     path: string;
     size: string;
     lastModification: string;
@@ -278,7 +278,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.fitScroll();
   }
 
-  private getFolderPathText(folder: Folder): string {
+  private getFolderPathText(folder: ScanFolderResult): string {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
     const ACTIONS = {
@@ -350,7 +350,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     return this.getRow(this.resultIndex) - this.scroll;
   }
 
-  private getVisibleScrollFolders(): Folder[] {
+  private getVisibleScrollFolders(): ScanFolderResult[] {
     return this.resultsService.results.slice(
       this.scroll,
       this.getRowsAvailable() + this.scroll,
