@@ -39,7 +39,7 @@ import { LoggerService } from '@core/services/logger.service.js';
 import { SearchStatus } from '@core/interfaces/search-status.model.js';
 import { FileService } from '@core/services/files/files.service.js';
 
-export class Controller {
+export class CliController {
   private folderRoot = '';
   private readonly stdout: NodeJS.WriteStream = process.stdout;
   private readonly config: IConfig = DEFAULT_CONFIG;
@@ -382,7 +382,7 @@ export class Controller {
     this.searchStart = Date.now();
     this.logger.info(`Scan started in ${params.path}`);
 
-    const results$ = this.npkill.findFolders(params);
+    const results$ = this.npkill.startScan(params);
     const nonExcludedResults$ = results$.pipe(
       filter((path) => !isExcludedDangerousDirectory(path)),
     );

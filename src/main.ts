@@ -6,7 +6,7 @@ import {
   UpdateService,
 } from './cli/services/index.js';
 
-import { Controller } from './cli/controller.js';
+import { CliController } from './cli/cli.controller.js';
 import { UiService } from './cli/services/ui.service.js';
 import { LoggerService } from './core/services/logger.service.js';
 import { SearchStatus } from './core/interfaces/search-status.model.js';
@@ -19,7 +19,7 @@ export default (): void => {
 
   const npkill = new Npkill({ logger, searchStatus, resultsService });
 
-  const controller = new Controller(
+  const cli = new CliController(
     npkill,
     logger,
     searchStatus,
@@ -30,5 +30,5 @@ export default (): void => {
     new UiService(),
   );
 
-  controller.init();
+  cli.init();
 };
