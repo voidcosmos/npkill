@@ -42,10 +42,7 @@ export class Npkill implements NpkillInterface {
       }),
       mergeMap((dataFolder) => from(splitData(dataFolder))),
       filter((path) => path !== ''),
-      map((path) => ({
-        path,
-        isDangerous: this.services.fileService.isDangerous(path),
-      })),
+      map((path) => ({ path })),
     );
   }
 

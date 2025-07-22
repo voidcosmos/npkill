@@ -3,6 +3,7 @@ import { FoundFolder } from '@core/interfaces';
 export interface ScanFolderResult extends FoundFolder {
   size: number;
   modificationTime: number;
+  isDangerous: boolean;
   status: 'live' | 'deleting' | 'error-deleting' | 'deleted';
 }
 

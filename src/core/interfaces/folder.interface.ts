@@ -1,6 +1,5 @@
 export interface FoundFolder {
   path: string;
-  isDangerous: boolean;
 }
 
 export interface ScanOptions {
