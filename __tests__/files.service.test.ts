@@ -130,6 +130,9 @@ describe('File Service', () => {
         fileService.isSafeToDelete('/one/node_/ro/modules', target),
       ).toBeFalsy();
       expect(fileService.isSafeToDelete('nodemodules', target)).toBeFalsy();
+      expect(fileService.isSafeToDelete('/', target)).toBeFalsy();
+      expect(fileService.isSafeToDelete('/home', target)).toBeFalsy();
+      expect(fileService.isSafeToDelete('/home/user', target)).toBeFalsy();
     });
 
     it('should get true if is safe to delete ', () => {
