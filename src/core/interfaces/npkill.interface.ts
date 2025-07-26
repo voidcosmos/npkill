@@ -28,6 +28,4 @@ export interface NpkillInterface {
   delete$(path: string, options: DeleteOptions): Observable<DeleteResult>;
 
   getLogs$(): Observable<LogEntry[]>;
-
-  getFileService(): IFileService;
 }

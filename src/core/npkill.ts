@@ -115,10 +115,6 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getFileService(): IFileService {
-    return this.services.fileService;
-  }
-
   getLogs$(): Observable<LogEntry[]> {
     return this.services.logger.getLog$();
   }
