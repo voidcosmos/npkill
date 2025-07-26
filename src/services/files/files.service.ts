@@ -1,4 +1,5 @@
 import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
+import path from 'path';
 import {
   IFileService,
   IFileStat,
@@ -85,16 +86,64 @@ export abstract class FileService implements IFileService {
    * application-specific data or configurations that should not be tampered with. Deleting node_modules
    * from these locations could potentially disrupt the normal operation of these applications.
    */
-  isDangerous(path: string): boolean {
-    const hiddenFilePattern = /(^|\/)\.[^/.]/g;
-    const macAppsPattern = /(^|\/)Applications\/[^/]+\.app\//g;
-    const windowsAppDataPattern = /(^|\\)AppData\\/g;
+  isDangerous(originalPath: string): boolean {
+    const absolutePath = path.resolve(originalPath);
+    const normalizedPath = absolutePath.replace(/\\/g, '/').toLowerCase();
 
-    return (
-      hiddenFilePattern.test(path) ||
-      macAppsPattern.test(path) ||
-      windowsAppDataPattern.test(path)
+    const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
+    let isInHome = false;
+
+    if (home !== '') {
+      const normalizedHome = path
+        .resolve(home)
+        .replace(/\\/g, '/')
+        .toLowerCase();
+      isInHome = normalizedPath.startsWith(normalizedHome);
+    }
+
+    if (isInHome) {
+      if (/\/\.config(\/|$)/.test(normalizedPath)) {
+        return true;
+      }
+      if (/\/\.local\/share(\/|$)/.test(normalizedPath)) {
+        return true;
+      }
+      if (/\/\.(cache|npm|pnpm)(\/|$)/.test(normalizedPath)) {
+        return false;
+      }
+    }
+
+    if (/\/applications\/[^/]+\.app\//.test(normalizedPath)) {
+      return true;
+    }
+
+    if (normalizedPath.includes('/appdata/roaming')) {
+      return true;
+    }
+    if (normalizedPath.includes('/appdata/local')) {
+      if (/\/\.(cache|npm|pnpm)(\/|$)/.test(normalizedPath)) {
+        return false;
+      }
+      return true;
+    }
+    if (/program files( \(x86\))?\//.test(normalizedPath)) {
+      return true;
+    }
+
+    const segments = normalizedPath.split('/');
+    const hasUnsafeHiddenFolder = segments.some(
+      (segment) =>
+        segment.startsWith('.') &&
+        segment !== '.' &&
+        segment !== '..' &&
+        !['.cache', '.npm', '.pnpm'].includes(segment),
     );
+
+    if (hasUnsafeHiddenFolder) {
+      return true;
+    }
+
+    return false;
   }
 
   async getRecentModificationInDir(path: string): Promise<number> {

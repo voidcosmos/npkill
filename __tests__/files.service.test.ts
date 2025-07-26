@@ -130,6 +130,9 @@ describe('File Service', () => {
         fileService.isSafeToDelete('/one/node_/ro/modules', target),
       ).toBeFalsy();
       expect(fileService.isSafeToDelete('nodemodules', target)).toBeFalsy();
+      expect(fileService.isSafeToDelete('/', target)).toBeFalsy();
+      expect(fileService.isSafeToDelete('/home', target)).toBeFalsy();
+      expect(fileService.isSafeToDelete('/home/user', target)).toBeFalsy();
     });
 
     it('should get true if is safe to delete ', () => {
@@ -142,39 +145,112 @@ describe('File Service', () => {
     });
   });
 
-  describe('#isDangerous', () => {
-    it('should return false for paths that are not considered dangerous', () => {
-      expect(
-        fileService.isDangerous('/home/apps/myapp/node_modules'),
-      ).toBeFalsy();
-      expect(fileService.isDangerous('node_modules')).toBeFalsy();
-      expect(
-        fileService.isDangerous('/home/user/projects/a/node_modules'),
-      ).toBeFalsy();
-      expect(
-        fileService.isDangerous('/Applications/NotAnApp/node_modules'),
-      ).toBeFalsy();
-      expect(
-        fileService.isDangerous('C:\\Users\\User\\Documents\\node_modules'),
-      ).toBeFalsy();
+  describe('isDangerous', () => {
+    const originalEnv = { ...process.env };
+    const originalCwd = process.cwd();
+
+    const mockCwd = (cwd: string) => {
+      jest.spyOn(process, 'cwd').mockReturnValue(cwd);
+    };
+
+    afterAll(() => {
+      process.env = originalEnv;
     });
 
-    it('should return true for paths that are considered dangerous', () => {
-      expect(
-        fileService.isDangerous('/home/.config/myapp/node_modules'),
-      ).toBeTruthy();
-      expect(fileService.isDangerous('.apps/node_modules')).toBeTruthy();
-      expect(
-        fileService.isDangerous('.apps/.sample/node_modules'),
-      ).toBeTruthy();
-      expect(
-        fileService.isDangerous('/Applications/MyApp.app/node_modules'),
-      ).toBeTruthy();
-      expect(
-        fileService.isDangerous(
-          'C:\\Users\\User\\AppData\\Local\\node_modules',
-        ),
-      ).toBeTruthy();
+    describe('POSIX paths', () => {
+      beforeAll(() => {
+        process.env.HOME = '/home/user';
+        delete process.env.USERPROFILE;
+      });
+
+      test('safe relative path', () => {
+        mockCwd('/safe/path');
+        expect(fileService.isDangerous('../project/node_modules')).toBe(false);
+      });
+
+      test('hidden relative path', () => {
+        mockCwd('/home/user/projects');
+        expect(fileService.isDangerous('../.config/secret')).toBe(true);
+      });
+
+      test('node_modules in ~/.cache', () => {
+        expect(
+          fileService.isDangerous('/home/user/.cache/project/node_modules'),
+        ).toBe(false);
+      });
+
+      test('parent relative path (..)', () => {
+        mockCwd('/home/user');
+        expect(fileService.isDangerous('..')).toBe(false);
+      });
+
+      test('current relative path (.)', () => {
+        mockCwd('/home/user');
+        expect(fileService.isDangerous('.')).toBe(false);
+      });
+    });
+
+    describe('Windows paths', () => {
+      beforeAll(() => {
+        process.env.USERPROFILE = 'C:\\Users\\user';
+        process.env.HOME = '';
+      });
+
+      test('safe relative path', () => {
+        mockCwd('D:\\safe\\path');
+        expect(fileService.isDangerous('..\\project\\node_modules')).toBe(
+          false,
+        );
+      });
+
+      test('AppData relative path', () => {
+        mockCwd('C:\\Users\\user\\Documents');
+        expect(fileService.isDangerous('..\\AppData\\Roaming\\app')).toBe(true);
+      });
+
+      test('Program Files (x86)', () => {
+        expect(
+          fileService.isDangerous('C:\\Program Files (x86)\\app\\node_modules'),
+        ).toBe(true);
+      });
+
+      test('network paths', () => {
+        expect(
+          fileService.isDangerous('\\\\network\\share\\.hidden\\node_modules'),
+        ).toBe(true);
+      });
+    });
+
+    describe('Edge cases', () => {
+      test('no home directory', () => {
+        delete process.env.HOME;
+        delete process.env.USERPROFILE;
+        expect(fileService.isDangerous('/some/path')).toBe(false);
+      });
+
+      test('whitelisted hidden segments', () => {
+        expect(
+          fileService.isDangerous('/tmp/.cache/project/node_modules'),
+        ).toBe(false);
+        expect(fileService.isDangerous('/tmp/.npm/project/node_modules')).toBe(
+          false,
+        );
+      });
+
+      test('macOS application bundle', () => {
+        expect(
+          fileService.isDangerous(
+            '/Applications/MyApp.app/Contents/node_modules',
+          ),
+        ).toBe(true);
+      });
+
+      test('Windows-style path on POSIX', () => {
+        process.env.HOME = '/home/user';
+        expect(fileService.isDangerous('/home/user/AppData/Local/.cache')).toBe(
+          false,
+        );
+      });
     });
   });
 
