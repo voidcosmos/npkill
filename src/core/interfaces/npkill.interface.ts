@@ -6,38 +6,43 @@ import {
   GetFolderSizeOptions,
   GetFolderSizeResult,
   ScanOptions,
+  DeleteResult,
+  DeleteOptions,
 } from './folder.interface';
 import { IFileService } from '.';
 import { LogEntry } from '@core/services/logger.service';
 
 export interface NpkillInterface {
-  startScan$(options: ScanOptions): Observable<ScanFoundFolder>;
+  startScan$(
+    rootPath: string,
+    options: ScanOptions,
+  ): Observable<ScanFoundFolder>;
+
   getFolderSize$(
+    path: string,
     options: GetFolderSizeOptions,
   ): Observable<GetFolderSizeResult>;
-  getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult>;
+
+  getFolderSize(
+    path: string,
+    options: GetFolderSizeOptions,
+  ): Promise<GetFolderSizeResult>;
+
   getFolderLastModification$(
-    options: GetFolderLastModificationOptions,
+    path: string,
+    //  options: GetFolderLastModificationOptions,
   ): Observable<GetFolderLastModificationResult>;
+
   getFolderLastModification(
-    options: GetFolderLastModificationOptions,
+    path: string,
+    // options: GetFolderLastModificationOptions,
   ): Promise<GetFolderLastModificationResult>;
-  deleteFolder$(folder: DeleteOptions): Observable<DeleteResult>;
-  deleteFolder(folder: DeleteOptions): Promise<DeleteResult>;
+
+  deleteFolder$(path: string, options: DeleteOptions): Observable<DeleteResult>;
+
+  deleteFolder(path: string, options: DeleteOptions): Promise<DeleteResult>;
+
   getLogs$(): Observable<LogEntry[]>;
+
   getFileService(): IFileService;
-}
-
-export interface DeleteOptions {
-  path: string;
-  dryRun?: boolean;
-}
-
-export interface DeleteResult {
-  path: string;
-  success: boolean;
-  error?: {
-    message: string;
-    code?: string;
-  };
 }

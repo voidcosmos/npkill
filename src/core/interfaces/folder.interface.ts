@@ -3,7 +3,6 @@ export interface ScanFoundFolder {
 }
 
 export interface ScanOptions {
-  rootPath: string;
   target: string;
   exclude?: string[];
   sortBy?: 'path' | 'size' | 'last-mod';
@@ -11,17 +10,29 @@ export interface ScanOptions {
 }
 
 export interface GetFolderSizeOptions {
-  path: string;
+  unit?: 'bytes' | 'kb' | 'mb' | 'gb'; // Default: bytes
 }
 
 export interface GetFolderSizeResult {
-  size: number; // bytes
+  size: number; // Default: bytes
+  unit: 'bytes' | 'kb' | 'mb' | 'gb';
 }
 
-export interface GetFolderLastModificationOptions {
-  path: string;
-}
+export interface GetFolderLastModificationOptions {}
 
 export interface GetFolderLastModificationResult {
   timestamp: number; // epoch timestamp
+}
+
+export interface DeleteOptions {
+  dryRun?: boolean;
+}
+
+export interface DeleteResult {
+  path: string;
+  success: boolean;
+  error?: {
+    message: string;
+    code?: string;
+  };
 }
