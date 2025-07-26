@@ -14,13 +14,12 @@ import {
   GetFolderSizeOptions,
   GetFolderSizeResult,
   ScanOptions,
-} from './interfaces/folder.interface.js';
-import { OSServiceMap } from '../constants/os-service-map.constants.js';
-import {
   DeleteOptions,
   DeleteResult,
-  NpkillInterface,
-} from './interfaces/npkill.interface.js';
+  SizeUnit,
+} from './interfaces/folder.interface.js';
+import { OSServiceMap } from '../constants/os-service-map.constants.js';
+import { NpkillInterface } from './interfaces/npkill.interface.js';
 
 import { LogEntry } from './services/logger.service.js';
 
@@ -39,12 +38,15 @@ export class Npkill implements NpkillInterface {
 
   private searchDuration = 0;
 
-  startScan$(options: ScanOptions): Observable<ScanFoundFolder> {
+  startScan$(
+    rootPath: string,
+    options: ScanOptions,
+  ): Observable<ScanFoundFolder> {
     const { fileService } = this.services;
-    this.logger.info(`Scan started in ${options.rootPath}`);
+    this.logger.info(`Scan started in ${rootPath}`);
     const startTime = Date.now();
 
-    return fileService.listDir(options).pipe(
+    return fileService.listDir(rootPath, options).pipe(
       catchError((_error, caught) => {
         throw new Error('Error while listing directories');
       }),
@@ -64,59 +66,69 @@ export class Npkill implements NpkillInterface {
   }
 
   getFolderSize$(
+    path: string,
     options: GetFolderSizeOptions,
   ): Observable<GetFolderSizeResult> {
     const { fileService } = this.services;
-    this.logger.info(`Calculating folder size for ${String(options.path)}`);
-    return fileService.getFolderSize(options.path).pipe(
+    this.logger.info(`Calculating folder size for ${String(path)}`);
+    return fileService.getFolderSize(path).pipe(
       take(1),
-      map((size) => ({ size })),
-      tap(({ size }) =>
-        this.logger.info(`Size of ${options.path}: ${size} bytes`),
-      ),
+      map((size) => ({ size, unit: 'bytes' as SizeUnit })),
+      tap(({ size }) => this.logger.info(`Size of ${path}: ${size} bytes`)),
     );
   }
 
-  getFolderSize(options: GetFolderSizeOptions): Promise<GetFolderSizeResult> {
-    return firstValueFrom(this.getFolderSize$(options));
+  getFolderSize(
+    path: string,
+    options: GetFolderSizeOptions,
+  ): Promise<GetFolderSizeResult> {
+    return firstValueFrom(this.getFolderSize$(path, options));
   }
 
   getFolderLastModification$(
-    options: GetFolderLastModificationOptions,
+    path: string,
+    // options: GetFolderLastModificationOptions,
   ): Observable<GetFolderLastModificationResult> {
-    return from(this.getFolderLastModification(options));
+    return from(this.getFolderLastModification(path));
   }
 
   async getFolderLastModification(
-    options: GetFolderLastModificationOptions,
+    path: string,
+    // options: GetFolderLastModificationOptions,
   ): Promise<GetFolderLastModificationResult> {
     const { fileService } = this.services;
-    this.logger.info(`Calculating last mod. of ${options.path}`);
-    const result = await fileService.getRecentModificationInDir(options.path);
-    this.logger.info(`Last mod. of ${options.path}: ${result}`);
+    this.logger.info(`Calculating last mod. of ${path}`);
+    const result = await fileService.getRecentModificationInDir(path);
+    this.logger.info(`Last mod. of ${path}: ${result}`);
     return { timestamp: result };
   }
 
-  deleteFolder$(folder: DeleteOptions): Observable<DeleteResult> {
-    return from(this.deleteFolder(folder));
+  deleteFolder$(
+    path: string,
+    options: DeleteOptions,
+  ): Observable<DeleteResult> {
+    return from(this.deleteFolder(path, options));
   }
 
-  async deleteFolder(folder: DeleteOptions): Promise<DeleteResult> {
+  async deleteFolder(
+    path: string,
+    options: DeleteOptions,
+  ): Promise<DeleteResult> {
     const { fileService } = this.services;
     this.logger.info(
-      `Deleting ${String(folder.path)} ${folder.dryRun ? '(dry run)' : ''}...`,
+      `Deleting ${String(path)} ${options.dryRun ? '(dry run)' : ''}...`,
     );
-    const result = folder.dryRun
-      ? await fileService.fakeDeleteDir(folder.path)
-      : await fileService.deleteDir(folder.path);
+    const result = options.dryRun
+      ? await fileService.fakeDeleteDir(path)
+      : await fileService.deleteDir(path);
     if (!result) {
-      this.logger.error(`Failed to delete ${String(folder.path)}`);
-      return { path: folder.path, success: false };
+      this.logger.error(`Failed to delete ${String(path)}`);
+      return { path, success: false };
     }
 
-    this.logger.info(`Deleted ${String(folder.path)}: ${result}`);
+    this.logger.info(`Deleted ${String(path)}: ${result}`);
     return {
-      path: folder.path,
+      path,
       success: result,
       // TODO: Modify services to return the error message and
       // include here.

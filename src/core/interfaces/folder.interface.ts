@@ -1,3 +1,5 @@
+export type SizeUnit = 'bytes' | 'kb' | 'mb' | 'gb';
+
 export interface ScanFoundFolder {
   path: string;
 }
@@ -10,12 +12,12 @@ export interface ScanOptions {
 }
 
 export interface GetFolderSizeOptions {
-  unit?: 'bytes' | 'kb' | 'mb' | 'gb'; // Default: bytes
+  unit?: SizeUnit; // Default: bytes
 }
 
 export interface GetFolderSizeResult {
   size: number; // Default: bytes
-  unit: 'bytes' | 'kb' | 'mb' | 'gb';
+  unit: SizeUnit;
 }
 
 export interface GetFolderLastModificationOptions {}

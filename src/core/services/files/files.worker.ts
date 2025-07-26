@@ -1,7 +1,7 @@
 import { Dir, Dirent } from 'fs';
 import { lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
-import { WorkerMessage } from './files.worker.service';
+import { WorkerMessage, WorkerScanOptions } from './files.worker.service';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
@@ -96,7 +96,7 @@ interface Task {
 
 class FileWalker {
   readonly events = new EventEmitter();
-  private searchConfig: ScanOptions = {
+  private searchConfig: WorkerScanOptions = {
     rootPath: '',
     target: '',
     exclude: [],
@@ -106,7 +106,7 @@ class FileWalker {
   private completedTasks = 0;
   private procs = 0;
 
-  setSearchConfig(params: ScanOptions): void {
+  setSearchConfig(params: WorkerScanOptions): void {
     this.searchConfig = params;
   }
 

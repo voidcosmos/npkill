@@ -14,9 +14,9 @@ export abstract class UnixFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  listDir(params: ScanOptions): Observable<string> {
+  listDir(path: string, params: ScanOptions): Observable<string> {
     const stream$ = new Subject<string>();
-    this.fileWorkerService.startScan(stream$, params);
+    this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
     return stream$;
   }
 
@@ -37,8 +37,8 @@ export abstract class UnixFilesService extends FileService {
     });
   }
 
-  protected prepareFindArgs(params: ScanOptions): string[] {
-    const { rootPath: path, target, exclude } = params;
+  protected prepareFindArgs(path: string, params: ScanOptions): string[] {
+    const { target, exclude } = params;
     let args: string[] = [path];
 
     if (exclude !== undefined && exclude.length > 0) {

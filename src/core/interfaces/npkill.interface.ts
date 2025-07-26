@@ -23,24 +23,12 @@ export interface NpkillInterface {
     options: GetFolderSizeOptions,
   ): Observable<GetFolderSizeResult>;
 
-  getFolderSize(
-    path: string,
-    options: GetFolderSizeOptions,
-  ): Promise<GetFolderSizeResult>;
-
   getFolderLastModification$(
     path: string,
     //  options: GetFolderLastModificationOptions,
   ): Observable<GetFolderLastModificationResult>;
 
-  getFolderLastModification(
-    path: string,
-    // options: GetFolderLastModificationOptions,
-  ): Promise<GetFolderLastModificationResult>;
-
   deleteFolder$(path: string, options: DeleteOptions): Observable<DeleteResult>;
-
-  deleteFolder(path: string, options: DeleteOptions): Promise<DeleteResult>;
 
   getLogs$(): Observable<LogEntry[]>;
 

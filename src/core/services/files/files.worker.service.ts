@@ -14,6 +14,10 @@ type WorkerJob = {
   value: { path: string };
 };
 
+export interface WorkerScanOptions extends ScanOptions {
+  rootPath: string;
+}
+
 export type WorkerMessage =
   | {
       type: EVENTS.scanResult;
@@ -32,7 +36,7 @@ export type WorkerMessage =
       };
     }
   | { type: EVENTS.explore | EVENTS.getFolderSize; value: { path: string } }
-  | { type: EVENTS.exploreConfig; value: ScanOptions }
+  | { type: EVENTS.exploreConfig; value: WorkerScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined };
 
@@ -58,7 +62,7 @@ export class FileWorkerService {
     private readonly searchStatus: ScanStatus,
   ) {}
 
-  startScan(stream$: Subject<string>, params: ScanOptions): void {
+  startScan(stream$: Subject<string>, params: WorkerScanOptions): void {
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);
     this.setWorkerConfig(params);
@@ -177,7 +181,7 @@ export class FileWorkerService {
     }
   }
 
-  private setWorkerConfig(params: ScanOptions): void {
+  private setWorkerConfig(params: WorkerScanOptions): void {
     this.tunnels.forEach((tunnel) =>
       tunnel.postMessage({
         type: EVENTS.exploreConfig,

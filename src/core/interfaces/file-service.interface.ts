@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 export interface IFileService {
   fileWorkerService: FileWorkerService;
   getFolderSize: (path: string) => Observable<number>;
-  listDir: (params: ScanOptions) => Observable<string>;
+  listDir: (path: string, params: ScanOptions) => Observable<string>;
   deleteDir: (path: string) => Promise<boolean>;
   fakeDeleteDir: (_path: string) => Promise<boolean>;
   isValidRootFolder: (path: string) => boolean;

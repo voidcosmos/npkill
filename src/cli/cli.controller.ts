@@ -374,13 +374,14 @@ export class CliController {
     this.uiStatus.start();
 
     const params = this.prepareListDirParams();
+    const { rootPath } = params;
     const isExcludedDangerousDirectory = (path: string): boolean =>
       this.config.excludeHiddenDirectories &&
       this.fileService.isDangerous(path);
 
     this.searchStart = Date.now();
     const results$ = this.npkill
-      .startScan$(params)
+      .startScan$(rootPath, params)
       .pipe(map((folder) => folder.path));
     const nonExcludedResults$ = results$.pipe(
       filter((path) => !isExcludedDangerousDirectory(path)),
@@ -423,7 +424,7 @@ export class CliController {
       });
   }
 
-  private prepareListDirParams(): ScanOptions {
+  private prepareListDirParams() {
     const target = this.config.targetFolder;
     const params = {
       rootPath: this.folderRoot,

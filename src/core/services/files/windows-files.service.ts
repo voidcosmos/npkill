@@ -16,9 +16,9 @@ export class WindowsFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  listDir(params: ScanOptions): Observable<string> {
+  listDir(path: string, params: ScanOptions): Observable<string> {
     const stream$ = new Subject<string>();
-    this.fileWorkerService.startScan(stream$, params);
+    this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
     return stream$;
   }
 
