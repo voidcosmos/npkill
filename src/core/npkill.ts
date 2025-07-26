@@ -78,61 +78,45 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getFolderSize(
-    path: string,
-    options: GetFolderSizeOptions,
-  ): Promise<GetFolderSizeResult> {
-    return firstValueFrom(this.getFolderSize$(path, options));
-  }
-
   getFolderLastModification$(
     path: string,
     // options: GetFolderLastModificationOptions,
   ): Observable<GetFolderLastModificationResult> {
-    return from(this.getFolderLastModification(path));
-  }
-
-  async getFolderLastModification(
-    path: string,
-    // options: GetFolderLastModificationOptions,
-  ): Promise<GetFolderLastModificationResult> {
     const { fileService } = this.services;
     this.logger.info(`Calculating last mod. of ${path}`);
-    const result = await fileService.getRecentModificationInDir(path);
-    this.logger.info(`Last mod. of ${path}: ${result}`);
-    return { timestamp: result };
+    return from(fileService.getRecentModificationInDir(path)).pipe(
+      map((timestamp) => ({ timestamp })),
+      tap(({ timestamp }) =>
+        this.logger.info(`Last mod. of ${path}: ${timestamp}`),
+      ),
+    );
   }
 
   deleteFolder$(
     path: string,
     options: DeleteOptions,
   ): Observable<DeleteResult> {
-    return from(this.deleteFolder(path, options));
-  }
-
-  async deleteFolder(
-    path: string,
-    options: DeleteOptions,
-  ): Promise<DeleteResult> {
     const { fileService } = this.services;
     this.logger.info(
       `Deleting ${String(path)} ${options.dryRun ? '(dry run)' : ''}...`,
     );
-    const result = options.dryRun
-      ? await fileService.fakeDeleteDir(path)
-      : await fileService.deleteDir(path);
-    if (!result) {
-      this.logger.error(`Failed to delete ${String(path)}`);
-      return { path, success: false };
-    }
+    const deleteOperation = options.dryRun
+      ? from(fileService.fakeDeleteDir(path))
+      : from(fileService.deleteDir(path));
 
-    this.logger.info(`Deleted ${String(path)}: ${result}`);
-    return {
-      path,
-      success: result,
-      // TODO: Modify services to return the error message and
-      // include here.
-    };
+    return deleteOperation.pipe(
+      map((result) => {
+        if (!result) {
+          this.logger.error(`Failed to delete ${String(path)}`);
+          return { path, success: false };
+        }
+        this.logger.info(`Deleted ${String(path)}: ${result}`);
+        return {
+          path,
+          success: result,
+        };
+      }),
+    );
   }
 
   getFileService(): IFileService {
