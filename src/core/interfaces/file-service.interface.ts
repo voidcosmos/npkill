@@ -2,6 +2,7 @@ import { FileWorkerService } from '@core/services/files/files.worker.service.js'
 import { GetNewestFileResult, RiskAnalysis } from '@core/interfaces';
 import { ScanOptions } from './folder.interface.js';
 import { Observable } from 'rxjs';
+import { IsValidRootFolderResult } from './npkill.interface.js';
 
 export interface IFileService {
   fileWorkerService: FileWorkerService;
@@ -9,12 +10,7 @@ export interface IFileService {
   listDir: (path: string, params: ScanOptions) => Observable<string>;
   deleteDir: (path: string) => Promise<boolean>;
   fakeDeleteDir: (_path: string) => Promise<boolean>;
-  isValidRootFolder: (path: string) => boolean;
-  convertBytesToKB: (bytes: number) => number;
-  convertBytesToGb: (bytes: number) => number;
-  convertGBToMB: (gb: number) => number;
-  getFileContent: (path: string) => string;
-  isSafeToDelete: (path: string, targetFolder: string) => boolean;
+  isValidRootFolder(path: string): IsValidRootFolderResult;
   isDangerous: (path: string) => RiskAnalysis;
   getRecentModificationInDir: (
     path: string,

@@ -110,43 +110,6 @@ describe('File Service', () => {
     });
   });
 
-  describe('Conversion methods', () => {
-    it('#convertBytesToKB', () => {
-      expect(fileService.convertBytesToKB(1)).toBe(0.0009765625);
-      expect(fileService.convertBytesToKB(100)).toBe(0.09765625);
-      expect(fileService.convertBytesToKB(96)).toBe(0.09375);
-    });
-    it('#convertGBToMB', () => {
-      expect(fileService.convertGBToMB(1)).toBe(1024);
-      expect(fileService.convertGBToMB(100)).toBe(102400);
-      expect(fileService.convertGBToMB(96)).toBe(98304);
-    });
-  });
-
-  describe('#isSafeToDelete', () => {
-    const target = 'node_modules';
-
-    it('should get false if not is safe to delete ', () => {
-      expect(fileService.isSafeToDelete('/one/route', target)).toBeFalsy();
-      expect(
-        fileService.isSafeToDelete('/one/node_/ro/modules', target),
-      ).toBeFalsy();
-      expect(fileService.isSafeToDelete('nodemodules', target)).toBeFalsy();
-      expect(fileService.isSafeToDelete('/', target)).toBeFalsy();
-      expect(fileService.isSafeToDelete('/home', target)).toBeFalsy();
-      expect(fileService.isSafeToDelete('/home/user', target)).toBeFalsy();
-    });
-
-    it('should get true if is safe to delete ', () => {
-      expect(
-        fileService.isSafeToDelete('/one/route/node_modules', target),
-      ).toBeTruthy();
-      expect(
-        fileService.isSafeToDelete('/one/route/node_modules/', target),
-      ).toBeTruthy();
-    });
-  });
-
   describe('isDangerous', () => {
     const originalEnv = { ...process.env };
     const originalCwd = process.cwd();
@@ -265,12 +228,6 @@ describe('File Service', () => {
         ).toBe(false);
       });
     });
-  });
-
-  it('#getFileContent should read file content with utf8 encoding', () => {
-    const path = 'file.json';
-    fileService.getFileContent(path);
-    expect(readFileSyncSpy).toHaveBeenCalledWith(path, 'utf8');
   });
 
   xdescribe('Functional test for #deleteDir', () => {

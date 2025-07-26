@@ -16,8 +16,8 @@ import { ResultsService } from '../../services/results.service.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
-import { FileService } from '@core/services/files/index.js';
 import { CliScanFoundFolder } from 'src/cli/interfaces/stats.interface.js';
+import { convertGBToMB } from 'src/utils/unit-conversions.js';
 
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
@@ -52,7 +52,6 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   constructor(
     private readonly resultsService: ResultsService,
     private readonly consoleService: ConsoleService,
-    private readonly fileService: FileService,
   ) {
     super();
   }
@@ -174,7 +173,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
 
     if (!this.config.folderSizeInGB) {
-      const size = this.fileService.convertGBToMB(folder.size);
+      const size = convertGBToMB(folder.size);
       // Prevent app crash when folder size is +999MB.
       const decimals = size < 999 ? DECIMALS_SIZE : 1;
       const sizeText = size.toFixed(decimals);

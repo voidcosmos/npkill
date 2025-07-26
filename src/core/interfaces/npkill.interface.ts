@@ -9,23 +9,29 @@ import {
   DeleteResult,
   DeleteOptions,
 } from './folder.interface';
-import { IFileService } from '.';
 import { LogEntry } from '@core/services/logger.service';
+
+export interface IsValidRootFolderResult {
+  isValid: boolean;
+  invalidReason?: string;
+}
 
 export interface NpkillInterface {
   startScan$(
     rootPath: string,
-    options: ScanOptions,
+    options?: ScanOptions,
   ): Observable<ScanFoundFolder>;
 
-  getSize$(path: string, options: GetSizeOptions): Observable<GetSizeResult>;
+  getSize$(path: string, options?: GetSizeOptions): Observable<GetSizeResult>;
 
   getNewestFile$(
     path: string,
-    //  options: GetNewestFileOptions,
+    //  options?: GetNewestFileOptions,
   ): Observable<GetNewestFileResult | null>;
 
-  delete$(path: string, options: DeleteOptions): Observable<DeleteResult>;
+  delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
 
   getLogs$(): Observable<LogEntry[]>;
+
+  isValidRootFolder(path: string): IsValidRootFolderResult;
 }

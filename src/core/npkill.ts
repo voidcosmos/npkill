@@ -19,9 +19,13 @@ import {
   SizeUnit,
 } from './interfaces/folder.interface.js';
 import { OSServiceMap } from '../constants/os-service-map.constants.js';
-import { NpkillInterface } from './interfaces/npkill.interface.js';
+import {
+  IsValidRootFolderResult,
+  NpkillInterface,
+} from './interfaces/npkill.interface.js';
 
 import { LogEntry } from './services/logger.service.js';
+import { getFileContent } from 'src/utils/get-file-content.js';
 
 export class Npkill implements NpkillInterface {
   private readonly services: Services;
@@ -77,7 +81,7 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getSize$(path: string, options: GetSizeOptions): Observable<GetSizeResult> {
+  getSize$(path: string, options?: GetSizeOptions): Observable<GetSizeResult> {
     const { fileService } = this.services;
     this.logger.info(`Calculating folder size for ${String(path)}`);
     return fileService.getFolderSize(path).pipe(
@@ -89,7 +93,7 @@ export class Npkill implements NpkillInterface {
 
   getNewestFile$(
     path: string,
-    // options: GetNewestFileOptions,
+    // options?: GetNewestFileOptions,
   ): Observable<GetNewestFileResult | null> {
     const { fileService } = this.services;
     this.logger.info(`Calculating last mod. of ${path}`);
@@ -103,12 +107,12 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  delete$(path: string, options: DeleteOptions): Observable<DeleteResult> {
+  delete$(path: string, options?: DeleteOptions): Observable<DeleteResult> {
     const { fileService } = this.services;
     this.logger.info(
-      `Deleting ${String(path)} ${options.dryRun ? '(dry run)' : ''}...`,
+      `Deleting ${String(path)} ${options?.dryRun ? '(dry run)' : ''}...`,
     );
-    const deleteOperation = options.dryRun
+    const deleteOperation = options?.dryRun
       ? from(fileService.fakeDeleteDir(path))
       : from(fileService.deleteDir(path));
 
@@ -131,12 +135,14 @@ export class Npkill implements NpkillInterface {
     return this.services.logger.getLog$();
   }
 
+  isValidRootFolder(path: string): IsValidRootFolderResult {
+    return this.services.fileService.isValidRootFolder(path);
+  }
+
   private getVersion(): string {
     const packageJson = _dirname + '/../package.json';
 
-    const packageData = JSON.parse(
-      this.services.fileService.getFileContent(packageJson),
-    );
+    const packageData = JSON.parse(getFileContent(packageJson));
     return packageData.version;
   }
 

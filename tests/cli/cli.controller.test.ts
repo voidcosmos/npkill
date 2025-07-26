@@ -111,7 +111,6 @@ describe('CliController test', () => {
 
   const npkillMock: Npkill = {
     logger: loggerServiceMock,
-    getFileService: () => linuxFilesServiceMock,
   } as unknown as Npkill;
 
   ////////// mocked Controller Methods

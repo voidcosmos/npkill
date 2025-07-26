@@ -6,10 +6,11 @@ import {
   GetNewestFileResult,
   RiskAnalysis,
 } from '@core/index.js';
-import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
+import fs, { accessSync, Stats, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
+import { IsValidRootFolderResult } from '@core/interfaces/npkill.interface.js';
 
 export abstract class FileService implements IFileService {
   public fileWorkerService: FileWorkerService;
@@ -34,48 +35,31 @@ export abstract class FileService implements IFileService {
     return true;
   }
 
-  isValidRootFolder(path: string): boolean {
+  isValidRootFolder(path: string): IsValidRootFolderResult {
     let stat: Stats;
     try {
       stat = statSync(path);
     } catch (error) {
-      throw new Error('The path does not exist.');
+      return { isValid: false, invalidReason: 'The path does not exist.' };
     }
 
     if (!stat.isDirectory()) {
-      throw new Error('The path must point to a directory.');
+      return {
+        isValid: false,
+        invalidReason: 'The path must point to a directory.',
+      };
     }
 
     try {
       accessSync(path, fs.constants.R_OK);
     } catch (error) {
-      throw new Error('Cannot read the specified path.');
+      return {
+        isValid: false,
+        invalidReason: 'Cannot read the specified path.',
+      };
     }
 
-    return true;
-  }
-
-  convertBytesToKB(bytes: number): number {
-    const factorBytestoKB = 1024;
-    return bytes / factorBytestoKB;
-  }
-
-  convertBytesToGb(bytes: number): number {
-    return bytes / Math.pow(1024, 3);
-  }
-
-  convertGBToMB(gb: number): number {
-    const factorGBtoMB = 1024;
-    return gb * factorGBtoMB;
-  }
-
-  getFileContent(path: string): string {
-    const encoding = 'utf8';
-    return readFileSync(path, encoding);
-  }
-
-  isSafeToDelete(path: string, targetFolder: string): boolean {
-    return path.includes(targetFolder);
+    return { isValid: true };
   }
 
   /**

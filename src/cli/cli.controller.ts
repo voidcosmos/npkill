@@ -11,7 +11,7 @@ import {
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
@@ -37,13 +37,14 @@ import openExplorer from 'open-file-explorer';
 import { ScanFoundFolder, Npkill } from '@core/index.js';
 import { LoggerService } from '@core/services/logger.service.js';
 import { ScanStatus } from '@core/interfaces/search-status.model.js';
-import { FileService } from '@core/services/files/files.service.js';
+import { isSafeToDelete } from 'src/utils/is-safe-to-delete.js';
+import { convertBytesToGb } from 'src/utils/unit-conversions.js';
+import { getFileContent } from 'src/utils/get-file-content.js';
 
 export class CliController {
   private folderRoot = '';
   private readonly stdout: NodeJS.WriteStream = process.stdout;
   private readonly config: IConfig = DEFAULT_CONFIG;
-  private readonly fileService: FileService;
 
   private searchStart: number;
   private searchDuration: number;
@@ -66,9 +67,7 @@ export class CliController {
     private readonly consoleService: ConsoleService,
     private readonly updateService: UpdateService,
     private readonly uiService: UiService,
-  ) {
-    this.fileService = npkill.getFileService();
-  }
+  ) {}
 
   init(): void {
     this.logger.info(`Npkill CLI started! v${this.getVersion()}`);
@@ -112,11 +111,7 @@ export class CliController {
   private initUi(): void {
     this.uiHeader = new HeaderUi();
     this.uiService.add(this.uiHeader);
-    this.uiResults = new ResultsUi(
-      this.resultsService,
-      this.consoleService,
-      this.fileService,
-    );
+    this.uiResults = new ResultsUi(this.resultsService, this.consoleService);
     this.uiService.add(this.uiResults);
     this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
     this.uiService.add(this.uiStats);
@@ -258,9 +253,7 @@ export class CliController {
   private getVersion(): string {
     const packageJson = _dirname + '/../package.json';
 
-    const packageData = JSON.parse(
-      this.fileService.getFileContent(packageJson),
-    );
+    const packageData = JSON.parse(getFileContent(packageJson));
     return packageData.version;
   }
 
@@ -291,11 +284,12 @@ export class CliController {
   }
 
   private checkFileRequirements(): void {
-    try {
-      this.fileService.isValidRootFolder(this.folderRoot);
-    } catch (error: any) {
-      this.uiService.print(error.message);
-      this.logger.error(error.message);
+    const result = this.npkill.isValidRootFolder(this.folderRoot);
+    if (!result.isValid) {
+      const errorMessage =
+        result.invalidReason || 'Root folder is not valid. Unknown reason';
+      this.uiService.print(errorMessage);
+      this.logger.error(errorMessage);
       this.exitWithError();
     }
   }
@@ -443,9 +437,9 @@ export class CliController {
   private calculateFolderStats(
     nodeFolder: CliScanFoundFolder,
   ): Observable<CliScanFoundFolder> {
-    return this.fileService.getFolderSize(nodeFolder.path).pipe(
-      tap((size) => {
-        nodeFolder.size = this.fileService.convertBytesToGb(size);
+    return this.npkill.getSize$(nodeFolder.path).pipe(
+      tap(({ size }) => {
+        nodeFolder.size = convertBytesToGb(size);
       }),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
@@ -454,8 +448,9 @@ export class CliController {
           return nodeFolder;
         }
         const parentFolder = path.join(nodeFolder.path, '../');
-        const result =
-          await this.fileService.getRecentModificationInDir(parentFolder);
+        const result = await firstValueFrom(
+          this.npkill.getNewestFile$(parentFolder),
+        );
 
         nodeFolder.modificationTime = result ? result.timestamp : -1;
         return nodeFolder;
@@ -521,12 +516,7 @@ export class CliController {
       return;
     }
 
-    const isSafeToDelete = this.fileService.isSafeToDelete(
-      folder.path,
-      this.config.targetFolder,
-    );
-
-    if (!isSafeToDelete) {
+    if (!isSafeToDelete(folder.path, this.config.targetFolder)) {
       this.newError(`Folder not safe to delete: ${String(folder.path)}`);
       return;
     }
@@ -536,12 +526,9 @@ export class CliController {
     this.uiStatus.render();
     this.printFoldersSection();
 
-    const deleteFunction: (path: string) => Promise<boolean> = this.config
-      .dryRun
-      ? this.fileService.fakeDeleteDir.bind(this.fileService)
-      : this.fileService.deleteDir.bind(this.fileService);
-
-    deleteFunction(String(folder.path))
+    firstValueFrom(
+      this.npkill.delete$(String(folder.path), { dryRun: this.config.dryRun }),
+    )
       .then(() => {
         folder.status = 'deleted';
         this.searchStatus.pendingDeletions--;
