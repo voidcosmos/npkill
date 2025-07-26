@@ -35,9 +35,8 @@
     "lib/**/*"
   ],
   "scripts": {
-    "build": "gulp",
-    "build-go-bin": "gulp buildGo",
-    "start": "node --loader ts-node/esm --no-warnings ./src/index.ts",
+    "build": "tsc",
+    "start": "node -r tsconfig-paths/register --loader ts-node/esm --no-warnings ./src/index.ts",
     "test": "node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js --verbose",
     "test:watch": "npm run test -- --watch",
     "test:mutant": "stryker run",
@@ -50,8 +49,7 @@
     "ansi-escapes": "^7.0.0",
     "colors": "1.4.0",
     "node-emoji": "^2.1.3",
-    "open-file-explorer": "^1.0.2",
-    "rxjs": "^7.8.2"
+    "open-file-explorer": "^1.0.2"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.8.1",
@@ -84,6 +82,9 @@
     "ts-node": "^10.9.2",
     "tslint": "^6.1.3",
     "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "rxjs": "^7.8.2"
   },
   "husky": {
     "hooks": {

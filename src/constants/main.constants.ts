@@ -1,4 +1,4 @@
-import { IConfig, IUiPosition } from '../interfaces/index.js';
+import { IConfig, IUiPosition } from '../cli/interfaces/index.js';
 
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';

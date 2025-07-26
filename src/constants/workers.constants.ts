@@ -9,5 +9,5 @@ export enum EVENTS {
   explore = 'explore',
   scanResult = 'scanResult',
   getFolderSize = 'getFolderSize',
-  getFolderSizeResult = 'getFolderSizeResult',
+  GetSizeResult = 'GetSizeResult',
 }
