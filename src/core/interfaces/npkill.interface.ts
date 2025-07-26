@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import {
   ScanFoundFolder,
-  GetNewestFileOptions,
+  // GetNewestFileOptions,
   GetNewestFileResult,
   GetSizeOptions,
   GetSizeResult,
@@ -34,4 +34,6 @@ export interface NpkillInterface {
   getLogs$(): Observable<LogEntry[]>;
 
   isValidRootFolder(path: string): IsValidRootFolderResult;
+
+  getVersion(): string;
 }

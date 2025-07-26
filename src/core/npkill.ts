@@ -139,7 +139,7 @@ export class Npkill implements NpkillInterface {
     return this.services.fileService.isValidRootFolder(path);
   }
 
-  private getVersion(): string {
+  getVersion(): string {
     const packageJson = _dirname + '/../package.json';
 
     const packageData = JSON.parse(getFileContent(packageJson));
