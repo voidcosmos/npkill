@@ -90,10 +90,10 @@ export abstract class FileService implements IFileService {
     const absolutePath = path.resolve(originalPath);
     const normalizedPath = absolutePath.replace(/\\/g, '/').toLowerCase();
 
-    const home = process.env.HOME || process.env.USERPROFILE || '';
+    const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
     let isInHome = false;
 
-    if (home) {
+    if (home !== '') {
       const normalizedHome = path
         .resolve(home)
         .replace(/\\/g, '/')
