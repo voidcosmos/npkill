@@ -25,7 +25,7 @@ import {
 } from './interfaces/npkill.interface.js';
 
 import { LogEntry } from './services/logger.service.js';
-import { getFileContent } from 'src/utils/get-file-content.js';
+import { getFileContent } from '../utils/get-file-content.js';
 
 export class Npkill implements NpkillInterface {
   private readonly services: Services;

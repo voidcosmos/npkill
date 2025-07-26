@@ -1,4 +1,4 @@
-import { CliScanFoundFolder } from 'src/cli/interfaces';
+import { CliScanFoundFolder } from '../cli/interfaces';
 
 export const FOLDER_SORT = {
   path: (a: CliScanFoundFolder, b: CliScanFoundFolder) =>

@@ -1,7 +1,7 @@
 import { FileService, FileWorkerService } from '@core/services/files/index.js';
 import { LoggerService } from '@core/services/logger.service.js';
 import { StreamService } from '@core/services/stream.service.js';
-import { ResultsService } from 'src/cli/services/index.js';
+import { ResultsService } from '../../cli/services/index.js';
 import { ScanStatus } from './search-status.model.js';
 
 export interface Services {

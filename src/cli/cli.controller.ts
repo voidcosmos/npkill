@@ -37,9 +37,9 @@ import openExplorer from 'open-file-explorer';
 import { ScanFoundFolder, Npkill } from '@core/index.js';
 import { LoggerService } from '@core/services/logger.service.js';
 import { ScanStatus } from '@core/interfaces/search-status.model.js';
-import { isSafeToDelete } from 'src/utils/is-safe-to-delete.js';
-import { convertBytesToGb } from 'src/utils/unit-conversions.js';
-import { getFileContent } from 'src/utils/get-file-content.js';
+import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
+import { convertBytesToGb } from '../utils/unit-conversions.js';
+import { getFileContent } from '../utils/get-file-content.js';
 
 export class CliController {
   private folderRoot = '';

@@ -16,8 +16,8 @@ import { ResultsService } from '../../services/results.service.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
-import { CliScanFoundFolder } from 'src/cli/interfaces/stats.interface.js';
-import { convertGBToMB } from 'src/utils/unit-conversions.js';
+import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
+import { convertGBToMB } from '../../../utils/unit-conversions.js';
 
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
