@@ -1,4 +1,5 @@
 import { FileWorkerService } from '@core/services/files/files.worker.service.js';
+import { GetNewestFileResult } from '@core/interfaces';
 import { ScanOptions } from './folder.interface.js';
 import { Observable } from 'rxjs';
 
@@ -15,7 +16,9 @@ export interface IFileService {
   getFileContent: (path: string) => string;
   isSafeToDelete: (path: string, targetFolder: string) => boolean;
   isDangerous: (path: string) => boolean;
-  getRecentModificationInDir: (path: string) => Promise<number>;
+  getRecentModificationInDir: (
+    path: string,
+  ) => Promise<GetNewestFileResult | null>;
   getFileStatsInDir: (dirname: string) => Promise<IFileStat[]>;
 }
 

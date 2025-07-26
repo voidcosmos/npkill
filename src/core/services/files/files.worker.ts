@@ -82,7 +82,7 @@ interface Task {
       'folderSizeResult',
       (result: { path: string; size: number }) => {
         tunnel.postMessage({
-          type: EVENTS.getFolderSizeResult,
+          type: EVENTS.GetSizeResult,
           value: {
             results: result,
             workerId: id,

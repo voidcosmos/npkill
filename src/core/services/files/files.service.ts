@@ -1,4 +1,9 @@
-import { ScanOptions, IFileService, IFileStat } from '@core/index.js';
+import {
+  ScanOptions,
+  IFileService,
+  IFileStat,
+  GetNewestFileResult,
+} from '@core/index.js';
 import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
@@ -93,12 +98,23 @@ export abstract class FileService implements IFileService {
     );
   }
 
-  async getRecentModificationInDir(path: string): Promise<number> {
+  async getRecentModificationInDir(
+    path: string,
+  ): Promise<GetNewestFileResult | null> {
     const files = await this.getFileStatsInDir(path);
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
     );
-    return sorted.length > 0 ? sorted[0].modificationTime : -1;
+    const newestFile = sorted.length > 0 ? sorted[0] : null;
+    if (!newestFile) {
+      return null;
+    }
+
+    return {
+      timestamp: newestFile.modificationTime,
+      name: newestFile.path.split('/').pop() || '',
+      path: newestFile.path,
+    };
   }
 
   async getFileStatsInDir(dirname: string): Promise<IFileStat[]> {

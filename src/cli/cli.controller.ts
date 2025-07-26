@@ -454,7 +454,8 @@ export class CliController {
         const parentFolder = path.join(nodeFolder.path, '../');
         const result =
           await this.fileService.getRecentModificationInDir(parentFolder);
-        nodeFolder.modificationTime = result;
+
+        nodeFolder.modificationTime = result ? result.timestamp : -1;
         return nodeFolder;
       }),
       tap(() => {

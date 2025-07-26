@@ -28,7 +28,7 @@ export type WorkerMessage =
       };
     }
   | {
-      type: EVENTS.getFolderSizeResult;
+      type: EVENTS.GetSizeResult;
       value: {
         results: { path: string; size: number };
         workerId: number;
@@ -123,7 +123,7 @@ export class FileWorkerService {
       this.checkJobComplete(stream$);
     }
 
-    if (type === EVENTS.getFolderSizeResult) {
+    if (type === EVENTS.GetSizeResult) {
       const result: { path: string; size: number } = value.results;
       const workerId: number = value.workerId;
       this.workersPendingJobs[workerId] = value.pending;

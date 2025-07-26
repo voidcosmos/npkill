@@ -1,10 +1,10 @@
 import { Observable } from 'rxjs';
 import {
   ScanFoundFolder,
-  GetFolderLastModificationOptions,
-  GetFolderLastModificationResult,
-  GetFolderSizeOptions,
-  GetFolderSizeResult,
+  GetNewestFileOptions,
+  GetNewestFileResult,
+  GetSizeOptions,
+  GetSizeResult,
   ScanOptions,
   DeleteResult,
   DeleteOptions,
@@ -18,17 +18,14 @@ export interface NpkillInterface {
     options: ScanOptions,
   ): Observable<ScanFoundFolder>;
 
-  getFolderSize$(
-    path: string,
-    options: GetFolderSizeOptions,
-  ): Observable<GetFolderSizeResult>;
+  getSize$(path: string, options: GetSizeOptions): Observable<GetSizeResult>;
 
-  getFolderLastModification$(
+  getNewestFile$(
     path: string,
-    //  options: GetFolderLastModificationOptions,
-  ): Observable<GetFolderLastModificationResult>;
+    //  options: GetNewestFileOptions,
+  ): Observable<GetNewestFileResult | null>;
 
-  deleteFolder$(path: string, options: DeleteOptions): Observable<DeleteResult>;
+  delete$(path: string, options: DeleteOptions): Observable<DeleteResult>;
 
   getLogs$(): Observable<LogEntry[]>;
 

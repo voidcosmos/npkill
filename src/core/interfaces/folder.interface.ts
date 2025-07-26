@@ -11,18 +11,20 @@ export interface ScanOptions {
   // maxConcurrentScans?: number; // Need to implement this.
 }
 
-export interface GetFolderSizeOptions {
+export interface GetSizeOptions {
   unit?: SizeUnit; // Default: bytes
 }
 
-export interface GetFolderSizeResult {
+export interface GetSizeResult {
   size: number; // Default: bytes
   unit: SizeUnit;
 }
 
-export interface GetFolderLastModificationOptions {}
+export interface GetNewestFileOptions {}
 
-export interface GetFolderLastModificationResult {
+export interface GetNewestFileResult {
+  path: string;
+  name: string;
   timestamp: number; // epoch timestamp
 }
 

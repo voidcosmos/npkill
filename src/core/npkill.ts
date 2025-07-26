@@ -9,10 +9,10 @@ import { StreamService } from './services/stream.service.js';
 import { Services } from './interfaces/services.interface.js';
 import {
   ScanFoundFolder,
-  GetFolderLastModificationOptions,
-  GetFolderLastModificationResult,
-  GetFolderSizeOptions,
-  GetFolderSizeResult,
+  GetNewestFileOptions,
+  GetNewestFileResult,
+  GetSizeOptions,
+  GetSizeResult,
   ScanOptions,
   DeleteOptions,
   DeleteResult,
@@ -65,10 +65,7 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getFolderSize$(
-    path: string,
-    options: GetFolderSizeOptions,
-  ): Observable<GetFolderSizeResult> {
+  getSize$(path: string, options: GetSizeOptions): Observable<GetSizeResult> {
     const { fileService } = this.services;
     this.logger.info(`Calculating folder size for ${String(path)}`);
     return fileService.getFolderSize(path).pipe(
@@ -78,24 +75,23 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getFolderLastModification$(
+  getNewestFile$(
     path: string,
-    // options: GetFolderLastModificationOptions,
-  ): Observable<GetFolderLastModificationResult> {
+    // options: GetNewestFileOptions,
+  ): Observable<GetNewestFileResult | null> {
     const { fileService } = this.services;
     this.logger.info(`Calculating last mod. of ${path}`);
     return from(fileService.getRecentModificationInDir(path)).pipe(
-      map((timestamp) => ({ timestamp })),
-      tap(({ timestamp }) =>
-        this.logger.info(`Last mod. of ${path}: ${timestamp}`),
-      ),
+      tap((result) => {
+        if (!result) {
+          return;
+        }
+        this.logger.info(`Last mod. of ${path}: ${result.timestamp}`);
+      }),
     );
   }
 
-  deleteFolder$(
-    path: string,
-    options: DeleteOptions,
-  ): Observable<DeleteResult> {
+  delete$(path: string, options: DeleteOptions): Observable<DeleteResult> {
     const { fileService } = this.services;
     this.logger.info(
       `Deleting ${String(path)} ${options.dryRun ? '(dry run)' : ''}...`,
