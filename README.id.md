@@ -23,6 +23,8 @@ Kami berusaha untuk menerjemahkan dokumen Npkill ke berbagai bahasa. Berikut daf
 
 - [Español](./README.es.md)
 - [Indonesian](./README.id.md)
+- [Portugis](./README.pt.md)
+- [Turki](./README.tr.md)
 
 ## Daftar Isi
 
