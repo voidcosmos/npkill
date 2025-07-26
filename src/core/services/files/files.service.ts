@@ -4,6 +4,7 @@ import {
   IFileService,
   IFileStat,
   GetNewestFileResult,
+  RiskAnalysis,
 } from '@core/index.js';
 import fs, { accessSync, readFileSync, Stats, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
@@ -87,7 +88,7 @@ export abstract class FileService implements IFileService {
    * application-specific data or configurations that should not be tampered with. Deleting node_modules
    * from these locations could potentially disrupt the normal operation of these applications.
    */
-  isDangerous(originalPath: string): boolean {
+  isDangerous(originalPath: string): RiskAnalysis {
     const absolutePath = path.resolve(originalPath);
     const normalizedPath = absolutePath.replace(/\\/g, '/').toLowerCase();
 
@@ -104,31 +105,44 @@ export abstract class FileService implements IFileService {
 
     if (isInHome) {
       if (/\/\.config(\/|$)/.test(normalizedPath)) {
-        return true;
+        return {
+          isSensitive: true,
+          reason: 'Contains user configuration data (~/.config)',
+        };
       }
       if (/\/\.local\/share(\/|$)/.test(normalizedPath)) {
-        return true;
+        return {
+          isSensitive: true,
+          reason: 'User data folder (~/.local/share)',
+        };
       }
-      if (/\/\.(cache|npm|pnpm)(\/|$)/.test(normalizedPath)) {
-        return false;
-      }
+      if (/\/\.(cache|npm|pnpm)(\/|$)/.test(normalizedPath))
+        return { isSensitive: false };
     }
 
+    // macOs
     if (/\/applications\/[^/]+\.app\//.test(normalizedPath)) {
-      return true;
+      return { isSensitive: true, reason: 'Inside macOS .app package' };
     }
 
+    // Windows
     if (normalizedPath.includes('/appdata/roaming')) {
-      return true;
+      return {
+        isSensitive: true,
+        reason: 'Inside Windows AppData Roaming folder',
+      };
     }
     if (normalizedPath.includes('/appdata/local')) {
       if (/\/\.(cache|npm|pnpm)(\/|$)/.test(normalizedPath)) {
-        return false;
+        return { isSensitive: false };
       }
-      return true;
+      return {
+        isSensitive: true,
+        reason: 'Inside Windows AppData Local folder',
+      };
     }
     if (/program files( \(x86\))?\//.test(normalizedPath)) {
-      return true;
+      return { isSensitive: true, reason: 'Inside Program Files folder' };
     }
 
     const segments = normalizedPath.split('/');
@@ -141,10 +155,10 @@ export abstract class FileService implements IFileService {
     );
 
     if (hasUnsafeHiddenFolder) {
-      return true;
+      return { isSensitive: true, reason: 'Contains unsafe hidden folder' };
     }
 
-    return false;
+    return { isSensitive: false };
   }
 
   async getRecentModificationInDir(

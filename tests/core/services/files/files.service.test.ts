@@ -167,28 +167,33 @@ describe('File Service', () => {
 
       test('safe relative path', () => {
         mockCwd('/safe/path');
-        expect(fileService.isDangerous('../project/node_modules')).toBe(false);
+        expect(
+          fileService.isDangerous('../project/node_modules').isSensitive,
+        ).toBe(false);
       });
 
       test('hidden relative path', () => {
         mockCwd('/home/user/projects');
-        expect(fileService.isDangerous('../.config/secret')).toBe(true);
+        expect(fileService.isDangerous('../.config/secret').isSensitive).toBe(
+          true,
+        );
       });
 
       test('node_modules in ~/.cache', () => {
         expect(
-          fileService.isDangerous('/home/user/.cache/project/node_modules'),
+          fileService.isDangerous('/home/user/.cache/project/node_modules')
+            .isSensitive,
         ).toBe(false);
       });
 
       test('parent relative path (..)', () => {
         mockCwd('/home/user');
-        expect(fileService.isDangerous('..')).toBe(false);
+        expect(fileService.isDangerous('..').isSensitive).toBe(false);
       });
 
       test('current relative path (.)', () => {
         mockCwd('/home/user');
-        expect(fileService.isDangerous('.')).toBe(false);
+        expect(fileService.isDangerous('.').isSensitive).toBe(false);
       });
     });
 
@@ -200,25 +205,29 @@ describe('File Service', () => {
 
       test('safe relative path', () => {
         mockCwd('D:\\safe\\path');
-        expect(fileService.isDangerous('..\\project\\node_modules')).toBe(
-          false,
-        );
+        expect(
+          fileService.isDangerous('..\\project\\node_modules').isSensitive,
+        ).toBe(false);
       });
 
       test('AppData relative path', () => {
         mockCwd('C:\\Users\\user\\Documents');
-        expect(fileService.isDangerous('..\\AppData\\Roaming\\app')).toBe(true);
+        expect(
+          fileService.isDangerous('..\\AppData\\Roaming\\app').isSensitive,
+        ).toBe(true);
       });
 
       test('Program Files (x86)', () => {
         expect(
-          fileService.isDangerous('C:\\Program Files (x86)\\app\\node_modules'),
+          fileService.isDangerous('C:\\Program Files (x86)\\app\\node_modules')
+            .isSensitive,
         ).toBe(true);
       });
 
       test('network paths', () => {
         expect(
-          fileService.isDangerous('\\\\network\\share\\.hidden\\node_modules'),
+          fileService.isDangerous('\\\\network\\share\\.hidden\\node_modules')
+            .isSensitive,
         ).toBe(true);
       });
     });
@@ -227,31 +236,33 @@ describe('File Service', () => {
       test('no home directory', () => {
         delete process.env.HOME;
         delete process.env.USERPROFILE;
-        expect(fileService.isDangerous('/some/path')).toBe(false);
+        expect(fileService.isDangerous('/some/path').isSensitive).toBe(false);
       });
 
       test('whitelisted hidden segments', () => {
         expect(
-          fileService.isDangerous('/tmp/.cache/project/node_modules'),
+          fileService.isDangerous('/tmp/.cache/project/node_modules')
+            .isSensitive,
         ).toBe(false);
-        expect(fileService.isDangerous('/tmp/.npm/project/node_modules')).toBe(
-          false,
-        );
+        expect(
+          fileService.isDangerous('/tmp/.npm/project/node_modules').isSensitive,
+        ).toBe(false);
       });
 
       test('macOS application bundle', () => {
         expect(
           fileService.isDangerous(
             '/Applications/MyApp.app/Contents/node_modules',
-          ),
+          ).isSensitive,
         ).toBe(true);
       });
 
       test('Windows-style path on POSIX', () => {
         process.env.HOME = '/home/user';
-        expect(fileService.isDangerous('/home/user/AppData/Local/.cache')).toBe(
-          false,
-        );
+        expect(
+          fileService.isDangerous('/home/user/AppData/Local/.cache')
+            .isSensitive,
+        ).toBe(false);
       });
     });
   });

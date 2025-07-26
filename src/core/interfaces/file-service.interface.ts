@@ -1,5 +1,5 @@
 import { FileWorkerService } from '@core/services/files/files.worker.service.js';
-import { GetNewestFileResult } from '@core/interfaces';
+import { GetNewestFileResult, RiskAnalysis } from '@core/interfaces';
 import { ScanOptions } from './folder.interface.js';
 import { Observable } from 'rxjs';
 
@@ -15,7 +15,7 @@ export interface IFileService {
   convertGBToMB: (gb: number) => number;
   getFileContent: (path: string) => string;
   isSafeToDelete: (path: string, targetFolder: string) => boolean;
-  isDangerous: (path: string) => boolean;
+  isDangerous: (path: string) => RiskAnalysis;
   getRecentModificationInDir: (
     path: string,
   ) => Promise<GetNewestFileResult | null>;

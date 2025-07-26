@@ -52,7 +52,19 @@ export class Npkill implements NpkillInterface {
       }),
       mergeMap((dataFolder) => from(splitData(dataFolder))),
       filter((path) => path !== ''),
-      map((path) => ({ path })),
+      map((path) => {
+        if (
+          options.performRiskAnalysis !== undefined &&
+          !options.performRiskAnalysis
+        ) {
+          return { path };
+        }
+        const riskAnalysis = fileService.isDangerous(path);
+        return {
+          path,
+          riskAnalysis,
+        };
+      }),
       tap((nodeFolder) =>
         this.logger.info(`Folder found: ${String(nodeFolder.path)}`),
       ),

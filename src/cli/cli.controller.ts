@@ -34,7 +34,7 @@ import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { ScanOptions, Npkill } from '@core/index.js';
+import { ScanFoundFolder, Npkill } from '@core/index.js';
 import { LoggerService } from '@core/services/logger.service.js';
 import { ScanStatus } from '@core/interfaces/search-status.model.js';
 import { FileService } from '@core/services/files/files.service.js';
@@ -375,25 +375,27 @@ export class CliController {
 
     const params = this.prepareListDirParams();
     const { rootPath } = params;
-    const isExcludedDangerousDirectory = (path: string): boolean =>
-      this.config.excludeHiddenDirectories &&
-      this.fileService.isDangerous(path);
+    const isExcludedDangerousDirectory = (
+      scanResult: ScanFoundFolder,
+    ): boolean =>
+      Boolean(
+        this.config.excludeHiddenDirectories &&
+          scanResult.riskAnalysis?.isSensitive,
+      );
 
     this.searchStart = Date.now();
-    const results$ = this.npkill
-      .startScan$(rootPath, params)
-      .pipe(map((folder) => folder.path));
+    const results$ = this.npkill.startScan$(rootPath, params);
     const nonExcludedResults$ = results$.pipe(
       filter((path) => !isExcludedDangerousDirectory(path)),
     );
 
     nonExcludedResults$
       .pipe(
-        map<string, CliScanFoundFolder>((path) => ({
+        map<ScanFoundFolder, CliScanFoundFolder>(({ path, riskAnalysis }) => ({
           path,
           size: 0,
           modificationTime: -1,
-          isDangerous: this.fileService.isDangerous(path),
+          isDangerous: riskAnalysis?.isSensitive || false,
           status: 'live',
         })),
         tap((nodeFolder) => {

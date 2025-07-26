@@ -1,13 +1,20 @@
 export type SizeUnit = 'bytes' | 'kb' | 'mb' | 'gb';
 
+export interface RiskAnalysis {
+  isSensitive: boolean;
+  reason?: string;
+}
+
 export interface ScanFoundFolder {
   path: string;
+  riskAnalysis?: RiskAnalysis;
 }
 
 export interface ScanOptions {
   target: string;
   exclude?: string[];
   sortBy?: 'path' | 'size' | 'last-mod';
+  performRiskAnalysis?: boolean; // Default: true
   // maxConcurrentScans?: number; // Need to implement this.
 }
 
