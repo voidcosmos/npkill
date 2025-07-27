@@ -424,7 +424,7 @@ export class CliController {
     const target = this.config.targetFolder;
     const params = {
       rootPath: this.folderRoot,
-      target,
+      targets: [target],
     };
 
     if (this.config.exclude.length > 0) {

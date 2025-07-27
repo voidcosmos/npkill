@@ -25,8 +25,8 @@ export interface ScanFoundFolder {
  * Configuration options for scanning directories.
  */
 export interface ScanOptions {
-  /** Target directory to scan for matching folders. */
-  target: string;
+  /** Target directories to scan for matching folders. */
+  targets: string[];
   /** Array of directory paths to exclude from the scan. */
   exclude?: string[];
   /** Criteria for sorting scan results. */

@@ -38,14 +38,14 @@ export abstract class UnixFilesService extends FileService {
   }
 
   protected prepareFindArgs(path: string, params: ScanOptions): string[] {
-    const { target, exclude } = params;
+    const { targets, exclude } = params;
     let args: string[] = [path];
 
     if (exclude !== undefined && exclude.length > 0) {
       args = [...args, this.prepareExcludeArgs(exclude)].flat();
     }
 
-    args = [...args, '-name', target, '-prune'];
+    args = [...args, '-name', targets[0], '-prune'];
 
     return args;
   }

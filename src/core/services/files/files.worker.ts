@@ -102,7 +102,7 @@ class FileWalker {
   readonly events = new EventEmitter();
   private searchConfig: WorkerScanOptions = {
     rootPath: '',
-    target: '',
+    targets: [''],
     exclude: [],
   };
 
@@ -272,7 +272,7 @@ class FileWalker {
   }
 
   private isTargetFolder(path: string): boolean {
-    return path === this.searchConfig.target;
+    return path === this.searchConfig.targets[0];
   }
 
   private completeTask(): void {
