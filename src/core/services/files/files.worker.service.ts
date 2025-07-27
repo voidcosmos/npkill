@@ -75,7 +75,11 @@ export class FileWorkerService {
   }
 
   getFolderSize(stream$: Subject<number>, path: string): void {
-    //   this.listenEvents(stream$);
+    if (this.workers.length === 0) {
+      this.instantiateWorkers(this.getOptimalNumberOfWorkers());
+      this.listenEvents(new Subject<string>());
+      this.setWorkerConfig({ rootPath: path } as WorkerScanOptions);
+    }
     this.getSizePendings = [...this.getSizePendings, { path, stream$ }];
     this.addJob({ job: EVENTS.getFolderSize, value: { path } });
   }
