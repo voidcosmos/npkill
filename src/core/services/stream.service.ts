@@ -2,6 +2,11 @@ import { ChildProcessWithoutNullStreams } from 'child_process';
 import { Observable } from 'rxjs';
 import { STREAM_ENCODING } from '../../constants/index.js';
 
+/**
+ * Service for converting child process streams into RxJS observables.
+ * Handles the conversion of stdout/stderr streams to reactive streams
+ * for better integration with the application's reactive architecture.
+ */
 export class StreamService {
   streamToObservable<T>(stream: ChildProcessWithoutNullStreams): Observable<T> {
     const { stdout, stderr } = stream;

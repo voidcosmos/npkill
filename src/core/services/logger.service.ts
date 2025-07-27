@@ -4,17 +4,20 @@ import { basename, dirname, join } from 'path';
 
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-export interface LogEntry {
-  type: 'info' | 'warn' | 'error';
-  timestamp: number;
-  message: string;
-}
+import {
+  ILoggerService,
+  LogEntry,
+} from '@core/interfaces/logger-service.interface';
 
 const LATEST_TAG = 'latest';
 const OLD_TAG = 'old';
 
-export class LoggerService {
+/**
+ * Implementation of the logging service for npkill.
+ * Manages application logs with different severity levels and provides
+ * reactive streams for log observation and file output capabilities.
+ */
+export class LoggerService implements ILoggerService {
   private log: LogEntry[] = [];
   private logSubject = new BehaviorSubject<LogEntry[]>([]);
 

@@ -24,9 +24,14 @@ import {
   NpkillInterface,
 } from './interfaces/npkill.interface.js';
 
-import { LogEntry } from './services/logger.service.js';
+import { LogEntry } from './interfaces/logger-service.interface.js';
 import { getFileContent } from '../utils/get-file-content.js';
 
+/**
+ * Main npkill class that implements the core directory scanning and cleanup functionality.
+ * Provides methods for recursive directory scanning, size calculation, file analysis,
+ * and safe deletion operations.
+ */
 export class Npkill implements NpkillInterface {
   private readonly services: Services;
 
