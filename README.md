@@ -187,7 +187,9 @@ npm run start -- -f -e
 
 # :bookmark_tabs: API
 
-// TODO
+The api allows you to interact with npkill from node to create your own implementations in your scripts (automations, for example).
+
+You can check the basic API [here](./API.md) or on the web (comming soon).
 
 <a name="roadmap"></a>
 
