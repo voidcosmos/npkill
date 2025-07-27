@@ -135,6 +135,11 @@ export class Npkill implements NpkillInterface {
     return this.services.logger.getLog$();
   }
 
+  stopScan(): void {
+    this.logger.info('Stopping scan...');
+    this.services.fileService.stopScan();
+  }
+
   isValidRootFolder(path: string): IsValidRootFolderResult {
     return this.services.fileService.isValidRootFolder(path);
   }

@@ -16,6 +16,7 @@ export interface IFileService {
     path: string,
   ) => Promise<GetNewestFileResult | null>;
   getFileStatsInDir: (dirname: string) => Promise<IFileStat[]>;
+  stopScan: () => void;
 }
 
 export interface IFileStat {

@@ -67,6 +67,10 @@ interface Task {
           true,
         );
       }
+
+      if (message?.type === EVENTS.stop) {
+        fileWalker.stop();
+      }
     });
   }
 
@@ -105,9 +109,14 @@ class FileWalker {
   private readonly taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
+  private shouldStop = false;
 
   setSearchConfig(params: WorkerScanOptions): void {
     this.searchConfig = params;
+  }
+
+  stop(): void {
+    this.shouldStop = true;
   }
 
   enqueueTask(
@@ -116,6 +125,10 @@ class FileWalker {
     priorize: boolean = false,
     sizeCollector?: Task['sizeCollector'],
   ): void {
+    if (this.shouldStop) {
+      return;
+    }
+
     const task: Task = { path, operation };
     if (sizeCollector) {
       task.sizeCollector = sizeCollector;
@@ -273,7 +286,11 @@ class FileWalker {
   }
 
   private processQueue(): void {
-    while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
+    while (
+      this.procs < MAX_PROCS &&
+      this.taskQueue.length > 0 &&
+      !this.shouldStop
+    ) {
       const task = this.taskQueue.shift();
       if (!task?.path) {
         continue;

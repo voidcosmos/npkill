@@ -22,6 +22,8 @@ export interface NpkillInterface {
     options?: ScanOptions,
   ): Observable<ScanFoundFolder>;
 
+  stopScan(): void;
+
   getSize$(path: string, options?: GetSizeOptions): Observable<GetSizeResult>;
 
   getNewestFile$(

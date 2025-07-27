@@ -28,6 +28,10 @@ export abstract class FileService implements IFileService {
     return stream$.pipe(map((data) => data));
   }
 
+  stopScan(): void {
+    this.fileWorkerService.stopScan();
+  }
+
   /** Used for dry-run or testing. */
   async fakeDeleteDir(_path: string): Promise<boolean> {
     const randomDelay = Math.floor(Math.random() * 4000 + 200);

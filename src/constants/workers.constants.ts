@@ -10,4 +10,5 @@ export enum EVENTS {
   scanResult = 'scanResult',
   getFolderSize = 'getFolderSize',
   GetSizeResult = 'GetSizeResult',
+  stop = 'stop',
 }

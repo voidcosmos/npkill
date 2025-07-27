@@ -38,7 +38,8 @@ export type WorkerMessage =
   | { type: EVENTS.explore | EVENTS.getFolderSize; value: { path: string } }
   | { type: EVENTS.exploreConfig; value: WorkerScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
-  | { type: EVENTS.alive; value?: undefined };
+  | { type: EVENTS.alive; value?: undefined }
+  | { type: EVENTS.stop; value?: undefined };
 
 export interface WorkerStats {
   pendingSearchTasks: number;
@@ -56,6 +57,7 @@ export class FileWorkerService {
   private pendingJobs = 0;
   private totalJobs = 0;
   private tunnels: MessagePort[] = [];
+  private shouldStop = false;
 
   constructor(
     private readonly logger: LoggerService,
@@ -63,6 +65,7 @@ export class FileWorkerService {
   ) {}
 
   startScan(stream$: Subject<string>, params: WorkerScanOptions): void {
+    this.shouldStop = false;
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);
     this.setWorkerConfig(params);
@@ -75,6 +78,21 @@ export class FileWorkerService {
     //   this.listenEvents(stream$);
     this.getSizePendings = [...this.getSizePendings, { path, stream$ }];
     this.addJob({ job: EVENTS.getFolderSize, value: { path } });
+  }
+
+  stopScan(): void {
+    this.logger.info('Stopping scan...');
+    this.shouldStop = true;
+    this.searchStatus.workerStatus = 'stopped';
+
+    this.tunnels.forEach((tunnel) => {
+      tunnel.postMessage({
+        type: EVENTS.stop,
+        value: undefined,
+      });
+    });
+
+    void this.killWorkers();
   }
 
   private listenEvents(stream$: Subject<string>): void {
@@ -111,7 +129,7 @@ export class FileWorkerService {
         const { path, isTarget } = result;
         if (isTarget) {
           stream$.next(path);
-        } else {
+        } else if (!this.shouldStop) {
           this.addJob({
             job: EVENTS.explore,
             value: { path },
@@ -147,6 +165,10 @@ export class FileWorkerService {
 
   /** Jobs are distributed following the round-robin algorithm. */
   private addJob(job: WorkerJob): void {
+    if (this.shouldStop) {
+      return;
+    }
+
     const tunnel = this.tunnels[this.index];
     const message: WorkerMessage = { type: job.job, value: job.value };
     tunnel.postMessage(message);
