@@ -100,7 +100,7 @@ describe('FileWorker', () => {
   // it('should plant a listener over the passed MessagePort',()=>{})
 
   it('should return only sub-directories from given parent', (done) => {
-    setExploreConfig({ rootPath: basePath, target });
+    setExploreConfig({ targets: [target] });
     const subDirectories = [
       { name: 'file1.txt', isDirectory: () => false },
       { name: 'file2.txt', isDirectory: () => false },
@@ -140,7 +140,7 @@ describe('FileWorker', () => {
 
     sampleTargets.forEach((target) => {
       it('when target is ' + target, (done) => {
-        setExploreConfig({ rootPath: basePath, target: 'node_modules' });
+        setExploreConfig({ targets: [target] });
         const subDirectories = [
           { name: 'file1.cs', isDirectory: () => false },
           { name: '.gitignore', isDirectory: () => false },
@@ -155,7 +155,7 @@ describe('FileWorker', () => {
           .filter((subdir) => subdir.isDirectory())
           .map((subdir) => ({
             path: join(basePath, subdir.name),
-            isTarget: subdir.name === 'node_modules',
+            isTarget: subdir.name === target,
           }));
 
         let results: any[];
@@ -181,8 +181,7 @@ describe('FileWorker', () => {
     it('when a simple patterns is gived', (done) => {
       const excluded = ['ignorethis', 'andignorethis'];
       setExploreConfig({
-        rootPath: basePath,
-        target: 'node_modules',
+        targets: ['node_modules'],
         exclude: excluded,
       });
       const subDirectories = [
@@ -224,8 +223,7 @@ describe('FileWorker', () => {
     it('when a part of path is gived', (done) => {
       const excluded = ['user/ignorethis'];
       setExploreConfig({
-        rootPath: basePath,
-        target: 'node_modules',
+        targets: ['node_modules'],
         exclude: excluded.map(normalize),
       });
       const subDirectories = [

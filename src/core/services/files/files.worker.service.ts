@@ -1,7 +1,7 @@
 import os from 'os';
 import { dirname, extname } from 'path';
 
-import { Worker, MessageChannel, MessagePort } from 'node:worker_threads';
+import { Worker, MessageChannel, MessagePort } from 'worker_threads';
 import { Subject } from 'rxjs';
 import { LoggerService } from '../logger.service.js';
 import { ScanStatus } from '@core/interfaces/search-status.model.js';

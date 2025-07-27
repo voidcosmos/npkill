@@ -1,9 +1,7 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
 import { Subject } from 'rxjs';
-import { Npkill } from '../../src/core/index.js';
-import { CliScanFoundFolder } from '../../src/cli/interfaces/stats.interface.js';
-import { DeleteResult } from '../../src/core/interfaces/npkill.interface.js';
+import { DeleteResult, Npkill } from '../../src/core/index.js';
 
 const resultsUiDeleteMock$ = new Subject<DeleteResult>();
 const setDeleteAllWarningVisibilityMock = jest.fn();
@@ -82,8 +80,8 @@ describe('CliController test', () => {
 
   const linuxFilesServiceMock: any = {
     getFileContent: jest.fn().mockReturnValue('{}'),
-    isValidRootFolder: jest.fn().mockReturnValue('true'),
-    isSafeToDelete: jest.fn().mockReturnValue('true'),
+    isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
+    isSafeToDelete: jest.fn().mockReturnValue(true),
     deleteDir: filesServiceDeleteMock,
     fakeDeleteDir: filesServiceFakeDeleteMock,
   };
@@ -109,8 +107,14 @@ describe('CliController test', () => {
     startListenKeyEvents: jest.fn(),
   };
 
+  const npkillDeleteMock = jest.fn();
   const npkillMock: Npkill = {
     logger: loggerServiceMock,
+    isValidRootFolder: linuxFilesServiceMock.isValidRootFolder,
+    getSize$: jest.fn(),
+    getNewestFile$: jest.fn(),
+    startScan$: jest.fn(),
+    delete$: npkillDeleteMock,
   } as unknown as Npkill;
 
   ////////// mocked Controller Methods
@@ -258,39 +262,38 @@ describe('CliController test', () => {
 
       beforeEach(() => {
         testFolder = {
-          path: '/my/path',
+          path: '/my/path/node_modules',
           success: true,
         };
         jest.clearAllMocks();
       });
 
       it('Should call normal deleteDir function when no --dry-run is included', () => {
+        mockParameters({ targets: ['node_modules'], 'dry-run': 'false' });
         cliController.init();
 
-        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
-        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
+        expect(npkillDeleteMock).toHaveBeenCalledTimes(0);
 
         resultsUiDeleteMock$.next(testFolder);
 
-        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
-        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(1);
-        expect(filesServiceDeleteMock).toHaveBeenCalledWith(testFolder.path);
+        expect(npkillDeleteMock).toHaveBeenCalledTimes(1);
+        expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
+          dryRun: false,
+        });
       });
 
       it('Should call fake deleteDir function instead of deleteDir', () => {
-        mockParameters({ 'dry-run': true });
+        mockParameters({ targets: ['node_modules'], 'dry-run': true });
         cliController.init();
 
-        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
-        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(0);
+        expect(npkillDeleteMock).toHaveBeenCalledTimes(0);
 
         resultsUiDeleteMock$.next(testFolder);
 
-        expect(filesServiceDeleteMock).toHaveBeenCalledTimes(0);
-        expect(filesServiceFakeDeleteMock).toHaveBeenCalledTimes(1);
-        expect(filesServiceFakeDeleteMock).toHaveBeenCalledWith(
-          testFolder.path,
-        );
+        expect(npkillDeleteMock).toHaveBeenCalledTimes(1);
+        expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
+          dryRun: true,
+        });
       });
     });
   });

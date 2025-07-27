@@ -1,4 +1,4 @@
-import { Folder } from '../../../src/core/interfaces/folder.interface.js';
+import { CliScanFoundFolder } from '../../../src/cli/interfaces/stats.interface.js';
 import { ResultsService } from '../../../src/cli/services/results.service.js';
 
 describe('Result Service', () => {
@@ -9,7 +9,7 @@ describe('Result Service', () => {
 
   describe('#addResult', () => {
     it('should add folder if that is the first', () => {
-      const newResult: Folder = {
+      const newResult: CliScanFoundFolder = {
         path: 'path',
         size: 5,
         status: 'live',
@@ -21,7 +21,7 @@ describe('Result Service', () => {
       expect(resultService.results).toMatchObject(resultExpected);
     });
     it('should add folders', () => {
-      const newResults: Folder[] = [
+      const newResults: CliScanFoundFolder[] = [
         {
           path: 'path',
           size: 1,
@@ -53,7 +53,7 @@ describe('Result Service', () => {
   });
 
   describe('#sortResults', () => {
-    let mockResults: Folder[];
+    let mockResults: CliScanFoundFolder[];
     beforeEach(() => {
       mockResults = [
         {
@@ -198,7 +198,7 @@ describe('Result Service', () => {
   });
 
   describe('#getStats', () => {
-    let mockResults: Folder[];
+    let mockResults: CliScanFoundFolder[];
     beforeEach(() => {
       mockResults = [
         {

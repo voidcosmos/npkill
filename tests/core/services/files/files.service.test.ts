@@ -72,9 +72,10 @@ describe('File Service', () => {
       statSyncReturnMock = () => {
         throw new Error('ENOENT');
       };
-      expect(() => fileService.isValidRootFolder(path)).toThrow(
-        'The path does not exist.',
-      );
+      expect(fileService.isValidRootFolder(path)).toEqual({
+        isValid: false,
+        invalidReason: 'The path does not exist.',
+      });
     });
 
     it('should throw error if is not directory', () => {
@@ -82,9 +83,10 @@ describe('File Service', () => {
         isDirectory: () => false,
       });
 
-      expect(() => fileService.isValidRootFolder(path)).toThrow(
-        'The path must point to a directory.',
-      );
+      expect(fileService.isValidRootFolder(path)).toEqual({
+        isValid: false,
+        invalidReason: 'The path must point to a directory.',
+      });
     });
 
     it('should throw error if cant read dir', () => {
@@ -95,9 +97,10 @@ describe('File Service', () => {
         throw new Error();
       };
 
-      expect(() => fileService.isValidRootFolder(path)).toThrow(
-        'Cannot read the specified path.',
-      );
+      expect(fileService.isValidRootFolder(path)).toEqual({
+        isValid: false,
+        invalidReason: 'Cannot read the specified path.',
+      });
     });
 
     it('should return true if is valid rootfolder', () => {

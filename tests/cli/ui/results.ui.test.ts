@@ -1,9 +1,8 @@
 import { ConsoleService } from '../../../src/cli/services/index.js';
 import { FileService } from '../../../src/core/services/files/files.service.js';
-
-import { Folder } from '../../../src/core/interfaces/folder.interface.js';
 import { ResultsService } from '../../../src/cli/services/results.service.js';
 import { jest } from '@jest/globals';
+import { CliScanFoundFolder } from '../../../src/cli/interfaces/stats.interface.js';
 
 const stdoutWriteMock = jest.fn() as any;
 
@@ -43,11 +42,7 @@ describe('ResultsUi', () => {
   beforeEach(() => {
     mockProcess();
     resultsServiceMock.results = [];
-    resultsUi = new ResultsUi(
-      resultsServiceMock,
-      consoleServiceMock,
-      fileServiceMock,
-    );
+    resultsUi = new ResultsUi(resultsServiceMock, consoleServiceMock);
   });
 
   afterEach(() => {
@@ -67,7 +62,7 @@ describe('ResultsUi', () => {
           size: 1,
           status: 'live',
         },
-      ] as Folder[];
+      ] as CliScanFoundFolder[];
 
       resultsUi.render();
 
@@ -87,7 +82,9 @@ describe('ResultsUi', () => {
             path: `path/folder/${i}`,
             size: 1,
             status: 'live',
-          } as Folder);
+            isDangerous: false,
+            modificationTime: -1,
+          } as CliScanFoundFolder);
         }
       };
 
