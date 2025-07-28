@@ -3,4 +3,5 @@ export interface IKeyPress {
   meta: boolean;
   ctrl: boolean;
   shift: boolean;
+  sequence: string;
 }

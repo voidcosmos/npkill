@@ -20,7 +20,7 @@ export class StatusUi extends BaseUi {
   private barClosing = false;
   private showProgressBar = true;
   private pendingTasksPosition = { ...UI_POSITIONS.PENDING_TASKS };
-  private readonly searchEnd$ = new Subject();
+  private searchEnd$ = new Subject();
   private readonly SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
@@ -36,6 +36,8 @@ export class StatusUi extends BaseUi {
   }
 
   start(): void {
+    this.barClosing = false;
+    this.showProgressBar = true;
     this.spinnerService.setSpinner(SPINNERS.W10);
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.searchEnd$))
@@ -44,6 +46,19 @@ export class StatusUi extends BaseUi {
       });
 
     this.animateProgressBar();
+  }
+
+  reset(): void {
+    this.barClosing = false;
+    this.showProgressBar = true;
+    this.barNormalizedWidth = 0;
+    this.text = '';
+    this.pendingTasksPosition = { ...UI_POSITIONS.PENDING_TASKS };
+    this.searchEnd$.next(true);
+    this.searchEnd$ = new Subject();
+
+    this.clearPendingTasks();
+    this.render();
   }
 
   completeSearch(duration: number): void {
@@ -57,7 +72,7 @@ export class StatusUi extends BaseUi {
   }
 
   render(): void {
-    this.printAt(this.text, UI_POSITIONS.STATUS);
+    this.printAt(this.text + '      ', UI_POSITIONS.STATUS);
 
     if (this.showProgressBar) {
       this.renderProgressBar();

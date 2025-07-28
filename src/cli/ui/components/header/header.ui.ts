@@ -8,6 +8,7 @@ import {
 } from '../../../../constants/index.js';
 import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
+import { IConfig } from 'src/cli/interfaces/config.interface.js';
 
 export enum MENU_BAR_OPTIONS {
   HELP = 0,
@@ -18,14 +19,13 @@ export enum MENU_BAR_OPTIONS {
 
 export class HeaderUi extends BaseUi {
   programVersion: string;
-  isDryRun: boolean;
   private activeMenuIndex = MENU_BAR_OPTIONS.DELETE;
 
   readonly menuIndex$ = new BehaviorSubject<MENU_BAR_OPTIONS>(
     MENU_BAR_OPTIONS.DELETE,
   );
 
-  constructor() {
+  constructor(private readonly config: IConfig) {
     super();
     this.menuIndex$.subscribe((menuIndex) => {
       this.activeMenuIndex = menuIndex;
@@ -43,7 +43,7 @@ export class HeaderUi extends BaseUi {
       this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
     }
 
-    if (this.isDryRun) {
+    if (this.config.dryRun) {
       this.printAt(
         colors.black(colors.bgMagenta(` ${INFO_MSGS.DRY_RUN} `)),
         UI_POSITIONS.DRY_RUN_NOTICE,

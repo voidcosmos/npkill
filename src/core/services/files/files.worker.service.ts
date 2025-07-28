@@ -64,7 +64,11 @@ export class FileWorkerService {
     private readonly searchStatus: ScanStatus,
   ) {}
 
-  startScan(stream$: Subject<string>, params: WorkerScanOptions): void {
+  async startScan(
+    stream$: Subject<string>,
+    params: WorkerScanOptions,
+  ): Promise<void> {
+    await this.killWorkers();
     this.shouldStop = false;
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);

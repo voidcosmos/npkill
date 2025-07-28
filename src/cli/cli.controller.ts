@@ -11,7 +11,7 @@ import {
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, Observable, Subject } from 'rxjs';
 import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
@@ -46,7 +46,6 @@ import { getFileContent } from '../utils/get-file-content.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 
 export class CliController {
-  private folderRoot = '';
   private readonly stdout: NodeJS.WriteStream = process.stdout;
   private readonly config: IConfig = DEFAULT_CONFIG;
 
@@ -113,7 +112,7 @@ export class CliController {
   }
 
   private initUi(): void {
-    this.uiHeader = new HeaderUi();
+    this.uiHeader = new HeaderUi(this.config);
     this.uiService.add(this.uiHeader);
     this.uiResults = new ResultsUi(this.resultsService, this.consoleService);
     this.uiService.add(this.uiResults);
@@ -144,13 +143,31 @@ export class CliController {
   }
 
   private openOptions(): void {
-    const optionsUi = new OptionsUi();
+    const changeConfig$ = new Subject<Partial<IConfig>>();
+    const optionsUi = new OptionsUi(changeConfig$, this.config);
     this.uiResults.clear();
     this.uiResults.setVisible(false);
     this.uiService.add(optionsUi);
     this.activeComponent = optionsUi;
     this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
     this.uiService.renderAll();
+
+    changeConfig$.subscribe((configChanges) => {
+      Object.assign(this.config, configChanges);
+      if (
+        configChanges.targetFolder ||
+        configChanges.folderRoot ||
+        configChanges.excludeHiddenDirectories ||
+        configChanges.exclude
+      ) {
+        this.scan();
+      }
+      if (configChanges.sortBy) {
+        this.resultsService.sortResults(configChanges.sortBy);
+      }
+      this.logger.info(`Config updated: ${JSON.stringify(configChanges)}`);
+      this.uiService.renderAll();
+    });
 
     optionsUi.goToHelp$.subscribe(() => {
       const helpUi = new HelpUi();
@@ -240,11 +257,11 @@ export class CliController {
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
     }
 
-    this.folderRoot = options.isTrue('directory')
+    this.config.folderRoot = options.isTrue('directory')
       ? options.getString('directory')
       : process.cwd();
     if (options.isTrue('full-scan')) {
-      this.folderRoot = homedir();
+      this.config.folderRoot = homedir();
     }
     if (options.isTrue('hide-errors')) {
       this.config.showErrors = false;
@@ -267,7 +284,6 @@ export class CliController {
 
     if (options.isTrue('dry-run')) {
       this.config.dryRun = true;
-      this.uiHeader.isDryRun = true;
     }
 
     if (options.isTrue('yes')) {
@@ -275,7 +291,7 @@ export class CliController {
     }
 
     // Remove trailing slash from folderRoot for consistency
-    this.folderRoot = this.folderRoot.replace(/[/\\]$/, '');
+    this.config.folderRoot = this.config.folderRoot.replace(/[/\\]$/, '');
   }
 
   private showErrorPopup(visible: boolean): void {
@@ -356,7 +372,7 @@ export class CliController {
   }
 
   private checkFileRequirements(): void {
-    const result = this.npkill.isValidRootFolder(this.folderRoot);
+    const result = this.npkill.isValidRootFolder(this.config.folderRoot);
     if (!result.isValid) {
       const errorMessage =
         result.invalidReason || 'Root folder is not valid. Unknown reason';
@@ -437,6 +453,9 @@ export class CliController {
   }
 
   private scan(): void {
+    this.searchStatus.reset();
+    this.resultsService.reset();
+    this.uiStatus.reset();
     this.uiStatus.start();
 
     const params = this.prepareListDirParams();
@@ -495,7 +514,7 @@ export class CliController {
   private prepareListDirParams() {
     const target = this.config.targetFolder;
     const params = {
-      rootPath: this.folderRoot,
+      rootPath: this.config.folderRoot,
       targets: [target],
     };
 

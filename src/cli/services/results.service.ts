@@ -12,6 +12,10 @@ export class ResultsService {
     this.results = this.results.sort(FOLDER_SORT[method]);
   }
 
+  reset(): void {
+    this.results = [];
+  }
+
   getStats(): IStats {
     let spaceReleased = 0;
 
