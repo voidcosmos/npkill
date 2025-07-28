@@ -8,6 +8,11 @@ export abstract class HeavyUi extends BaseUi {
   private buffer = '';
   private previousBuffer = '';
 
+  resetBufferState(): void {
+    this.buffer = '';
+    this.previousBuffer = '';
+  }
+
   /**
    * Stores the text in a buffer. No will print it to stdout until flush()
    * is called.

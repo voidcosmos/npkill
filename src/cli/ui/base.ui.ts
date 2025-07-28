@@ -11,6 +11,7 @@ export interface InteractiveUi {
 }
 
 export abstract class BaseUi {
+  public readonly id = Math.random().toString(36).substring(2, 10);
   public freezed = false;
   protected _position: Position;
   protected _visible = true;

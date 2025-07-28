@@ -40,6 +40,7 @@ import { ScanStatus } from '@core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
 import { convertBytesToGb } from '../utils/unit-conversions.js';
 import { getFileContent } from '../utils/get-file-content.js';
+import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 
 export class CliController {
   private folderRoot = '';
@@ -129,9 +130,34 @@ export class CliController {
     this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
     this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
     this.uiResults.openFolder$.subscribe((path) => openExplorer(path));
+    this.uiResults.showDetails$.subscribe((folder) =>
+      this.openResultsDetails(folder),
+    );
+    this.uiResults.endNpkill$.subscribe(() => this.quit());
 
     // Activate the main interactive component
     this.activeComponent = this.uiResults;
+  }
+
+  private openResultsDetails(folder: CliScanFoundFolder): void {
+    const detailsUi = new ResultDetailsUi(folder);
+    this.uiResults.clear();
+    this.uiResults.setVisible(false);
+
+    this.uiService.add(detailsUi);
+    this.activeComponent = detailsUi;
+    // detailsUi.render();
+    this.uiService.renderAll();
+
+    detailsUi.openFolder$.subscribe((path) => openExplorer(path));
+    detailsUi.goBack$.subscribe(() => {
+      detailsUi.clear();
+      this.activeComponent = this.uiResults;
+      this.uiService.remove(detailsUi.id);
+      this.uiResults.clear();
+      this.uiResults.setVisible(true);
+      this.uiService.renderAll();
+    });
   }
 
   private parseArguments(): void {
@@ -389,7 +415,7 @@ export class CliController {
           path,
           size: 0,
           modificationTime: -1,
-          isDangerous: riskAnalysis?.isSensitive || false,
+          riskAnalysis,
           status: 'live',
         })),
         tap((nodeFolder) => {
@@ -443,7 +469,7 @@ export class CliController {
       }),
       switchMap(async () => {
         // Saves resources by not scanning a result that is probably not of interest
-        if (nodeFolder.isDangerous) {
+        if (nodeFolder.riskAnalysis?.isSensitive) {
           nodeFolder.modificationTime = -1;
           return nodeFolder;
         }
@@ -483,7 +509,7 @@ export class CliController {
   }
 
   private isQuitKey(ctrl: boolean, name: string): boolean {
-    return (ctrl && name === 'c') || name === 'q';
+    return ctrl && name === 'c';
   }
 
   private exitWithError(): void {
