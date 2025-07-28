@@ -1,5 +1,8 @@
-export const HELP_MSGS = {
-  BASIC_USAGE: ' CURSORS for select - SPACE to delete',
+export const MENU_BAR = {
+  HELP: 'Help',
+  OPTIONS: 'Options',
+  DELETE: 'Delete',
+  INFO: 'Info',
 };
 
 export const INFO_MSGS = {

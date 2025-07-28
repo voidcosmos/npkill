@@ -1,21 +1,43 @@
+import { BehaviorSubject } from 'rxjs';
 import {
   BANNER,
   UI_POSITIONS,
-  HELP_MSGS,
+  MENU_BAR,
   INFO_MSGS,
   DEFAULT_SIZE,
 } from '../../../../constants/index.js';
 import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
 
+export enum MENU_BAR_OPTIONS {
+  HELP = 0,
+  OPTIONS = 1,
+  DELETE = 2,
+  INFO = 3,
+}
+
 export class HeaderUi extends BaseUi {
   programVersion: string;
   isDryRun: boolean;
+  private activeMenuIndex = MENU_BAR_OPTIONS.DELETE;
+
+  readonly menuIndex$ = new BehaviorSubject<MENU_BAR_OPTIONS>(
+    MENU_BAR_OPTIONS.DELETE,
+  );
+
+  constructor() {
+    super();
+    this.menuIndex$.subscribe((menuIndex) => {
+      this.activeMenuIndex = menuIndex;
+      this.render();
+    });
+  }
 
   render(): void {
     // banner and tutorial
     this.printAt(BANNER, UI_POSITIONS.INITIAL);
     this.renderHeader();
+    this.renderMenuBar();
 
     if (this.programVersion !== undefined) {
       this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
@@ -47,11 +69,28 @@ export class HeaderUi extends BaseUi {
 
   private renderHeader(): void {
     const { columns } = this.terminal;
-    const spaceToFill = Math.max(0, columns - HELP_MSGS.BASIC_USAGE.length - 2);
-    const text = HELP_MSGS.BASIC_USAGE + ' '.repeat(spaceToFill);
+    const spaceToFill = Math.max(0, columns - MENU_BAR.OPTIONS.length - 2);
     this.printAt(
-      colors.yellow(colors.inverse(text)),
+      colors.bgYellow(' '.repeat(spaceToFill)),
       UI_POSITIONS.TUTORIAL_TIP,
     );
+  }
+
+  private renderMenuBar(): void {
+    const options = Object.values(MENU_BAR);
+    let xStart = 2;
+    for (const option of options) {
+      const isActive = option === options[this.activeMenuIndex];
+      const colorFn = isActive
+        ? colors.bgYellow.black.bold.underline
+        : colors.bgYellow.gray;
+      this.printAt(colorFn(option), {
+        x: xStart,
+        y: UI_POSITIONS.TUTORIAL_TIP.y,
+      });
+
+      const MARGIN = 1;
+      xStart += option.length + MARGIN;
+    }
   }
 }

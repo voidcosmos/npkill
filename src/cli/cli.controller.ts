@@ -26,6 +26,7 @@ import {
   HeaderUi,
   GeneralUi,
   WarningUi,
+  MENU_BAR_OPTIONS,
 } from './ui/index.js';
 
 import { UiService } from './services/ui.service.js';
@@ -147,6 +148,7 @@ export class CliController {
     this.uiService.add(detailsUi);
     this.activeComponent = detailsUi;
     // detailsUi.render();
+    this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.INFO);
     this.uiService.renderAll();
 
     detailsUi.openFolder$.subscribe((path) => openExplorer(path));
@@ -156,6 +158,7 @@ export class CliController {
       this.uiService.remove(detailsUi.id);
       this.uiResults.clear();
       this.uiResults.setVisible(true);
+      this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.DELETE);
       this.uiService.renderAll();
     });
   }
