@@ -8,22 +8,31 @@ import { CliScanFoundFolder } from 'src/cli/interfaces/stats.interface.js';
 import { convertGBToMB } from '../../../utils/unit-conversions.js';
 import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
 
-export class HelpUi extends BaseUi implements InteractiveUi {
+export class OptionsUi extends BaseUi implements InteractiveUi {
   resultIndex = 0;
 
-  readonly goToOptions$ = new Subject<null>();
+  readonly goBack$ = new Subject<null>();
+  readonly goToHelp$ = new Subject<null>();
 
   private readonly KEYS = {
-    right: () => this.goToOptions(),
+    right: () => this.goBack(),
+    left: () => this.goToHelp(),
+    q: () => this.goBack(),
+    escape: () => this.goBack(),
   };
 
   constructor() {
     super();
   }
 
-  private goToOptions(): void {
+  private goBack(): void {
     this.clear();
-    this.goToOptions$.next(null);
+    this.goBack$.next(null);
+  }
+
+  private goToHelp(): void {
+    this.clear();
+    this.goToHelp$.next(null);
   }
 
   onKeyInput({ name }: IKeyPress): void {
@@ -35,12 +44,11 @@ export class HelpUi extends BaseUi implements InteractiveUi {
   }
 
   render(): void {
-    this.clear();
     const maxWidth = Math.min(this.terminal.columns, 80);
     const startRow = MARGINS.ROW_RESULTS_START;
     let currentRow = startRow;
 
-    this.printAt(colors.bgCyan.black('HELP PAGE WORK!'), {
+    this.printAt(colors.bgGreen.white('OPTIONS PAGE WORK!'), {
       x: 3,
       y: startRow + 3,
     });

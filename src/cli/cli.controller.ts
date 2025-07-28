@@ -22,11 +22,13 @@ import {
   ResultsUi,
   LogsUi,
   InteractiveUi,
-  HelpUi,
+  HelpCommandUi,
   HeaderUi,
   GeneralUi,
   WarningUi,
   MENU_BAR_OPTIONS,
+  OptionsUi,
+  HelpUi,
 } from './ui/index.js';
 
 import { UiService } from './services/ui.service.js';
@@ -135,9 +137,50 @@ export class CliController {
       this.openResultsDetails(folder),
     );
     this.uiResults.endNpkill$.subscribe(() => this.quit());
+    this.uiResults.goOptions$.subscribe(() => this.openOptions());
 
     // Activate the main interactive component
     this.activeComponent = this.uiResults;
+  }
+
+  private openOptions(): void {
+    const optionsUi = new OptionsUi();
+    this.uiResults.clear();
+    this.uiResults.setVisible(false);
+    this.uiService.add(optionsUi);
+    this.activeComponent = optionsUi;
+    this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
+    this.uiService.renderAll();
+
+    optionsUi.goToHelp$.subscribe(() => {
+      const helpUi = new HelpUi();
+      this.uiService.add(helpUi);
+      this.activeComponent = helpUi;
+      optionsUi.clear();
+      optionsUi.setVisible(false);
+      this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.HELP);
+      this.uiService.renderAll();
+      helpUi.render();
+      helpUi.goToOptions$.subscribe(() => {
+        helpUi.clear();
+        this.activeComponent = optionsUi;
+        this.uiService.remove(helpUi.id);
+        optionsUi.clear();
+        optionsUi.setVisible(true);
+        this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
+        this.uiService.renderAll();
+      });
+    });
+
+    optionsUi.goBack$.subscribe(() => {
+      optionsUi.clear();
+      this.activeComponent = this.uiResults;
+      this.uiService.remove(optionsUi.id);
+      this.uiResults.clear();
+      this.uiResults.setVisible(true);
+      this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.DELETE);
+      this.uiService.renderAll();
+    });
   }
 
   private openResultsDetails(folder: CliScanFoundFolder): void {
@@ -258,7 +301,7 @@ export class CliController {
   }
 
   private showHelp(): void {
-    new HelpUi(this.consoleService).show();
+    new HelpCommandUi(this.consoleService).show();
   }
 
   private showProgramVersion(): void {
