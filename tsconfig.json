@@ -5,7 +5,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "node",
-    "declaration": false,
+    "declaration": true,
     "rootDir": "./src/",
     "outDir": "./lib/",
     "strict": true,
@@ -17,7 +17,10 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@core/*": ["src/core/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "__tests__"]

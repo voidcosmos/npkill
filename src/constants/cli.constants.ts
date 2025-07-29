@@ -1,4 +1,4 @@
-import { ICliOptions } from '../interfaces/index.js';
+import { ICliOptions } from '../cli/interfaces/index.js';
 import colors from 'colors';
 
 export const OPTIONS: ICliOptions[] = [

@@ -1,9 +1,11 @@
-import { IFolder } from '../interfaces/folder.interface.js';
+import { CliScanFoundFolder } from '../cli/interfaces';
 
 export const FOLDER_SORT = {
-  path: (a: IFolder, b: IFolder) => (a.path > b.path ? 1 : -1),
-  size: (a: IFolder, b: IFolder) => (a.size < b.size ? 1 : -1),
-  'last-mod': (a: IFolder, b: IFolder) => {
+  path: (a: CliScanFoundFolder, b: CliScanFoundFolder) =>
+    a.path > b.path ? 1 : -1,
+  size: (a: CliScanFoundFolder, b: CliScanFoundFolder) =>
+    a.size < b.size ? 1 : -1,
+  'last-mod': (a: CliScanFoundFolder, b: CliScanFoundFolder) => {
     if (a.modificationTime === b.modificationTime) {
       return FOLDER_SORT.path(a, b);
     }

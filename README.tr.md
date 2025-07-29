@@ -108,7 +108,7 @@ Seçili sonucun bulunduğu klasörü açmak için <kbd>o</kbd> tuşuna basabilir
 | -f, --full                       | Aramaya kullanıcının ev dizininden başlayın (örneğin Linux'ta "/home/user").                                                                     |
 | -gb                              | Klasörleri Megabytes yerine Gigabytes olarak göster.                                                                                             |
 | -h, --help, ?                    | Bu yardım sayfasını göster ve çık.                                                                                                               |
-| -nu, --no-check-update           | Başlangıçta güncellemeleri kontrol etme.                                                                                                          |
+| -nu, --no-check-update           | Başlangıçta güncellemeleri kontrol etme.                                                                                                         |
 | -s, --sort                       | Sonuçları şu kriterlere göre sırala: `size`, `path` veya `last-mod`                                                                              |
 | -t, --target                     | Aramak istediğiniz dizinlerin adını belirtin (varsayılan olarak node_modules).                                                                   |
 | -x, --exclude-hidden-directories | Gizli dizinleri ("nokta" dizinleri) arama kapsamı dışında bırak.                                                                                 |

@@ -1,6 +1,5 @@
 <p align="center">
-  <img src="https://npkill.js.org/img/npkill-text-outlined.svg" width="320" alt="npkill logo" />
-  <img src="https://npkill.js.org/img/npkill-scope-mono.svg" width="50" alt="npkill logo scope" />
+  <img src="./docs/npkill-text-clean.svg" width="380" alt="npkill logo" />
 </p>
 <p align="center">
 <img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
@@ -34,6 +33,7 @@ We're making an effort to internationalize the Npkill docs. Here's a list of the
   - [Options](#options)
   - [Examples](#examples)
 - [Set Up Locally](#setup-locally)
+- [API](#API)
 - [Roadmap](#roadmap)
 - [Known bugs](#known-bugs)
 - [Contributing](#contributing)
@@ -182,6 +182,14 @@ npm run start
 # -- If you want to run it with some parameter, you will have to add "--" as in the following example:
 npm run start -- -f -e
 ```
+
+<a name="API"></a>
+
+# :bookmark_tabs: API
+
+The api allows you to interact with npkill from node to create your own implementations in your scripts (automations, for example).
+
+You can check the basic API [here](./API.md) or on the web (comming soon).
 
 <a name="roadmap"></a>
 
