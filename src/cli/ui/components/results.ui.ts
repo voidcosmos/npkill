@@ -194,7 +194,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
 
     if (folder.riskAnalysis?.isSensitive) {
-      daysSinceLastModification = 'xx';
+      daysSinceLastModification = '';
     }
 
     // Align to right
