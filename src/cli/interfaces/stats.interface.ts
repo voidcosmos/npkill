@@ -1,4 +1,4 @@
-import { ScanFoundFolder } from '@core/interfaces';
+import { ScanFoundFolder } from '../../core/interfaces';
 
 export interface CliScanFoundFolder extends ScanFoundFolder {
   size: number;

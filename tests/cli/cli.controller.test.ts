@@ -42,6 +42,8 @@ jest.unstable_mockModule('../../src/cli/ui/components/results.ui.js', () => ({
     delete$: resultsUiDeleteMock$,
     showErrors$: { subscribe: jest.fn() },
     openFolder$: { subscribe: jest.fn() },
+    showDetails$: { subscribe: jest.fn() },
+    endNpkill$: { subscribe: jest.fn() },
     render: jest.fn(),
   })),
 }));
@@ -58,7 +60,9 @@ jest.unstable_mockModule('../../src/cli/ui/components/warning.ui.js', () => ({
   })),
 }));
 jest.unstable_mockModule('../../src/cli/ui/base.ui.js', () => ({
-  BaseUi: { setVisible: jest.fn() },
+  BaseUi: class {
+    setVisible() {}
+  },
 }));
 jest.unstable_mockModule('../../src/cli/ui/heavy.ui.js', () => ({
   HeavyUi: {},
