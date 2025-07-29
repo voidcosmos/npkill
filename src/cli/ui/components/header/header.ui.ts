@@ -9,13 +9,7 @@ import {
 import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
 import { IConfig } from '../../../../cli/interfaces/config.interface.js';
-
-export enum MENU_BAR_OPTIONS {
-  HELP = 0,
-  OPTIONS = 1,
-  DELETE = 2,
-  INFO = 3,
-}
+import { MENU_BAR_OPTIONS } from './header-ui.constants.js';
 
 export class HeaderUi extends BaseUi {
   programVersion: string;

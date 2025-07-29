@@ -26,10 +26,10 @@ import {
   HeaderUi,
   GeneralUi,
   WarningUi,
-  MENU_BAR_OPTIONS,
   OptionsUi,
   HelpUi,
 } from './ui/index.js';
+import { MENU_BAR_OPTIONS } from './ui/components/header/header-ui.constants.js';
 
 import { UiService } from './services/ui.service.js';
 import _dirname from '../dirname.js';
