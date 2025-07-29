@@ -8,6 +8,7 @@ import { convertGBToMB } from '../../../utils/unit-conversions.js';
 import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { COLORS } from '../../../constants/cli.constants.js';
+import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
 
 type OptionType = 'checkbox' | 'dropdown' | 'input';
 
@@ -187,6 +188,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
 
   render(): void {
     this.clear();
+    this.printHintMessage();
     let currentRow = MARGINS.ROW_RESULTS_START;
 
     this.printAt(colors.bold.bgYellow.black('  OPTIONS  '), {
@@ -234,6 +236,24 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         }
       }
     }
+  }
+
+  private printHintMessage() {
+    const optionSelected = this.options[this.selectedIndex];
+
+    const hintText =
+      optionSelected.type === 'input' && this.isEditing
+        ? OPTIONS_HINTS_BY_TYPE['input-exit']
+        : OPTIONS_HINTS_BY_TYPE[optionSelected.type];
+
+    if (!hintText) {
+      return;
+    }
+
+    this.printAt(hintText, {
+      x: 15,
+      y: MARGINS.ROW_RESULTS_START,
+    });
   }
 
   clear(): void {
