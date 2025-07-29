@@ -22,6 +22,10 @@ export class UiService {
     this.uiComponents.push(component);
   }
 
+  remove(baseUiId: string): void {
+    this.uiComponents = this.uiComponents.filter((c) => c.id !== baseUiId);
+  }
+
   renderAll(): void {
     this.clear();
     this.uiComponents.forEach((component) => {

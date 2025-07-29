@@ -38,3 +38,8 @@ export const ERROR_MSG = {
     'The directory cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
 };
+
+export const RESULT_TYPE_INFO = {
+  NODE_MODULES:
+    'Holds all the node packages your project depends on. Can get huge. Deleting it won’t hurt—just. You can run `npm install` to restore it.',
+};

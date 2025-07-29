@@ -28,6 +28,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   readonly delete$ = new Subject<CliScanFoundFolder>();
   readonly showErrors$ = new Subject<null>();
   readonly openFolder$ = new Subject<string>();
+  readonly showDetails$ = new Subject<CliScanFoundFolder>();
+  readonly endNpkill$ = new Subject<null>();
 
   private readonly config: IConfig = DEFAULT_CONFIG;
   private readonly KEYS = {
@@ -47,6 +49,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     end: () => this.cursorLastResult(),
     e: () => this.showErrorsPopup(),
     o: () => this.openFolder(),
+    right: () => this.showDetails(),
+    q: () => this.endNpkill(),
   };
 
   constructor(
@@ -62,16 +66,35 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.openFolder$.next(parentPath);
   }
 
+  private showDetails(): void {
+    const result = this.resultsService.results[this.resultIndex];
+    if (!result) {
+      return;
+    }
+    this.showDetails$.next(result);
+  }
+
+  private endNpkill(): void {
+    this.endNpkill$.next(null);
+  }
+
   onKeyInput({ name }: IKeyPress): void {
     const action: (() => void) | undefined = this.KEYS[name];
     if (action === undefined) {
       return;
     }
     action();
-    this.render();
+
+    if (this.visible) {
+      this.render();
+    }
   }
 
   render(): void {
+    if (!this.visible) {
+      return;
+    }
+
     if (!this.haveResultsAfterCompleted) {
       this.noResults();
       return;
@@ -82,6 +105,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   clear(): void {
+    this.resetBufferState();
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
@@ -128,7 +152,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       this.paintBgRow(row);
     }
 
-    if (folder.isDangerous) {
+    if (folder.riskAnalysis?.isSensitive) {
       path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
     }
 
@@ -163,7 +187,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       daysSinceLastModification = '--';
     }
 
-    if (folder.isDangerous) {
+    if (folder.riskAnalysis?.isSensitive) {
       daysSinceLastModification = 'xx';
     }
 
