@@ -219,12 +219,14 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
       // If selected and dropdown, show options
       if (opt.type === 'dropdown' && isSelected) {
         const optionsNumber = opt.options.length;
+        const maxLength = Math.max(...opt.options.map((o) => o.length));
         for (let i = 0; i < optionsNumber; i++) {
           const option = opt.options[i];
+          const paddedOption = option.padEnd(maxLength, ' ');
           const optionEntryText =
             option === opt.value
-              ? colors.bgCyan.black(option)
-              : colors.bgBlack.white(option);
+              ? colors.bgCyan.black(` ${paddedOption} `)
+              : colors.bgBlack.white(` ${paddedOption} `);
           this.printAt(optionEntryText, {
             x: 34,
             y: currentRow - Math.round(optionsNumber / 2) + i,

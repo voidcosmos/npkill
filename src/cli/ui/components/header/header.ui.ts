@@ -8,7 +8,7 @@ import {
 } from '../../../../constants/index.js';
 import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
-import { IConfig } from 'src/cli/interfaces/config.interface.js';
+import { IConfig } from '../../../../cli/interfaces/config.interface.js';
 
 export enum MENU_BAR_OPTIONS {
   HELP = 0,
