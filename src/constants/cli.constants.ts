@@ -16,7 +16,7 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-D', '--delete-all'],
-    description: 'Auto-delete all node_modules folders that are found.',
+    description: 'Auto-delete all target folders that are found.',
     name: 'delete-all',
   },
   {
@@ -65,7 +65,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-t', '--target'],
     description:
-      "Specify the name of the directory you want to search for (by default, it's node_modules)",
+      "Specify the name of the directory you want to search for (by default, it's 'node_modules')",
     name: 'target-folder',
   },
   {

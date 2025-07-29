@@ -73,7 +73,7 @@ export abstract class FileService implements IFileService {
    * would imply breaking the application (until the dependencies are reinstalled).
    *
    * In the case of macOS applications and Windows AppData directory, these locations often contain
-   * application-specific data or configurations that should not be tampered with. Deleting node_modules
+   * application-specific data or configurations that should not be tampered with. Deleting directories
    * from these locations could potentially disrupt the normal operation of these applications.
    */
   isDangerous(originalPath: string): RiskAnalysis {
@@ -169,12 +169,15 @@ export abstract class FileService implements IFileService {
   }
 
   async getFileStatsInDir(dirname: string): Promise<IFileStat[]> {
+    const ignoredFolders = ['node_modules', '.git', 'coverage', 'dist'];
+
     let files: IFileStat[] = [];
     const items = await readdir(dirname, { withFileTypes: true });
 
     for (const item of items) {
       if (item.isDirectory()) {
-        if (item.name === 'node_modules') {
+        const itemNameLowerCase = item.name.toLowerCase();
+        if (ignoredFolders.includes(itemNameLowerCase)) {
           continue;
         }
         files = [
