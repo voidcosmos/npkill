@@ -212,7 +212,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           this.isEditing && isSelected ? this.editBuffer + '_' : opt.value;
       }
 
-      const line = `  ${label}${valueText}`;
+      const line = `${isSelected ? colors.bgCyan(' ') : ' '} ${label}${valueText}`;
       this.printAt(isSelected ? colors.cyan(line) : line, {
         x: 2,
         y: currentRow++,
