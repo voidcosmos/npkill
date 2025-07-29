@@ -11,7 +11,7 @@ import {
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, Observable, Subject } from 'rxjs';
 import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
@@ -22,11 +22,14 @@ import {
   ResultsUi,
   LogsUi,
   InteractiveUi,
-  HelpUi,
+  HelpCommandUi,
   HeaderUi,
   GeneralUi,
   WarningUi,
+  OptionsUi,
+  HelpUi,
 } from './ui/index.js';
+import { MENU_BAR_OPTIONS } from './ui/components/header/header-ui.constants.js';
 
 import { UiService } from './services/ui.service.js';
 import _dirname from '../dirname.js';
@@ -34,16 +37,15 @@ import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { ScanFoundFolder, Npkill } from '@core/index.js';
-import { LoggerService } from '@core/services/logger.service.js';
-import { ScanStatus } from '@core/interfaces/search-status.model.js';
+import { ScanFoundFolder, Npkill } from '../core/index.js';
+import { LoggerService } from '../core/services/logger.service.js';
+import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
 import { convertBytesToGb } from '../utils/unit-conversions.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 
 export class CliController {
-  private folderRoot = '';
   private readonly stdout: NodeJS.WriteStream = process.stdout;
   private readonly config: IConfig = DEFAULT_CONFIG;
 
@@ -110,7 +112,7 @@ export class CliController {
   }
 
   private initUi(): void {
-    this.uiHeader = new HeaderUi();
+    this.uiHeader = new HeaderUi(this.config);
     this.uiService.add(this.uiHeader);
     this.uiResults = new ResultsUi(this.resultsService, this.consoleService);
     this.uiService.add(this.uiResults);
@@ -134,9 +136,68 @@ export class CliController {
       this.openResultsDetails(folder),
     );
     this.uiResults.endNpkill$.subscribe(() => this.quit());
+    this.uiResults.goOptions$.subscribe(() => this.openOptions());
 
     // Activate the main interactive component
     this.activeComponent = this.uiResults;
+  }
+
+  private openOptions(): void {
+    const changeConfig$ = new Subject<Partial<IConfig>>();
+    const optionsUi = new OptionsUi(changeConfig$, this.config);
+    this.uiResults.clear();
+    this.uiResults.setVisible(false);
+    this.uiService.add(optionsUi);
+    this.activeComponent = optionsUi;
+    this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
+    this.uiService.renderAll();
+
+    changeConfig$.subscribe((configChanges) => {
+      Object.assign(this.config, configChanges);
+      if (
+        configChanges.targetFolder ||
+        configChanges.folderRoot ||
+        configChanges.excludeHiddenDirectories ||
+        configChanges.exclude
+      ) {
+        this.scan();
+      }
+      if (configChanges.sortBy) {
+        this.resultsService.sortResults(configChanges.sortBy);
+      }
+      this.logger.info(`Config updated: ${JSON.stringify(configChanges)}`);
+      this.uiService.renderAll();
+    });
+
+    optionsUi.goToHelp$.subscribe(() => {
+      const helpUi = new HelpUi();
+      this.uiService.add(helpUi);
+      this.activeComponent = helpUi;
+      optionsUi.clear();
+      optionsUi.setVisible(false);
+      this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.HELP);
+      this.uiService.renderAll();
+      helpUi.render();
+      helpUi.goToOptions$.subscribe(() => {
+        helpUi.clear();
+        this.activeComponent = optionsUi;
+        this.uiService.remove(helpUi.id);
+        optionsUi.clear();
+        optionsUi.setVisible(true);
+        this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
+        this.uiService.renderAll();
+      });
+    });
+
+    optionsUi.goBack$.subscribe(() => {
+      optionsUi.clear();
+      this.activeComponent = this.uiResults;
+      this.uiService.remove(optionsUi.id);
+      this.uiResults.clear();
+      this.uiResults.setVisible(true);
+      this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.DELETE);
+      this.uiService.renderAll();
+    });
   }
 
   private openResultsDetails(folder: CliScanFoundFolder): void {
@@ -147,6 +208,7 @@ export class CliController {
     this.uiService.add(detailsUi);
     this.activeComponent = detailsUi;
     // detailsUi.render();
+    this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.INFO);
     this.uiService.renderAll();
 
     detailsUi.openFolder$.subscribe((path) => openExplorer(path));
@@ -156,6 +218,7 @@ export class CliController {
       this.uiService.remove(detailsUi.id);
       this.uiResults.clear();
       this.uiResults.setVisible(true);
+      this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.DELETE);
       this.uiService.renderAll();
     });
   }
@@ -194,11 +257,11 @@ export class CliController {
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
     }
 
-    this.folderRoot = options.isTrue('directory')
+    this.config.folderRoot = options.isTrue('directory')
       ? options.getString('directory')
       : process.cwd();
     if (options.isTrue('full-scan')) {
-      this.folderRoot = homedir();
+      this.config.folderRoot = homedir();
     }
     if (options.isTrue('hide-errors')) {
       this.config.showErrors = false;
@@ -221,7 +284,6 @@ export class CliController {
 
     if (options.isTrue('dry-run')) {
       this.config.dryRun = true;
-      this.uiHeader.isDryRun = true;
     }
 
     if (options.isTrue('yes')) {
@@ -229,7 +291,7 @@ export class CliController {
     }
 
     // Remove trailing slash from folderRoot for consistency
-    this.folderRoot = this.folderRoot.replace(/[/\\]$/, '');
+    this.config.folderRoot = this.config.folderRoot.replace(/[/\\]$/, '');
   }
 
   private showErrorPopup(visible: boolean): void {
@@ -255,7 +317,7 @@ export class CliController {
   }
 
   private showHelp(): void {
-    new HelpUi(this.consoleService).show();
+    new HelpCommandUi(this.consoleService).show();
   }
 
   private showProgramVersion(): void {
@@ -310,7 +372,7 @@ export class CliController {
   }
 
   private checkFileRequirements(): void {
-    const result = this.npkill.isValidRootFolder(this.folderRoot);
+    const result = this.npkill.isValidRootFolder(this.config.folderRoot);
     if (!result.isValid) {
       const errorMessage =
         result.invalidReason || 'Root folder is not valid. Unknown reason';
@@ -391,6 +453,9 @@ export class CliController {
   }
 
   private scan(): void {
+    this.searchStatus.reset();
+    this.resultsService.reset();
+    this.uiStatus.reset();
     this.uiStatus.start();
 
     const params = this.prepareListDirParams();
@@ -449,7 +514,7 @@ export class CliController {
   private prepareListDirParams() {
     const target = this.config.targetFolder;
     const params = {
-      rootPath: this.folderRoot,
+      rootPath: this.config.folderRoot,
       targets: [target],
     };
 

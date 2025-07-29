@@ -40,4 +40,13 @@ export class ScanStatus {
     this.pendingStatsCalculation--;
     this.completedStatsCalculation++;
   }
+
+  reset() {
+    this.pendingSearchTasks = 0;
+    this.completedSearchTasks = 0;
+    this.pendingStatsCalculation = 0;
+    this.completedStatsCalculation = 0;
+    this.resultsFound = 0;
+    this.pendingDeletions = 0;
+  }
 }

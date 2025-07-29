@@ -1,73 +1,55 @@
-import ansiEscapes from 'ansi-escapes';
-import {
-  HELP_HEADER,
-  OPTIONS,
-  HELP_FOOTER,
-  HELP_PROGRESSBAR,
-} from '../../../constants/cli.constants.js';
-import { MARGINS, UI_HELP } from '../../../constants/main.constants.js';
-import { INFO_MSGS } from '../../../constants/messages.constants.js';
-import { IPosition } from '../../interfaces/ui-positions.interface.js';
-import { ConsoleService } from '../../services/console.service.js';
-import { BaseUi } from '../base.ui.js';
+import { MARGINS } from '../../../constants/main.constants.js';
+import { BaseUi, InteractiveUi } from '../base.ui.js';
+import { IKeyPress } from '../../interfaces/key-press.interface.js';
+import { Subject } from 'rxjs';
 import colors from 'colors';
+import { resolve } from 'node:path';
+import { CliScanFoundFolder } from 'src/cli/interfaces/stats.interface.js';
+import { convertGBToMB } from '../../../utils/unit-conversions.js';
+import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
 
-export class HelpUi extends BaseUi {
-  constructor(private readonly consoleService: ConsoleService) {
+export class HelpUi extends BaseUi implements InteractiveUi {
+  resultIndex = 0;
+
+  readonly goToOptions$ = new Subject<null>();
+
+  private readonly KEYS = {
+    right: () => this.goToOptions(),
+    l: () => this.goToOptions(),
+  };
+
+  constructor() {
     super();
   }
 
-  render(): void {
-    throw new Error('Method not implemented.');
+  private goToOptions(): void {
+    this.clear();
+    this.goToOptions$.next(null);
   }
 
-  show(): void {
+  onKeyInput({ name }: IKeyPress): void {
+    const action: (() => void) | undefined = this.KEYS[name];
+    if (action === undefined) {
+      return;
+    }
+    action();
+  }
+
+  render(): void {
     this.clear();
-    this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
-    this.print(HELP_HEADER + '\n\n');
-    this.print(HELP_PROGRESSBAR + '\n\n');
+    const maxWidth = Math.min(this.terminal.columns, 80);
+    const startRow = MARGINS.ROW_RESULTS_START;
+    let currentRow = startRow;
 
-    let lineCount = 0;
-    OPTIONS.forEach((option, index) => {
-      this.printAtHelp(
-        option.arg.reduce((text, arg) => text + ', ' + arg),
-        {
-          x: UI_HELP.X_COMMAND_OFFSET,
-          y: index + UI_HELP.Y_OFFSET + lineCount,
-        },
-      );
-      const description = this.consoleService.splitWordsByWidth(
-        option.description,
-        this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
-      );
-
-      description.forEach((line) => {
-        this.printAtHelp(line, {
-          x: UI_HELP.X_DESCRIPTION_OFFSET,
-          y: index + UI_HELP.Y_OFFSET + lineCount,
-        });
-        ++lineCount;
-      });
+    this.printAt(colors.bgCyan.black('HELP PAGE WORK!'), {
+      x: 3,
+      y: startRow + 3,
     });
-
-    this.print(HELP_FOOTER + '\n');
   }
 
   clear(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
-  }
-
-  private printAtHelp(message: string, position: IPosition): void {
-    this.setCursorAtHelp(position);
-    this.print(message);
-    if (!/-[a-zA-Z]/.test(message.substring(0, 2)) && message !== '') {
-      this.print('\n\n');
-    }
-  }
-
-  private setCursorAtHelp({ x }: IPosition): void {
-    this.print(ansiEscapes.cursorTo(x));
   }
 }

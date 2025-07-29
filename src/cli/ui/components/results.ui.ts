@@ -29,6 +29,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   readonly showErrors$ = new Subject<null>();
   readonly openFolder$ = new Subject<string>();
   readonly showDetails$ = new Subject<CliScanFoundFolder>();
+  readonly goOptions$ = new Subject<null>();
   readonly endNpkill$ = new Subject<null>();
 
   private readonly config: IConfig = DEFAULT_CONFIG;
@@ -39,8 +40,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     delete: () => this.delete(),
     j: () => this.cursorDown(),
     k: () => this.cursorUp(),
-    h: () => this.cursorPageDown(),
-    l: () => this.cursorPageUp(),
+    h: () => this.goOptions(),
+    l: () => this.showDetails(),
     d: () => this.cursorPageDown(),
     u: () => this.cursorPageUp(),
     pageup: () => this.cursorPageUp(),
@@ -50,6 +51,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     e: () => this.showErrorsPopup(),
     o: () => this.openFolder(),
     right: () => this.showDetails(),
+    left: () => this.goOptions(),
     q: () => this.endNpkill(),
   };
 
@@ -72,6 +74,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       return;
     }
     this.showDetails$.next(result);
+  }
+
+  private goOptions(): void {
+    this.goOptions$.next(null);
   }
 
   private endNpkill(): void {

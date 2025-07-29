@@ -1,4 +1,5 @@
 export interface IConfig {
+  folderRoot: string;
   backgroundColor: string;
   warningColor: string;
   checkUpdates: boolean;

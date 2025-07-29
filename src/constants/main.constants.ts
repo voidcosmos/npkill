@@ -8,6 +8,7 @@ export const DECIMALS_SIZE = 2;
 export const OVERFLOW_CUT_FROM = 11;
 
 export const DEFAULT_CONFIG: IConfig = {
+  folderRoot: '',
   backgroundColor: 'bgBlue',
   warningColor: 'brightYellow',
   checkUpdates: true,
@@ -18,7 +19,7 @@ export const DEFAULT_CONFIG: IConfig = {
   folderSizeInGB: false,
   maxSimultaneousSearch: 6,
   showErrors: true,
-  sortBy: '',
+  sortBy: 'none',
   targetFolder: 'node_modules',
   yes: false,
 };

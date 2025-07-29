@@ -44,6 +44,7 @@ jest.unstable_mockModule('../../src/cli/ui/components/results.ui.js', () => ({
     openFolder$: { subscribe: jest.fn() },
     showDetails$: { subscribe: jest.fn() },
     endNpkill$: { subscribe: jest.fn() },
+    goOptions$: new Subject(),
     render: jest.fn(),
   })),
 }));
