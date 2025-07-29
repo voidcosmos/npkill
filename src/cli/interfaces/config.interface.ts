@@ -8,7 +8,7 @@ export interface IConfig {
   maxSimultaneousSearch: number;
   showErrors: boolean;
   sortBy: string;
-  targetFolder: string;
+  targets: string[];
   exclude: string[];
   excludeHiddenDirectories: boolean;
   dryRun: boolean;

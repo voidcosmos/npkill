@@ -272,7 +272,7 @@ class FileWalker {
   }
 
   private isTargetFolder(path: string): boolean {
-    return path === this.searchConfig.targets[0];
+    return this.searchConfig.targets.includes(path);
   }
 
   private completeTask(): void {
