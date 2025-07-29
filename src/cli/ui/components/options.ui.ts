@@ -35,10 +35,14 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
   private readonly KEYS: Record<string, () => void> = {
     up: () => this.move(-1),
     down: () => this.move(1),
+    k: () => this.move(-1),
+    j: () => this.move(1),
     return: () => this.activateSelected(),
     space: () => this.activateSelected(),
     left: () => this.goToHelp(),
     right: () => this.goBack(),
+    h: () => this.goToHelp(),
+    l: () => this.goBack(),
     escape: () => (this.isEditing ? this.cancelEdit() : this.goBack()),
     q: () => this.goBack(),
   };

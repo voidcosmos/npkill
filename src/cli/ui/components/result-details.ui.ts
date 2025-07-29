@@ -16,6 +16,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
 
   private readonly KEYS = {
     left: () => this.goBack(),
+    h: () => this.goBack(),
     o: () => this.openFolder(),
     q: () => this.goBack(),
     escape: () => this.goBack(),

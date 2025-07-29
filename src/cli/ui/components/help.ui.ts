@@ -15,6 +15,7 @@ export class HelpUi extends BaseUi implements InteractiveUi {
 
   private readonly KEYS = {
     right: () => this.goToOptions(),
+    l: () => this.goToOptions(),
   };
 
   constructor() {
