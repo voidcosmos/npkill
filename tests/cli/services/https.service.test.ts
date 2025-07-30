@@ -1,3 +1,8 @@
+/* eslint-disable promise/valid-params */
+/* eslint-disable promise/catch-or-return */
+/* eslint-disable promise/no-callback-in-promise */
+/* eslint-disable promise/always-return */
+
 import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 
@@ -7,7 +12,7 @@ const eventEmitter2 = new EventEmitter();
 const response = () => ({
   statusCode: statusCodeMock,
   setEncoding: jest.fn(),
-  on: (eventName: string, listener: (...args: any[]) => void) =>
+  on: (eventName: string, listener: (...args: unknown[]) => void) =>
     eventEmitter2.on(eventName, listener),
 });
 
@@ -18,8 +23,9 @@ jest.unstable_mockModule('node:https', () => ({
   },
 }));
 
-const HttpsServiceConstructor = //@ts-ignore
-  (await import('../../../src/cli/services/https.service')).HttpsService;
+const HttpsServiceConstructor = (
+  await import('../../../src/cli/services/https.service.js')
+).HttpsService;
 class HttpsService extends HttpsServiceConstructor {}
 
 describe('Http Service', () => {

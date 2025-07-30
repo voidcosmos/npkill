@@ -1,5 +1,5 @@
-import { FileWorkerService } from '@core/services/files/files.worker.service.js';
-import { GetNewestFileResult, RiskAnalysis } from '@core/interfaces';
+import { FileWorkerService } from '../services/files/files.worker.service.js';
+import { GetNewestFileResult, RiskAnalysis } from '../interfaces/index.js';
 import { ScanOptions } from './folder.interface.js';
 import { Observable } from 'rxjs';
 import { IsValidRootFolderResult } from './npkill.interface.js';

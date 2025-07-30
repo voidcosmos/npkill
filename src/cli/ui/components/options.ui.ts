@@ -1,11 +1,8 @@
-import { DEFAULT_CONFIG, MARGINS } from '../../../constants/main.constants.js';
+import { MARGINS } from '../../../constants/main.constants.js';
 import { BaseUi, InteractiveUi } from '../base.ui.js';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
-import { resolve } from 'node:path';
-import { convertGBToMB } from '../../../utils/unit-conversions.js';
-import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { COLORS } from '../../../constants/cli.constants.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
@@ -30,7 +27,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
   private isEditing = false;
   private editBuffer = '';
 
-  private options: /*OptionItem*/ any[];
+  private options: OptionItem[];
 
   private readonly KEYS: Record<string, () => void> = {
     up: () => this.move(-1),
@@ -126,28 +123,48 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
     const opt = this.options[this.selectedIndex];
 
     if (opt.type === 'checkbox') {
-      opt.value = !opt.value;
-      this.config[opt.key] = opt.value;
+      // Direct assignment for boolean types
+      opt.value = !opt.value as IConfig[typeof opt.key];
+      const key = opt.key as keyof Pick<
+        IConfig,
+        {
+          [K in keyof IConfig]: IConfig[K] extends boolean ? K : never;
+        }[keyof IConfig]
+      >;
+      this.config[key] = !!opt.value;
       this.emitConfigChange(opt.key, opt.value);
       this.render();
     } else if (opt.type === 'dropdown') {
-      const idx = opt.options!.indexOf(opt.value);
+      const key = opt.key as keyof Pick<
+        IConfig,
+        {
+          [K in keyof IConfig]: IConfig[K] extends string ? K : never;
+        }[keyof IConfig]
+      >;
+      const idx = opt.options!.indexOf(opt.value as string);
       const next = (idx + 1) % opt.options!.length;
-      opt.value = opt.options![next];
-      this.config[opt.key] = opt.value;
+      opt.value = opt.options![next] as IConfig[typeof key];
+      this.config[key] = opt.value;
       this.emitConfigChange(opt.key, opt.value);
       this.render();
     } else if (opt.type === 'input') {
       this.isEditing = true;
+      // Convertir el valor existente a string para el buffer de edición
       this.editBuffer = String(opt.value);
       this.render();
     }
   }
 
   private handleEditKey(name: string, sequence: string): void {
+    const opt = this.options[this.selectedIndex];
+
+    if (opt.type !== 'input') {
+      this.isEditing = false;
+      this.render();
+      return;
+    }
+
     if (name === 'return') {
-      const opt = this.options[this.selectedIndex];
-      let newValue = this.editBuffer;
       if (opt.key === 'targets' || opt.key === 'exclude') {
         const arrValue = this.editBuffer
           .split(',')
@@ -157,9 +174,17 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         this.emitConfigChange(opt.key, arrValue);
         opt.value = this.editBuffer;
       } else {
-        this.config[opt.key] = newValue;
+        const key = opt.key as keyof Pick<
+          IConfig,
+          {
+            [K in keyof IConfig]: IConfig[K] extends string ? K : never;
+          }[keyof IConfig]
+        >;
+        const newValue: IConfig[typeof opt.key] = this
+          .editBuffer as IConfig[typeof opt.key];
+        this.config[key] = newValue as unknown as string;
+        opt.value = newValue;
         this.emitConfigChange(opt.key, newValue);
-        opt.value = this.editBuffer;
       }
       this.isEditing = false;
       this.render();
@@ -174,8 +199,11 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
     }
   }
 
-  private emitConfigChange(key: keyof IConfig, value: any): void {
-    const configChange = { [key]: value } as Partial<IConfig>;
+  private emitConfigChange<K extends keyof IConfig>(
+    key: K,
+    value: IConfig[K],
+  ): void {
+    const configChange: Partial<IConfig> = { [key]: value } as Partial<IConfig>;
     this.changeConfig$.next(configChange);
   }
 
@@ -228,7 +256,9 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         valueText = `${opt.value}`;
       } else if (opt.type === 'input') {
         valueText =
-          this.isEditing && isSelected ? this.editBuffer + '_' : opt.value;
+          this.isEditing && isSelected
+            ? this.editBuffer + '_'
+            : String(opt.value);
       }
 
       const line = `${isSelected ? colors.bgCyan(' ') : ' '} ${label}${valueText}`;
@@ -239,10 +269,14 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
 
       // If selected and dropdown, show options
       if (opt.type === 'dropdown' && isSelected) {
-        const optionsNumber = opt.options.length;
-        const maxLength = Math.max(...opt.options.map((o) => o.length));
+        const dropdownOptions = opt.options || [];
+        const optionsNumber = dropdownOptions.length;
+        const maxLength =
+          dropdownOptions.length > 0
+            ? Math.max(...dropdownOptions.map((o) => o.length))
+            : 0;
         for (let i = 0; i < optionsNumber; i++) {
-          const option = opt.options[i];
+          const option = dropdownOptions[i];
           const paddedOption = option.padEnd(maxLength, ' ');
           const optionEntryText =
             option === opt.value

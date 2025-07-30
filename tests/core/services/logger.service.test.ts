@@ -13,21 +13,22 @@ jest.unstable_mockModule('fs', () => {
   };
 });
 
-let osTmpPath = '/tmpDir';
+const osTmpPath = '/tmpDir';
 jest.unstable_mockModule('os', () => {
   return {
     tmpdir: () => osTmpPath,
   };
 });
 
-const LoggerServiceConstructor = //@ts-ignore
-  (await import('../../../src/core/services/logger.service.js')).LoggerService;
+const LoggerServiceConstructor = (
+  await import('../../../src/core/services/logger.service.js')
+).LoggerService;
 class LoggerService extends LoggerServiceConstructor {}
 
 describe('LoggerService', () => {
   let logger: LoggerService;
-  let fakeTime = new Date('2026-01-01');
-  let fakeTimeEpox = fakeTime.getTime();
+  const fakeTime = new Date('2026-01-01');
+  const fakeTimeEpox = fakeTime.getTime();
 
   beforeEach(() => {
     logger = new LoggerService();

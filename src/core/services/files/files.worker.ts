@@ -1,11 +1,10 @@
 import { Dir, Dirent } from 'fs';
 import { lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
-import { WorkerMessage, WorkerScanOptions } from './files.worker.service';
+import { WorkerMessage, WorkerScanOptions } from './files.worker.service.js';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
-import { ScanOptions } from '@core/index';
 
 enum ETaskOperation {
   'explore',
@@ -149,7 +148,7 @@ class FileWalker {
     try {
       const dir = await opendir(path);
       await this.analizeDir(path, dir);
-    } catch (_) {
+    } catch {
       this.completeTask();
     }
   }
@@ -238,7 +237,7 @@ class FileWalker {
           collector,
         );
       }
-    } catch (error) {
+    } catch {
       // Ignore permissions errors.
     } finally {
       collector.pending -= 1;
@@ -251,7 +250,11 @@ class FileWalker {
     }
   }
 
-  private newDirEntry(path: string, entry: Dirent, results: any[]): void {
+  private newDirEntry(
+    path: string,
+    entry: Dirent,
+    results: { path: string; isTarget: boolean }[],
+  ): void {
     const subpath = join(path, entry.name);
     const shouldSkip = !entry.isDirectory() || this.isExcluded(subpath);
     if (shouldSkip) {
@@ -298,7 +301,7 @@ class FileWalker {
 
       switch (task.operation) {
         case ETaskOperation.explore:
-          this.run(task.path).catch((error) => {
+          this.run(task.path).catch(() => {
             this.completeTask();
           });
           break;

@@ -4,9 +4,9 @@ import { dirname, extname } from 'path';
 import { Worker, MessageChannel, MessagePort } from 'worker_threads';
 import { Subject } from 'rxjs';
 import { LoggerService } from '../logger.service.js';
-import { ScanStatus } from '@core/interfaces/search-status.model.js';
+import { ScanStatus } from '../../interfaces/search-status.model.js';
 import { EVENTS, MAX_WORKERS } from '../../../constants/workers.constants.js';
-import { ScanOptions } from '@core/index.js';
+import { ScanOptions } from '../../index.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 type WorkerJob = {

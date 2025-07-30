@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-import fs from 'fs';
 
 import { IFileService } from '../../../../src/core/interfaces/file-service.interface.js';
 import * as rimraf from 'rimraf';
@@ -9,8 +8,8 @@ let accessSyncReturnMock = (): boolean | null => null;
 const readFileSyncSpy = jest.fn();
 jest.unstable_mockModule('fs', () => {
   return {
-    statSync: (path) => statSyncReturnMock(),
-    accessSync: (path, flag) => accessSyncReturnMock(),
+    statSync: () => statSyncReturnMock(),
+    accessSync: () => accessSyncReturnMock(),
     readFileSync: readFileSyncSpy,
     lstat: jest.fn(),
     readdir: jest.fn(),
@@ -23,40 +22,44 @@ jest.unstable_mockModule('fs', () => {
 
 jest.useFakeTimers();
 
-const FileServiceConstructor = //@ts-ignore
-  (await import('../../../../src/core/services/files/files.service.js'))
-    .FileService;
+const FileServiceConstructor = (
+  await import('../../../../src/core/services/files/files.service.js')
+).FileService;
 abstract class FileService extends FileServiceConstructor {}
 
-const LinuxFilesServiceConstructor = //@ts-ignore
-  (await import('../../../../src/core/services/files/linux-files.service.js'))
-    .LinuxFilesService;
+const LinuxFilesServiceConstructor = (
+  await import('../../../../src/core/services/files/linux-files.service.js')
+).LinuxFilesService;
 class LinuxFilesService extends LinuxFilesServiceConstructor {}
 
-const MacFilesServiceConstructor = //@ts-ignore
-  (await import('../../../../src/core/services/files/mac-files.service.js'))
-    .MacFilesService;
+const MacFilesServiceConstructor = (
+  await import('../../../../src/core/services/files/mac-files.service.js')
+).MacFilesService;
 class MacFilesService extends MacFilesServiceConstructor {}
 
-const WindowsFilesServiceConstructor = //@ts-ignore
-  (await import('../../../../src/core/services/files/windows-files.service.js'))
-    .WindowsFilesService;
+const WindowsFilesServiceConstructor = (
+  await import('../../../../src/core/services/files/windows-files.service.js')
+).WindowsFilesService;
 class WindowsFilesService extends WindowsFilesServiceConstructor {}
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../../../../src/core/services/stream.service.js';
+import { FileWorkerService } from '../../../../src/core/services/files/index.js';
 
 jest.mock('../../../../src/dirname.js', () => {
   return { __esModule: true };
 });
 
-const fileWorkerService: any = jest.fn();
+const fileWorkerService = jest.fn();
 
 describe('File Service', () => {
   let fileService: FileService;
 
   beforeEach(() => {
-    fileService = new LinuxFilesService(new StreamService(), fileWorkerService);
+    fileService = new LinuxFilesService(
+      new StreamService(),
+      fileWorkerService as unknown as FileWorkerService,
+    );
   });
 
   describe('isValidRootFolder', () => {
@@ -115,7 +118,6 @@ describe('File Service', () => {
 
   describe('isDangerous', () => {
     const originalEnv = { ...process.env };
-    const originalCwd = process.cwd();
 
     const mockCwd = (cwd: string) => {
       jest.spyOn(process, 'cwd').mockReturnValue(cwd);
@@ -304,7 +306,7 @@ describe('File Service', () => {
 
   describe('fakeDeleteDir', () => {
     it('Should return a Promise', () => {
-      const result = fileService.fakeDeleteDir('/sample/path');
+      const result = fileService.fakeDeleteDir();
       expect(result).toBeInstanceOf(Promise);
     });
   });

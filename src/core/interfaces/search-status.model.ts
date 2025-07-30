@@ -1,4 +1,4 @@
-import { WorkerStatus } from '../services/files/files.worker.service';
+import { WorkerStatus } from '../services/files/files.worker.service.js';
 
 /**
  * Tracks the progress and status of directory scanning operations.

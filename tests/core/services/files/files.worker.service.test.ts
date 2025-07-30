@@ -1,8 +1,11 @@
 import { jest } from '@jest/globals';
 import EventEmitter from 'node:events';
 import { Subject } from 'rxjs';
-import { EVENTS } from '../../../../src/constants/workers.constants';
-import { WorkerMessage } from '../../../../src/core/services/files/index.js';
+import { EVENTS } from '../../../../src/constants/workers.constants.js';
+import {
+  WorkerMessage,
+  WorkerScanOptions,
+} from '../../../../src/core/services/files/index.js';
 import { LoggerService } from '../../../../src/core/services/logger.service.js';
 import { ScanStatus } from '../../../../src/core/index.js';
 
@@ -23,7 +26,7 @@ jest.unstable_mockModule('os', () => ({
 jest.unstable_mockModule('node:worker_threads', () => ({
   Worker: jest.fn(() => ({
     postMessage: workerPostMessageMock,
-    on: (eventName: string, listener: (...args: any[]) => void) =>
+    on: (eventName: string, listener: (...args: unknown[]) => void) =>
       workerEmitter.on(eventName, listener),
     terminate: workerTerminateMock,
     removeAllListeners: jest.fn(),
@@ -32,13 +35,13 @@ jest.unstable_mockModule('node:worker_threads', () => ({
   MessageChannel: jest.fn(() => ({
     port1: {
       postMessage: messageChannelPort1Mock,
-      on: (eventName: string, listener: (...args: any[]) => void) =>
+      on: (eventName: string, listener: (...args: unknown[]) => void) =>
         port1Emitter.on(eventName, listener),
       removeAllListeners: jest.fn(),
     },
     port2: {
       postMessage: messageChannelPort2Mock,
-      on: (eventName: string, listener: (...args: any[]) => void) =>
+      on: (eventName: string, listener: (...args: unknown[]) => void) =>
         port2Emitter.on(eventName, listener),
       removeAllListeners: jest.fn(),
     },
@@ -57,7 +60,7 @@ class FileWorkerService extends FileWorkerServiceConstructor {}
 xdescribe('FileWorkerService', () => {
   let fileWorkerService: FileWorkerService;
   let searchStatus: ScanStatus;
-  let params: any; //ScanOptions;
+  let params: WorkerScanOptions;
 
   beforeEach(async () => {
     const aa = new URL('file:///dev/null'); // Any valid URL. Is not used

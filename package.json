@@ -43,7 +43,8 @@
     "release": "npm run build && np",
     "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/index.ts",
     "prepare": "husky install",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "lint": "eslint"
   },
   "dependencies": {
     "ansi-escapes": "^7.0.0",
@@ -53,6 +54,8 @@
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.32.0",
+    "@jest/globals": "^30.0.5",
     "@stryker-mutator/core": "6.3.0",
     "@stryker-mutator/jest-runner": "6.3.0",
     "@types/colors": "^1.2.4",
@@ -60,12 +63,10 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^18.18.0",
     "@types/rimraf": "^4.0.5",
-    "@typescript-eslint/eslint-plugin": "^8.37.0",
     "commitlint": "^19.8.1",
     "del": "^8.0.0",
-    "eslint": "^9.31.0",
+    "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-promise": "^7.2.1",
     "gulp": "^5.0.1",
@@ -81,7 +82,8 @@
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tslint": "^6.1.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0"
   },
   "peerDependencies": {
     "rxjs": "^7.8.2"

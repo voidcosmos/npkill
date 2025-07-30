@@ -1,4 +1,4 @@
-import { IKeyPress } from '../interfaces';
+import { IKeyPress } from '../interfaces/index.js';
 import ansiEscapes from 'ansi-escapes';
 
 export interface Position {

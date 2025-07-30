@@ -1,4 +1,4 @@
-import { ScanFoundFolder } from '../../core/interfaces';
+import { ScanFoundFolder } from '../../core/interfaces/index.js';
 
 export interface CliScanFoundFolder extends ScanFoundFolder {
   size: number;

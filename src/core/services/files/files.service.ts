@@ -33,7 +33,7 @@ export abstract class FileService implements IFileService {
   }
 
   /** Used for dry-run or testing. */
-  async fakeDeleteDir(_path: string): Promise<boolean> {
+  async fakeDeleteDir(): Promise<boolean> {
     const randomDelay = Math.floor(Math.random() * 4000 + 200);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
     return true;
@@ -43,7 +43,7 @@ export abstract class FileService implements IFileService {
     let stat: Stats;
     try {
       stat = statSync(path);
-    } catch (error) {
+    } catch {
       return { isValid: false, invalidReason: 'The path does not exist.' };
     }
 
@@ -56,7 +56,7 @@ export abstract class FileService implements IFileService {
 
     try {
       accessSync(path, fs.constants.R_OK);
-    } catch (error) {
+    } catch {
       return {
         isValid: false,
         invalidReason: 'Cannot read the specified path.',

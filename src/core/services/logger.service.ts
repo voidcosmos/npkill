@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 import {
   ILoggerService,
   LogEntry,
-} from '@core/interfaces/logger-service.interface';
+} from '@core/interfaces/logger-service.interface.js';
 
 const LATEST_TAG = 'latest';
 const OLD_TAG = 'old';
