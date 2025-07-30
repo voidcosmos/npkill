@@ -19,7 +19,10 @@ export default tseslint.config(
       'dist',
       'build',
       '**/*.min.js',
-      'src/index.ts',
+      '/src/index.ts',
     ],
+    rules: {
+      quotes: ['error', 'single'],
+    },
   },
 );

@@ -71,6 +71,7 @@ describe('ResultsUi', () => {
       );
     });
 
+    // eslint-disable-next-line quotes
     it("should't render results if it is not visible", () => {
       const populateResults = () => {
         for (let i = 0; i < 100; i++) {
