@@ -190,7 +190,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
       )}d`;
     } else {
-      daysSinceLastModification = '--';
+      daysSinceLastModification = colors.bgBlack('calc');
     }
 
     if (folder.riskAnalysis?.isSensitive) {
@@ -212,7 +212,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       folderSize = `${space}${sizeText} MB`;
     }
 
-    const folderSizeText = folder.size > 0 ? folderSize : '--';
+    const folderSizeText =
+      folder.size > 0 ? folderSize : colors.bgBlack.gray(' calc... ');
 
     return {
       path: folderText,
