@@ -7,8 +7,8 @@ import {
   ScanOptions,
   DeleteResult,
   DeleteOptions,
-} from './folder.interface';
-import { LogEntry } from '@core/interfaces/logger-service.interface';
+} from './folder.interface.js';
+import { LogEntry } from '@core/interfaces/logger-service.interface.js';
 
 /**
  * Result of validating a root folder path.

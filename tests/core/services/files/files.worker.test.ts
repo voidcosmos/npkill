@@ -49,21 +49,21 @@ const mockDir = {
 } as unknown as Dir;
 
 jest.unstable_mockModule('fs/promises', () => ({
-  opendir: (path: string) => new Promise((resolve) => resolve(mockDir)),
-  lstat: (path: string) =>
+  opendir: () => new Promise((resolve) => resolve(mockDir)),
+  lstat: () =>
     Promise.resolve({
       blocks: 1,
       size: 100,
       isDirectory: () => false,
       isSymbolicLink: () => false,
     }),
-  readdir: (path: string, opts: any) => Promise.resolve([]),
+  readdir: () => Promise.resolve([]),
 }));
 
 jest.unstable_mockModule('node:worker_threads', () => ({
   parentPort: {
     postMessage: tunnelPostMock,
-    on: (eventName: string, listener: (...args: any[]) => void) =>
+    on: (eventName: string, listener: (...args: unknown[]) => void) =>
       parentEmitter.on(eventName, listener),
   },
 }));
@@ -118,7 +118,7 @@ describe('FileWorker', () => {
 
     dirEntriesMock = [...subDirectories];
 
-    let results: any[];
+    let results: unknown[];
 
     tunnelEmitter.on('message', (message) => {
       if (message.type === EVENTS.scanResult) {
@@ -158,7 +158,7 @@ describe('FileWorker', () => {
             isTarget: subdir.name === target,
           }));
 
-        let results: any[];
+        let results: unknown[];
 
         tunnelEmitter.on('message', (message) => {
           if (message.type === EVENTS.scanResult) {
@@ -204,7 +204,7 @@ describe('FileWorker', () => {
           isTarget: subdir.name === 'node_modules',
         }));
 
-      let results: any[];
+      let results: unknown[];
       tunnelEmitter.on('message', (message) => {
         if (message.type === EVENTS.scanResult) {
           results = message.value.results;
@@ -246,7 +246,7 @@ describe('FileWorker', () => {
           isTarget: subdir.name === 'node_modules',
         }));
 
-      let results: any[];
+      let results: unknown[];
       tunnelEmitter.on('message', (message) => {
         if (message.type === EVENTS.scanResult) {
           results = message.value.results;

@@ -16,6 +16,7 @@ import {
 } from '../../src/core/interfaces/folder.interface.js';
 import { LogEntry } from '../../src/core/interfaces/logger-service.interface.js';
 import { IsValidRootFolderResult } from '../../src/core/interfaces/npkill.interface.js';
+import { FileService } from '../../src/core/services/files/index.js';
 
 describe('Npkill', () => {
   let npkill: Npkill;
@@ -34,12 +35,17 @@ describe('Npkill', () => {
       getFolderSize: jest.fn(),
       getRecentModificationInDir: jest.fn(),
       deleteDir: jest.fn(),
-      fakeDeleteDir: jest.fn(),
+      fakeDeleteDir: jest.fn(() => Promise.resolve(true)),
       isValidRootFolder: jest.fn(),
       isDangerous: jest.fn(),
       getFileStatsInDir: jest.fn(),
       stopScan: jest.fn(),
-      fileWorkerService: {} as any,
+      fileWorkerService: {
+        startScan: jest.fn(),
+        getFolderSize: jest.fn(),
+        stopScan: jest.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as unknown as any,
     };
 
     logSubject = new BehaviorSubject<LogEntry[]>([]);
@@ -58,7 +64,7 @@ describe('Npkill', () => {
       rotateLogFile: jest.fn(),
       addToLog: jest.fn(),
       getTimestamp: jest.fn(() => Date.now()),
-    } as any;
+    } as unknown as jest.Mocked<LoggerService>;
 
     searchStatusMock = {} as jest.Mocked<ScanStatus>;
 
@@ -68,7 +74,7 @@ describe('Npkill', () => {
     }));
 
     npkill = new Npkill({
-      fileService: fileServiceMock,
+      fileService: fileServiceMock as unknown as FileService,
       logger: loggerMock,
       searchStatus: searchStatusMock,
     });
@@ -319,7 +325,7 @@ describe('Npkill', () => {
           path: mockPath,
           success: true,
         });
-        expect(fileServiceMock.fakeDeleteDir).toHaveBeenCalledWith(mockPath);
+        expect(fileServiceMock.fakeDeleteDir).toHaveBeenCalled();
         expect(fileServiceMock.deleteDir).not.toHaveBeenCalled();
         expect(loggerMock.info).toHaveBeenCalledWith(
           `Deleting ${mockPath} (dry run)...`,

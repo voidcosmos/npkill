@@ -1,3 +1,5 @@
+/* eslint-disable promise/no-callback-in-promise */
+/* eslint-disable promise/always-return */
 import { jest } from '@jest/globals';
 
 import { HttpsService } from '../../../src/cli/services/https.service.js';

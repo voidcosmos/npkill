@@ -4,7 +4,7 @@ import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
-import { CliScanFoundFolder } from 'src/cli/interfaces/stats.interface.js';
+import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
 import { convertGBToMB } from '../../../utils/unit-conversions.js';
 import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
 

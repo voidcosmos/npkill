@@ -1,10 +1,9 @@
 import { ConsoleService } from '../../../src/cli/services/index.js';
-import { FileService } from '../../../src/core/services/files/files.service.js';
 import { ResultsService } from '../../../src/cli/services/results.service.js';
 import { jest } from '@jest/globals';
 import { CliScanFoundFolder } from '../../../src/cli/interfaces/stats.interface.js';
 
-const stdoutWriteMock = jest.fn() as any;
+const stdoutWriteMock = jest.fn() as unknown;
 
 const originalProcess = process;
 const mockProcess = () => {
@@ -20,24 +19,21 @@ const mockProcess = () => {
   };
 };
 
-const ResultsUiConstructor = //@ts-ignore
-  (await import('../../../src/cli/ui/components/results.ui.js')).ResultsUi;
+const ResultsUiConstructor = (
+  await import('../../../src/cli/ui/components/results.ui.js')
+).ResultsUi;
 class ResultsUi extends ResultsUiConstructor {}
 
 describe('ResultsUi', () => {
   let resultsUi: ResultsUi;
 
-  let resultsServiceMock: ResultsService = {
+  const resultsServiceMock: ResultsService = {
     results: [],
   } as unknown as ResultsService;
 
-  let consoleServiceMock: ConsoleService = {
+  const consoleServiceMock: ConsoleService = {
     shortenText: (text) => text,
   } as unknown as ConsoleService;
-
-  let fileServiceMock: FileService = {
-    convertGBToMB: (value) => value,
-  } as unknown as FileService;
 
   beforeEach(() => {
     mockProcess();

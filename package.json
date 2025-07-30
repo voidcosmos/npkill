@@ -55,6 +55,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.32.0",
+    "@jest/globals": "^30.0.5",
     "@stryker-mutator/core": "6.3.0",
     "@stryker-mutator/jest-runner": "6.3.0",
     "@types/colors": "^1.2.4",

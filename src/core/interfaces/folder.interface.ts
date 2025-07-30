@@ -57,6 +57,7 @@ export interface GetSizeResult {
 /**
  * Options for finding the newest file in a directory.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GetNewestFileOptions {}
 
 /**

@@ -66,11 +66,11 @@ xdescribe('main', () => {
     };
 
     const testIfServiceIsIstanciated = async (serviceMock) => {
-      let servicesThatShouldNotBeCalled = [...SERVICES_MOCKS].filter(
+      const servicesThatShouldNotBeCalled = [...SERVICES_MOCKS].filter(
         (service) => service !== serviceMock,
       );
       expect(serviceMock).toHaveBeenCalledTimes(0);
-      main = await import('../src/main');
+      main = await import('../src/main.js');
       main.default();
       expect(serviceMock).toHaveBeenCalledTimes(1);
       servicesThatShouldNotBeCalled.forEach((service) =>

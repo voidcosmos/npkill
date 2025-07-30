@@ -38,5 +38,5 @@ describe('index.ts', () => {
 });
 
 function importIndex() {
-  return import('../src/index');
+  return import('../src/index.js');
 }

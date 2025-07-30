@@ -1,7 +1,13 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
 import { Subject } from 'rxjs';
-import { DeleteResult, Npkill } from '../../src/core/index.js';
+import { DeleteResult, Npkill, ScanStatus } from '../../src/core/index.js';
+import { LoggerService } from '../../src/core/services/logger.service.js';
+import { ResultsService } from '../../src/cli/services/results.service.js';
+import { SpinnerService } from '../../src/cli/services/spinner.service.js';
+import { ConsoleService } from '../../src/cli/services/console.service.js';
+import { UpdateService } from '../../src/cli/services/update.service.js';
+import { UiService } from '../../src/cli/services/ui.service.js';
 
 const resultsUiDeleteMock$ = new Subject<DeleteResult>();
 const setDeleteAllWarningVisibilityMock = jest.fn();
@@ -69,8 +75,9 @@ jest.unstable_mockModule('../../src/cli/ui/heavy.ui.js', () => ({
   HeavyUi: {},
 }));
 
-const CliControllerConstructor = //@ts-ignore
-  (await import('../../src/cli/cli.controller.js')).CliController;
+const CliControllerConstructor = (
+  await import('../../src/cli/cli.controller.js')
+).CliController;
 class CliController extends CliControllerConstructor {}
 
 describe('CliController test', () => {
@@ -83,30 +90,32 @@ describe('CliController test', () => {
     .fn<() => Promise<boolean>>()
     .mockResolvedValue(true);
 
-  const linuxFilesServiceMock: any = {
+  const linuxFilesServiceMock = {
     getFileContent: jest.fn().mockReturnValue('{}'),
     isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
     isSafeToDelete: jest.fn().mockReturnValue(true),
     deleteDir: filesServiceDeleteMock,
     fakeDeleteDir: filesServiceFakeDeleteMock,
   };
-  const spinnerServiceMock: any = jest.fn();
-  const updateServiceMock: any = jest.fn();
-  const resultServiceMock: any = jest.fn();
-  const searchStatusMock: any = jest.fn();
-  const loggerServiceMock: any = {
+  const spinnerServiceMock = jest.fn();
+  const updateServiceMock = jest.fn();
+  const resultServiceMock = jest.fn();
+  const searchStatusMock = jest.fn();
+  const loggerServiceMock: Partial<LoggerService> = {
     info: jest.fn(),
     error: jest.fn(),
-    getSuggestLogFilePath: jest.fn(),
+    getSuggestLogFilePath: jest.fn(() => '/example/file'),
     saveToFile: jest.fn(),
   };
-  const uiServiceMock: any = {
+  const uiServiceMock = {
     add: jest.fn(),
     print: jest.fn(),
     setRawMode: jest.fn(),
     setCursorVisible: jest.fn(),
+    clear: jest.fn(),
+    renderAll: jest.fn(),
   };
-  const consoleServiceMock: any = {
+  const consoleServiceMock = {
     getParameters: () => new StartParameters(),
     isRunningBuild: () => false,
     startListenKeyEvents: jest.fn(),
@@ -123,11 +132,8 @@ describe('CliController test', () => {
   } as unknown as Npkill;
 
   ////////// mocked Controller Methods
-  let parseArgumentsSpy;
   let showHelpSpy;
-  let prepareScreenSpy;
   let setupEventsListenerSpy;
-  let initializeLoadingStatusSpy;
   let scanSpy;
   let checkVersionSpy;
   let exitSpy;
@@ -139,24 +145,20 @@ describe('CliController test', () => {
     });
     cliController = new CliController(
       npkillMock,
-      loggerServiceMock,
-      searchStatusMock,
-      resultServiceMock,
-      spinnerServiceMock,
-      consoleServiceMock,
-      updateServiceMock,
-      uiServiceMock,
+      loggerServiceMock as LoggerService,
+      searchStatusMock as unknown as ScanStatus,
+      resultServiceMock as unknown as ResultsService,
+      spinnerServiceMock as unknown as SpinnerService,
+      consoleServiceMock as unknown as ConsoleService,
+      updateServiceMock as unknown as UpdateService,
+      uiServiceMock as unknown as UiService,
     );
 
     Object.defineProperty(process.stdout, 'columns', { value: 80 });
     Object.defineProperty(process.stdout, 'isTTY', { value: true });
 
-    parseArgumentsSpy = jest.spyOn(cliController, 'parseArguments');
     showHelpSpy = jest
       .spyOn(cliController, 'showHelp')
-      .mockImplementation(() => ({}));
-    prepareScreenSpy = jest
-      .spyOn(cliController, 'prepareScreen')
       .mockImplementation(() => ({}));
     setupEventsListenerSpy = jest
       .spyOn(cliController, 'setupEventsListener')
@@ -176,7 +178,7 @@ describe('CliController test', () => {
   });
 
   describe('#getArguments', () => {
-    const mockParameters = (parameters: Object) => {
+    const mockParameters = (parameters: object) => {
       consoleServiceMock.getParameters = () => {
         const startParameters = new StartParameters();
         Object.keys(parameters).forEach((key) => {

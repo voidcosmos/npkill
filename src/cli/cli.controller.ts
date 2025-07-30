@@ -227,11 +227,13 @@ export class CliController {
     const options = this.consoleService.getParameters(process.argv);
     if (options.isTrue('help')) {
       this.showHelp();
-      process.exit();
+      // eslint-disable-next-line n/no-process-exit
+      process.exit(0);
     }
     if (options.isTrue('version')) {
       this.showProgramVersion();
-      process.exit();
+      // eslint-disable-next-line n/no-process-exit
+      process.exit(0);
     }
     if (options.isTrue('delete-all')) {
       this.config.deleteAll = true;
@@ -393,6 +395,7 @@ export class CliController {
         } else {
           this.logger.info('Npkill is update');
         }
+        return isUpdated;
       })
       .catch((err: Error) => {
         const errorMessage =
@@ -582,6 +585,7 @@ export class CliController {
     this.uiService.setCursorVisible(true);
     const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
+    // eslint-disable-next-line n/no-process-exit
     process.exit(1);
   }
 
@@ -593,7 +597,8 @@ export class CliController {
     this.logger.info('Thank for using npkill. Bye!');
     const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
-    process.exit();
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(0);
   }
 
   private printExitMessage(): void {
@@ -625,6 +630,7 @@ export class CliController {
         this.uiStats.render();
         this.uiStatus.render();
         this.printFoldersSection();
+        return folder;
       })
       .catch((e) => {
         folder.status = 'error-deleting';

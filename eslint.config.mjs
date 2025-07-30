@@ -13,6 +13,13 @@ export default tseslint.config(
   pluginPromise.configs['flat/recommended'],
   eslintConfigPrettier,
   {
-    ignores: ['node_modules', 'lib', 'dist', 'build', '**/*.min.js'],
+    ignores: [
+      'node_modules',
+      'lib',
+      'dist',
+      'build',
+      '**/*.min.js',
+      'src/index.ts',
+    ],
   },
 );

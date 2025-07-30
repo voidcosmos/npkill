@@ -1,7 +1,6 @@
 import { FileWorkerService } from './services/files/index.js';
-import { firstValueFrom, from, Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { catchError, filter, map, mergeMap, take, tap } from 'rxjs/operators';
-import { IFileService } from './interfaces/file-service.interface.js';
 import { ScanStatus } from './interfaces/search-status.model.js';
 import _dirname from '../dirname.js';
 import { LoggerService } from './services/logger.service.js';
@@ -9,9 +8,7 @@ import { StreamService } from './services/stream.service.js';
 import { Services } from './interfaces/services.interface.js';
 import {
   ScanFoundFolder,
-  GetNewestFileOptions,
   GetNewestFileResult,
-  GetSizeOptions,
   GetSizeResult,
   ScanOptions,
   DeleteOptions,
@@ -26,6 +23,7 @@ import {
 
 import { LogEntry } from './interfaces/logger-service.interface.js';
 import { getFileContent } from '../utils/get-file-content.js';
+import { ResultsService } from '../cli/services/results.service.js';
 
 /**
  * Main npkill class that implements the core directory scanning and cleanup functionality.
@@ -56,7 +54,7 @@ export class Npkill implements NpkillInterface {
     const startTime = Date.now();
 
     return fileService.listDir(rootPath, options).pipe(
-      catchError((_error, caught) => {
+      catchError(() => {
         throw new Error('Error while listing directories');
       }),
       mergeMap((dataFolder) => from(splitData(dataFolder))),
@@ -86,7 +84,7 @@ export class Npkill implements NpkillInterface {
     );
   }
 
-  getSize$(path: string, options?: GetSizeOptions): Observable<GetSizeResult> {
+  getSize$(path: string): Observable<GetSizeResult> {
     const { fileService } = this.services;
     this.logger.info(`Calculating folder size for ${String(path)}`);
     return fileService.getFolderSize(path).pipe(
@@ -118,7 +116,7 @@ export class Npkill implements NpkillInterface {
       `Deleting ${String(path)} ${options?.dryRun ? '(dry run)' : ''}...`,
     );
     const deleteOperation = options?.dryRun
-      ? from(fileService.fakeDeleteDir(path))
+      ? from(fileService.fakeDeleteDir())
       : from(fileService.deleteDir(path));
 
     return deleteOperation.pipe(
@@ -172,7 +170,7 @@ function createDefaultServices(
     actualSearchStatus,
   );
   const streamService = new StreamService();
-  const resultsService = null as any;
+  const resultsService = new ResultsService();
 
   const OSService = OSServiceMap[process.platform];
   if (typeof OSService === 'undefined') {
