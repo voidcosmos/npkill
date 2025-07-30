@@ -26,7 +26,7 @@ describe('unit-conversions', () => {
 });
 
 describe('is-safe-to-delete', () => {
-  const target = 'node_modules';
+  const target = ['node_modules'];
 
   it('should get false if not is safe to delete ', () => {
     expect(isSafeToDelete('/one/route', target)).toBeFalsy();
@@ -35,10 +35,19 @@ describe('is-safe-to-delete', () => {
     expect(isSafeToDelete('/', target)).toBeFalsy();
     expect(isSafeToDelete('/home', target)).toBeFalsy();
     expect(isSafeToDelete('/home/user', target)).toBeFalsy();
+    expect(isSafeToDelete('/home/user/.angular', target)).toBeFalsy();
+    expect(
+      isSafeToDelete('/home/user/.angular', [...target, 'angular']),
+    ).toBeFalsy();
+    expect(isSafeToDelete('/home/user/dIst', [...target, 'dist'])).toBeFalsy();
   });
 
   it('should get true if is safe to delete ', () => {
     expect(isSafeToDelete('/one/route/node_modules', target)).toBeTruthy();
     expect(isSafeToDelete('/one/route/node_modules/', target)).toBeTruthy();
+    expect(
+      isSafeToDelete('/home/user/.angular', [...target, '.angular']),
+    ).toBeTruthy();
+    expect(isSafeToDelete('/home/user/dIst', [...target, 'dIst'])).toBeTruthy();
   });
 });

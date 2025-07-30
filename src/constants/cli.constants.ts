@@ -65,7 +65,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-t', '--target'],
     description:
-      "Specify the name of the directory you want to search for (by default, it's 'node_modules')",
+      "Specify the name of the directories you want to search for (by default, it's 'node_modules'). You can define multiple targets separating with comma. Ej. `-t node_modules,.cache,`.",
     name: 'target-folder',
   },
   {

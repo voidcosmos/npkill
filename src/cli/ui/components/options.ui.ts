@@ -61,8 +61,10 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
       {
         label: 'Target folder',
         type: 'input',
-        key: 'targetFolder',
-        value: this.config.targetFolder,
+        key: 'targets',
+        value: Array.isArray(this.config.targets)
+          ? this.config.targets.join(',')
+          : '',
       },
       {
         label: 'Cwd',
@@ -71,10 +73,12 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         value: this.config.folderRoot,
       },
       {
-        label: 'Exlude',
+        label: 'Exclude',
         type: 'input',
         key: 'exclude',
-        value: this.config.exclude,
+        value: Array.isArray(this.config.exclude)
+          ? this.config.exclude.join(',')
+          : '',
       },
       {
         label: 'Sort by',
@@ -143,9 +147,20 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
   private handleEditKey(name: string, sequence: string): void {
     if (name === 'return') {
       const opt = this.options[this.selectedIndex];
-      opt.value = this.editBuffer;
-      this.config[opt.key] = this.editBuffer;
-      this.emitConfigChange(opt.key, this.editBuffer);
+      let newValue = this.editBuffer;
+      if (opt.key === 'targets' || opt.key === 'exclude') {
+        const arrValue = this.editBuffer
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        this.config[opt.key] = arrValue;
+        this.emitConfigChange(opt.key, arrValue);
+        opt.value = this.editBuffer;
+      } else {
+        this.config[opt.key] = newValue;
+        this.emitConfigChange(opt.key, newValue);
+        opt.value = this.editBuffer;
+      }
       this.isEditing = false;
       this.render();
     } else if (name === 'escape') {

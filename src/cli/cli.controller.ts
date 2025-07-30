@@ -155,7 +155,7 @@ export class CliController {
     changeConfig$.subscribe((configChanges) => {
       Object.assign(this.config, configChanges);
       if (
-        configChanges.targetFolder ||
+        configChanges.targets ||
         configChanges.folderRoot ||
         configChanges.excludeHiddenDirectories ||
         configChanges.exclude
@@ -273,7 +273,7 @@ export class CliController {
       this.config.checkUpdates = false;
     }
     if (options.isTrue('target-folder')) {
-      this.config.targetFolder = options.getString('target-folder');
+      this.config.targets = options.getString('target-folder').split(',');
     }
     if (options.isTrue('bg-color')) {
       this.setColor(options.getString('bg-color'));
@@ -512,10 +512,9 @@ export class CliController {
   }
 
   private prepareListDirParams() {
-    const target = this.config.targetFolder;
     const params = {
       rootPath: this.config.folderRoot,
-      targets: [target],
+      targets: this.config.targets,
     };
 
     if (this.config.exclude.length > 0) {
@@ -607,7 +606,7 @@ export class CliController {
       return;
     }
 
-    if (!isSafeToDelete(folder.path, this.config.targetFolder)) {
+    if (!isSafeToDelete(folder.path, this.config.targets)) {
       this.newError(`Folder not safe to delete: ${String(folder.path)}`);
       return;
     }

@@ -98,22 +98,23 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 ## Options
 
-| ARGUMENT                         | DESCRIPTION                                                                                                                                    |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| -c, --bg-color                   | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                      |
-| -d, --directory                  | Set the directory from which to begin searching. By default, starting-point is .                                                               |
-| -D, --delete-all                 | Automatically delete all node_modules folders that are found. Suggested to be used together with `-x`.                                         |
-| -e, --hide-errors                | Hide errors if any                                                                                                                             |
-| -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2" |
-| -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                     |
-| -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                |
-| -h, --help, ?                    | Show this help page and exit                                                                                                                   |
-| -nu, --no-check-update           | Don't check for updates on startup                                                                                                             |
-| -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                  |
-| -t, --target                     | Specify the name of the directories you want to search (by default, is node_modules)                                                           |
-| -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                    |
-| --dry-run                        | It does not delete anything (will simulate it with a random delay).                                                                            |
-| -v, --version                    | Show npkill version                                                                                                                            |
+| ARGUMENT                         | DESCRIPTION                                                                                                                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -c, --bg-color                   | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                                                           |
+| -d, --directory                  | Set the directory from which to begin searching. By default, starting-point is .                                                                                                    |
+| -D, --delete-all                 | Automatically delete all node_modules folders that are found. Suggested to be used together with `-x`.                                                                              |
+| -e, --hide-errors                | Hide errors if any                                                                                                                                                                  |
+| -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                      |
+| -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                          |
+| -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                                                     |
+| -h, --help, ?                    | Show this help page and exit                                                                                                                                                        |
+| -nu, --no-check-update           | Don't check for updates on startup                                                                                                                                                  |
+| -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                                                       |
+| -t, --target                     | Specify the name of the directories you want to search for (by default, it's 'node_modules'). You can define multiple targets separating with comma. Ej. `-t node_modules,.cache,`. |
+|                                  |
+| -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                                                         |
+| --dry-run                        | It does not delete anything (will simulate it with a random delay).                                                                                                                 |
+| -v, --version                    | Show npkill version                                                                                                                                                                 |
 
 **Warning:** _In future versions some commands may change_
 

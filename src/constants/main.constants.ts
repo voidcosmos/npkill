@@ -20,7 +20,7 @@ export const DEFAULT_CONFIG: IConfig = {
   maxSimultaneousSearch: 6,
   showErrors: true,
   sortBy: 'none',
-  targetFolder: 'node_modules',
+  targets: ['node_modules'],
   yes: false,
 };
 
