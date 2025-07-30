@@ -12,4 +12,7 @@ export default tseslint.config(
   nodePlugin.configs['flat/recommended'],
   pluginPromise.configs['flat/recommended'],
   eslintConfigPrettier,
+  {
+    ignores: ['node_modules', 'lib', 'dist', 'build', '**/*.min.js'],
+  },
 );
