@@ -35,6 +35,18 @@ export class UiService {
     });
   }
 
+  setFreezeAll(freeze: boolean): void {
+    this.uiComponents.forEach((component) => {
+      component.freezed = freeze;
+    });
+  }
+
+  setVisibleAll(visible: boolean): void {
+    this.uiComponents.forEach((component) => {
+      component.setVisible(visible);
+    });
+  }
+
   clear(): void {
     this.print(ansiEscapes.clearTerminal);
   }
