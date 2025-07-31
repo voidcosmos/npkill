@@ -472,46 +472,7 @@ export class CliController {
       );
 
     this.searchStart = Date.now();
-    const results$ = this.npkill.startScan$(rootPath, params);
-    const nonExcludedResults$ = results$.pipe(
-      filter((path) => !isExcludedDangerousDirectory(path)),
-    );
-
-    nonExcludedResults$
-      .pipe(
-        map<ScanFoundFolder, CliScanFoundFolder>(({ path, riskAnalysis }) => ({
-          path,
-          size: 0,
-          modificationTime: -1,
-          riskAnalysis,
-          status: 'live',
-        })),
-        tap((nodeFolder) => {
-          this.searchStatus.newResult();
-          this.resultsService.addResult(nodeFolder);
-
-          if (this.config.sortBy === 'path') {
-            this.resultsService.sortResults(this.config.sortBy);
-            this.uiResults.clear();
-          }
-
-          this.uiResults.render();
-        }),
-        mergeMap((nodeFolder) => {
-          return this.calculateFolderStats(nodeFolder);
-        }),
-        tap(() => this.searchStatus.completeStatCalculation()),
-        tap((folder) => {
-          if (this.config.deleteAll) {
-            this.deleteFolder(folder);
-          }
-        }),
-      )
-      .subscribe({
-        next: () => this.printFoldersSection(),
-        error: (error) => this.newError(error),
-        complete: () => this.completeSearch(),
-      });
+    // TODO scan
   }
 
   private prepareListDirParams() {
