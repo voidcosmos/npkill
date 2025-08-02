@@ -7,6 +7,7 @@ import {
 } from '../../../src/cli/interfaces/index.js';
 import { of, firstValueFrom } from 'rxjs';
 import { convertBytesToGb } from '../../../src/utils/unit-conversions.js';
+import path from 'node:path';
 
 describe('ScanService', () => {
   let scanService: ScanService;
@@ -155,7 +156,7 @@ describe('ScanService', () => {
         mockCliScanFoundFolder.path,
       );
       expect(mockNpkill.getNewestFile$).toHaveBeenCalledWith(
-        '/test/root/project/', // parent folder
+        path.normalize('/test/root/project/'), // parent folder
       );
       expect(result.size).toBe(convertBytesToGb(folderSize));
       expect(result.modificationTime).toBe(newestFile.timestamp);
