@@ -44,6 +44,7 @@ import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
 import { convertBytesToGb } from '../utils/unit-conversions.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
+import { ScanService } from './services/scan.service.js';
 
 export class CliController {
   private readonly stdout: NodeJS.WriteStream = process.stdout;
@@ -70,6 +71,7 @@ export class CliController {
     private readonly consoleService: ConsoleService,
     private readonly updateService: UpdateService,
     private readonly uiService: UiService,
+    private readonly scanService: ScanService,
   ) {}
 
   init(): void {
@@ -463,29 +465,12 @@ export class CliController {
 
     const params = this.prepareListDirParams();
     const { rootPath } = params;
-    const isExcludedDangerousDirectory = (
-      scanResult: ScanFoundFolder,
-    ): boolean =>
-      Boolean(
-        this.config.excludeHiddenDirectories &&
-          scanResult.riskAnalysis?.isSensitive,
-      );
 
     this.searchStart = Date.now();
-    const results$ = this.npkill.startScan$(rootPath, params);
-    const nonExcludedResults$ = results$.pipe(
-      filter((path) => !isExcludedDangerousDirectory(path)),
-    );
 
-    nonExcludedResults$
+    this.scanService
+      .scan(this.config)
       .pipe(
-        map<ScanFoundFolder, CliScanFoundFolder>(({ path, riskAnalysis }) => ({
-          path,
-          size: 0,
-          modificationTime: -1,
-          riskAnalysis,
-          status: 'live',
-        })),
         tap((nodeFolder) => {
           this.searchStatus.newResult();
           this.resultsService.addResult(nodeFolder);
@@ -498,10 +483,11 @@ export class CliController {
           this.uiResults.render();
         }),
         mergeMap((nodeFolder) => {
-          return this.calculateFolderStats(nodeFolder);
+          return this.scanService.calculateFolderStats(nodeFolder);
         }),
-        tap(() => this.searchStatus.completeStatCalculation()),
         tap((folder) => {
+          this.searchStatus.completeStatCalculation();
+          this.finishFolderStats();
           if (this.config.deleteAll) {
             this.deleteFolder(folder);
           }
@@ -525,33 +511,6 @@ export class CliController {
     }
 
     return params;
-  }
-
-  private calculateFolderStats(
-    nodeFolder: CliScanFoundFolder,
-  ): Observable<CliScanFoundFolder> {
-    return this.npkill.getSize$(nodeFolder.path).pipe(
-      tap(({ size }) => {
-        nodeFolder.size = convertBytesToGb(size);
-      }),
-      switchMap(async () => {
-        // Saves resources by not scanning a result that is probably not of interest
-        if (nodeFolder.riskAnalysis?.isSensitive) {
-          nodeFolder.modificationTime = -1;
-          return nodeFolder;
-        }
-        const parentFolder = path.join(nodeFolder.path, '../');
-        const result = await firstValueFrom(
-          this.npkill.getNewestFile$(parentFolder),
-        );
-
-        nodeFolder.modificationTime = result ? result.timestamp : -1;
-        return nodeFolder;
-      }),
-      tap(() => {
-        this.finishFolderStats();
-      }),
-    );
   }
 
   private finishFolderStats(): void {

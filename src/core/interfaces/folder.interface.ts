@@ -1,6 +1,8 @@
 /** Unit for representing file/directory sizes. */
 export type SizeUnit = 'bytes'; // | 'kb' | 'mb' | 'gb'; // TODO implement
 
+/** Options soported for the sortBy scan option. */
+export type SortBy = 'path' | 'size' | 'last-mod';
 /**
  * Analysis of potential risks associated with deleting a directory.
  */
@@ -30,7 +32,7 @@ export interface ScanOptions {
   /** Array of directory paths to exclude from the scan. */
   exclude?: string[];
   /** Criteria for sorting scan results. */
-  sortBy?: 'path' | 'size' | 'last-mod';
+  sortBy?: SortBy;
   /** Whether to perform risk analysis on found directories. Default: true. */
   performRiskAnalysis?: boolean; // Default: true
   // maxConcurrentScans?: number; // Need to implement this.
