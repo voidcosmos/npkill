@@ -6,7 +6,9 @@ import {
   ScanOptions,
   SortBy,
 } from '../interfaces';
-import { filter, map, mergeMap, Observable, tap } from 'rxjs';
+import { Observable, filter, firstValueFrom, map, switchMap, tap } from 'rxjs';
+import { convertBytesToGb } from '../../utils/unit-conversions.js';
+import { join } from 'path';
 
 export class ScanService {
   constructor(private readonly npkill: Npkill) {}
@@ -23,7 +25,13 @@ export class ScanService {
 
     const results$ = this.npkill.startScan$(config.folderRoot, params);
     const nonExcludedResults$ = results$.pipe(
-      filter((path) => !isExcludedDangerousDirectory(path)),
+      filter(
+        (path) =>
+          !this.isExcludedDangerousDirectory(
+            path,
+            config.excludeHiddenDirectories,
+          ),
+      ),
     );
 
     return nonExcludedResults$.pipe(
@@ -34,26 +42,39 @@ export class ScanService {
         riskAnalysis,
         status: 'live',
       })),
-      tap((nodeFolder) => {
-        this.searchStatus.newResult();
-        this.resultsService.addResult(nodeFolder);
+    );
+  }
 
-        if (this.config.sortBy === 'path') {
-          this.resultsService.sortResults(this.config.sortBy);
-          this.uiResults.clear();
+  calculateFolderStats(
+    nodeFolder: CliScanFoundFolder,
+  ): Observable<CliScanFoundFolder> {
+    return this.npkill.getSize$(nodeFolder.path).pipe(
+      tap(({ size }) => {
+        nodeFolder.size = convertBytesToGb(size);
+      }),
+      switchMap(async () => {
+        // Saves resources by not scanning a result that is probably not of interest
+        if (nodeFolder.riskAnalysis?.isSensitive) {
+          nodeFolder.modificationTime = -1;
+          return nodeFolder;
         }
+        const parentFolder = join(nodeFolder.path, '../');
+        const result = await firstValueFrom(
+          this.npkill.getNewestFile$(parentFolder),
+        );
 
-        this.uiResults.render();
+        nodeFolder.modificationTime = result ? result.timestamp : -1;
+        return nodeFolder;
       }),
-      mergeMap((nodeFolder) => {
-        return this.calculateFolderStats(nodeFolder);
-      }),
-      tap(() => this.searchStatus.completeStatCalculation()),
-      tap((folder) => {
-        if (this.config.deleteAll) {
-          this.deleteFolder(folder);
-        }
-      }),
+    );
+  }
+
+  private isExcludedDangerousDirectory(
+    scanResult: ScanFoundFolder,
+    excludeHiddenDirectories: boolean,
+  ): boolean {
+    return Boolean(
+      excludeHiddenDirectories && scanResult.riskAnalysis?.isSensitive,
     );
   }
 }

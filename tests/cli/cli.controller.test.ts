@@ -8,6 +8,7 @@ import { SpinnerService } from '../../src/cli/services/spinner.service.js';
 import { ConsoleService } from '../../src/cli/services/console.service.js';
 import { UpdateService } from '../../src/cli/services/update.service.js';
 import { UiService } from '../../src/cli/services/ui.service.js';
+import { ScanService } from '../../src/cli/services/scan.service.js';
 
 const resultsUiDeleteMock$ = new Subject<DeleteResult>();
 const setDeleteAllWarningVisibilityMock = jest.fn();
@@ -115,6 +116,10 @@ describe('CliController test', () => {
     clear: jest.fn(),
     renderAll: jest.fn(),
   };
+  const scanServiceMock = {
+    scan: jest.fn(),
+    calculateFolderStats: jest.fn(),
+  };
   const consoleServiceMock = {
     getParameters: () => new StartParameters(),
     isRunningBuild: () => false,
@@ -152,6 +157,7 @@ describe('CliController test', () => {
       consoleServiceMock as unknown as ConsoleService,
       updateServiceMock as unknown as UpdateService,
       uiServiceMock as unknown as UiService,
+      scanServiceMock as unknown as ScanService,
     );
 
     Object.defineProperty(process.stdout, 'columns', { value: 80 });
