@@ -11,3 +11,8 @@ export function convertGBToMB(gb: number): number {
   const factorGBtoMB = 1024;
   return gb * factorGBtoMB;
 }
+
+export function convertGbToKb(gb: number): number {
+  const factorGBtoKB = 1024 * 1024;
+  return gb * factorGBtoKB;
+}

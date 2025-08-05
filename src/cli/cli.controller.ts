@@ -11,8 +11,8 @@ import {
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
-import { firstValueFrom, Observable, Subject } from 'rxjs';
-import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { firstValueFrom, Subject } from 'rxjs';
+import { map, mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
 import { FOLDER_SORT } from '../constants/sort.result.js';
@@ -37,11 +37,11 @@ import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { ScanFoundFolder, Npkill } from '../core/index.js';
+import { Npkill } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
-import { convertBytesToGb } from '../utils/unit-conversions.js';
+import { convertGbToKb } from '../utils/unit-conversions.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 import { ScanService } from './services/scan.service.js';
@@ -76,13 +76,21 @@ export class CliController {
 
   init(): void {
     this.logger.info(`Npkill CLI started! v${this.getVersion()}`);
+
+    this.parseArguments();
+
+    if (this.config.jsonStream) {
+      this.logger.info('JSON stream mode enabled.');
+      this.scan();
+      return;
+    }
+
     this.initUi();
     if (this.consoleService.isRunningBuild()) {
       this.uiHeader.programVersion = this.getVersion();
     }
 
     this.consoleService.startListenKeyEvents();
-    this.parseArguments();
     this.checkRequirements();
     this.prepareScreen();
     this.setupEventsListener();
@@ -294,6 +302,10 @@ export class CliController {
       this.config.yes = true;
     }
 
+    if (options.isTrue('jsonStream')) {
+      this.config.jsonStream = true;
+    }
+
     // Remove trailing slash from folderRoot for consistency
     this.config.folderRoot = this.config.folderRoot.replace(/[/\\]$/, '');
   }
@@ -460,6 +472,43 @@ export class CliController {
   private scan(): void {
     this.searchStatus.reset();
     this.resultsService.reset();
+
+    // TODO REFACTOR
+    if (this.config.jsonStream) {
+      this.scanService
+        .scan(this.config)
+        .pipe(
+          mergeMap((nodeFolder) =>
+            this.scanService.calculateFolderStats(nodeFolder),
+          ),
+          map((folder) => ({
+            path: folder.path,
+            size: convertGbToKb(folder.size),
+            newestFile: {
+              modificationTime: folder.modificationTime,
+              file: '// TODO PENDING',
+            },
+            riskAnalysis: {
+              isSensitive: folder.riskAnalysis?.isSensitive,
+              reason: folder.riskAnalysis?.reason,
+            },
+          })),
+        )
+        .subscribe({
+          next: (result) => {
+            this.stdout.write(JSON.stringify(result) + '\n');
+          },
+          error: (error) => {
+            const errOutput = { error: true, message: error.message };
+            process.stderr.write(JSON.stringify(errOutput) + '\n');
+          },
+          complete: () => {
+            process.exit(0);
+          },
+        });
+      return;
+    }
+
     this.uiStatus.reset();
     this.uiStatus.start();
 
@@ -499,7 +548,6 @@ export class CliController {
         complete: () => this.completeSearch(),
       });
   }
-
   private prepareListDirParams() {
     const params = {
       rootPath: this.config.folderRoot,
