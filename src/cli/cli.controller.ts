@@ -470,77 +470,49 @@ export class CliController {
   }
 
   private scan(): void {
+    this.initializeScan();
+
+    if (this.config.jsonStream) {
+      this.scanInJsonStreamMode();
+    } else {
+      this.scanInUiMode();
+    }
+  }
+
+  private initializeScan(): void {
     this.searchStatus.reset();
     this.resultsService.reset();
+  }
 
-    // TODO REFACTOR
-    if (this.config.jsonStream) {
-      this.scanService
-        .scan(this.config)
-        .pipe(
-          mergeMap((nodeFolder) =>
-            this.scanService.calculateFolderStats(nodeFolder),
-          ),
-          map((folder) => ({
-            path: folder.path,
-            size: convertGbToKb(folder.size),
-            newestFile: {
-              modificationTime: folder.modificationTime,
-              file: '// TODO PENDING',
-            },
-            riskAnalysis: {
-              isSensitive: folder.riskAnalysis?.isSensitive,
-              reason: folder.riskAnalysis?.reason,
-            },
-          })),
-        )
-        .subscribe({
-          next: (result) => {
-            this.stdout.write(JSON.stringify(result) + '\n');
-          },
-          error: (error) => {
-            const errOutput = { error: true, message: error.message };
-            process.stderr.write(JSON.stringify(errOutput) + '\n');
-          },
-          complete: () => {
-            process.exit(0);
-          },
-        });
-      return;
-    }
+  private scanInJsonStreamMode(): void {
+    this.scanService
+      .scan(this.config)
+      .pipe(
+        mergeMap((nodeFolder) =>
+          this.scanService.calculateFolderStats(nodeFolder),
+        ),
+        map((folder) => this.mapFolderToJsonOutput(folder)),
+      )
+      .subscribe({
+        next: (result) => this.writeJsonResult(result),
+        error: (error) => this.writeJsonError(error),
+        complete: () => process.exit(0),
+      });
+  }
 
+  private scanInUiMode(): void {
     this.uiStatus.reset();
     this.uiStatus.start();
-
-    const params = this.prepareListDirParams();
-    const { rootPath } = params;
-
     this.searchStart = Date.now();
 
     this.scanService
       .scan(this.config)
       .pipe(
-        tap((nodeFolder) => {
-          this.searchStatus.newResult();
-          this.resultsService.addResult(nodeFolder);
-
-          if (this.config.sortBy === 'path') {
-            this.resultsService.sortResults(this.config.sortBy);
-            this.uiResults.clear();
-          }
-
-          this.uiResults.render();
-        }),
-        mergeMap((nodeFolder) => {
-          return this.scanService.calculateFolderStats(nodeFolder);
-        }),
-        tap((folder) => {
-          this.searchStatus.completeStatCalculation();
-          this.finishFolderStats();
-          if (this.config.deleteAll) {
-            this.deleteFolder(folder);
-          }
-        }),
+        tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)),
+        mergeMap((nodeFolder) =>
+          this.scanService.calculateFolderStats(nodeFolder),
+        ),
+        tap((folder) => this.processFolderStatsForUi(folder)),
       )
       .subscribe({
         next: () => this.printFoldersSection(),
@@ -548,17 +520,50 @@ export class CliController {
         complete: () => this.completeSearch(),
       });
   }
-  private prepareListDirParams() {
-    const params = {
-      rootPath: this.config.folderRoot,
-      targets: this.config.targets,
-    };
 
-    if (this.config.exclude.length > 0) {
-      params['exclude'] = this.config.exclude;
+  private mapFolderToJsonOutput(folder: CliScanFoundFolder) {
+    return {
+      path: folder.path,
+      size: convertGbToKb(folder.size),
+      newestFile: {
+        modificationTime: folder.modificationTime,
+        file: '// TODO PENDING',
+      },
+      riskAnalysis: {
+        isSensitive: folder.riskAnalysis?.isSensitive,
+        reason: folder.riskAnalysis?.reason,
+      },
+    };
+  }
+
+  private writeJsonResult(result: any): void {
+    this.stdout.write(JSON.stringify(result) + '\n');
+  }
+
+  private writeJsonError(error: Error): void {
+    const errOutput = { error: true, message: error.message };
+    process.stderr.write(JSON.stringify(errOutput) + '\n');
+  }
+
+  private processNodeFolderForUi(nodeFolder: CliScanFoundFolder): void {
+    this.searchStatus.newResult();
+    this.resultsService.addResult(nodeFolder);
+
+    if (this.config.sortBy === 'path') {
+      this.resultsService.sortResults(this.config.sortBy);
+      this.uiResults.clear();
     }
 
-    return params;
+    this.uiResults.render();
+  }
+
+  private processFolderStatsForUi(folder: CliScanFoundFolder): void {
+    this.searchStatus.completeStatCalculation();
+    this.finishFolderStats();
+
+    if (this.config.deleteAll) {
+      this.deleteFolder(folder);
+    }
   }
 
   private finishFolderStats(): void {
