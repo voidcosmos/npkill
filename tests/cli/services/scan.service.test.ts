@@ -33,6 +33,7 @@ describe('ScanService', () => {
     showErrors: false,
     dryRun: false,
     yes: false,
+    jsonStream: false,
   };
 
   const mockScanFoundFolder: ScanFoundFolder = {
