@@ -284,7 +284,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       ? MARGINS.FOLDER_COLUMN_START + 1
       : MARGINS.FOLDER_COLUMN_START;
 
-    if (isRowSelected && !this.selectMode) {
+    if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
       lastModification = colors[this.config.backgroundColor](lastModification);
@@ -295,7 +295,15 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
 
     if (folder.riskAnalysis?.isSensitive) {
-      path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
+      path += '⚠️';
+    }
+
+    const isFolderSelected = this.selectedFolders.has(folder.path);
+    if (folder.riskAnalysis?.isSensitive) {
+      path =
+        colors[isFolderSelected ? 'blue' : DEFAULT_CONFIG.warningColor](path);
+    } else if (!isRowSelected && isFolderSelected) {
+      path = colors.blue(path);
     }
 
     if (this.selectMode && this.selectedFolders.has(folder.path)) {
