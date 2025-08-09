@@ -512,7 +512,9 @@ export class CliController {
       .scan(this.config)
       .pipe(
         mergeMap((nodeFolder) =>
-          this.scanService.calculateFolderStats(nodeFolder),
+          this.scanService.calculateFolderStats(nodeFolder, {
+            getModificationTimeForSensitiveResults: true,
+          }),
         ),
         tap((folder) => this.jsonOutputService.processResult(folder)),
       )

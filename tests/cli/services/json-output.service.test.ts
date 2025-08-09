@@ -51,7 +51,7 @@ describe('JsonOutputService', () => {
         version: 1,
         result: {
           path: '/test/node_modules',
-          size: 1024,
+          size: 1099511627776,
           modificationTime: 1640995200000,
           riskAnalysis: {
             isSensitive: false,
@@ -94,12 +94,12 @@ describe('JsonOutputService', () => {
         results: [
           {
             path: '/test/node_modules',
-            size: 1024,
+            size: 1099511627776,
             modificationTime: 1640995200000,
           },
           {
             path: '/test2/node_modules',
-            size: 2048,
+            size: 2199023255552,
             modificationTime: 1640995300000,
           },
         ],

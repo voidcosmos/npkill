@@ -10,6 +10,10 @@ import { Observable, filter, firstValueFrom, map, switchMap, tap } from 'rxjs';
 import { convertBytesToGb } from '../../utils/unit-conversions.js';
 import { join } from 'path';
 
+export interface CalculateFolderStatsOptions {
+  getModificationTimeForSensitiveResults: boolean;
+}
+
 export class ScanService {
   constructor(private readonly npkill: Npkill) {}
 
@@ -47,14 +51,20 @@ export class ScanService {
 
   calculateFolderStats(
     nodeFolder: CliScanFoundFolder,
+    options: CalculateFolderStatsOptions = {
+      /** Saves resources by not scanning a result that is probably not of interest. */
+      getModificationTimeForSensitiveResults: false,
+    },
   ): Observable<CliScanFoundFolder> {
     return this.npkill.getSize$(nodeFolder.path).pipe(
       tap(({ size }) => {
         nodeFolder.size = convertBytesToGb(size);
       }),
       switchMap(async () => {
-        // Saves resources by not scanning a result that is probably not of interest
-        if (nodeFolder.riskAnalysis?.isSensitive) {
+        if (
+          nodeFolder.riskAnalysis?.isSensitive &&
+          !options.getModificationTimeForSensitiveResults
+        ) {
           nodeFolder.modificationTime = -1;
           return nodeFolder;
         }
