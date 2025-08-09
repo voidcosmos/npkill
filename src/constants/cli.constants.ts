@@ -86,6 +86,11 @@ export const OPTIONS: ICliOptions[] = [
     name: 'jsonStream',
   },
   {
+    arg: ['--json'],
+    description: 'Output results in a JSON format.',
+    name: 'jsonSimple',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',

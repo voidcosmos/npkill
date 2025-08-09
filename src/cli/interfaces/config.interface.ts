@@ -14,4 +14,5 @@ export interface IConfig {
   dryRun: boolean;
   yes: boolean;
   jsonStream: boolean;
+  jsonSimple: boolean;
 }

@@ -41,13 +41,12 @@ import { Npkill } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
-import { convertGbToKb } from '../utils/unit-conversions.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 import { ScanService } from './services/scan.service.js';
+import { JsonOutputService } from './services/json-output.service.js';
 
 export class CliController {
-  private readonly stdout: NodeJS.WriteStream = process.stdout;
   private readonly config: IConfig = DEFAULT_CONFIG;
 
   private searchStart: number;
@@ -63,6 +62,7 @@ export class CliController {
   private activeComponent: InteractiveUi | null = null;
 
   constructor(
+    private readonly stdout: NodeJS.WriteStream,
     private readonly npkill: Npkill,
     private readonly logger: LoggerService,
     private readonly searchStatus: ScanStatus,
@@ -72,6 +72,7 @@ export class CliController {
     private readonly updateService: UpdateService,
     private readonly uiService: UiService,
     private readonly scanService: ScanService,
+    private readonly jsonOutputService: JsonOutputService,
   ) {}
 
   init(): void {
@@ -81,6 +82,14 @@ export class CliController {
 
     if (this.config.jsonStream) {
       this.logger.info('JSON stream mode enabled.');
+      this.setupJsonModeSignalHandlers();
+      this.scan();
+      return;
+    }
+
+    if (this.config.jsonSimple) {
+      this.logger.info('JSON simple mode enabled.');
+      this.setupJsonModeSignalHandlers();
       this.scan();
       return;
     }
@@ -306,6 +315,15 @@ export class CliController {
       this.config.jsonStream = true;
     }
 
+    if (options.isTrue('jsonSimple')) {
+      this.config.jsonSimple = true;
+    }
+
+    if (this.config.jsonStream && this.config.jsonSimple) {
+      this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
+      this.exitWithError();
+    }
+
     // Remove trailing slash from folderRoot for consistency
     this.config.folderRoot = this.config.folderRoot.replace(/[/\\]$/, '');
   }
@@ -472,8 +490,10 @@ export class CliController {
   private scan(): void {
     this.initializeScan();
 
-    if (this.config.jsonStream) {
-      this.scanInJsonStreamMode();
+    const shouldOutputInJson = this.config.jsonSimple || this.config.jsonStream;
+
+    if (shouldOutputInJson) {
+      this.scanInJson();
     } else {
       this.scanInUiMode();
     }
@@ -484,19 +504,24 @@ export class CliController {
     this.resultsService.reset();
   }
 
-  private scanInJsonStreamMode(): void {
+  private scanInJson(): void {
+    const isStreamMode = this.config.jsonStream;
+    this.jsonOutputService.initializeSession(isStreamMode);
+
     this.scanService
       .scan(this.config)
       .pipe(
         mergeMap((nodeFolder) =>
           this.scanService.calculateFolderStats(nodeFolder),
         ),
-        map((folder) => this.mapFolderToJsonOutput(folder)),
+        tap((folder) => this.jsonOutputService.processResult(folder)),
       )
       .subscribe({
-        next: (result) => this.writeJsonResult(result),
-        error: (error) => this.writeJsonError(error),
-        complete: () => process.exit(0),
+        error: (error) => this.jsonOutputService.writeError(error),
+        complete: () => {
+          this.jsonOutputService.completeScan();
+          process.exit(0);
+        },
       });
   }
 
@@ -521,28 +546,14 @@ export class CliController {
       });
   }
 
-  private mapFolderToJsonOutput(folder: CliScanFoundFolder) {
-    return {
-      path: folder.path,
-      size: convertGbToKb(folder.size),
-      newestFile: {
-        modificationTime: folder.modificationTime,
-        file: '// TODO PENDING',
-      },
-      riskAnalysis: {
-        isSensitive: folder.riskAnalysis?.isSensitive,
-        reason: folder.riskAnalysis?.reason,
-      },
+  private setupJsonModeSignalHandlers(): void {
+    const gracefulShutdown = () => {
+      this.jsonOutputService.handleShutdown();
+      process.exit(0);
     };
-  }
 
-  private writeJsonResult(result: any): void {
-    this.stdout.write(JSON.stringify(result) + '\n');
-  }
-
-  private writeJsonError(error: Error): void {
-    const errOutput = { error: true, message: error.message };
-    process.stderr.write(JSON.stringify(errOutput) + '\n');
+    process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
   }
 
   private processNodeFolderForUi(nodeFolder: CliScanFoundFolder): void {

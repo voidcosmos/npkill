@@ -40,6 +40,8 @@ export const ERROR_MSG = {
   CANT_DELETE_FOLDER:
     'The directory cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
+  CANT_USE_BOTH_JSON_OPTIONS:
+    'Cannot use both --json and --json-stream options simultaneously.',
 };
 
 export const RESULT_TYPE_INFO = {

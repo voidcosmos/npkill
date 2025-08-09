@@ -107,7 +107,6 @@ describe('Npkill', () => {
       const mockFolderData = 'folder1\nfolder2\nfolder3';
       const mockRiskAnalysis: RiskAnalysis = {
         isSensitive: false,
-        reason: 'Safe to delete',
       };
 
       fileServiceMock.listDir.mockReturnValue(of(mockFolderData));

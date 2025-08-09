@@ -23,6 +23,7 @@ export const DEFAULT_CONFIG: IConfig = {
   targets: ['node_modules'],
   yes: false,
   jsonStream: false,
+  jsonSimple: false,
 };
 
 export const MARGINS = {
