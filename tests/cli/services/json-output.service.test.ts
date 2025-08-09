@@ -141,7 +141,7 @@ describe('JsonOutputService', () => {
         version: 1,
         error: true,
         message: 'Test error message',
-        timestamp: expect.any(String),
+        timestamp: expect.any(Number),
       });
     });
 
@@ -157,7 +157,7 @@ describe('JsonOutputService', () => {
         version: 1,
         error: true,
         message: 'String error message',
-        timestamp: expect.any(String),
+        timestamp: expect.any(Number),
       });
     });
   });

@@ -31,5 +31,5 @@ export interface JsonSimpleOutput extends JsonOutputBase {
 export interface JsonErrorOutput extends JsonOutputBase {
   error: true;
   message: string;
-  timestamp: string;
+  timestamp: number; // Unix timestamp in milliseconds
 }

@@ -86,7 +86,7 @@ export class JsonOutputService {
       version: this.OUTPUT_VERSION,
       error: true,
       message: errorMessage,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().getDate(),
     };
 
     this.stderr.write(JSON.stringify(errorOutput) + '\n');
