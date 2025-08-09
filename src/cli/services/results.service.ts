@@ -1,8 +1,10 @@
 import { CliScanFoundFolder, IStats } from '../interfaces/index.js';
 import { FOLDER_SORT } from '../../constants/sort.result.js';
+import { formatSize } from '../../utils/unit-conversions.js';
 
 export class ResultsService {
   results: CliScanFoundFolder[] = [];
+  private sizeUnit: 'auto' | 'mb' | 'gb' = 'auto';
 
   addResult(result: CliScanFoundFolder): void {
     this.results = [...this.results, result];
@@ -16,6 +18,10 @@ export class ResultsService {
     this.results = [];
   }
 
+  setSizeUnit(sizeUnit: 'auto' | 'mb' | 'gb'): void {
+    this.sizeUnit = sizeUnit;
+  }
+
   getStats(): IStats {
     let spaceReleased = 0;
 
@@ -27,9 +33,12 @@ export class ResultsService {
       return total + folder.size;
     }, 0);
 
+    const formattedTotal = formatSize(totalSpace, this.sizeUnit);
+    const formattedReleased = formatSize(spaceReleased, this.sizeUnit);
+
     return {
-      spaceReleased: `${spaceReleased.toFixed(2)} GB`,
-      totalSpace: `${totalSpace.toFixed(2)} GB`,
+      spaceReleased: formattedReleased.text,
+      totalSpace: formattedTotal.text,
     };
   }
 }

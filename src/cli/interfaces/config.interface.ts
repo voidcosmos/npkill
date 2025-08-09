@@ -4,7 +4,7 @@ export interface IConfig {
   warningColor: string;
   checkUpdates: boolean;
   deleteAll: boolean;
-  folderSizeInGB: boolean;
+  sizeUnit: 'auto' | 'mb' | 'gb';
   maxSimultaneousSearch: number;
   showErrors: boolean;
   sortBy: string;

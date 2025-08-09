@@ -16,7 +16,7 @@ export const DEFAULT_CONFIG: IConfig = {
   dryRun: false,
   exclude: ['.git'],
   excludeHiddenDirectories: false,
-  folderSizeInGB: false,
+  sizeUnit: 'auto',
   maxSimultaneousSearch: 6,
   showErrors: true,
   sortBy: 'none',
