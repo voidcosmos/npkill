@@ -388,7 +388,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       scrollPercentage * (end - start) + start,
     );
 
-    for (let i = start; i < end; i++) {
+    for (let i = start; i <= end; i++) {
       this.printAt(SCROLLBAR_BG, {
         x: this.terminal.columns - 1,
         y: i,
