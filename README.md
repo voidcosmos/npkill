@@ -30,6 +30,7 @@ We're making an effort to internationalize the Npkill docs. Here's a list of the
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Multi-Select Mode](#multi-select-mode)
   - [Options](#options)
   - [Examples](#examples)
   - [JSON Output](#json-output)
@@ -94,6 +95,30 @@ You can open the directory where the selected result is placed by pressing <kbd>
 To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 **Important!** Some applications installed on the system need their node_modules directory to work and deleting them may break them. NPKILL will highlight them by displaying a :warning: to be careful.
+
+## Multi-Select Mode
+
+This mode allows you to select and delete multiple folders at once, making it more efficient when cleaning up many directories.
+
+### Entering Multi-Select Mode
+
+Press <kbd>T</kbd> to toggle multi-select mode. When active, you'll see a selection counter and additional instructions at the top of the results.
+
+### Controls
+
+- **<kbd>Space</kbd>**: Toggle selection of the current folder.
+- **<kbd>V</kbd>**: Start/end range selection mode.
+- **<kbd>A</kbd>**: Toggle select/unselect all folders.
+- **<kbd>Enter</kbd>**: Delete all selected folders.
+- **<kbd>T</kbd>**: Unselect all and back to normal mode.
+
+### Range Selection
+
+After pressing <kbd>V</kbd> to enter range selection mode:
+
+- Move the cursor with arrow keys, <kbd>j</kbd>/<kbd>k</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>, or page up/down
+- All folders between the starting position and current cursor position will be selected/deselected
+- Press <kbd>V</kbd> again to exit range selection mode
 
 <a name="options"></a>
 

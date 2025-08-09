@@ -24,8 +24,13 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   previousIndex = 0;
   scroll: number = 0;
   private haveResultsAfterCompleted = true;
+  private selectMode = false;
+  private selectedFolders: Map<string, CliScanFoundFolder> = new Map();
+  private rangeSelectionStart: number | null = null;
+  private isRangeSelectionMode: boolean = false;
 
   readonly delete$ = new Subject<CliScanFoundFolder>();
+  readonly deleteMultiple$ = new Subject<CliScanFoundFolder[]>();
   readonly showErrors$ = new Subject<null>();
   readonly openFolder$ = new Subject<string>();
   readonly showDetails$ = new Subject<CliScanFoundFolder>();
@@ -36,8 +41,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   private readonly KEYS = {
     up: () => this.cursorUp(),
     down: () => this.cursorDown(),
-    space: () => this.delete(),
-    delete: () => this.delete(),
+    space: () => this.handleSpacePress(),
+    delete: () => this.handleSpacePress(),
     j: () => this.cursorDown(),
     k: () => this.cursorUp(),
     h: () => this.goOptions(),
@@ -53,6 +58,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     right: () => this.showDetails(),
     left: () => this.goOptions(),
     q: () => this.endNpkill(),
+    t: () => this.toggleSelectMode(),
+    return: () => this.deleteSelected(),
+    enter: () => this.deleteSelected(),
+    v: () => this.startRangeSelection(),
+    a: () => this.toggleSelectAll(),
   };
 
   constructor(
@@ -84,6 +94,127 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.endNpkill$.next(null);
   }
 
+  private toggleSelectMode(): void {
+    this.selectMode = !this.selectMode;
+    if (!this.selectMode) {
+      this.selectedFolders.clear();
+      this.rangeSelectionStart = null;
+      this.isRangeSelectionMode = false;
+    }
+  }
+
+  private startRangeSelection(): void {
+    if (!this.selectMode) {
+      return;
+    }
+
+    if (this.isRangeSelectionMode) {
+      // Selection mode was started, so end the range.
+      this.isRangeSelectionMode = false;
+      this.rangeSelectionStart = null;
+      return;
+    }
+
+    this.isRangeSelectionMode = true;
+    this.rangeSelectionStart = this.resultIndex;
+
+    const folder = this.resultsService.results[this.resultIndex];
+    if (folder) {
+      if (this.selectedFolders.has(folder.path)) {
+        this.selectedFolders.delete(folder.path);
+      } else {
+        this.selectedFolders.set(folder.path, folder);
+      }
+    }
+  }
+
+  private toggleSelectAll(): void {
+    if (!this.selectMode) {
+      return;
+    }
+
+    const allFolders = this.resultsService.results;
+    const totalFolders = allFolders.length;
+    const selectedCount = this.selectedFolders.size;
+
+    // If all folders are selected, deselect all
+    // If some or none are selected, select all
+    if (selectedCount === totalFolders) {
+      this.selectedFolders.clear();
+    } else {
+      allFolders.forEach((folder) => {
+        this.selectedFolders.set(folder.path, folder);
+      });
+    }
+  }
+
+  private handleSpacePress(): void {
+    if (!this.selectMode) {
+      this.delete();
+      return;
+    }
+
+    this.toggleFolderSelection();
+  }
+
+  private toggleFolderSelection(): void {
+    const folder = this.resultsService.results[this.resultIndex];
+    if (!folder) {
+      return;
+    }
+
+    if (this.selectedFolders.has(folder.path)) {
+      this.selectedFolders.delete(folder.path);
+    } else {
+      this.selectedFolders.set(folder.path, folder);
+    }
+  }
+
+  private applyRangeSelection(): void {
+    if (
+      !this.selectMode ||
+      !this.isRangeSelectionMode ||
+      this.rangeSelectionStart === null
+    ) {
+      return;
+    }
+
+    const start = Math.min(this.rangeSelectionStart, this.resultIndex);
+    const end = Math.max(this.rangeSelectionStart, this.resultIndex);
+
+    const firstFolder = this.resultsService.results[this.rangeSelectionStart];
+    if (!firstFolder) {
+      return;
+    }
+
+    const shouldSelect = this.selectedFolders.has(firstFolder.path);
+
+    for (let i = start; i <= end; i++) {
+      const folder = this.resultsService.results[i];
+      if (!folder) {
+        continue;
+      }
+
+      if (shouldSelect) {
+        this.selectedFolders.set(folder.path, folder);
+      } else {
+        this.selectedFolders.delete(folder.path);
+      }
+    }
+  }
+
+  private deleteSelected(): void {
+    if (!this.selectMode || this.selectedFolders.size === 0) {
+      return;
+    }
+
+    const selectedFolders = this.selectedFolders.entries();
+    for (const [, folder] of selectedFolders) {
+      this.delete$.next(folder);
+    }
+    this.selectedFolders.clear();
+  }
+
   onKeyInput({ name }: IKeyPress): void {
     const action: (() => void) | undefined = this.KEYS[name];
     if (action === undefined) {
@@ -107,6 +238,37 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
 
     this.printResults();
+
+    const tagStartXPosition = 16;
+    // 14 for the selection counter, 56 for the instruction message
+    const clearSelectionCounterText = ' '.repeat(14 + 56);
+    this.printAt(clearSelectionCounterText, {
+      x: tagStartXPosition,
+      y: MARGINS.ROW_RESULTS_START - 2,
+    });
+    if (this.selectMode) {
+      const selectedMessage = ` ${this.selectedFolders.size} selected `;
+      this.printAt(colors.bgYellow.black(selectedMessage), {
+        x: tagStartXPosition,
+        y: MARGINS.ROW_RESULTS_START - 2,
+      });
+
+      const instructionMessage = colors.gray(
+        colors.bold('SPACE') +
+          ': toggle | ' +
+          colors.bold('v') +
+          ': range | ' +
+          colors.bold('a') +
+          ': select all | ' +
+          colors.bold('ENTER') +
+          ': delete',
+      );
+      this.printAt(instructionMessage, {
+        x: tagStartXPosition + selectedMessage.length + 1,
+        y: MARGINS.ROW_RESULTS_START - 2,
+      });
+    }
+
     this.printScrollBar();
     this.flush();
   }
@@ -151,20 +313,44 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const isRowSelected = row === this.getRealCursorPosY();
 
     lastModification = colors.gray(lastModification);
+
+    // Adjust column start based on select mode
+    const pathColumnStart = this.selectMode
+      ? MARGINS.FOLDER_COLUMN_START + 1
+      : MARGINS.FOLDER_COLUMN_START;
+
     if (isRowSelected) {
       path = colors[this.config.backgroundColor](path);
       size = colors[this.config.backgroundColor](size);
       lastModification = colors[this.config.backgroundColor](lastModification);
 
       this.paintBgRow(row);
+    } else if (isRowSelected && this.selectMode) {
+      this.paintCursorCell(row);
     }
 
     if (folder.riskAnalysis?.isSensitive) {
-      path = colors[DEFAULT_CONFIG.warningColor](path + '⚠️');
+      path += '⚠️';
+    }
+
+    const isFolderSelected = this.selectedFolders.has(folder.path);
+    if (folder.riskAnalysis?.isSensitive) {
+      path =
+        colors[isFolderSelected ? 'blue' : DEFAULT_CONFIG.warningColor](path);
+    } else if (!isRowSelected && isFolderSelected) {
+      path = colors.blue(path);
+    }
+
+    if (this.selectMode && this.selectedFolders.has(folder.path)) {
+      this.rangeSelectedCursor(row);
+    }
+
+    if (this.selectMode && this.isRangeSelectionMode && isRowSelected) {
+      this.selectionCursor(row);
     }
 
     this.printAt(path, {
-      x: MARGINS.FOLDER_COLUMN_START,
+      x: pathColumnStart,
       y: row,
     });
     this.printAt(lastModification, {
@@ -173,6 +359,28 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
     this.printAt(size, {
       x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN,
+      y: row,
+    });
+  }
+
+  private paintCursorCell(row: number): void {
+    this.printAt(colors[this.config.backgroundColor](' '), {
+      x: MARGINS.FOLDER_COLUMN_START - 1,
+      y: row,
+    });
+  }
+
+  private rangeSelectedCursor(row: number): void {
+    this.printAt('●', {
+      x: MARGINS.FOLDER_COLUMN_START,
+      y: row,
+    });
+  }
+
+  private selectionCursor(row: number): void {
+    const indicator = this.isRangeSelectionMode ? '●' : ' ';
+    this.printAt(colors.yellow(indicator), {
+      x: MARGINS.FOLDER_COLUMN_START - 1,
       y: row,
     });
   }
@@ -309,6 +517,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
 
     this.fitScroll();
+
+    if (this.isRangeSelectionMode) {
+      this.applyRangeSelection();
+    }
   }
 
   private getFolderPathText(folder: CliScanFoundFolder): string {
@@ -333,9 +545,14 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       ACTIONS[folder.status]();
     }
 
+    // Adjust text width based if select mode is enabled
+    const columnEnd = this.selectMode
+      ? MARGINS.FOLDER_COLUMN_END + 1
+      : MARGINS.FOLDER_COLUMN_END;
+
     text = this.consoleService.shortenText(
       text,
-      this.terminal.columns - MARGINS.FOLDER_COLUMN_END,
+      this.terminal.columns - columnEnd,
       cutFrom,
     );
 
