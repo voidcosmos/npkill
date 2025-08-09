@@ -94,7 +94,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     };
 
     // Header
-    this.printAt(colors.bold.underline.bgYellow.black('  Result Details  '), {
+    this.printAt(colors.bold.bgYellow.black('  Result Details  '), {
       x: 1,
       y: currentRow++,
     });
