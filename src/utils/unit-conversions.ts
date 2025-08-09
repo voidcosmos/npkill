@@ -16,3 +16,7 @@ export function convertGbToKb(gb: number): number {
   const factorGBtoKB = 1024 * 1024;
   return gb * factorGBtoKB;
 }
+
+export function convertGbToBytes(gb: number): number {
+  return gb * Math.pow(1024, 3);
+}

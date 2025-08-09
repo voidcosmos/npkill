@@ -5,6 +5,7 @@ import {
   JsonErrorOutput,
   JsonCliScanFoundFolder,
 } from '../interfaces/json-output.interface.js';
+import { convertGbToBytes } from '../../utils/unit-conversions.js';
 
 export class JsonOutputService {
   private readonly OUTPUT_VERSION = 1;
@@ -107,7 +108,7 @@ export class JsonOutputService {
   ): JsonCliScanFoundFolder {
     return {
       path: folder.path,
-      size: folder.size,
+      size: convertGbToBytes(folder.size),
       modificationTime: folder.modificationTime,
       riskAnalysis: folder.riskAnalysis
         ? {
