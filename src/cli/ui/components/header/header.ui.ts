@@ -45,10 +45,12 @@ export class HeaderUi extends BaseUi {
     }
 
     // Columns headers
-    this.printAt(colors.bgYellow(colors.black(INFO_MSGS.HEADER_COLUMNS)), {
-      x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 4,
-      y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
-    });
+    if (this.activeMenuIndex === MENU_BAR_OPTIONS.DELETE) {
+      this.printAt(colors.bgYellow(colors.black(INFO_MSGS.HEADER_COLUMNS)), {
+        x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 2,
+        y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
+      });
+    }
 
     // npkill stats
     this.printAt(
@@ -63,7 +65,7 @@ export class HeaderUi extends BaseUi {
 
   private renderHeader(): void {
     const { columns } = this.terminal;
-    const spaceToFill = Math.max(0, columns - MENU_BAR.OPTIONS.length - 2);
+    const spaceToFill = Math.max(0, columns - 2);
     this.printAt(
       colors.bgYellow(' '.repeat(spaceToFill)),
       UI_POSITIONS.TUTORIAL_TIP,
