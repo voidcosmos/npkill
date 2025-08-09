@@ -135,7 +135,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private noResults(): void {
     const targetFolderColored: string = colors[DEFAULT_CONFIG.warningColor](
-      this.config.targets,
+      this.config.targets.join(', '),
     );
     const message = `No ${targetFolderColored} found!`;
     this.printAt(message, {
