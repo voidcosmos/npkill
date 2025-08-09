@@ -92,10 +92,11 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         options: Object.values(COLORS),
       },
       {
-        label: 'Show sizes in GB.',
-        type: 'checkbox',
-        key: 'folderSizeInGB',
-        value: this.config.folderSizeInGB,
+        label: 'Size unit',
+        type: 'dropdown',
+        key: 'sizeUnit',
+        value: this.config.sizeUnit,
+        options: ['auto', 'mb', 'gb'],
       },
       {
         label: 'Exclude hidden dirs.',
@@ -144,7 +145,13 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
       const idx = opt.options!.indexOf(opt.value as string);
       const next = (idx + 1) % opt.options!.length;
       opt.value = opt.options![next] as IConfig[typeof key];
-      this.config[key] = opt.value;
+
+      if (opt.key === 'sizeUnit') {
+        this.config[key] = opt.value as IConfig['sizeUnit'];
+      } else {
+        this.config[opt.key as any] = opt.value as IConfig[typeof opt.key];
+      }
+
       this.emitConfigChange(opt.key, opt.value);
       this.render();
     } else if (opt.type === 'input') {
@@ -182,7 +189,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         >;
         const newValue: IConfig[typeof opt.key] = this
           .editBuffer as IConfig[typeof opt.key];
-        this.config[key] = newValue as unknown as string;
+        this.config[key as any] = newValue as unknown as string;
         opt.value = newValue;
         this.emitConfigChange(opt.key, newValue);
       }
