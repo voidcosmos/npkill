@@ -218,18 +218,32 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     this.printResults();
 
+    const tagStartXPosition = 16;
+    // 14 for the selection counter, 56 for the instruction message
+    const clearSelectionCounterText = ' '.repeat(14 + 56);
+    this.printAt(clearSelectionCounterText, {
+      x: tagStartXPosition,
+      y: MARGINS.ROW_RESULTS_START - 2,
+    });
     if (this.selectMode) {
-      this.printAt(
-        colors.bgYellow.black(` ${this.selectedFolders.size} selected `),
-        {
-          x: 16,
-          y: MARGINS.ROW_RESULTS_START - 2,
-        },
+      const selectedMessage = ` ${this.selectedFolders.size} selected `;
+      this.printAt(colors.bgYellow.black(selectedMessage), {
+        x: tagStartXPosition,
+        y: MARGINS.ROW_RESULTS_START - 2,
+      });
+
+      const instructionMessage = colors.gray(
+        colors.bold('SPACE') +
+          ': toggle | ' +
+          colors.bold('v') +
+          ': range | ' +
+          colors.bold('a') +
+          ': select all | ' +
+          colors.bold('ENTER') +
+          ': delete',
       );
-    } else {
-      const clearSelectionCounterText = ' '.repeat(14);
-      this.printAt(clearSelectionCounterText, {
-        x: 16,
+      this.printAt(instructionMessage, {
+        x: tagStartXPosition + selectedMessage.length + 1,
         y: MARGINS.ROW_RESULTS_START - 2,
       });
     }
