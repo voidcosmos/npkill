@@ -372,8 +372,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private printScrollBar(): void {
-    const SCROLLBAR_CHAR = colors.gray('█');
+    const SCROLLBAR_ACTIVE = colors.gray('█');
     const SCROLLBAR_BG = colors.gray('░');
+
     const totalResults = this.resultsService.results.length;
     const visibleRows = this.getRowsAvailable();
 
@@ -395,7 +396,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       });
     }
 
-    this.printAt(SCROLLBAR_CHAR, {
+    this.printAt(SCROLLBAR_ACTIVE, {
       x: this.terminal.columns - 1,
       y: scrollBarPosition,
     });
