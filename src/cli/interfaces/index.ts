@@ -8,3 +8,4 @@ export * from './stats.interface.js';
 export * from './ui-positions.interface.js';
 export * from './version.interface.js';
 export * from './node-version.interface.js';
+export * from './json-output.interface.js';

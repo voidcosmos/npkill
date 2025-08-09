@@ -13,4 +13,6 @@ export interface IConfig {
   excludeHiddenDirectories: boolean;
   dryRun: boolean;
   yes: boolean;
+  jsonStream: boolean;
+  jsonSimple: boolean;
 }

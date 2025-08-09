@@ -9,6 +9,8 @@ import { ConsoleService } from '../../src/cli/services/console.service.js';
 import { UpdateService } from '../../src/cli/services/update.service.js';
 import { UiService } from '../../src/cli/services/ui.service.js';
 import { ScanService } from '../../src/cli/services/scan.service.js';
+import { ERROR_MSG } from '../../src/constants/messages.constants.js';
+import { JsonOutputService } from '../../src/cli/services/json-output.service.js';
 
 const resultsUiDeleteMock$ = new Subject<DeleteResult>();
 const setDeleteAllWarningVisibilityMock = jest.fn();
@@ -126,6 +128,12 @@ describe('CliController test', () => {
     startListenKeyEvents: jest.fn(),
   };
 
+  const jsonOutputServiceMock = {
+    initializeSession: jest.fn(),
+    writeStreamResult: jest.fn(),
+    getResultsCount: jest.fn(() => 0),
+  };
+
   const npkillDeleteMock = jest.fn();
   const npkillMock: Npkill = {
     logger: loggerServiceMock,
@@ -149,6 +157,7 @@ describe('CliController test', () => {
       throw new Error('process.exit: ' + number);
     });
     cliController = new CliController(
+      process.stdout,
       npkillMock,
       loggerServiceMock as LoggerService,
       searchStatusMock as unknown as ScanStatus,
@@ -158,6 +167,7 @@ describe('CliController test', () => {
       updateServiceMock as unknown as UpdateService,
       uiServiceMock as unknown as UiService,
       scanServiceMock as unknown as ScanService,
+      jsonOutputServiceMock as unknown as JsonOutputService,
     );
 
     Object.defineProperty(process.stdout, 'columns', { value: 80 });
@@ -307,6 +317,42 @@ describe('CliController test', () => {
         expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
           dryRun: true,
         });
+      });
+    });
+
+    describe('--json and --json-stream options', () => {
+      it('Should enable JSON stream mode when --json-stream is provided', () => {
+        mockParameters({ jsonStream: true });
+        const setupJsonSignalsSpy = spyMethod('setupJsonModeSignalHandlers');
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.init();
+
+        expect(setupJsonSignalsSpy).toHaveBeenCalledTimes(1);
+        expect(scanSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should enable JSON simple mode when --json is provided', () => {
+        mockParameters({ jsonSimple: true });
+        const setupJsonSignalsSpy = spyMethod('setupJsonModeSignalHandlers');
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.init();
+
+        expect(setupJsonSignalsSpy).toHaveBeenCalledTimes(1);
+        expect(scanSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should show error and exit when both --json and --json-stream are provided', () => {
+        mockParameters({ jsonSimple: true, jsonStream: true });
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.init();
+
+        expect(loggerServiceMock.error).toHaveBeenCalledWith(
+          ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS,
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
     });
   });

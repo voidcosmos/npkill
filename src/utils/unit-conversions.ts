@@ -12,6 +12,15 @@ export function convertGBToMB(gb: number): number {
   return gb * factorGBtoMB;
 }
 
+export function convertGbToKb(gb: number): number {
+  const factorGBtoKB = 1024 * 1024;
+  return gb * factorGBtoKB;
+}
+
+export function convertGbToBytes(gb: number): number {
+  return gb * Math.pow(1024, 3);
+}
+
 export interface FormattedSize {
   value: number;
   unit: 'MB' | 'GB';

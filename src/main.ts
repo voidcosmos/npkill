@@ -1,6 +1,7 @@
 import {
   ConsoleService,
   HttpsService,
+  JsonOutputService,
   ResultsService,
   SpinnerService,
   UpdateService,
@@ -20,7 +21,11 @@ export default (): void => {
 
   const npkill = new Npkill({ logger, searchStatus, resultsService });
 
+  const stdOut = process.stdout;
+  const jsonOutputService = new JsonOutputService(stdOut, process.stderr);
+
   const cli = new CliController(
+    stdOut,
     npkill,
     logger,
     searchStatus,
@@ -30,6 +35,7 @@ export default (): void => {
     new UpdateService(new HttpsService()),
     new UiService(),
     new ScanService(npkill),
+    jsonOutputService,
   );
 
   cli.init();
