@@ -167,7 +167,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       y: row,
     });
     this.printAt(lastModification, {
-      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
+      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN - 4,
       y: row,
     });
     this.printAt(size, {
