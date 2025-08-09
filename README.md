@@ -107,7 +107,7 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 | -e, --hide-errors                | Hide errors if any                                                                                                                                                                  |
 | -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                      |
 | -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                          |
-| -gb                              | Show folders in Gigabytes instead of Megabytes.                                                                                                                                     |
+| --size-unit                      | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).                 |
 | -h, --help, ?                    | Show this help page and exit                                                                                                                                                        |
 | -nu, --no-check-update           | Don't check for updates on startup                                                                                                                                                  |
 | -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                                                       |
@@ -150,7 +150,7 @@ npkill --bg-color magenta
 - List **vendor** directories in your _projects_ directory, sort by size, and show size in gb:
 
 ```bash
-npkill -d '~/more projects' -gb --sort size --target vendor
+npkill -d '~/more projects' --size-unit gb --sort size --target vendor
 ```
 
 - List **node_modules** in your _projects_ directory, excluding the ones in _progress_ and _ignore-this_ directories:

@@ -184,6 +184,9 @@ export class CliController {
       if (configChanges.sortBy) {
         this.resultsService.sortResults(configChanges.sortBy);
       }
+      if (configChanges.sizeUnit) {
+        this.resultsService.setSizeUnit(configChanges.sizeUnit);
+      }
       this.logger.info(`Config updated: ${JSON.stringify(configChanges)}`);
       this.uiService.renderAll();
     });
@@ -220,7 +223,7 @@ export class CliController {
   }
 
   private openResultsDetails(folder: CliScanFoundFolder): void {
-    const detailsUi = new ResultDetailsUi(folder);
+    const detailsUi = new ResultDetailsUi(folder, this.config);
     this.uiResults.clear();
     this.uiResults.setVisible(false);
 
@@ -287,8 +290,14 @@ export class CliController {
     if (options.isTrue('hide-errors')) {
       this.config.showErrors = false;
     }
-    if (options.isTrue('gb')) {
-      this.config.folderSizeInGB = true;
+    if (options.isTrue('size-unit')) {
+      const sizeUnit = options.getString('size-unit');
+      if (this.isValidSizeUnit(sizeUnit)) {
+        this.config.sizeUnit = sizeUnit as 'auto' | 'mb' | 'gb';
+      } else {
+        this.invalidSizeUnitParam();
+        return;
+      }
     }
     if (options.isTrue('no-check-updates')) {
       this.config.checkUpdates = false;
@@ -370,6 +379,16 @@ export class CliController {
 
   private isValidSortParam(sortName: string): boolean {
     return Object.keys(FOLDER_SORT).includes(sortName);
+  }
+
+  private isValidSizeUnit(sizeUnit: string): boolean {
+    return ['auto', 'mb', 'gb'].includes(sizeUnit);
+  }
+
+  private invalidSizeUnitParam(): void {
+    this.uiService.print(INFO_MSGS.NO_VALID_SIZE_UNIT);
+    this.logger.error(INFO_MSGS.NO_VALID_SIZE_UNIT);
+    this.exitWithError();
   }
 
   private getVersion(): string {
@@ -502,6 +521,7 @@ export class CliController {
   private initializeScan(): void {
     this.searchStatus.reset();
     this.resultsService.reset();
+    this.resultsService.setSizeUnit(this.config.sizeUnit);
   }
 
   private scanInJson(): void {

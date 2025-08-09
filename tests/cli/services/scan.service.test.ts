@@ -28,7 +28,7 @@ describe('ScanService', () => {
     warningColor: '',
     checkUpdates: false,
     deleteAll: false,
-    folderSizeInGB: false,
+    sizeUnit: 'auto',
     maxSimultaneousSearch: 0,
     showErrors: false,
     dryRun: false,

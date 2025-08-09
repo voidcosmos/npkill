@@ -17,7 +17,7 @@ import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
-import { convertGBToMB } from '../../../utils/unit-conversions.js';
+import { formatSize } from '../../../utils/unit-conversions.js';
 
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
@@ -182,7 +182,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     lastModification: string;
   } {
     const folderText = this.getFolderPathText(folder);
-    let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
+    const formattedSize = formatSize(
+      folder.size,
+      this.config.sizeUnit,
+      DECIMALS_SIZE,
+    );
     let daysSinceLastModification: string;
 
     if (folder.modificationTime !== null && folder.modificationTime > 0) {
@@ -202,15 +206,13 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     daysSinceLastModification =
       ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
 
-    if (!this.config.folderSizeInGB) {
-      const size = convertGBToMB(folder.size);
-      // Prevent app crash when folder size is +999MB.
-      const decimals = size < 999 ? DECIMALS_SIZE : 1;
-      const sizeText = size.toFixed(decimals);
-      const OFFSET_COLUMN = 6;
-      const space = ' '.repeat(OFFSET_COLUMN - sizeText.length);
-      folderSize = `${space}${sizeText} MB`;
-    }
+    const OFFSET_COLUMN = 9;
+    let folderSize = formattedSize.text;
+
+    // Right-align size text
+    const sizeLength = folderSize.length;
+    const spacePadding = ' '.repeat(Math.max(0, OFFSET_COLUMN - sizeLength));
+    folderSize = `${spacePadding}${folderSize}`;
 
     const folderSizeText =
       folder.size > 0 ? folderSize : colors.bgBlack.gray(' calc... ');

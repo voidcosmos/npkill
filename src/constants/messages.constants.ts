@@ -20,6 +20,7 @@ export const INFO_MSGS = {
     'is a bug, which has to be fixed. Please try another command interpreter ' +
     '(for example, CMD in windows)',
   NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size | last-mod',
+  NO_VALID_SIZE_UNIT: 'Invalid size-unit option. Available: auto | mb | gb',
   STARTING: 'Initializing ',
   SEARCHING: 'Searching ',
   CALCULATING_STATS: 'Calculating stats ',
