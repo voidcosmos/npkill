@@ -3,11 +3,12 @@ import {
   JsonStreamOutput,
   JsonSimpleOutput,
   JsonErrorOutput,
+  JsonCliScanFoundFolder,
 } from '../interfaces/json-output.interface.js';
 
 export class JsonOutputService {
   private readonly OUTPUT_VERSION = 1;
-  private results: CliScanFoundFolder[] = [];
+  private results: JsonCliScanFoundFolder[] = [];
   private scanStartTime: number = 0;
   private isStreamMode: boolean = false;
 
@@ -103,12 +104,11 @@ export class JsonOutputService {
 
   private sanitizeFolderForOutput(
     folder: CliScanFoundFolder,
-  ): CliScanFoundFolder {
+  ): JsonCliScanFoundFolder {
     return {
       path: folder.path,
       size: folder.size,
       modificationTime: folder.modificationTime,
-      status: folder.status,
       riskAnalysis: folder.riskAnalysis
         ? {
             isSensitive: folder.riskAnalysis.isSensitive,

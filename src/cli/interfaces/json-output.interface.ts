@@ -4,12 +4,15 @@ export interface JsonOutputBase {
   version: number;
 }
 
+export interface JsonCliScanFoundFolder
+  extends Omit<CliScanFoundFolder, 'status'> {}
+
 /**
  * JSON output format for streaming mode (--json-stream).
  * Each result is output as a separate JSON object on its own line.
  */
 export interface JsonStreamOutput extends JsonOutputBase {
-  result: CliScanFoundFolder;
+  result: JsonCliScanFoundFolder;
 }
 
 /**
@@ -17,7 +20,7 @@ export interface JsonStreamOutput extends JsonOutputBase {
  * All results are collected and output as a single JSON object at the end.
  */
 export interface JsonSimpleOutput extends JsonOutputBase {
-  results: CliScanFoundFolder[];
+  results: JsonCliScanFoundFolder[];
   meta: {
     resultsCount: number;
     /** Scan duration in milliseconds */

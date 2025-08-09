@@ -53,7 +53,6 @@ describe('JsonOutputService', () => {
           path: '/test/node_modules',
           size: 1024,
           modificationTime: 1640995200000,
-          status: 'live',
           riskAnalysis: {
             isSensitive: false,
           },
@@ -97,13 +96,11 @@ describe('JsonOutputService', () => {
             path: '/test/node_modules',
             size: 1024,
             modificationTime: 1640995200000,
-            status: 'live',
           },
           {
             path: '/test2/node_modules',
             size: 2048,
             modificationTime: 1640995300000,
-            status: 'deleted',
           },
         ],
         meta: {
