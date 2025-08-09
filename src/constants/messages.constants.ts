@@ -9,7 +9,7 @@ export const INFO_MSGS = {
   DELETED_FOLDER: '[DELETED] ',
   DELETING_FOLDER: '[..deleting..] ',
   ERROR_DELETING_FOLDER: '[ ERROR ] ',
-  HEADER_COLUMNS: 'Last_mod   Size',
+  HEADER_COLUMNS: 'Age    Size', // Δ (delta) for last_mod/age?
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
@@ -20,6 +20,7 @@ export const INFO_MSGS = {
     'is a bug, which has to be fixed. Please try another command interpreter ' +
     '(for example, CMD in windows)',
   NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size | last-mod',
+  NO_VALID_SIZE_UNIT: 'Invalid size-unit option. Available: auto | mb | gb',
   STARTING: 'Initializing ',
   SEARCHING: 'Searching ',
   CALCULATING_STATS: 'Calculating stats ',
@@ -40,6 +41,8 @@ export const ERROR_MSG = {
   CANT_DELETE_FOLDER:
     'The directory cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
+  CANT_USE_BOTH_JSON_OPTIONS:
+    'Cannot use both --json and --json-stream options simultaneously.',
 };
 
 export const RESULT_TYPE_INFO = {

@@ -16,16 +16,18 @@ export const DEFAULT_CONFIG: IConfig = {
   dryRun: false,
   exclude: ['.git'],
   excludeHiddenDirectories: false,
-  folderSizeInGB: false,
+  sizeUnit: 'auto',
   maxSimultaneousSearch: 6,
   showErrors: true,
   sortBy: 'none',
   targets: ['node_modules'],
   yes: false,
+  jsonStream: false,
+  jsonSimple: false,
 };
 
 export const MARGINS = {
-  FOLDER_COLUMN_END: 19,
+  FOLDER_COLUMN_END: 16,
   FOLDER_COLUMN_START: 1,
   FOLDER_SIZE_COLUMN: 10,
   ROW_RESULTS_START: 8,

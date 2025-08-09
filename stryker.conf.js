@@ -4,14 +4,12 @@
 const config = {
   packageManager: 'npm',
   reporters: ['html', 'clear-text', 'progress'],
-  //  testRunner: 'jest', // Using npm test by default
-  testRunnerNodeArgs: ['--experimental-vm-modules', '--experimental-modules'],
-  coverageAnalysis: 'perTest',
-  jest: {
-    projectType: 'custom',
-    configFile: './jest.config.ts',
-    enableFindRelatedTests: true,
+  testRunner: 'command',
+  coverageAnalysis: 'off',
+  concurrency: 4,
+  commandRunner: {
+    command:
+      'node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js --verbose',
   },
 };
-
 export default config;

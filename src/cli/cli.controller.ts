@@ -11,8 +11,8 @@ import {
 } from '../constants/index.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
-import { firstValueFrom, Observable, Subject } from 'rxjs';
-import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { firstValueFrom, Subject } from 'rxjs';
+import { map, mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
 import { FOLDER_SORT } from '../constants/sort.result.js';
@@ -37,16 +37,16 @@ import colors from 'colors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { ScanFoundFolder, Npkill } from '../core/index.js';
+import { Npkill } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
-import { convertBytesToGb } from '../utils/unit-conversions.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
+import { ScanService } from './services/scan.service.js';
+import { JsonOutputService } from './services/json-output.service.js';
 
 export class CliController {
-  private readonly stdout: NodeJS.WriteStream = process.stdout;
   private readonly config: IConfig = DEFAULT_CONFIG;
 
   private searchStart: number;
@@ -62,6 +62,7 @@ export class CliController {
   private activeComponent: InteractiveUi | null = null;
 
   constructor(
+    private readonly stdout: NodeJS.WriteStream,
     private readonly npkill: Npkill,
     private readonly logger: LoggerService,
     private readonly searchStatus: ScanStatus,
@@ -70,17 +71,35 @@ export class CliController {
     private readonly consoleService: ConsoleService,
     private readonly updateService: UpdateService,
     private readonly uiService: UiService,
+    private readonly scanService: ScanService,
+    private readonly jsonOutputService: JsonOutputService,
   ) {}
 
   init(): void {
     this.logger.info(`Npkill CLI started! v${this.getVersion()}`);
+
+    this.parseArguments();
+
+    if (this.config.jsonStream) {
+      this.logger.info('JSON stream mode enabled.');
+      this.setupJsonModeSignalHandlers();
+      this.scan();
+      return;
+    }
+
+    if (this.config.jsonSimple) {
+      this.logger.info('JSON simple mode enabled.');
+      this.setupJsonModeSignalHandlers();
+      this.scan();
+      return;
+    }
+
     this.initUi();
     if (this.consoleService.isRunningBuild()) {
       this.uiHeader.programVersion = this.getVersion();
     }
 
     this.consoleService.startListenKeyEvents();
-    this.parseArguments();
     this.checkRequirements();
     this.prepareScreen();
     this.setupEventsListener();
@@ -165,6 +184,9 @@ export class CliController {
       if (configChanges.sortBy) {
         this.resultsService.sortResults(configChanges.sortBy);
       }
+      if (configChanges.sizeUnit) {
+        this.resultsService.setSizeUnit(configChanges.sizeUnit);
+      }
       this.logger.info(`Config updated: ${JSON.stringify(configChanges)}`);
       this.uiService.renderAll();
     });
@@ -201,7 +223,7 @@ export class CliController {
   }
 
   private openResultsDetails(folder: CliScanFoundFolder): void {
-    const detailsUi = new ResultDetailsUi(folder);
+    const detailsUi = new ResultDetailsUi(folder, this.config);
     this.uiResults.clear();
     this.uiResults.setVisible(false);
 
@@ -268,8 +290,14 @@ export class CliController {
     if (options.isTrue('hide-errors')) {
       this.config.showErrors = false;
     }
-    if (options.isTrue('gb')) {
-      this.config.folderSizeInGB = true;
+    if (options.isTrue('size-unit')) {
+      const sizeUnit = options.getString('size-unit');
+      if (this.isValidSizeUnit(sizeUnit)) {
+        this.config.sizeUnit = sizeUnit as 'auto' | 'mb' | 'gb';
+      } else {
+        this.invalidSizeUnitParam();
+        return;
+      }
     }
     if (options.isTrue('no-check-updates')) {
       this.config.checkUpdates = false;
@@ -290,6 +318,19 @@ export class CliController {
 
     if (options.isTrue('yes')) {
       this.config.yes = true;
+    }
+
+    if (options.isTrue('jsonStream')) {
+      this.config.jsonStream = true;
+    }
+
+    if (options.isTrue('jsonSimple')) {
+      this.config.jsonSimple = true;
+    }
+
+    if (this.config.jsonStream && this.config.jsonSimple) {
+      this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
+      this.exitWithError();
     }
 
     // Remove trailing slash from folderRoot for consistency
@@ -338,6 +379,16 @@ export class CliController {
 
   private isValidSortParam(sortName: string): boolean {
     return Object.keys(FOLDER_SORT).includes(sortName);
+  }
+
+  private isValidSizeUnit(sizeUnit: string): boolean {
+    return ['auto', 'mb', 'gb'].includes(sizeUnit);
+  }
+
+  private invalidSizeUnitParam(): void {
+    this.uiService.print(INFO_MSGS.NO_VALID_SIZE_UNIT);
+    this.logger.error(INFO_MSGS.NO_VALID_SIZE_UNIT);
+    this.exitWithError();
   }
 
   private getVersion(): string {
@@ -456,56 +507,59 @@ export class CliController {
   }
 
   private scan(): void {
+    this.initializeScan();
+
+    const shouldOutputInJson = this.config.jsonSimple || this.config.jsonStream;
+
+    if (shouldOutputInJson) {
+      this.scanInJson();
+    } else {
+      this.scanInUiMode();
+    }
+  }
+
+  private initializeScan(): void {
     this.searchStatus.reset();
     this.resultsService.reset();
+    this.resultsService.setSizeUnit(this.config.sizeUnit);
+  }
+
+  private scanInJson(): void {
+    const isStreamMode = this.config.jsonStream;
+    this.jsonOutputService.initializeSession(isStreamMode);
+
+    this.scanService
+      .scan(this.config)
+      .pipe(
+        mergeMap((nodeFolder) =>
+          this.scanService.calculateFolderStats(nodeFolder, {
+            getModificationTimeForSensitiveResults: true,
+          }),
+        ),
+        tap((folder) => this.jsonOutputService.processResult(folder)),
+      )
+      .subscribe({
+        error: (error) => this.jsonOutputService.writeError(error),
+        complete: () => {
+          this.jsonOutputService.completeScan();
+          process.exit(0);
+        },
+      });
+  }
+
+  private scanInUiMode(): void {
     this.uiStatus.reset();
     this.uiStatus.start();
-
-    const params = this.prepareListDirParams();
-    const { rootPath } = params;
-    const isExcludedDangerousDirectory = (
-      scanResult: ScanFoundFolder,
-    ): boolean =>
-      Boolean(
-        this.config.excludeHiddenDirectories &&
-          scanResult.riskAnalysis?.isSensitive,
-      );
-
     this.searchStart = Date.now();
-    const results$ = this.npkill.startScan$(rootPath, params);
-    const nonExcludedResults$ = results$.pipe(
-      filter((path) => !isExcludedDangerousDirectory(path)),
-    );
 
-    nonExcludedResults$
+    this.scanService
+      .scan(this.config)
       .pipe(
-        map<ScanFoundFolder, CliScanFoundFolder>(({ path, riskAnalysis }) => ({
-          path,
-          size: 0,
-          modificationTime: -1,
-          riskAnalysis,
-          status: 'live',
-        })),
-        tap((nodeFolder) => {
-          this.searchStatus.newResult();
-          this.resultsService.addResult(nodeFolder);
-
-          if (this.config.sortBy === 'path') {
-            this.resultsService.sortResults(this.config.sortBy);
-            this.uiResults.clear();
-          }
-
-          this.uiResults.render();
-        }),
-        mergeMap((nodeFolder) => {
-          return this.calculateFolderStats(nodeFolder);
-        }),
-        tap(() => this.searchStatus.completeStatCalculation()),
-        tap((folder) => {
-          if (this.config.deleteAll) {
-            this.deleteFolder(folder);
-          }
-        }),
+        tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)),
+        mergeMap((nodeFolder) =>
+          this.scanService.calculateFolderStats(nodeFolder),
+        ),
+        tap((folder) => this.processFolderStatsForUi(folder)),
       )
       .subscribe({
         next: () => this.printFoldersSection(),
@@ -514,44 +568,35 @@ export class CliController {
       });
   }
 
-  private prepareListDirParams() {
-    const params = {
-      rootPath: this.config.folderRoot,
-      targets: this.config.targets,
+  private setupJsonModeSignalHandlers(): void {
+    const gracefulShutdown = () => {
+      this.jsonOutputService.handleShutdown();
+      process.exit(0);
     };
 
-    if (this.config.exclude.length > 0) {
-      params['exclude'] = this.config.exclude;
-    }
-
-    return params;
+    process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
   }
 
-  private calculateFolderStats(
-    nodeFolder: CliScanFoundFolder,
-  ): Observable<CliScanFoundFolder> {
-    return this.npkill.getSize$(nodeFolder.path).pipe(
-      tap(({ size }) => {
-        nodeFolder.size = convertBytesToGb(size);
-      }),
-      switchMap(async () => {
-        // Saves resources by not scanning a result that is probably not of interest
-        if (nodeFolder.riskAnalysis?.isSensitive) {
-          nodeFolder.modificationTime = -1;
-          return nodeFolder;
-        }
-        const parentFolder = path.join(nodeFolder.path, '../');
-        const result = await firstValueFrom(
-          this.npkill.getNewestFile$(parentFolder),
-        );
+  private processNodeFolderForUi(nodeFolder: CliScanFoundFolder): void {
+    this.searchStatus.newResult();
+    this.resultsService.addResult(nodeFolder);
 
-        nodeFolder.modificationTime = result ? result.timestamp : -1;
-        return nodeFolder;
-      }),
-      tap(() => {
-        this.finishFolderStats();
-      }),
-    );
+    if (this.config.sortBy === 'path') {
+      this.resultsService.sortResults(this.config.sortBy);
+      this.uiResults.clear();
+    }
+
+    this.uiResults.render();
+  }
+
+  private processFolderStatsForUi(folder: CliScanFoundFolder): void {
+    this.searchStatus.completeStatCalculation();
+    this.finishFolderStats();
+
+    if (this.config.deleteAll) {
+      this.deleteFolder(folder);
+    }
   }
 
   private finishFolderStats(): void {

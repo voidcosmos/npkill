@@ -17,7 +17,7 @@ import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
-import { convertGBToMB } from '../../../utils/unit-conversions.js';
+import { formatSize } from '../../../utils/unit-conversions.js';
 
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
@@ -233,6 +233,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         y: MARGINS.ROW_RESULTS_START - 2,
       });
     }
+
+    this.printScrollBar();
     this.flush();
   }
 
@@ -261,7 +263,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private noResults(): void {
     const targetFolderColored: string = colors[DEFAULT_CONFIG.warningColor](
-      this.config.targets,
+      this.config.targets.join(', '),
     );
     const message = `No ${targetFolderColored} found!`;
     this.printAt(message, {
@@ -309,7 +311,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       y: row,
     });
     this.printAt(lastModification, {
-      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN - 6,
+      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN - 4,
       y: row,
     });
     this.printAt(size, {
@@ -346,7 +348,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     lastModification: string;
   } {
     const folderText = this.getFolderPathText(folder);
-    let folderSize = `${folder.size.toFixed(DECIMALS_SIZE)} GB`;
+    const formattedSize = formatSize(
+      folder.size,
+      this.config.sizeUnit,
+      DECIMALS_SIZE,
+    );
     let daysSinceLastModification: string;
 
     if (folder.modificationTime !== null && folder.modificationTime > 0) {
@@ -366,15 +372,13 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     daysSinceLastModification =
       ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
 
-    if (!this.config.folderSizeInGB) {
-      const size = convertGBToMB(folder.size);
-      // Prevent app crash when folder size is +999MB.
-      const decimals = size < 999 ? DECIMALS_SIZE : 1;
-      const sizeText = size.toFixed(decimals);
-      const OFFSET_COLUMN = 6;
-      const space = ' '.repeat(OFFSET_COLUMN - sizeText.length);
-      folderSize = `${space}${sizeText} MB`;
-    }
+    const OFFSET_COLUMN = 9;
+    let folderSize = formattedSize.text;
+
+    // Right-align size text
+    const sizeLength = folderSize.length;
+    const spacePadding = ' '.repeat(Math.max(0, OFFSET_COLUMN - sizeLength));
+    folderSize = `${spacePadding}${folderSize}`;
 
     const folderSizeText =
       folder.size > 0 ? folderSize : colors.bgBlack.gray(' calc... ');
@@ -539,6 +543,37 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     return TRANSFORMATIONS[action] !== undefined
       ? TRANSFORMATIONS[action](folderString)
       : folderString;
+  }
+
+  private printScrollBar(): void {
+    const SCROLLBAR_ACTIVE = colors.gray('█');
+    const SCROLLBAR_BG = colors.gray('░');
+
+    const totalResults = this.resultsService.results.length;
+    const visibleRows = this.getRowsAvailable();
+
+    if (totalResults <= visibleRows) {
+      return;
+    }
+
+    const scrollPercentage = this.scroll / (totalResults - visibleRows);
+    const start = MARGINS.ROW_RESULTS_START;
+    const end = this.terminal.rows - 1;
+    const scrollBarPosition = Math.round(
+      scrollPercentage * (end - start) + start,
+    );
+
+    for (let i = start; i <= end; i++) {
+      this.printAt(SCROLLBAR_BG, {
+        x: this.terminal.columns - 1,
+        y: i,
+      });
+    }
+
+    this.printAt(SCROLLBAR_ACTIVE, {
+      x: this.terminal.columns - 1,
+      y: scrollBarPosition,
+    });
   }
 
   private isCursorInLowerLimit(): boolean {

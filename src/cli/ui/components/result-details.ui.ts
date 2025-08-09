@@ -5,8 +5,9 @@ import { Subject } from 'rxjs';
 import colors from 'colors';
 import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
-import { convertGBToMB } from '../../../utils/unit-conversions.js';
+import { formatSize } from '../../../utils/unit-conversions.js';
 import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
+import { IConfig } from '../../interfaces/config.interface.js';
 
 export class ResultDetailsUi extends BaseUi implements InteractiveUi {
   resultIndex = 0;
@@ -22,7 +23,10 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     escape: () => this.goBack(),
   };
 
-  constructor(private readonly result: CliScanFoundFolder) {
+  constructor(
+    private readonly result: CliScanFoundFolder,
+    private readonly config: IConfig,
+  ) {
     super();
   }
 
@@ -90,7 +94,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     };
 
     // Header
-    this.printAt(colors.bold.underline.bgYellow.black('  Result Details  '), {
+    this.printAt(colors.bold.bgYellow.black('  Result Details  '), {
       x: 1,
       y: currentRow++,
     });
@@ -118,7 +122,8 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     }
 
     // Size, Modified
-    drawLabel('Size:', `${convertGBToMB(size).toFixed(2)} MB`, colors.yellow);
+    const formattedSize = formatSize(size, this.config.sizeUnit);
+    drawLabel('Size:', formattedSize.text, colors.yellow);
     drawLabel(
       'Modified:',
       new Date(modificationTime * 1000).toLocaleString(),

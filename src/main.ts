@@ -1,6 +1,7 @@
 import {
   ConsoleService,
   HttpsService,
+  JsonOutputService,
   ResultsService,
   SpinnerService,
   UpdateService,
@@ -11,6 +12,7 @@ import { UiService } from './cli/services/ui.service.js';
 import { LoggerService } from './core/services/logger.service.js';
 import { ScanStatus } from './core/interfaces/search-status.model.js';
 import { Npkill } from './core/index.js';
+import { ScanService } from './cli/services/scan.service.js';
 
 export default (): void => {
   const logger = new LoggerService();
@@ -19,7 +21,11 @@ export default (): void => {
 
   const npkill = new Npkill({ logger, searchStatus, resultsService });
 
+  const stdOut = process.stdout;
+  const jsonOutputService = new JsonOutputService(stdOut, process.stderr);
+
   const cli = new CliController(
+    stdOut,
     npkill,
     logger,
     searchStatus,
@@ -28,6 +34,8 @@ export default (): void => {
     new ConsoleService(),
     new UpdateService(new HttpsService()),
     new UiService(),
+    new ScanService(npkill),
+    jsonOutputService,
   );
 
   cli.init();

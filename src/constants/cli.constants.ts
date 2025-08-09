@@ -42,9 +42,10 @@ export const OPTIONS: ICliOptions[] = [
     name: 'full-scan',
   },
   {
-    arg: ['-gb'],
-    description: 'Show folder size in Gigabytes',
-    name: 'gb',
+    arg: ['-s', '--size-unit'],
+    description:
+      'Set the unit for displaying folder sizes. Options: auto (default), mb, gb. With auto, sizes < 1024MB are shown in MB, larger sizes in GB.',
+    name: 'size-unit',
   },
   {
     arg: ['-h', '--help', '?'],
@@ -79,6 +80,16 @@ export const OPTIONS: ICliOptions[] = [
     description:
       'It does not delete anything (will simulate it with a random delay).',
     name: 'dry-run',
+  },
+  {
+    arg: ['--json-stream'],
+    description: 'Output results in a stream JSON format.',
+    name: 'jsonStream',
+  },
+  {
+    arg: ['--json'],
+    description: 'Output results in a JSON format.',
+    name: 'jsonSimple',
   },
   {
     arg: ['-v', '--version'],
