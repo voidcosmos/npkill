@@ -62,6 +62,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     return: () => this.deleteSelected(),
     enter: () => this.deleteSelected(),
     v: () => this.startRangeSelection(),
+    a: () => this.toggleSelectAll(),
   };
 
   constructor(
@@ -124,6 +125,26 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       } else {
         this.selectedFolders.set(folder.path, folder);
       }
+    }
+  }
+
+  private toggleSelectAll(): void {
+    if (!this.selectMode) {
+      return;
+    }
+
+    const allFolders = this.resultsService.results;
+    const totalFolders = allFolders.length;
+    const selectedCount = this.selectedFolders.size;
+
+    // If all folders are selected, deselect all
+    // If some or none are selected, select all
+    if (selectedCount === totalFolders) {
+      this.selectedFolders.clear();
+    } else {
+      allFolders.forEach((folder) => {
+        this.selectedFolders.set(folder.path, folder);
+      });
     }
   }
 
