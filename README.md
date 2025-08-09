@@ -32,6 +32,7 @@ We're making an effort to internationalize the Npkill docs. Here's a list of the
 - [Usage](#usage)
   - [Options](#options)
   - [Examples](#examples)
+  - [JSON Output](#json-output)
 - [Set Up Locally](#setup-locally)
 - [API](#API)
 - [Roadmap](#roadmap)
@@ -114,6 +115,8 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 |                                  |
 | -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                                                         |
 | --dry-run                        | It does not delete anything (will simulate it with a random delay).                                                                                                                 |
+| --json                           | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                          |
+| --json-stream                    | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                           |
 | -v, --version                    | Show npkill version                                                                                                                                                                 |
 
 **Warning:** _In future versions some commands may change_
@@ -160,6 +163,48 @@ npkill -d 'projects' --exclude "progress, ignore-this"
 
 ```bash
 npkill -d ~/backups/ --delete-all
+```
+
+- Get results in JSON format for automation or further processing:
+
+```bash
+npkill --json > results.json
+```
+
+- Stream results in real-time as JSON (useful for monitoring or piping to other tools):
+
+```bash
+npkill --json-stream | jq '.'
+```
+
+- Save only successful results to a file, ignoring errors:
+
+```bash
+npkill --json-stream 2>/dev/null | jq -s '.' > clean-results.json
+```
+
+<a name="json-output"></a>
+
+## JSON Output
+
+Npkill supports JSON output formats for automation and integration with other tools:
+
+- **`--json`**: Output all results as a single JSON object at the end of the scan
+- **`--json-stream`**: Output each result as a separate JSON object in real-time
+
+For detailed documentation, examples, and TypeScript interfaces, see [JSON Output Documentation](./docs/json-output.md).
+
+**Quick Examples:**
+
+```bash
+# Get all results as JSON
+npkill --json > results.json
+
+# Process results in real-time
+npkill --json-stream | jq '.result.path'
+
+# Find directories larger than 100MB
+npkill --json | jq '.results[] | select(.size > 104857600)'
 ```
 
 <a name="setup-locally"></a>
