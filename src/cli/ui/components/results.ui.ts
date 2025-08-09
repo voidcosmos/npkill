@@ -107,6 +107,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
 
     this.printResults();
+    this.printScrollBar();
     this.flush();
   }
 
@@ -368,6 +369,37 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     return TRANSFORMATIONS[action] !== undefined
       ? TRANSFORMATIONS[action](folderString)
       : folderString;
+  }
+
+  private printScrollBar(): void {
+    const SCROLLBAR_ACTIVE = colors.gray('█');
+    const SCROLLBAR_BG = colors.gray('░');
+
+    const totalResults = this.resultsService.results.length;
+    const visibleRows = this.getRowsAvailable();
+
+    if (totalResults <= visibleRows) {
+      return;
+    }
+
+    const scrollPercentage = this.scroll / (totalResults - visibleRows);
+    const start = MARGINS.ROW_RESULTS_START;
+    const end = this.terminal.rows - 1;
+    const scrollBarPosition = Math.round(
+      scrollPercentage * (end - start) + start,
+    );
+
+    for (let i = start; i <= end; i++) {
+      this.printAt(SCROLLBAR_BG, {
+        x: this.terminal.columns - 1,
+        y: i,
+      });
+    }
+
+    this.printAt(SCROLLBAR_ACTIVE, {
+      x: this.terminal.columns - 1,
+      y: scrollBarPosition,
+    });
   }
 
   private isCursorInLowerLimit(): boolean {
