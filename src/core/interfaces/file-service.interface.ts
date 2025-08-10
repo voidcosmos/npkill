@@ -3,6 +3,7 @@ import { GetNewestFileResult, RiskAnalysis } from '../interfaces/index.js';
 import { ScanOptions } from './folder.interface.js';
 import { Observable } from 'rxjs';
 import { IsValidRootFolderResult } from './npkill.interface.js';
+import { DeletionStrategyManager } from '@core/services/files/index.js';
 
 /**
  * Core file system operations service for npkill.
@@ -11,6 +12,7 @@ import { IsValidRootFolderResult } from './npkill.interface.js';
 export interface IFileService {
   /** Worker service for handling file operations in background threads. */
   fileWorkerService: FileWorkerService;
+  delStrategyManager: DeletionStrategyManager;
 
   /**
    * Calculates the total size of a directory.

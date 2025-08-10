@@ -11,12 +11,18 @@ import { readdir, stat } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
 import { IsValidRootFolderResult } from '@core/interfaces/npkill.interface.js';
+import { DeletionStrategyManager } from './strategies/strategy-manager.js';
 
 export abstract class FileService implements IFileService {
   public fileWorkerService: FileWorkerService;
+  public delStrategyManager: DeletionStrategyManager;
 
-  constructor(fileWorkerService: FileWorkerService) {
+  constructor(
+    fileWorkerService: FileWorkerService,
+    delStrategyManager: DeletionStrategyManager,
+  ) {
     this.fileWorkerService = fileWorkerService;
+    this.delStrategyManager = delStrategyManager;
   }
 
   abstract deleteDir(path: string): Promise<boolean>;

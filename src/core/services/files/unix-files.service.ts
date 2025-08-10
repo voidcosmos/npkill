@@ -10,39 +10,37 @@ import {
 } from './index.js';
 
 export class UnixFilesService extends FileService {
-  private readonly strategyManager: DeletionStrategyManager;
-
   constructor(
     protected streamService: StreamService,
     public override fileWorkerService: FileWorkerService,
+    delstrategyManager: DeletionStrategyManager,
   ) {
-    super(fileWorkerService);
-    this.strategyManager = new DeletionStrategyManager();
+    super(fileWorkerService, delstrategyManager);
     this.initializeStrategies();
   }
 
   async deleteDir(path: string): Promise<boolean> {
     try {
-      return await this.strategyManager.deleteDirectory(path);
+      return await this.delStrategyManager.deleteDirectory(path);
     } catch (error) {
       throw new Error(`Failed to delete directory ${path}: ${error}`);
     }
   }
 
   getSelectedDeletionStrategy(): string | null {
-    const strategy = this.strategyManager.getSelectedStrategy();
+    const strategy = this.delStrategyManager.getSelectedStrategy();
     return strategy ? strategy.name : null;
   }
 
   resetDeletionStrategy(): void {
-    this.strategyManager.resetStrategy();
+    this.delStrategyManager.resetStrategy();
   }
 
   private initializeStrategies() {
     // Order matter!
-    this.strategyManager.registerStrategy(new PerlDeletionStrategy());
-    this.strategyManager.registerStrategy(new RsyncDeletionStrategy());
-    this.strategyManager.registerStrategy(new FindDeletionStrategy());
-    this.strategyManager.registerStrategy(new RmRfDeletionStrategy());
+    this.delStrategyManager.registerStrategy(new PerlDeletionStrategy());
+    this.delStrategyManager.registerStrategy(new RsyncDeletionStrategy());
+    this.delStrategyManager.registerStrategy(new FindDeletionStrategy());
+    this.delStrategyManager.registerStrategy(new RmRfDeletionStrategy());
   }
 }
