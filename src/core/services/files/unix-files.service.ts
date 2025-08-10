@@ -36,29 +36,4 @@ export class UnixFilesService extends FileService {
       });
     });
   }
-
-  protected prepareFindArgs(path: string, params: ScanOptions): string[] {
-    const { targets, exclude } = params;
-    let args: string[] = [path];
-
-    if (exclude !== undefined && exclude.length > 0) {
-      args = [...args, this.prepareExcludeArgs(exclude)].flat();
-    }
-
-    args = [...args, '-name', targets[0], '-prune'];
-
-    return args;
-  }
-
-  protected prepareExcludeArgs(exclude: string[]): string[] {
-    const excludeDirs = exclude.map((dir: string) => [
-      '-not',
-      '(',
-      '-name',
-      dir,
-      '-prune',
-      ')',
-    ]);
-    return excludeDirs.flat();
-  }
 }
