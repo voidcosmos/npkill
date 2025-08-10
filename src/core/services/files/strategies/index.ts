@@ -3,4 +3,7 @@ export * from './unix-strategies/rsync-deletion.strategy.js';
 export * from './unix-strategies/find-deletion.strategy.js';
 export * from './unix-strategies/rm-rf-deletion.strategy.js';
 export * from './unix-strategies/perl-deletion.strategy.js';
+export * from './windows-strategies/robocopy-deletion.strategy.js';
+export * from './windows-strategies/powershell-deletion.strategy.js';
+export * from './windows-strategies/node-rm-deletion.strategy.js';
 export * from './strategy-manager.js';
