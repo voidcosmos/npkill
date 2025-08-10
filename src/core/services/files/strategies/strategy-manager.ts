@@ -1,3 +1,4 @@
+import { LoggerService } from '@core/services/logger.service.js';
 import { IDeletionStrategy } from './deletion-strategy.interface.js';
 
 /**
@@ -8,7 +9,7 @@ export class DeletionStrategyManager {
   private selectedStrategy: IDeletionStrategy | null = null;
   private strategiesInitialized = false;
 
-  constructor() {}
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Registers a deletion strategy.
@@ -17,6 +18,9 @@ export class DeletionStrategyManager {
    */
   registerStrategy(strategy: IDeletionStrategy): void {
     this.availableStrategies.push(strategy);
+    this.logger.info(
+      `[DeletionStrategyManager] Registered ${strategy.name} strategy.`,
+    );
   }
 
   /**
@@ -35,11 +39,14 @@ export class DeletionStrategyManager {
         if (isAvailable) {
           this.selectedStrategy = strategy;
           this.strategiesInitialized = true;
+          this.logger.info(`[DeletionStrategyManager] Using ${strategy.name}.`);
           return strategy;
         }
       } catch (error) {
         // Strategy check failed, continue to next one
-        console.warn(`Strategy ${strategy.name} check failed:`, error);
+        this.logger.warn(
+          `[DeletionStrategyManager] ${strategy.name} strategy unavailable.`,
+        );
       }
     }
 

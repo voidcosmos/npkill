@@ -174,7 +174,7 @@ function createDefaultServices(
   );
   const streamService = new StreamService();
   const resultsService = new ResultsService();
-  const delStrategyManager = new DeletionStrategyManager();
+  const delStrategyManager = new DeletionStrategyManager(actualLogger);
 
   const OSService = OSServiceMap[
     process.platform
