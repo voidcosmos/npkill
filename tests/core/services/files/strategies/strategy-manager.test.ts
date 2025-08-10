@@ -4,7 +4,6 @@ import { IDeletionStrategy } from '../../../../../src/core/services/files/strate
 class MockStrategy implements IDeletionStrategy {
   constructor(
     public readonly name: string,
-    public readonly priority: number,
     private availabilityResult: boolean = true,
     private deleteResult: boolean = true,
   ) {}
@@ -30,21 +29,27 @@ describe('DeletionStrategyManager', () => {
 
   describe('Strategy Selection', () => {
     it('should initialize and select the first available strategy', async () => {
+      // Register some mock strategies first
+      manager.registerStrategy(new MockStrategy('mock1', true));
+      manager.registerStrategy(new MockStrategy('mock2', false));
+      manager.registerStrategy(new MockStrategy('mock3', true));
+
       const strategy = await manager.initializeStrategy();
       expect(strategy).toBeDefined();
-      expect(strategy?.name).toBeDefined();
-      expect(['rsync', 'find', 'rm-rf'].includes(strategy?.name || '')).toBe(
-        true,
-      );
+      expect(strategy?.name).toBe('mock1'); // Should select the first available one
     });
 
     it('should cache the selected strategy after initialization', async () => {
+      manager.registerStrategy(new MockStrategy('mock1', true));
+
       const firstCall = await manager.initializeStrategy();
       const secondCall = await manager.initializeStrategy();
       expect(firstCall).toBe(secondCall);
     });
 
     it('should return the same strategy when called multiple times', async () => {
+      manager.registerStrategy(new MockStrategy('mock1', true));
+
       const strategy1 = await manager.initializeStrategy();
       const strategy2 = manager.getSelectedStrategy();
       expect(strategy1).toBe(strategy2);
@@ -53,29 +58,32 @@ describe('DeletionStrategyManager', () => {
 
   describe('Directory Deletion', () => {
     it('should delete directory using selected strategy', async () => {
+      manager.registerStrategy(new MockStrategy('mock1', true, true));
+
       const result = await manager.deleteDirectory('/tmp/test');
-      expect(typeof result).toBe('boolean');
+      expect(result).toBe(true);
     });
 
     it('should throw error when no strategies are available', async () => {
+      // Don't register any strategies
       manager.resetStrategy();
 
-      // This is a bit tricky to test without mocking the actual strategies
-      // In a real test, we'd need to mock the strategy availability
-      // For now, we'll test the error handling structure
       try {
-        // Create a manager with no strategies (this would require dependency injection)
-        // For this test, we'll assume the current system has at least rm available
-        const result = await manager.deleteDirectory('/tmp/test');
-        expect(typeof result).toBe('boolean');
+        await manager.deleteDirectory('/tmp/test');
+        fail('Should have thrown an error');
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain(
+          'No deletion strategies are available',
+        );
       }
     });
   });
 
   describe('Strategy Management', () => {
     it('should reset strategy selection', async () => {
+      manager.registerStrategy(new MockStrategy('mock1', true));
+
       await manager.initializeStrategy();
       const firstStrategy = manager.getSelectedStrategy();
       expect(firstStrategy).toBeDefined();
@@ -86,18 +94,24 @@ describe('DeletionStrategyManager', () => {
     });
 
     it('should return all registered strategies', () => {
+      manager.registerStrategy(new MockStrategy('mock1', true));
+      manager.registerStrategy(new MockStrategy('mock2', true));
+
       const strategies = manager.getAllStrategies();
-      expect(strategies.length).toBeGreaterThan(0);
+      expect(strategies.length).toBe(2);
+      expect(strategies[0].name).toBe('mock1');
+      expect(strategies[1].name).toBe('mock2');
     });
   });
 });
 
 describe('Individual Deletion Strategies', () => {
-  // These tests would require actual system commands to be available
-  // In a real test environment, you might want to mock the exec calls
-
   it('should test strategy availability checks', async () => {
     const manager = new DeletionStrategyManager();
+    // Register some mock strategies to test
+    manager.registerStrategy(new MockStrategy('mock1', true));
+    manager.registerStrategy(new MockStrategy('mock2', false));
+
     const strategies = manager.getAllStrategies();
 
     for (const strategy of strategies) {
