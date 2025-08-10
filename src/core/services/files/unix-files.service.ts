@@ -6,7 +6,7 @@ import { StreamService } from '../stream.service.js';
 import { FileWorkerService } from './files.worker.service.js';
 import { ScanOptions } from '@core/index.js';
 
-export abstract class UnixFilesService extends FileService {
+export class UnixFilesService extends FileService {
   constructor(
     protected streamService: StreamService,
     public override fileWorkerService: FileWorkerService,

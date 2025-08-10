@@ -27,15 +27,10 @@ const FileServiceConstructor = (
 ).FileService;
 abstract class FileService extends FileServiceConstructor {}
 
-const LinuxFilesServiceConstructor = (
-  await import('../../../../src/core/services/files/linux-files.service.js')
-).LinuxFilesService;
-class LinuxFilesService extends LinuxFilesServiceConstructor {}
-
-const MacFilesServiceConstructor = (
-  await import('../../../../src/core/services/files/mac-files.service.js')
-).MacFilesService;
-class MacFilesService extends MacFilesServiceConstructor {}
+const UnixFilesServiceConstructor = (
+  await import('../../../../src/core/services/files/unix-files.service.js')
+).UnixFilesService;
+class UnixFilesService extends UnixFilesServiceConstructor {}
 
 const WindowsFilesServiceConstructor = (
   await import('../../../../src/core/services/files/windows-files.service.js')
@@ -56,7 +51,7 @@ describe('File Service', () => {
   let fileService: FileService;
 
   beforeEach(() => {
-    fileService = new LinuxFilesService(
+    fileService = new UnixFilesService(
       new StreamService(),
       fileWorkerService as unknown as FileWorkerService,
     );
@@ -254,9 +249,9 @@ describe('File Service', () => {
     beforeAll(() => {
       const getOS = () => process.platform;
       const OSService = {
-        linux: LinuxFilesService,
+        linux: UnixFilesService,
+        darwin: UnixFilesService,
         win32: WindowsFilesService,
-        darwin: MacFilesService,
       };
       const streamService: StreamService = new StreamService();
       fileService = new OSService[getOS()](streamService);
