@@ -19,8 +19,13 @@ export abstract class FileService implements IFileService {
     this.fileWorkerService = fileWorkerService;
   }
 
-  abstract listDir(path: string, params: ScanOptions): Observable<string>;
   abstract deleteDir(path: string): Promise<boolean>;
+
+  listDir(path: string, params: ScanOptions): Observable<string> {
+    const stream$ = new Subject<string>();
+    this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
+    return stream$;
+  }
 
   getFolderSize(path: string): Observable<number> {
     const stream$ = new Subject<number>();

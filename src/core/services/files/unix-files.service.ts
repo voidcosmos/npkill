@@ -14,12 +14,6 @@ export class UnixFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  listDir(path: string, params: ScanOptions): Observable<string> {
-    const stream$ = new Subject<string>();
-    this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
-    return stream$;
-  }
-
   async deleteDir(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const command = `rm -rf "${path}"`;

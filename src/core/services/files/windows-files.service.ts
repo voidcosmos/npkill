@@ -13,12 +13,6 @@ export class WindowsFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  listDir(path: string, params: ScanOptions): Observable<string> {
-    const stream$ = new Subject<string>();
-    this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
-    return stream$;
-  }
-
   async deleteDir(path: string): Promise<boolean> {
     await rm(path, { recursive: true, force: true });
     return true;
