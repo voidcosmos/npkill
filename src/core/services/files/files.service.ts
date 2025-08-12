@@ -1,4 +1,5 @@
 import path from 'path';
+import os from 'os';
 import {
   ScanOptions,
   IFileService,
@@ -82,40 +83,74 @@ export abstract class FileService implements IFileService {
    * from these locations could potentially disrupt the normal operation of these applications.
    */
   isDangerous(originalPath: string): RiskAnalysis {
-    const absolutePath = path.resolve(originalPath);
+    const isUnc =
+      originalPath.startsWith('\\\\') || originalPath.startsWith('//');
+    const absolutePath = isUnc
+      ? originalPath
+      : path.isAbsolute(originalPath)
+        ? originalPath
+        : path.resolve(process.cwd(), originalPath);
     const normalizedPath = absolutePath.replace(/\\/g, '/').toLowerCase();
+    const normalizedOriginal = originalPath.replace(/\\/g, '/').toLowerCase();
 
-    const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
+    const home =
+      process.env.HOME ?? process.env.USERPROFILE ?? os.homedir() ?? '';
     let isInHome = false;
+    let normalizedHome = '';
 
     if (home !== '') {
-      const normalizedHome = path
-        .resolve(home)
-        .replace(/\\/g, '/')
-        .toLowerCase();
-      isInHome = normalizedPath.startsWith(normalizedHome);
+      normalizedHome = path.resolve(home).replace(/\\/g, '/').toLowerCase();
+      isInHome =
+        normalizedPath === normalizedHome ||
+        normalizedPath.startsWith(normalizedHome + '/');
     }
 
     if (isInHome) {
-      if (/\/\.config(\/|$)/.test(normalizedPath)) {
+      // Relative path inside HOME (without the HOME prefix)
+      let rel = normalizedPath.slice(normalizedHome.length);
+      if (rel.startsWith('/')) rel = rel.slice(1);
+
+      // Special sensitive locations inside HOME
+      if (rel === '.config' || rel.startsWith('.config/')) {
         return {
           isSensitive: true,
           reason: 'Contains user configuration data (~/.config)',
         };
       }
-      if (/\/\.local\/share(\/|$)/.test(normalizedPath)) {
+      if (rel === '.local/share' || rel.startsWith('.local/share/')) {
         return {
           isSensitive: true,
           reason: 'User data folder (~/.local/share)',
         };
       }
-      if (/\/\.(cache|npm|pnpm)(\/|$)/.test(normalizedPath))
+
+      // Whitelisted hidden top-level folders inside HOME
+      if (/^\.(cache|npm|pnpm)(\/|$)/.test(rel)) {
         return { isSensitive: false };
+      }
+
+      // Only consider TOP-LEVEL hidden entries inside HOME as sensitive
+      const topLevel = rel.split('/')[0] ?? '';
+      if (
+        topLevel.startsWith('.') &&
+        topLevel !== '.' &&
+        topLevel !== '..' &&
+        !['.cache', '.npm', '.pnpm'].includes(topLevel)
+      ) {
+        return { isSensitive: true, reason: 'Contains unsafe hidden folder' };
+      }
     }
 
     // macOs
     if (/\/applications\/[^/]+\.app\//.test(normalizedPath)) {
       return { isSensitive: true, reason: 'Inside macOS .app package' };
+    }
+
+    // Windows UNC network paths (e.g., \\server\\share -> //server/share)
+    if (normalizedOriginal.startsWith('//')) {
+      if (/\/\.[^/]+(\/|$)/.test(normalizedOriginal)) {
+        return { isSensitive: true, reason: 'Hidden path in network share' };
+      }
     }
 
     // Windows
@@ -136,19 +171,6 @@ export abstract class FileService implements IFileService {
     }
     if (/program files( \(x86\))?\//.test(normalizedPath)) {
       return { isSensitive: true, reason: 'Inside Program Files folder' };
-    }
-
-    const segments = normalizedPath.split('/');
-    const hasUnsafeHiddenFolder = segments.some(
-      (segment) =>
-        segment.startsWith('.') &&
-        segment !== '.' &&
-        segment !== '..' &&
-        !['.cache', '.npm', '.pnpm'].includes(segment),
-    );
-
-    if (hasUnsafeHiddenFolder) {
-      return { isSensitive: true, reason: 'Contains unsafe hidden folder' };
     }
 
     return { isSensitive: false };

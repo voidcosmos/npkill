@@ -158,6 +158,16 @@ describe('File Service', () => {
         mockCwd('/home/user');
         expect(fileService.isDangerous('.').isSensitive).toBe(false);
       });
+
+      test('hidden file in home path', () => {
+        mockCwd('/home/user');
+        expect(fileService.isDangerous('.hidden').isSensitive).toBe(true);
+      });
+
+      test('hidden file in not home path', () => {
+        mockCwd('/home/user/project/projecta');
+        expect(fileService.isDangerous('.hello').isSensitive).toBe(false);
+      });
     });
 
     describe('Windows paths', () => {
