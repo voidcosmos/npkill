@@ -32,7 +32,7 @@
 - [特性](#features)
 - [安装](#installation)
 - [使用](#usage)
-  - [多选模型](#multi-select-mode)
+  - [多选模式](#multi-select-mode)
   - [选项](#options)
   - [例子](#examples)
   - [JSON 输出](#json-output)
@@ -41,7 +41,7 @@
 - [路线图](#roadmap)
 - [已知 bugs](#known-bugs)
 - [如何贡献](#contributing)
-- [Buy us a coffee](#donations)
+- [请我们喝杯咖啡](#donations)
 - [License](#license)
 
 <a name="features"></a>
@@ -126,26 +126,6 @@ NPKILL 会通过显示一个 :warning: 来标记这些目录，以提醒你谨�
 <a name="options"></a>
 
 ## 选项
-
-| ARGUMENT                         | DESCRIPTION                                                                                                                                                                         |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| -c, --bg-color                   | Change row highlight color. _(Available: **blue**, cyan, magenta, white, red and yellow)_                                                                                           |
-| -d, --directory                  | Set the directory from which to begin searching. By default, starting-point is .                                                                                                    |
-| -D, --delete-all                 | Automatically delete all node_modules folders that are found. Suggested to be used together with `-x`.                                                                              |
-| -e, --hide-errors                | Hide errors if any                                                                                                                                                                  |
-| -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                      |
-| -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                          |
-| --size-unit                      | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).                 |
-| -h, --help, ?                    | Show this help page and exit                                                                                                                                                        |
-| -nu, --no-check-update           | Don't check for updates on startup                                                                                                                                                  |
-| -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                                                       |
-| -t, --target                     | Specify the name of the directories you want to search for (by default, it's 'node_modules'). You can define multiple targets separating with comma. Ej. `-t node_modules,.cache,`. |
-|                                  |
-| -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                                                         |
-| --dry-run                        | It does not delete anything (will simulate it with a random delay).                                                                                                                 |
-| --json                           | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                          |
-| --json-stream                    | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                           |
-| -v, --version                    | Show npkill version                                                                                                                                                                 |
 
 | 参数                              | 描述                                                                                                                                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  |
@@ -260,20 +240,20 @@ npkill --json | jq '.results[] | select(.size > 104857600)'
 # :pager: 本地设置
 
 ```bash
-# -- First, clone the repository
+# -- 第一步，克隆仓库
 git clone https://github.com/voidcosmos/npkill.git
 
-# -- Navigate to the dir
+# -- 进入文件夹
 cd npkill
 
-# -- Install dependencies
+# -- 安装以来
 npm install
 
-# -- And run!
+# -- 运行！
 npm run start
 
 
-# -- If you want to run it with some parameter, you will have to add "--" as in the following example:
+# -- 如果你想在运行时添加一些参数，需要像下面的示例一样加上 `--`：
 npm run start -- -f -e
 ```
 
@@ -324,7 +304,7 @@ npm run start -- -f -e
 
 <a name="donations"></a>
 
-# :coffee: Buy us a coffee
+# :coffee: 请我们喝杯咖啡
 
 <img align="right" width="300" src="https://npkill.js.org/img/cat-donation-cup.png">
 我们在空闲时间开发了 npkill，因为我们对编程领域充满热情。  
