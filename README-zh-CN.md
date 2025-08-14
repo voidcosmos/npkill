@@ -20,11 +20,11 @@
 
 我们正在努力将 Npkill 文档国际化。以下是可用翻译的列表：
 
+- [English](./README.md)
 - [Español](./README.es.md)
 - [Indonesian](./README.id.md)
 - [Português](./README.pt.md)
 - [Turkish](./README.tr.md)
-- [简体中文](./README-zh-cn.md)
 
 ## Table of Contents
 ## 目录

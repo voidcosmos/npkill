@@ -24,6 +24,7 @@ We're making an effort to internationalize the Npkill docs. Here's a list of the
 - [Indonesian](./README.id.md)
 - [Português](./README.pt.md)
 - [Turkish](./README.tr.md)
+- [简体中文](./README-zh-CN.md)
 
 ## Table of Contents
 
