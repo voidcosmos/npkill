@@ -6,7 +6,7 @@ import colors from 'colors';
 import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
-import { RESULT_TYPE_INFO } from '../../../constants/messages.constants.js';
+import { RESULT_TYPE_INFO } from '../../../constants/index.js';
 import { IConfig } from '../../interfaces/config.interface.js';
 
 export class ResultDetailsUi extends BaseUi implements InteractiveUi {
@@ -167,7 +167,8 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     );
 
     // Target folder details
-    const targetInfo = RESULT_TYPE_INFO[folderName.toUpperCase()];
+    const folderKey = folderName.toLowerCase();
+    const targetInfo = RESULT_TYPE_INFO[folderKey];
     if (targetInfo) {
       currentRow += 2;
       this.printAt(colors.bold.bgBlack.gray(` ${folderName} info `), {
