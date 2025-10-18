@@ -168,20 +168,44 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
 
     // Target folder details
     const folderKey = folderName.toLowerCase();
-    const targetInfo = RESULT_TYPE_INFO[folderKey];
+    const targetInfo: string = RESULT_TYPE_INFO[folderKey];
+
     if (targetInfo) {
       currentRow += 2;
       this.printAt(colors.bold.bgBlack.gray(` ${folderName} info `), {
         x: 2,
         y: currentRow++,
       });
-      // drawLabel('Info:', targetInfo, (text) => colors.gray.italic(text));
-      const infoLines = wrapText(targetInfo, maxWidth - 2);
-      for (const line of infoLines) {
-        this.printAt(colors.gray(line), {
-          x: 2,
-          y: currentRow++,
-        });
+
+      const warningMatch = targetInfo.match(/^(.*?)\s*WARNING:\s*(.*)$/s);
+
+      if (warningMatch) {
+        const mainInfo = warningMatch[1].trim();
+        const warningText = warningMatch[2].trim();
+
+        const infoLines = wrapText(mainInfo, maxWidth - 2);
+        for (const line of infoLines) {
+          this.printAt(colors.gray(line), {
+            x: 2,
+            y: currentRow++,
+          });
+        }
+
+        const warningLines = wrapText(`⚠️ ${warningText}`, maxWidth - 2);
+        for (const line of warningLines) {
+          this.printAt(colors.yellow(line), {
+            x: 2,
+            y: currentRow++,
+          });
+        }
+      } else {
+        const infoLines = wrapText(targetInfo, maxWidth - 2);
+        for (const line of infoLines) {
+          this.printAt(colors.gray(line), {
+            x: 2,
+            y: currentRow++,
+          });
+        }
       }
     }
   }

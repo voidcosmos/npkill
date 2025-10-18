@@ -44,8 +44,3 @@ export const ERROR_MSG = {
   CANT_USE_BOTH_JSON_OPTIONS:
     'Cannot use both --json and --json-stream options simultaneously.',
 };
-
-export const RESULT_TYPE_INFO = {
-  NODE_MODULES:
-    'Holds all the node packages your project depends on. Can get huge. Deleting it won’t hurt—just. You can run `npm install` to restore it.',
-};
