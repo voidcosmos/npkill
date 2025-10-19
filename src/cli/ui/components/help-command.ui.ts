@@ -20,10 +20,29 @@ export class HelpCommandUi extends BaseUi {
   }
 
   show(): void {
+    const maxWidth = Math.min(UI_HELP.MAX_WIDTH, this.terminal.columns);
+
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
-    this.print(HELP_HEADER + '\n\n');
-    this.print(HELP_PROGRESSBAR + '\n\n');
+
+    const headerLines = this.consoleService.splitWordsByWidth(
+      HELP_HEADER,
+      maxWidth,
+    );
+    headerLines.forEach((line) => this.print(line + '\n'));
+    this.print('\n');
+
+    const progressBarLines = this.consoleService.splitWordsByWidth(
+      HELP_PROGRESSBAR,
+      maxWidth,
+    );
+    progressBarLines.forEach((line) => this.print(line + '\n'));
+    this.print('\n');
+
+    const maxDescriptionWidth = Math.min(
+      maxWidth - UI_HELP.X_DESCRIPTION_OFFSET,
+      this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
+    );
 
     OPTIONS.forEach((option) => {
       const args = option.arg.reduce((text, arg) => text + ', ' + arg);
@@ -40,7 +59,7 @@ export class HelpCommandUi extends BaseUi {
 
       const description = this.consoleService.splitWordsByWidth(
         option.description,
-        this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
+        maxDescriptionWidth,
       );
 
       description.forEach((line, index) => {
@@ -58,7 +77,11 @@ export class HelpCommandUi extends BaseUi {
       this.print('\n');
     });
 
-    this.print(HELP_FOOTER + '\n');
+    const footerLines = this.consoleService.splitWordsByWidth(
+      HELP_FOOTER,
+      maxWidth,
+    );
+    footerLines.forEach((line) => this.print(line + '\n'));
   }
 
   clear(): void {
