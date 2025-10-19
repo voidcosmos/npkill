@@ -1,4 +1,3 @@
-import ansiEscapes from 'ansi-escapes';
 import {
   HELP_HEADER,
   OPTIONS,
@@ -7,7 +6,6 @@ import {
 } from '../../../constants/cli.constants.js';
 import { MARGINS, UI_HELP } from '../../../constants/main.constants.js';
 import { INFO_MSGS } from '../../../constants/messages.constants.js';
-import { IPosition } from '../../interfaces/ui-positions.interface.js';
 import { ConsoleService } from '../../services/console.service.js';
 import { BaseUi } from '../base.ui.js';
 import colors from 'colors';
@@ -22,52 +20,73 @@ export class HelpCommandUi extends BaseUi {
   }
 
   show(): void {
+    const maxWidth = Math.min(UI_HELP.MAX_WIDTH, this.terminal.columns);
+
     this.clear();
     this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
-    this.print(HELP_HEADER + '\n\n');
-    this.print(HELP_PROGRESSBAR + '\n\n');
 
-    let lineCount = 0;
-    OPTIONS.forEach((option, index) => {
-      this.printAtHelp(
-        option.arg.reduce((text, arg) => text + ', ' + arg),
-        {
-          x: UI_HELP.X_COMMAND_OFFSET,
-          y: index + UI_HELP.Y_OFFSET + lineCount,
-        },
-      );
+    const headerLines = this.consoleService.splitWordsByWidth(
+      HELP_HEADER,
+      maxWidth,
+    );
+    headerLines.forEach((line) => this.print(line + '\n'));
+    this.print('\n');
+
+    const progressBarLines = this.consoleService.splitWordsByWidth(
+      HELP_PROGRESSBAR,
+      maxWidth,
+    );
+    progressBarLines.forEach((line) => this.print(line + '\n'));
+    this.print('\n');
+
+    const maxDescriptionWidth = Math.min(
+      maxWidth - UI_HELP.X_DESCRIPTION_OFFSET,
+      this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
+    );
+
+    OPTIONS.forEach((option) => {
+      const args = option.arg.reduce((text, arg) => text + ', ' + arg);
+      const padding = ' '.repeat(UI_HELP.X_COMMAND_OFFSET);
+      const commandLength = UI_HELP.X_COMMAND_OFFSET + args.length;
+
+      const commandTooLong = commandLength >= UI_HELP.X_DESCRIPTION_OFFSET;
+
+      if (commandTooLong) {
+        this.print(padding + args + '\n');
+      } else {
+        this.print(padding + args);
+      }
+
       const description = this.consoleService.splitWordsByWidth(
         option.description,
-        this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
+        maxDescriptionWidth,
       );
 
-      description.forEach((line) => {
-        this.printAtHelp(line, {
-          x: UI_HELP.X_DESCRIPTION_OFFSET,
-          y: index + UI_HELP.Y_OFFSET + lineCount,
-        });
-        ++lineCount;
+      description.forEach((line, index) => {
+        if (index === 0 && !commandTooLong) {
+          const spaceBetween = ' '.repeat(
+            UI_HELP.X_DESCRIPTION_OFFSET - commandLength,
+          );
+          this.print(spaceBetween + line + '\n');
+        } else {
+          const descriptionPadding = ' '.repeat(UI_HELP.X_DESCRIPTION_OFFSET);
+          this.print(descriptionPadding + line + '\n');
+        }
       });
+
+      this.print('\n');
     });
 
-    this.print(HELP_FOOTER + '\n');
+    const footerLines = this.consoleService.splitWordsByWidth(
+      HELP_FOOTER,
+      maxWidth,
+    );
+    footerLines.forEach((line) => this.print(line + '\n'));
   }
 
   clear(): void {
     for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
-  }
-
-  private printAtHelp(message: string, position: IPosition): void {
-    this.setCursorAtHelp(position);
-    this.print(message);
-    if (!/-[a-zA-Z]/.test(message.substring(0, 2)) && message !== '') {
-      this.print('\n\n');
-    }
-  }
-
-  private setCursorAtHelp({ x }: IPosition): void {
-    this.print(ansiEscapes.cursorTo(x));
   }
 }

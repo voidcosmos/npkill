@@ -37,6 +37,7 @@ export const UI_HELP = {
   X_COMMAND_OFFSET: 3,
   X_DESCRIPTION_OFFSET: 27,
   Y_OFFSET: 2,
+  MAX_WIDTH: 80,
 };
 
 export const UI_POSITIONS = {
