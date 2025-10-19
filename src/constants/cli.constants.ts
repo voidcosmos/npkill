@@ -3,6 +3,12 @@ import colors from 'colors';
 
 export const OPTIONS: ICliOptions[] = [
   {
+    arg: ['-p', '--profiles'],
+    description:
+      'Specifies profiles (presets) of folders to search, separated by commas (e.g., `-p python,java`, `-p all`). If used without a value, lists the available profiles. Default: `node`.',
+    name: 'profiles',
+  },
+  {
     arg: ['-c', '--bg-color'],
     description:
       'Change row highlight color. Available colors are: blue, cyan, magenta, red, white and yellow. Default is blue.',
@@ -67,7 +73,7 @@ export const OPTIONS: ICliOptions[] = [
     arg: ['-t', '--target'],
     description:
       // eslint-disable-next-line quotes
-      "Specify the name of the directories you want to search for (by default, it's 'node_modules'). You can define multiple targets separating with comma. Ej. `-t node_modules,.cache,`.",
+      'Specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
     name: 'target-folder',
   },
   {
