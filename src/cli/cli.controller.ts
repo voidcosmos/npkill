@@ -346,6 +346,26 @@ export class CliController {
         ]);
       } else {
         const selectedProfiles = options.getStrings('profiles');
+        const badProfiles =
+          this.profilesService.getBadProfiles(selectedProfiles);
+
+        if (badProfiles.length > 0) {
+          this.logger.warn(
+            `The following profiles are invalid: ${badProfiles.join(', ')}`,
+          );
+          const profileText = badProfiles.length > 1 ? 'profiles' : 'profile';
+          console.log(
+            colors.bold(colors.bgRed(colors.white(` Invalid ${profileText} `))),
+          );
+          console.log(
+            `The following ${profileText} are invalid: ${colors.red(badProfiles.join(', '))}.`,
+          );
+          console.log(
+            `You can list the available profiles with ${colors.bold(colors.green('--profiles'))} command ${colors.gray('(without arguments)')}.`,
+          );
+          process.exit(1);
+        }
+
         const targets =
           this.profilesService.getTargetsFromProfiles(selectedProfiles);
         this.logger.info(
