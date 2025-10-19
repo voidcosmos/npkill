@@ -1,4 +1,7 @@
-import { FileWorkerService } from './services/files/index.js';
+import {
+  DeletionStrategyManager,
+  FileWorkerService,
+} from './services/files/index.js';
 import { from, Observable } from 'rxjs';
 import { catchError, filter, map, mergeMap, take, tap } from 'rxjs/operators';
 import { ScanStatus } from './interfaces/search-status.model.js';
@@ -171,14 +174,21 @@ function createDefaultServices(
   );
   const streamService = new StreamService();
   const resultsService = new ResultsService();
+  const delStrategyManager = new DeletionStrategyManager(actualLogger);
 
-  const OSService = OSServiceMap[process.platform];
+  const OSService = OSServiceMap[
+    process.platform
+  ] as (typeof OSServiceMap)[keyof typeof OSServiceMap];
   if (typeof OSService === 'undefined') {
     throw new Error(
       `Unsupported platform: ${process.platform}. Cannot load OS service.`,
     );
   }
-  const fileService = new OSService(streamService, fileWorkerService);
+  const fileService = new OSService(
+    streamService,
+    fileWorkerService,
+    delStrategyManager,
+  );
 
   return {
     logger: actualLogger,
