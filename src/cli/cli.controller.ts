@@ -1,11 +1,13 @@
 import {
   ConsoleService,
+  ProfilesService,
   ResultsService,
   SpinnerService,
   UpdateService,
 } from './services/index.js';
 import {
   DEFAULT_CONFIG,
+  DEFAULT_PROFILE,
   MIN_CLI_COLUMNS_SIZE,
   UI_POSITIONS,
 } from '../constants/index.js';
@@ -73,6 +75,7 @@ export class CliController {
     private readonly uiService: UiService,
     private readonly scanService: ScanService,
     private readonly jsonOutputService: JsonOutputService,
+    private readonly profilesService: ProfilesService,
   ) {}
 
   init(): void {
@@ -257,9 +260,41 @@ export class CliController {
       // eslint-disable-next-line n/no-process-exit
       process.exit(0);
     }
+
+    if (options.isTrue('profiles') && options.isTrue('target-folder')) {
+      console.log(
+        'Cannot use both --profiles and --target-folder options together.',
+      );
+      process.exit(0);
+    }
+
+    if (
+      options.isTrue('profiles') &&
+      options.getStrings('profiles').length === 0
+    ) {
+      // TODO check user defined
+      const defaultProfile = DEFAULT_PROFILE;
+      console.log(
+        colors.bold(colors.bgYellow(colors.black(' Available profiles '))),
+      );
+      console.log(
+        `Remember: ${colors.bold(colors.yellow('context matters'))}. What's safe to remove in one project or ecosystem could be important in another.\n`,
+      );
+      console.log(
+        this.profilesService.getAvailableProfilesToPrint(defaultProfile),
+      );
+      process.exit(0);
+    }
+
     if (options.isTrue('delete-all')) {
+      if (!options.isTrue('target-folder') || options.isTrue('profiles')) {
+        // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
+        console.log('--delete-all only can be used with --target-folder.');
+        process.exit(1);
+      }
       this.config.deleteAll = true;
     }
+
     if (options.isTrue('sort-by')) {
       if (!this.isValidSortParam(options.getString('sort-by'))) {
         this.invalidSortParam();
@@ -302,6 +337,25 @@ export class CliController {
     if (options.isTrue('no-check-updates')) {
       this.config.checkUpdates = false;
     }
+
+    if (!options.isTrue('target-folder')) {
+      if (!options.isTrue('profiles')) {
+        this.logger.info(`Using default profile targets (${DEFAULT_PROFILE})`);
+        this.config.targets = this.profilesService.getTargetsFromProfiles([
+          DEFAULT_PROFILE,
+        ]);
+      } else {
+        const selectedProfiles = options.getStrings('profiles');
+        const targets =
+          this.profilesService.getTargetsFromProfiles(selectedProfiles);
+        this.logger.info(
+          `Using profiles ${selectedProfiles.join(', ')} | With targets ${targets.join(', ')}`,
+        );
+        this.config.profiles = selectedProfiles;
+        this.config.targets = targets;
+      }
+    }
+
     if (options.isTrue('target-folder')) {
       this.config.targets = options.getString('target-folder').split(',');
     }

@@ -18,4 +18,13 @@ export class StartParameters {
 
     return value;
   }
+
+  getStrings(key: string): string[] {
+    const value = this.values[key];
+    if (!value || typeof value === 'boolean') {
+      return [];
+    }
+
+    return value.split(',').map((item) => item.trim());
+  }
 }
