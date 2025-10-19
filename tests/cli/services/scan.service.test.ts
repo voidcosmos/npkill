@@ -8,6 +8,7 @@ import {
 import { of, firstValueFrom } from 'rxjs';
 import { convertBytesToGb } from '../../../src/utils/unit-conversions.js';
 import path from 'node:path';
+import { DEFAULT_PROFILE } from '../../../src/constants/profiles.constants.js';
 
 describe('ScanService', () => {
   let scanService: ScanService;
@@ -19,6 +20,7 @@ describe('ScanService', () => {
 
   // Sample data for testing
   const mockConfig: IConfig = {
+    profiles: [DEFAULT_PROFILE],
     folderRoot: '/test/root',
     targets: ['node_modules'],
     exclude: ['/test/root/excluded'],
