@@ -126,7 +126,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     drawLabel(
       'Size:',
       size ? formattedSize.text : '...',
-      size ? colors.gray : colors.yellow,
+      size ? colors.yellow : colors.gray,
     );
     drawLabel(
       'Modified:',
