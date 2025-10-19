@@ -123,10 +123,16 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
 
     // Size, Modified
     const formattedSize = formatSize(size, this.config.sizeUnit);
-    drawLabel('Size:', formattedSize.text, colors.yellow);
+    drawLabel(
+      'Size:',
+      size ? formattedSize.text : '...',
+      size ? colors.gray : colors.yellow,
+    );
     drawLabel(
       'Modified:',
-      new Date(modificationTime * 1000).toLocaleString(),
+      modificationTime > 0
+        ? new Date(modificationTime * 1000).toLocaleString()
+        : '...',
       colors.gray,
     );
 
