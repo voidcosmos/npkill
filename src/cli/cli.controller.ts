@@ -252,20 +252,18 @@ export class CliController {
     const options = this.consoleService.getParameters(process.argv);
     if (options.isTrue('help')) {
       this.showHelp();
-      // eslint-disable-next-line n/no-process-exit
-      process.exit(0);
+      this.exitGracefully();
     }
     if (options.isTrue('version')) {
       this.showProgramVersion();
-      // eslint-disable-next-line n/no-process-exit
-      process.exit(0);
+      this.exitGracefully();
     }
 
     if (options.isTrue('profiles') && options.isTrue('target-folder')) {
       console.log(
         'Cannot use both --profiles and --target-folder options together.',
       );
-      process.exit(0);
+      this.exitGracefully();
     }
 
     if (
@@ -283,14 +281,14 @@ export class CliController {
       console.log(
         this.profilesService.getAvailableProfilesToPrint(defaultProfile),
       );
-      process.exit(0);
+      this.exitGracefully();
     }
 
     if (options.isTrue('delete-all')) {
       if (!options.isTrue('target-folder') || options.isTrue('profiles')) {
         // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
         console.log('--delete-all only can be used with --target-folder.');
-        process.exit(1);
+        this.exitWithError();
       }
       this.config.deleteAll = true;
     }
@@ -699,13 +697,19 @@ export class CliController {
   }
 
   private exitWithError(): void {
-    this.uiService.print('\n');
-    this.uiService.setRawMode(false);
-    this.uiService.setCursorVisible(true);
+    this.resetConsoleState();
     const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
     // eslint-disable-next-line n/no-process-exit
     process.exit(1);
+  }
+
+  private exitGracefully(): void {
+    this.resetConsoleState();
+    const logPath = this.logger.getSuggestLogFilePath();
+    this.logger.saveToFile(logPath);
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(0);
   }
 
   private quit(): void {
@@ -718,6 +722,12 @@ export class CliController {
     this.logger.saveToFile(logPath);
     // eslint-disable-next-line n/no-process-exit
     process.exit(0);
+  }
+
+  private resetConsoleState(): void {
+    this.uiService.print('\n');
+    this.uiService.setRawMode(false);
+    this.uiService.setCursorVisible(true);
   }
 
   private printExitMessage(): void {
