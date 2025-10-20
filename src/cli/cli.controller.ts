@@ -361,7 +361,7 @@ export class CliController {
           console.log(
             `You can list the available profiles with ${colors.bold(colors.green('--profiles'))} command ${colors.gray('(without arguments)')}.`,
           );
-          process.exit(1);
+          this.exitWithError();
         }
 
         const targets =
@@ -614,7 +614,7 @@ export class CliController {
         error: (error) => this.jsonOutputService.writeError(error),
         complete: () => {
           this.jsonOutputService.completeScan();
-          process.exit(0);
+          this.exitGracefully();
         },
       });
   }
@@ -643,7 +643,7 @@ export class CliController {
   private setupJsonModeSignalHandlers(): void {
     const gracefulShutdown = () => {
       this.jsonOutputService.handleShutdown();
-      process.exit(0);
+      this.exitGracefully();
     };
 
     process.on('SIGINT', gracefulShutdown);
