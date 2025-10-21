@@ -1,4 +1,5 @@
 import { IConfig } from '../cli/interfaces/index.js';
+import { DEFAULT_PROFILE } from './profiles.constants.js';
 
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';
@@ -8,6 +9,7 @@ export const DECIMALS_SIZE = 2;
 export const OVERFLOW_CUT_FROM = 11;
 
 export const DEFAULT_CONFIG: IConfig = {
+  profiles: [DEFAULT_PROFILE],
   folderRoot: '',
   backgroundColor: 'bgBlue',
   warningColor: 'brightYellow',

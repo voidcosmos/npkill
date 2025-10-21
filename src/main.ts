@@ -2,6 +2,7 @@ import {
   ConsoleService,
   HttpsService,
   JsonOutputService,
+  ProfilesService,
   ResultsService,
   SpinnerService,
   UpdateService,
@@ -36,6 +37,7 @@ export default (): void => {
     new UiService(),
     new ScanService(npkill),
     jsonOutputService,
+    new ProfilesService(),
   );
 
   cli.init();

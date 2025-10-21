@@ -1,11 +1,13 @@
 import {
   ConsoleService,
+  ProfilesService,
   ResultsService,
   SpinnerService,
   UpdateService,
 } from './services/index.js';
 import {
   DEFAULT_CONFIG,
+  DEFAULT_PROFILE,
   MIN_CLI_COLUMNS_SIZE,
   UI_POSITIONS,
 } from '../constants/index.js';
@@ -73,6 +75,7 @@ export class CliController {
     private readonly uiService: UiService,
     private readonly scanService: ScanService,
     private readonly jsonOutputService: JsonOutputService,
+    private readonly profilesService: ProfilesService,
   ) {}
 
   init(): void {
@@ -249,17 +252,47 @@ export class CliController {
     const options = this.consoleService.getParameters(process.argv);
     if (options.isTrue('help')) {
       this.showHelp();
-      // eslint-disable-next-line n/no-process-exit
-      process.exit(0);
+      this.exitGracefully();
     }
     if (options.isTrue('version')) {
       this.showProgramVersion();
-      // eslint-disable-next-line n/no-process-exit
-      process.exit(0);
+      this.exitGracefully();
     }
+
+    if (options.isTrue('profiles') && options.isTrue('target-folder')) {
+      console.log(
+        'Cannot use both --profiles and --target-folder options together.',
+      );
+      this.exitGracefully();
+    }
+
+    if (
+      options.isTrue('profiles') &&
+      options.getStrings('profiles').length === 0
+    ) {
+      // TODO check user defined
+      const defaultProfile = DEFAULT_PROFILE;
+      console.log(
+        colors.bold(colors.bgYellow(colors.black(' Available profiles '))),
+      );
+      console.log(
+        `Remember: ${colors.bold(colors.yellow('context matters'))}. What's safe to remove in one project or ecosystem could be important in another.\n`,
+      );
+      console.log(
+        this.profilesService.getAvailableProfilesToPrint(defaultProfile),
+      );
+      this.exitGracefully();
+    }
+
     if (options.isTrue('delete-all')) {
+      if (!options.isTrue('target-folder') || options.isTrue('profiles')) {
+        // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
+        console.log('--delete-all only can be used with --target-folder.');
+        this.exitWithError();
+      }
       this.config.deleteAll = true;
     }
+
     if (options.isTrue('sort-by')) {
       if (!this.isValidSortParam(options.getString('sort-by'))) {
         this.invalidSortParam();
@@ -302,6 +335,45 @@ export class CliController {
     if (options.isTrue('no-check-updates')) {
       this.config.checkUpdates = false;
     }
+
+    if (!options.isTrue('target-folder')) {
+      if (!options.isTrue('profiles')) {
+        this.logger.info(`Using default profile targets (${DEFAULT_PROFILE})`);
+        this.config.targets = this.profilesService.getTargetsFromProfiles([
+          DEFAULT_PROFILE,
+        ]);
+      } else {
+        const selectedProfiles = options.getStrings('profiles');
+        const badProfiles =
+          this.profilesService.getBadProfiles(selectedProfiles);
+
+        if (badProfiles.length > 0) {
+          this.logger.warn(
+            `The following profiles are invalid: ${badProfiles.join(', ')}`,
+          );
+          const profileText = badProfiles.length > 1 ? 'profiles' : 'profile';
+          console.log(
+            colors.bold(colors.bgRed(colors.white(` Invalid ${profileText} `))),
+          );
+          console.log(
+            `The following ${profileText} are invalid: ${colors.red(badProfiles.join(', '))}.`,
+          );
+          console.log(
+            `You can list the available profiles with ${colors.bold(colors.green('--profiles'))} command ${colors.gray('(without arguments)')}.`,
+          );
+          this.exitWithError();
+        }
+
+        const targets =
+          this.profilesService.getTargetsFromProfiles(selectedProfiles);
+        this.logger.info(
+          `Using profiles ${selectedProfiles.join(', ')} | With targets ${targets.join(', ')}`,
+        );
+        this.config.profiles = selectedProfiles;
+        this.config.targets = targets;
+      }
+    }
+
     if (options.isTrue('target-folder')) {
       this.config.targets = options.getString('target-folder').split(',');
     }
@@ -542,7 +614,7 @@ export class CliController {
         error: (error) => this.jsonOutputService.writeError(error),
         complete: () => {
           this.jsonOutputService.completeScan();
-          process.exit(0);
+          this.exitGracefully();
         },
       });
   }
@@ -571,7 +643,7 @@ export class CliController {
   private setupJsonModeSignalHandlers(): void {
     const gracefulShutdown = () => {
       this.jsonOutputService.handleShutdown();
-      process.exit(0);
+      this.exitGracefully();
     };
 
     process.on('SIGINT', gracefulShutdown);
@@ -625,13 +697,19 @@ export class CliController {
   }
 
   private exitWithError(): void {
-    this.uiService.print('\n');
-    this.uiService.setRawMode(false);
-    this.uiService.setCursorVisible(true);
+    this.resetConsoleState();
     const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
     // eslint-disable-next-line n/no-process-exit
     process.exit(1);
+  }
+
+  private exitGracefully(): void {
+    this.resetConsoleState();
+    const logPath = this.logger.getSuggestLogFilePath();
+    this.logger.saveToFile(logPath);
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(0);
   }
 
   private quit(): void {
@@ -644,6 +722,12 @@ export class CliController {
     this.logger.saveToFile(logPath);
     // eslint-disable-next-line n/no-process-exit
     process.exit(0);
+  }
+
+  private resetConsoleState(): void {
+    this.uiService.print('\n');
+    this.uiService.setRawMode(false);
+    this.uiService.setCursorVisible(true);
   }
 
   private printExitMessage(): void {
