@@ -254,7 +254,7 @@ describe('File Service', () => {
     const createDir = (dir) => mkdirSync(dir);
     const isDirEmpty = (dir) => readdirSync(dir).length === 0;
     const createFileWithSize = (filename, mb) =>
-      writeFileSync(filename, Buffer.alloc(1024 * 1024 * mb));
+      writeFileSync(filename, new Uint8Array(1024 * 1024 * mb));
 
     beforeAll(() => {
       const getOS = () => process.platform;
