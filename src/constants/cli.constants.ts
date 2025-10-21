@@ -104,28 +104,43 @@ export const OPTIONS: ICliOptions[] = [
   },
 ];
 
-export const HELP_HEADER = `This tool allows you to list any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.
- ┌------ CONTROLS --------------------
- 🭲 SPACE, DEL:            delete selected result
- 🭲 Cursor UP, k:          move up
- 🭲 Cursor DOWN, j:        move down
- 🭲 h, d, Ctrl+d, PgUp:    move one page down
- 🭲 l, u, Ctrl+u, PgDown:  move one page up
- 🭲 home, end:             move to the first and last result
- 🭲 o:                     open the parent directory of the selected result
- 🭲 e:                     show errors popup, next page`;
+const getHeader = (title: string) => {
+  return colors.black(colors.bgYellow(colors.bold(` ${title} `)));
+};
 
-export const HELP_PROGRESSBAR = ` ------- PROGRESS BAR --------------------
- The progress bar provides information on the search process. It has 3 parts differentiated by colors.
+export const HELP_HEADER = `Npkill helps you find and manage “junk” directories left behind by development tools.
+These folders are essential while you’re actively working on a project, but over time they pile up, eating tons of space long after you’ve moved on.
+Npkill scans your directories, lists these directories with their sizes, and shows when you last touched each project, so you can quickly decide what to keep and what to clean. Easy!
 
-    ┌ (green) Results ready (stats calculated).
-    🭲     ┌ (white) Directories examined.
-    🭲     🭲      ┌ (gray) Directories pending to be analyzed.
+${getHeader('How to interact')}
+ ${colors.green('SPACE / DEL')}             Delete selected result.
+ ${colors.green('↑ / k')}                   Move up.
+ ${colors.green('↓ / j')}                   Move down.
+ ${colors.green('→ / ←')}                   Switch between panels.
+ ${colors.green('t')}                       Multi-selection mode.
+ ${colors.green('PgUp / Ctrl+u / u / h')}   Move one page up.
+ ${colors.green('PgDown / Ctrl+d / d / l')} Move one page down.
+ ${colors.green('Home, End')}               Jump to first / last result.
+ ${colors.green('o')}                       Open the parent directory.
+ ${colors.green('e')}                       Show errors.
+ ${colors.green('q')}                       Quit.`;
+
+export const HELP_PROGRESSBAR = `${getHeader('Header information')}
+${colors.green('Potential space')}: The total size of all detected directories. Not everything needs to be deleted. This represents the maximum possible space you could free.
+${colors.green('Freed space')}: The space actually recovered in this session.
+
+The progress bar provides information on the search process. It has 3 parts differentiated by colors.
+
+ (green) Results ready (stats calculated).
+    🭲  (white) Directories examined.
+    🭲     🭲     ┌ (gray) Directories pending to be analyzed.
  ${colors.green('▀▀▀▀▀▀▀')}${colors.white('▀▀▀▀')}${colors.gray('▀▀▀▀▀▀▀▀▀▀▀')}
+
+The header will also display other relevant contextual information, such as when selection mode is activated or npkill is started in "dry-run mode".
 `;
 
-export const HELP_FOOTER =
-  'Not all node_modules are bad! Some applications (like vscode, Discord, etc) need those dependencies to work. If their directory is deleted, the application will probably break (until the dependencies are reinstalled). NPKILL will show you these directories by highlighting them ⚠️';
+export const HELP_FOOTER = `${getHeader('Important note')}
+${colors.bold('Not all results listed are bad!')} Some applications (like vscode, Discord, etc) need those dependencies to work. If their directory is deleted, the application will probably break (until the dependencies are reinstalled). NPKILL will try to show you these results by highlighting them ⚠️.`;
 
 export const COLORS = {
   red: 'bgRed',

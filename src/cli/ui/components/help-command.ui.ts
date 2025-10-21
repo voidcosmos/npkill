@@ -23,7 +23,7 @@ export class HelpCommandUi extends BaseUi {
     const maxWidth = Math.min(UI_HELP.MAX_WIDTH, this.terminal.columns);
 
     this.clear();
-    this.print(colors.inverse(INFO_MSGS.HELP_TITLE + '\n\n'));
+    this.print(colors.inverse(colors.bold(INFO_MSGS.HELP_TITLE + '\n')));
 
     const headerLines = this.consoleService.splitWordsByWidth(
       HELP_HEADER,
@@ -44,6 +44,7 @@ export class HelpCommandUi extends BaseUi {
       this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
     );
 
+    this.print(colors.black(colors.bgYellow(colors.bold(' Options '))) + '\n');
     OPTIONS.forEach((option) => {
       const args = option.arg.reduce((text, arg) => text + ', ' + arg);
       const padding = ' '.repeat(UI_HELP.X_COMMAND_OFFSET);
@@ -77,6 +78,7 @@ export class HelpCommandUi extends BaseUi {
       this.print('\n');
     });
 
+    this.print('\n');
     const footerLines = this.consoleService.splitWordsByWidth(
       HELP_FOOTER,
       maxWidth,
