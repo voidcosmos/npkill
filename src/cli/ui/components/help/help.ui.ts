@@ -144,7 +144,7 @@ export class HelpUi extends BaseUi implements InteractiveUi {
         colors.green('↑/↓') +
         colors.dim(' to change section, ') +
         colors.green('j/k') +
-        colors.dim(' to scroll'),
+        colors.dim(' to scroll.'),
       { x: 2, y: startRow },
     );
 
