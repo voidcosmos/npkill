@@ -45,7 +45,7 @@ jest.unstable_mockModule(
 jest.unstable_mockModule('../../src/cli/ui/components/general.ui.js', () => ({
   GeneralUi: jest.fn(),
 }));
-jest.unstable_mockModule('../../src/cli/ui/components/help.ui.js', () => ({
+jest.unstable_mockModule('../../src/cli/ui/components/help/help.ui.js', () => ({
   HelpUi: jest.fn(),
 }));
 jest.unstable_mockModule('../../src/cli/ui/components/results.ui.js', () => ({

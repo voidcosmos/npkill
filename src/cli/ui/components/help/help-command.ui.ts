@@ -3,11 +3,11 @@ import {
   OPTIONS,
   HELP_FOOTER,
   HELP_PROGRESSBAR,
-} from '../../../constants/cli.constants.js';
-import { MARGINS, UI_HELP } from '../../../constants/main.constants.js';
-import { INFO_MSGS } from '../../../constants/messages.constants.js';
-import { ConsoleService } from '../../services/console.service.js';
-import { BaseUi } from '../base.ui.js';
+} from '../../../../constants/cli.constants.js';
+import { MARGINS, UI_HELP } from '../../../../constants/main.constants.js';
+import { INFO_MSGS } from '../../../../constants/messages.constants.js';
+import { ConsoleService } from '../../../services/console.service.js';
+import { BaseUi } from '../../base.ui.js';
 import colors from 'colors';
 
 export class HelpCommandUi extends BaseUi {
