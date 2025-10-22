@@ -1,5 +1,5 @@
 import { BaseUi } from '../../base.ui.js';
-import colors from 'colors';
+import pc from 'picocolors';
 import { SpinnerService } from '../../../services/spinner.service.js';
 import { interval, Subject, takeUntil } from 'rxjs';
 import { INFO_MSGS } from '../../../../constants/messages.constants.js';
@@ -65,8 +65,7 @@ export class StatusUi extends BaseUi {
     this.searchEnd$.next(true);
     this.searchEnd$.complete();
 
-    this.text =
-      colors.green(INFO_MSGS.SEARCH_COMPLETED) + colors.gray(`${duration}s`);
+    this.text = pc.green(INFO_MSGS.SEARCH_COMPLETED) + pc.gray(`${duration}s`);
     this.render();
     setTimeout(() => this.animateClose(), 2000);
   }
@@ -90,7 +89,7 @@ export class StatusUi extends BaseUi {
     const { pendingDeletions } = this.searchStatus;
     const text = pendingDeletions > 1 ? 'pending tasks' : 'pending task ';
     this.printAt(
-      colors.yellow(`${pendingDeletions} ${text}`),
+      pc.yellow(`${pendingDeletions} ${text}`),
       this.pendingTasksPosition,
     );
   }
@@ -220,7 +219,7 @@ export class StatusUi extends BaseUi {
   }
 
   private fatalError(): void {
-    this.text = colors.red(INFO_MSGS.FATAL_ERROR);
+    this.text = pc.red(INFO_MSGS.FATAL_ERROR);
     this.searchEnd$.next(true);
     this.searchEnd$.complete();
     this.render();

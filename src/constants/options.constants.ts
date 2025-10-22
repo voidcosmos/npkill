@@ -1,16 +1,16 @@
-import colors from 'colors';
+import pc from 'picocolors';
 
 export const OPTIONS_HINTS_BY_TYPE = {
-  input: colors.gray(
-    `${colors.bold.underline('SPACE')} or ${colors.bold.underline('ENTER')} to edit.`,
+  input: pc.gray(
+    `${pc.bold(pc.underline('SPACE'))} or ${pc.bold(pc.underline('ENTER'))} to edit.`,
   ),
-  'input-exit': colors.gray(
-    `${colors.bold.underline('ENTER')} to confirm. ${colors.bold.underline('ESC')} To cancel.`,
+  'input-exit': pc.gray(
+    `${pc.bold(pc.underline('ENTER'))} to confirm. ${pc.bold(pc.underline('ESC'))} To cancel.`,
   ),
-  dropdown: colors.gray(
-    `${colors.bold.underline('SPACE')}/${colors.bold.underline('SHIFT')}+${colors.bold.underline('SPACE')} to navigate.`,
+  dropdown: pc.gray(
+    `${pc.bold(pc.underline('SPACE'))}/${pc.bold(pc.underline('SHIFT'))}+${pc.bold(pc.underline('SPACE'))} to navigate.`,
   ),
-  checkbox: colors.gray(
-    `${colors.bold.underline('SPACE')} or ${colors.bold.underline('ENTER')} to toggle.`,
+  checkbox: pc.gray(
+    `${pc.bold(pc.underline('SPACE'))} or ${pc.bold(pc.underline('ENTER'))} to toggle.`,
   ),
 };

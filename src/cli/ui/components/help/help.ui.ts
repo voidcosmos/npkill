@@ -2,7 +2,7 @@ import { MARGINS } from '../../../../constants/main.constants.js';
 import { BaseUi, InteractiveUi } from '../../base.ui.js';
 import { IKeyPress } from '../../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
-import colors from 'colors';
+import pc from 'picocolors';
 import { HELP_SECTIONS } from './help.constants.js';
 
 export class HelpUi extends BaseUi implements InteractiveUi {
@@ -140,11 +140,11 @@ export class HelpUi extends BaseUi implements InteractiveUi {
 
     // Header hint
     this.printAt(
-      colors.dim('Use ') +
-        colors.green('↑/↓') +
-        colors.dim(' to change section, ') +
-        colors.green('j/k') +
-        colors.dim(' to scroll.'),
+      pc.dim('Use ') +
+        pc.green('↑/↓') +
+        pc.dim(' to change section, ') +
+        pc.green('j/k') +
+        pc.dim(' to scroll.'),
       { x: 2, y: startRow },
     );
 
@@ -155,7 +155,7 @@ export class HelpUi extends BaseUi implements InteractiveUi {
   private drawIndex(startRow: number): void {
     const indexHeight = this.terminal.rows - startRow - 1;
 
-    this.printAt(colors.gray('╭' + '─'.repeat(this.INDEX_WIDTH - 2) + '╮'), {
+    this.printAt(pc.gray('╭' + '─'.repeat(this.INDEX_WIDTH - 2) + '╮'), {
       x: 2,
       y: startRow - 1,
     });
@@ -170,12 +170,12 @@ export class HelpUi extends BaseUi implements InteractiveUi {
       const line = ` ${section.icon} ${section.title}${padding}`;
 
       if (isSelected) {
-        this.printAt(
-          colors.gray('│') + colors.bgCyan.black(line) + colors.gray('│'),
-          { x: 2, y: startRow + i },
-        );
+        this.printAt(pc.gray('│') + pc.bgCyan(pc.black(line)) + pc.gray('│'), {
+          x: 2,
+          y: startRow + i,
+        });
       } else {
-        this.printAt(colors.gray('│') + colors.white(line) + colors.gray('│'), {
+        this.printAt(pc.gray('│') + pc.white(line) + pc.gray('│'), {
           x: 2,
           y: startRow + i,
         });
@@ -183,7 +183,7 @@ export class HelpUi extends BaseUi implements InteractiveUi {
     }
 
     const bottomRow = startRow + Math.min(HELP_SECTIONS.length, indexHeight);
-    this.printAt(colors.gray('╰' + '─'.repeat(this.INDEX_WIDTH - 2) + '╯'), {
+    this.printAt(pc.gray('╰' + '─'.repeat(this.INDEX_WIDTH - 2) + '╯'), {
       x: 2,
       y: bottomRow,
     });
@@ -197,7 +197,7 @@ export class HelpUi extends BaseUi implements InteractiveUi {
       this.terminal.columns - contentStartX - 4,
     );
 
-    this.printAt(colors.gray('╭' + '─'.repeat(contentWidth) + '╮'), {
+    this.printAt(pc.gray('╭' + '─'.repeat(contentWidth) + '╮'), {
       x: contentStartX,
       y: startRow - 1,
     });
@@ -213,13 +213,13 @@ export class HelpUi extends BaseUi implements InteractiveUi {
       const padding = ' '.repeat(
         Math.max(0, contentWidth - this.getStringWidth(line) - 1),
       );
-      this.printAt(colors.gray('│ ') + line + padding + colors.gray('│'), {
+      this.printAt(pc.gray('│ ') + line + padding + pc.gray('│'), {
         x: contentStartX,
         y: startRow + i,
       });
     }
 
-    this.printAt(colors.gray('╰' + '─'.repeat(contentWidth) + '╯'), {
+    this.printAt(pc.gray('╰' + '─'.repeat(contentWidth) + '╯'), {
       x: contentStartX,
       y: startRow + contentHeight,
     });

@@ -14,7 +14,7 @@ import {
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
 import { firstValueFrom, Subject } from 'rxjs';
-import { map, mergeMap, tap } from 'rxjs/operators';
+import { mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
 import { FOLDER_SORT } from '../constants/sort.result.js';
@@ -35,7 +35,7 @@ import { MENU_BAR_OPTIONS } from './ui/components/header/header-ui.constants.js'
 
 import { UiService } from './services/ui.service.js';
 import _dirname from '../dirname.js';
-import colors from 'colors';
+import pc from 'picocolors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
@@ -272,11 +272,9 @@ export class CliController {
     ) {
       // TODO check user defined
       const defaultProfile = DEFAULT_PROFILE;
+      console.log(pc.bold(pc.bgYellow(pc.black(' Available profiles '))));
       console.log(
-        colors.bold(colors.bgYellow(colors.black(' Available profiles '))),
-      );
-      console.log(
-        `Remember: ${colors.bold(colors.yellow('context matters'))}. What's safe to remove in one project or ecosystem could be important in another.\n`,
+        `Remember: ${pc.bold(pc.yellow('context matters'))}. What's safe to remove in one project or ecosystem could be important in another.\n`,
       );
       console.log(
         this.profilesService.getAvailableProfilesToPrint(defaultProfile),
@@ -352,14 +350,12 @@ export class CliController {
             `The following profiles are invalid: ${badProfiles.join(', ')}`,
           );
           const profileText = badProfiles.length > 1 ? 'profiles' : 'profile';
+          console.log(pc.bold(pc.bgRed(pc.white(` Invalid ${profileText} `))));
           console.log(
-            colors.bold(colors.bgRed(colors.white(` Invalid ${profileText} `))),
+            `The following ${profileText} are invalid: ${pc.red(badProfiles.join(', '))}.`,
           );
           console.log(
-            `The following ${profileText} are invalid: ${colors.red(badProfiles.join(', '))}.`,
-          );
-          console.log(
-            `You can list the available profiles with ${colors.bold(colors.green('--profiles'))} command ${colors.gray('(without arguments)')}.`,
+            `You can list the available profiles with ${pc.bold(pc.green('--profiles'))} command ${pc.gray('(without arguments)')}.`,
           );
           this.exitWithError();
         }
@@ -528,7 +524,7 @@ export class CliController {
   }
 
   private showUpdateMessage(): void {
-    const message = colors.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
+    const message = pc.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
     this.uiService.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
 

@@ -14,7 +14,7 @@ import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { INFO_MSGS } from '../../../constants/messages.constants.js';
 import { ResultsService } from '../../services/results.service.js';
 import { Subject } from 'rxjs';
-import colors from 'colors';
+import pc from 'picocolors';
 import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
@@ -248,19 +248,19 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
     if (this.selectMode) {
       const selectedMessage = ` ${this.selectedFolders.size} selected `;
-      this.printAt(colors.bgYellow.black(selectedMessage), {
+      this.printAt(pc.bgYellow(pc.black(selectedMessage)), {
         x: tagStartXPosition,
         y: MARGINS.ROW_RESULTS_START - 2,
       });
 
-      const instructionMessage = colors.gray(
-        colors.bold('SPACE') +
+      const instructionMessage = pc.gray(
+        pc.bold('SPACE') +
           ': toggle | ' +
-          colors.bold('v') +
+          pc.bold('v') +
           ': range | ' +
-          colors.bold('a') +
+          pc.bold('a') +
           ': select all | ' +
-          colors.bold('ENTER') +
+          pc.bold('ENTER') +
           ': delete',
       );
       this.printAt(instructionMessage, {
@@ -297,7 +297,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private noResults(): void {
-    const targetFolderColored: string = colors[DEFAULT_CONFIG.warningColor](
+    const targetFolderColored: string = pc[DEFAULT_CONFIG.warningColor](
       this.config.targets.join(', '),
     );
     const message = `No ${targetFolderColored} found!`;
@@ -312,7 +312,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
 
-    lastModification = colors.gray(lastModification);
+    lastModification = pc.gray(lastModification);
 
     // Adjust column start based on select mode
     const pathColumnStart = this.selectMode
@@ -320,9 +320,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       : MARGINS.FOLDER_COLUMN_START;
 
     if (isRowSelected) {
-      path = colors[this.config.backgroundColor](path);
-      size = colors[this.config.backgroundColor](size);
-      lastModification = colors[this.config.backgroundColor](lastModification);
+      path = pc[this.config.backgroundColor](path);
+      size = pc[this.config.backgroundColor](size);
+      lastModification = pc[this.config.backgroundColor](lastModification);
 
       this.paintBgRow(row);
     } else if (isRowSelected && this.selectMode) {
@@ -335,10 +335,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     const isFolderSelected = this.selectedFolders.has(folder.path);
     if (folder.riskAnalysis?.isSensitive) {
-      path =
-        colors[isFolderSelected ? 'blue' : DEFAULT_CONFIG.warningColor](path);
+      path = pc[isFolderSelected ? 'blue' : DEFAULT_CONFIG.warningColor](path);
     } else if (!isRowSelected && isFolderSelected) {
-      path = colors.blue(path);
+      path = pc.blue(path);
     }
 
     if (this.selectMode && this.selectedFolders.has(folder.path)) {
@@ -364,7 +363,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private paintCursorCell(row: number): void {
-    this.printAt(colors[this.config.backgroundColor](' '), {
+    this.printAt(pc[this.config.backgroundColor](' '), {
       x: MARGINS.FOLDER_COLUMN_START - 1,
       y: row,
     });
@@ -379,7 +378,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private selectionCursor(row: number): void {
     const indicator = this.isRangeSelectionMode ? '●' : ' ';
-    this.printAt(colors.yellow(indicator), {
+    this.printAt(pc.yellow(indicator), {
       x: MARGINS.FOLDER_COLUMN_START - 1,
       y: row,
     });
@@ -403,7 +402,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
       )}d`;
     } else {
-      daysSinceLastModification = colors.bgBlack('calc');
+      daysSinceLastModification = pc.bgBlack('calc');
     }
 
     if (folder.riskAnalysis?.isSensitive) {
@@ -424,7 +423,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     folderSize = `${spacePadding}${folderSize}`;
 
     const folderSizeText =
-      folder.size > 0 ? folderSize : colors.bgBlack.gray(' calc... ');
+      folder.size > 0 ? folderSize : pc.bgBlack(pc.gray(' calc... '));
 
     return {
       path: folderText,
@@ -569,17 +568,17 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       deleted: (text) =>
         text.replace(
           INFO_MSGS.DELETED_FOLDER,
-          colors.green(INFO_MSGS.DELETED_FOLDER),
+          pc.green(INFO_MSGS.DELETED_FOLDER),
         ),
       deleting: (text) =>
         text.replace(
           INFO_MSGS.DELETING_FOLDER,
-          colors.yellow(INFO_MSGS.DELETING_FOLDER),
+          pc.yellow(INFO_MSGS.DELETING_FOLDER),
         ),
       'error-deleting': (text) =>
         text.replace(
           INFO_MSGS.ERROR_DELETING_FOLDER,
-          colors.red(INFO_MSGS.ERROR_DELETING_FOLDER),
+          pc.red(INFO_MSGS.ERROR_DELETING_FOLDER),
         ),
     };
 
@@ -589,8 +588,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private printScrollBar(): void {
-    const SCROLLBAR_ACTIVE = colors.gray('█');
-    const SCROLLBAR_BG = colors.gray('░');
+    const SCROLLBAR_ACTIVE = pc.gray('█');
+    const SCROLLBAR_BG = pc.gray('░');
 
     const totalResults = this.resultsService.results.length;
     const visibleRows = this.getRowsAvailable();
@@ -647,7 +646,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       paintSpaces += ' ';
     }
 
-    this.printAt(colors[this.config.backgroundColor](paintSpaces), {
+    this.printAt(pc[this.config.backgroundColor](paintSpaces), {
       x: startPaint,
       y: row,
     });

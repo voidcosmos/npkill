@@ -1,13 +1,13 @@
 import { DEFAULT_PROFILES } from '../../constants/index.js';
-import colors from 'colors';
+import pc from 'picocolors';
 
 export class ProfilesService {
   getAvailableProfilesToPrint(defaultProfileName?: string): string {
     return DEFAULT_PROFILES.reduce((acc, profile) => {
       const isDefault = profile.name === defaultProfileName;
       const entry =
-        ` ${colors.green(profile.name)}${isDefault ? colors.italic(' (default)') : ''} - ${profile.description}\n` +
-        colors.gray(` ${profile.targets.join(colors.italic(','))}\n\n`);
+        ` ${pc.green(profile.name)}${isDefault ? pc.italic(' (default)') : ''} - ${profile.description}\n` +
+        pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
       return acc + entry;
     }, '');
   }

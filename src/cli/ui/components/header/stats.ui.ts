@@ -2,7 +2,7 @@ import { UI_POSITIONS, INFO_MSGS } from '../../../../constants/index.js';
 import { BaseUi } from '../../base.ui.js';
 import { ResultsService } from '../../../services/results.service.js';
 import { LoggerService } from '@core/services/logger.service.js';
-import colors from 'colors';
+import pc from 'picocolors';
 import { IConfig } from '../../../interfaces/config.interface.js';
 import { IPosition } from '../../../interfaces/ui-positions.interface.js';
 
@@ -81,7 +81,7 @@ export class StatsUi extends BaseUi {
       return;
     }
 
-    this.printAt(colors[updateColor](`${value} ▲`), statPosition);
+    this.printAt(pc[updateColor](`${value} ▲`), statPosition);
 
     if (this.timeouts[lastValueKey]) {
       clearTimeout(this.timeouts[lastValueKey]);
@@ -102,6 +102,6 @@ export class StatsUi extends BaseUi {
     }
 
     const text = `${errors} error${errors > 1 ? 's' : ''}. 'e' to see`;
-    this.printAt(colors['yellow'](text), { ...UI_POSITIONS.ERRORS_COUNT });
+    this.printAt(pc.yellow(text), { ...UI_POSITIONS.ERRORS_COUNT });
   }
 }
