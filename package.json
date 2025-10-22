@@ -48,8 +48,8 @@
   },
   "dependencies": {
     "ansi-escapes": "7.1.1",
-    "colors": "1.4.0",
-    "open-file-explorer": "1.0.2"
+    "open-file-explorer": "1.0.2",
+    "picocolors": "1.1.1"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "20.0.0",

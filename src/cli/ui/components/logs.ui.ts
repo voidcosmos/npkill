@@ -1,6 +1,6 @@
 import { LoggerService } from '@core/services/logger.service.js';
 import { InteractiveUi, BaseUi } from '../base.ui.js';
-import colors from 'colors';
+import pc from 'picocolors';
 import { IPosition } from '../../interfaces/ui-positions.interface.js';
 import { Subject } from 'rxjs';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
@@ -76,7 +76,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
           char = '╯';
         }
 
-        this.printAt(colors['bgBlack'](char), { x, y });
+        this.printAt(pc.bgBlack(char), { x, y });
       }
     }
 
@@ -134,7 +134,7 @@ export class LogsUi extends BaseUi implements InteractiveUi {
   ): string {
     const styles = { normal: 'white', error: 'red' };
     const color = styles[style];
-    return colors[color](colors['bgBlack'](text));
+    return pc[color](pc.bgBlack(text));
   }
 
   private chunkString(str: string, length: number): string[] {

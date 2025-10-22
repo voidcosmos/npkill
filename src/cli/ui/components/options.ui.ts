@@ -2,7 +2,7 @@ import { MARGINS } from '../../../constants/main.constants.js';
 import { BaseUi, InteractiveUi } from '../base.ui.js';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
-import colors from 'colors';
+import pc from 'picocolors';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { COLORS } from '../../../constants/cli.constants.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
@@ -245,7 +245,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
     this.printHintMessage();
     let currentRow = MARGINS.ROW_RESULTS_START;
 
-    this.printAt(colors.bold.bgYellow.black('  OPTIONS  '), {
+    this.printAt(pc.bold(pc.bgYellow(pc.black('  OPTIONS  '))), {
       x: 1,
       y: currentRow++,
     });
@@ -268,8 +268,8 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
             : String(opt.value);
       }
 
-      const line = `${isSelected ? colors.bgCyan(' ') : ' '} ${label}${valueText}`;
-      this.printAt(isSelected ? colors.cyan(line) : line, {
+      const line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${valueText}`;
+      this.printAt(isSelected ? pc.cyan(line) : line, {
         x: 2,
         y: currentRow++,
       });
@@ -287,8 +287,8 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           const paddedOption = option.padEnd(maxLength, ' ');
           const optionEntryText =
             option === opt.value
-              ? colors.bgCyan.black(` ${paddedOption} `)
-              : colors.bgBlack.white(` ${paddedOption} `);
+              ? pc.bgCyan(pc.black(` ${paddedOption} `))
+              : pc.bgBlack(pc.white(` ${paddedOption} `));
           this.printAt(optionEntryText, {
             x: 34,
             y: currentRow - Math.round(optionsNumber / 2) + i,

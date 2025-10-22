@@ -1,10 +1,10 @@
-import colors from 'colors';
+import pc from 'picocolors';
 
 export const BAR_PARTS = {
-  bg: colors.gray('▀'),
-  searchTask: colors.white('▀'),
-  calculatingTask: colors.blue('▀'),
-  completed: colors.green('▀'),
+  bg: pc.gray('▀'),
+  searchTask: pc.white('▀'),
+  calculatingTask: pc.blue('▀'),
+  completed: pc.green('▀'),
 };
 
 export const BAR_WIDTH = 25;

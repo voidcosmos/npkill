@@ -7,7 +7,7 @@ import {
   DEFAULT_SIZE,
 } from '../../../../constants/index.js';
 import { BaseUi } from '../../base.ui.js';
-import colors from 'colors';
+import pc from 'picocolors';
 import { IConfig } from '../../../../cli/interfaces/config.interface.js';
 import { MENU_BAR_OPTIONS } from './header-ui.constants.js';
 
@@ -34,19 +34,19 @@ export class HeaderUi extends BaseUi {
     this.renderMenuBar();
 
     if (this.programVersion !== undefined) {
-      this.printAt(colors.gray(this.programVersion), UI_POSITIONS.VERSION);
+      this.printAt(pc.gray(this.programVersion), UI_POSITIONS.VERSION);
     }
 
     if (this.config.dryRun) {
       this.printAt(
-        colors.black(colors.bgMagenta(` ${INFO_MSGS.DRY_RUN} `)),
+        pc.black(pc.bgMagenta(` ${INFO_MSGS.DRY_RUN} `)),
         UI_POSITIONS.DRY_RUN_NOTICE,
       );
     }
 
     // Columns headers
     if (this.activeMenuIndex === MENU_BAR_OPTIONS.DELETE) {
-      this.printAt(colors.bgYellow(colors.black(INFO_MSGS.HEADER_COLUMNS)), {
+      this.printAt(pc.bgYellow(pc.black(INFO_MSGS.HEADER_COLUMNS)), {
         x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 2,
         y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
       });
@@ -54,11 +54,11 @@ export class HeaderUi extends BaseUi {
 
     // npkill stats
     this.printAt(
-      colors.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
+      pc.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
       UI_POSITIONS.TOTAL_SPACE,
     );
     this.printAt(
-      colors.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
+      pc.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
       UI_POSITIONS.SPACE_RELEASED,
     );
   }
@@ -67,7 +67,7 @@ export class HeaderUi extends BaseUi {
     const { columns } = this.terminal;
     const spaceToFill = Math.max(0, columns - 2);
     this.printAt(
-      colors.bgYellow(' '.repeat(spaceToFill)),
+      pc.bgYellow(' '.repeat(spaceToFill)),
       UI_POSITIONS.TUTORIAL_TIP,
     );
   }
@@ -78,8 +78,9 @@ export class HeaderUi extends BaseUi {
     for (const option of options) {
       const isActive = option === options[this.activeMenuIndex];
       const colorFn = isActive
-        ? colors.bgYellow.black.bold.underline
-        : colors.bgYellow.gray;
+        ? (v: string) => pc.bgYellow(pc.black(pc.bold(pc.underline(v))))
+        : (v: string) => pc.bgYellow(pc.gray(v));
+
       this.printAt(colorFn(option), {
         x: xStart,
         y: UI_POSITIONS.TUTORIAL_TIP.y,

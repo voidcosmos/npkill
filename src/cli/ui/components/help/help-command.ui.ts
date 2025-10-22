@@ -8,7 +8,7 @@ import { MARGINS, UI_HELP } from '../../../../constants/main.constants.js';
 import { INFO_MSGS } from '../../../../constants/messages.constants.js';
 import { ConsoleService } from '../../../services/console.service.js';
 import { BaseUi } from '../../base.ui.js';
-import colors from 'colors';
+import pc from 'picocolors';
 
 export class HelpCommandUi extends BaseUi {
   constructor(private readonly consoleService: ConsoleService) {
@@ -23,7 +23,7 @@ export class HelpCommandUi extends BaseUi {
     const maxWidth = Math.min(UI_HELP.MAX_WIDTH, this.terminal.columns);
 
     this.clear();
-    this.print(colors.inverse(colors.bold(INFO_MSGS.HELP_TITLE + '\n')));
+    this.print(pc.inverse(pc.bold(INFO_MSGS.HELP_TITLE + '\n')));
 
     const headerLines = this.consoleService.splitWordsByWidth(
       HELP_HEADER,
@@ -44,7 +44,7 @@ export class HelpCommandUi extends BaseUi {
       this.terminal.columns - UI_HELP.X_DESCRIPTION_OFFSET,
     );
 
-    this.print(colors.black(colors.bgYellow(colors.bold(' Options '))) + '\n');
+    this.print(pc.black(pc.bgYellow(pc.bold(' Options '))) + '\n');
     OPTIONS.forEach((option) => {
       const args = option.arg.reduce((text, arg) => text + ', ' + arg);
       const padding = ' '.repeat(UI_HELP.X_COMMAND_OFFSET);
