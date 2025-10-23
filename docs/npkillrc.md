@@ -1,6 +1,6 @@
-# Config File (`.npkillrc`)
+# Config File - npkillrc
 
-You can customize the behavior of npkill through the config file.
+You can customize the behavior of npkill through the config file (`.npkillrc` by default).
 
 ## Table of Contents
 
