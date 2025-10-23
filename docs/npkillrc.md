@@ -7,12 +7,14 @@ You can customize the behavior of npkill through the config file.
 - [Location](#location)
 - [Example](#example)
 - [Options](#options)
+  - [rootDir](#rootDir)
   - [exclude](#exclude)
   - [sortBy](#sortby)
   - [sizeUnit](#sizeunit)
   - [hideSensitiveResults](#hidesensitiveresults)
   - [dryRun](#dryrun)
   - [checkUpdates](#checkupdates)
+  - [defaultProfiles](#defaultProfiles)
   - [profiles](#profiles)
 - [Error Handling](#error-handling)
   - [Testing Your Configuration](#testing-your-configuration)
@@ -38,6 +40,7 @@ npkill --config /path/to/your/config.json
   "exclude": ["important-project"],
   "sortBy": "size",
   "hideSensitiveResults": true,
+  "defaultProfiles": ["node", "mystack"],
   "profiles": {
     "webdev": {
       "description": "Frontend web development artifacts and build outputs",
@@ -56,6 +59,17 @@ npkill --config /path/to/your/config.json
 ```
 
 ## Options
+
+### rootDir
+
+**Type:** `string`  
+**Default:** ``
+
+Absolute path from which the search will begin.
+
+```json
+"rootdir": "/home/user/my-projects/"
+```
 
 ### exclude
 
@@ -127,6 +141,17 @@ When true, deletions are simulated (nothing is actually deleted).
 **Default:** `true`
 
 Check for updates on startup.
+
+```json
+"checkUpdates": true
+```
+
+### defaultProfiles
+
+**Type:** `string[]`  
+**Default:** `["node"]`
+
+Define the profile names to be used by default. These can be either built-in or user-defined names.
 
 ```json
 "checkUpdates": true

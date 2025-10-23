@@ -10,14 +10,6 @@ import { PROFILE } from '../interfaces/profile.interface.js';
 
 const DEFAULT_CONFIG_FILENAME = '.npkillrc';
 const VALID_SORT_OPTIONS = ['none', 'size', 'path', 'last-mod'] as const;
-const VALID_BG_COLORS = [
-  'bgBlue',
-  'bgCyan',
-  'bgMagenta',
-  'bgRed',
-  'bgWhite',
-  'bgYellow',
-] as const;
 const VALID_SIZE_UNITS = ['auto', 'mb', 'gb'] as const;
 
 /**
@@ -94,19 +86,19 @@ export class ConfigService {
       };
     }
 
-    // Validate targets
-    if (config.targets !== undefined) {
-      if (!Array.isArray(config.targets)) {
+    // Validate rootDir
+    if (config.rootDir !== undefined) {
+      if (typeof config.rootDir !== 'string') {
         return {
           isValid: false,
-          error: 'targets must be an array of strings.',
+          error: 'rootDir must be a string.',
         };
       }
-      if (!config.targets.every((t) => typeof t === 'string')) {
-        return { isValid: false, error: 'All targets must be strings.' };
-      }
-      if (config.targets.length === 0) {
-        return { isValid: false, error: 'Targets array cannot be empty.' };
+      if (config.rootDir.trim() === '') {
+        return {
+          isValid: false,
+          error: 'rootDir cannot be an empty string.',
+        };
       }
     }
 
@@ -133,18 +125,6 @@ export class ConfigService {
       }
     }
 
-    // Validate backgroundColor
-    if (config.backgroundColor !== undefined) {
-      if (
-        !(VALID_BG_COLORS as readonly string[]).includes(config.backgroundColor)
-      ) {
-        return {
-          isValid: false,
-          error: `backgroundColor must be one of: ${VALID_BG_COLORS.join(', ')}.`,
-        };
-      }
-    }
-
     // Validate sizeUnit
     if (config.sizeUnit !== undefined) {
       if (!(VALID_SIZE_UNITS as readonly string[]).includes(config.sizeUnit)) {
@@ -157,12 +137,12 @@ export class ConfigService {
 
     // Validate boolean fields
     if (
-      config.excludeHiddenDirectories !== undefined &&
-      typeof config.excludeHiddenDirectories !== 'boolean'
+      config.hideSensitiveResults !== undefined &&
+      typeof config.hideSensitiveResults !== 'boolean'
     ) {
       return {
         isValid: false,
-        error: 'excludeHiddenDirectories must be a boolean',
+        error: 'hideSensitiveResults must be a boolean',
       };
     }
 
@@ -178,6 +158,22 @@ export class ConfigService {
       typeof config.checkUpdates !== 'boolean'
     ) {
       return { isValid: false, error: 'checkUpdates must be a boolean.' };
+    }
+
+    // Validate defaultProfiles
+    if (config.defaultProfiles !== undefined) {
+      if (!Array.isArray(config.defaultProfiles)) {
+        return {
+          isValid: false,
+          error: 'defaultProfiles must be an array of strings.',
+        };
+      }
+      if (!config.defaultProfiles.every((p) => typeof p === 'string')) {
+        return {
+          isValid: false,
+          error: 'All defaultProfiles items must be strings.',
+        };
+      }
     }
 
     // Validate profiles
@@ -254,9 +250,8 @@ export class ConfigService {
 
     const merged = { ...baseConfig };
 
-    // Merge simple properties
-    if (fileConfig.targets !== undefined) {
-      (merged as Record<string, unknown>).targets = fileConfig.targets;
+    if (fileConfig.rootDir !== undefined) {
+      (merged as Record<string, unknown>).rootDir = fileConfig.rootDir;
     }
 
     if (fileConfig.exclude !== undefined) {
@@ -275,18 +270,13 @@ export class ConfigService {
       (merged as Record<string, unknown>).sortBy = fileConfig.sortBy;
     }
 
-    if (fileConfig.backgroundColor !== undefined) {
-      (merged as Record<string, unknown>).backgroundColor =
-        fileConfig.backgroundColor;
-    }
-
     if (fileConfig.sizeUnit !== undefined) {
       (merged as Record<string, unknown>).sizeUnit = fileConfig.sizeUnit;
     }
 
-    if (fileConfig.excludeHiddenDirectories !== undefined) {
-      (merged as Record<string, unknown>).excludeHiddenDirectories =
-        fileConfig.excludeHiddenDirectories;
+    if (fileConfig.hideSensitiveResults !== undefined) {
+      (merged as Record<string, unknown>).hideSensitiveResults =
+        fileConfig.hideSensitiveResults;
     }
 
     if (fileConfig.dryRun !== undefined) {
@@ -296,6 +286,11 @@ export class ConfigService {
     if (fileConfig.checkUpdates !== undefined) {
       (merged as Record<string, unknown>).checkUpdates =
         fileConfig.checkUpdates;
+    }
+
+    if (fileConfig.defaultProfiles !== undefined) {
+      (merged as Record<string, unknown>).defaultProfiles =
+        fileConfig.defaultProfiles;
     }
 
     return merged;

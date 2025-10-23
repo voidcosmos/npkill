@@ -6,10 +6,10 @@ import { PROFILE } from './profile.interface.js';
  */
 export interface INpkillrcConfig {
   /**
-   * Array of directory names to search.
-   * @example ["node_modules", ".venv", "target"]
+   * Absolute path from which the search will begin.
+   * @example "/home/user/my-projects/"
    */
-  targets?: string[];
+  rootDir?: string;
 
   /**
    * Array of directory names to exclude from search.
@@ -25,18 +25,6 @@ export interface INpkillrcConfig {
   sortBy?: 'none' | 'size' | 'path' | 'last-mod';
 
   /**
-   * Color for the cursor/selection highlight in the UI.
-   * @default "bgBlue"
-   */
-  backgroundColor?:
-    | 'bgBlue'
-    | 'bgCyan'
-    | 'bgMagenta'
-    | 'bgRed'
-    | 'bgWhite'
-    | 'bgYellow';
-
-  /**
    * Unit for displaying folder sizes.
    * - "auto": Sizes < 1024MB shown in MB, larger sizes in GB
    * - "mb": Always show in megabytes
@@ -46,10 +34,10 @@ export interface INpkillrcConfig {
   sizeUnit?: 'auto' | 'mb' | 'gb';
 
   /**
-   * Exclude hidden directories (those starting with '.') from search.
+   * Exclude sensitive results.
    * @default false
    */
-  excludeHiddenDirectories?: boolean;
+  hideSensitiveResults?: boolean;
 
   /**
    * Enable dry-run mode by default.
@@ -63,6 +51,13 @@ export interface INpkillrcConfig {
    * @default true
    */
   checkUpdates?: boolean;
+
+  /**
+   * Profiles to use.
+   * @example ["node", "python"]
+   * @default ["node"]
+   */
+  defaultProfiles?: string[];
 
   /**
    * Custom profiles with specific target directories.
@@ -103,13 +98,13 @@ export interface IConfigLoadResult {
 }
 
 export const VALID_NPKILLRC_PROPERTIES = [
-  'targets',
+  'rootDir',
   'exclude',
   'sortBy',
-  'backgroundColor',
   'sizeUnit',
-  'excludeHiddenDirectories',
+  'hideSensitiveResults',
   'dryRun',
   'checkUpdates',
+  'defaultProfiles',
   'profiles',
 ] as const satisfies readonly (keyof INpkillrcConfig)[];

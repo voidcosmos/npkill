@@ -284,9 +284,10 @@ export class CliController {
 
     this.logger.info(`Loaded config from ${result.configPath}`);
 
-    if (result.config.targets !== undefined) {
-      this.config.targets = result.config.targets;
+    if (result.config.rootDir !== undefined) {
+      this.config.folderRoot = result.config.rootDir;
     }
+
     if (result.config.exclude !== undefined) {
       this.config.exclude = [
         ...new Set([...this.config.exclude, ...result.config.exclude]),
@@ -295,15 +296,12 @@ export class CliController {
     if (result.config.sortBy !== undefined) {
       this.config.sortBy = result.config.sortBy;
     }
-    if (result.config.backgroundColor !== undefined) {
-      this.config.backgroundColor = result.config.backgroundColor;
-    }
+
     if (result.config.sizeUnit !== undefined) {
       this.config.sizeUnit = result.config.sizeUnit;
     }
-    if (result.config.excludeHiddenDirectories !== undefined) {
-      this.config.excludeHiddenDirectories =
-        result.config.excludeHiddenDirectories;
+    if (result.config.hideSensitiveResults !== undefined) {
+      this.config.excludeHiddenDirectories = result.config.hideSensitiveResults;
     }
     if (result.config.dryRun !== undefined) {
       this.config.dryRun = result.config.dryRun;
@@ -321,6 +319,14 @@ export class CliController {
     if (profileCount > 0) {
       this.profilesService.setUserDefinedProfiles(userProfiles);
       this.logger.info(`Loaded ${profileCount} custom profile(s) from config`);
+    }
+
+    if (result.config.defaultProfiles !== undefined) {
+      // Store default profiles from config to be used later if no CLI profiles are specified
+      this.config.profiles = result.config.defaultProfiles;
+      this.logger.info(
+        `Default profiles set from config: ${result.config.defaultProfiles.join(', ')}`,
+      );
     }
   }
 
@@ -399,9 +405,14 @@ export class CliController {
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
     }
 
-    this.config.folderRoot = options.isTrue('directory')
-      ? options.getString('directory')
-      : process.cwd();
+    // Set folder root: CLI --directory takes precedence, then config rootDir, then process.cwd()
+    if (options.isTrue('directory')) {
+      this.config.folderRoot = options.getString('directory');
+    } else if (!this.config.folderRoot) {
+      // Only use process.cwd() if folderRoot wasn't set by config
+      this.config.folderRoot = process.cwd();
+    }
+
     if (options.isTrue('full-scan')) {
       this.config.folderRoot = homedir();
     }
@@ -423,10 +434,17 @@ export class CliController {
 
     if (!options.isTrue('target-folder')) {
       if (!options.isTrue('profiles')) {
-        this.logger.info(`Using default profile targets (${DEFAULT_PROFILE})`);
-        this.config.targets = this.profilesService.getTargetsFromProfiles([
-          DEFAULT_PROFILE,
-        ]);
+        // Use defaultProfiles from config if available, otherwise use DEFAULT_PROFILE
+        const profilesToUse =
+          this.config.profiles.length > 0
+            ? this.config.profiles
+            : [DEFAULT_PROFILE];
+
+        this.logger.info(
+          `Using default profile targets (${profilesToUse.join(', ')})`,
+        );
+        this.config.targets =
+          this.profilesService.getTargetsFromProfiles(profilesToUse);
       } else {
         const selectedProfiles = options.getStrings('profiles');
         const badProfiles =

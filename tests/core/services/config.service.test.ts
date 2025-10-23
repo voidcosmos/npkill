@@ -34,10 +34,8 @@ describe('ConfigService', () => {
     it('should load valid configuration file', () => {
       const configPath = join(tempDir, '.npkillrc');
       const validConfig: INpkillrcConfig = {
-        targets: ['node_modules', '.venv'],
         exclude: ['.git', 'important'],
         sortBy: 'size',
-        backgroundColor: 'bgCyan',
       };
 
       writeFileSync(configPath, JSON.stringify(validConfig, null, 2));
@@ -46,7 +44,7 @@ describe('ConfigService', () => {
 
       expect(result.config).not.toBeNull();
       expect(result.error).toBeUndefined();
-      expect(result.config?.targets).toEqual(['node_modules', '.venv']);
+      expect(result.config?.exclude).toEqual(['.git', 'important']);
       expect(result.config?.sortBy).toBe('size');
     });
 
@@ -59,20 +57,6 @@ describe('ConfigService', () => {
       expect(result.config).toBeNull();
       expect(result.error).toBeDefined();
       expect(result.error).toContain('Failed to parse');
-    });
-
-    it('should validate targets array', () => {
-      const configPath = join(tempDir, '.npkillrc');
-      const invalidConfig = {
-        targets: 'not-an-array',
-      };
-
-      writeFileSync(configPath, JSON.stringify(invalidConfig));
-
-      const result = configService.loadConfig(configPath);
-
-      expect(result.config).toBeNull();
-      expect(result.error).toContain('targets must be an array');
     });
 
     it('should validate sortBy values', () => {
@@ -92,7 +76,6 @@ describe('ConfigService', () => {
     it('should reject unknown properties', () => {
       const configPath = join(tempDir, '.npkillrc');
       const invalidConfig = {
-        targets: ['node_modules'],
         unknownProp: 'value',
         anotherBadProp: 123,
       };
@@ -105,20 +88,6 @@ describe('ConfigService', () => {
       expect(result.error).toContain('Unknown configuration');
       expect(result.error).toContain('unknownProp');
       expect(result.error).toContain('anotherBadProp');
-    });
-
-    it('should validate backgroundColor values', () => {
-      const configPath = join(tempDir, '.npkillrc');
-      const invalidConfig = {
-        backgroundColor: 'invalidColor',
-      };
-
-      writeFileSync(configPath, JSON.stringify(invalidConfig));
-
-      const result = configService.loadConfig(configPath);
-
-      expect(result.config).toBeNull();
-      expect(result.error).toContain('backgroundColor must be one of');
     });
 
     it('should validate boolean fields', () => {
@@ -201,6 +170,98 @@ describe('ConfigService', () => {
       expect(result.config).toBeNull();
       expect(result.error).toContain('targets array cannot be empty');
     });
+
+    it('should validate rootDir as string', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      const invalidConfig = {
+        rootDir: 123,
+      };
+
+      writeFileSync(configPath, JSON.stringify(invalidConfig));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).toBeNull();
+      expect(result.error).toContain('rootDir must be a string');
+    });
+
+    it('should reject empty rootDir string', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      const invalidConfig = {
+        rootDir: '   ',
+      };
+
+      writeFileSync(configPath, JSON.stringify(invalidConfig));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).toBeNull();
+      expect(result.error).toContain('rootDir cannot be an empty string');
+    });
+
+    it('should load valid rootDir', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      const validConfig: INpkillrcConfig = {
+        rootDir: '/home/user/projects',
+      };
+
+      writeFileSync(configPath, JSON.stringify(validConfig, null, 2));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).not.toBeNull();
+      expect(result.error).toBeUndefined();
+      expect(result.config?.rootDir).toBe('/home/user/projects');
+    });
+
+    it('should validate defaultProfiles as array', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      const invalidConfig = {
+        defaultProfiles: 'not-an-array',
+      };
+
+      writeFileSync(configPath, JSON.stringify(invalidConfig));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).toBeNull();
+      expect(result.error).toContain('defaultProfiles must be an array');
+    });
+
+    it('should validate defaultProfiles array contains only strings', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      const invalidConfig = {
+        defaultProfiles: ['node', 123, 'python'],
+      };
+
+      writeFileSync(configPath, JSON.stringify(invalidConfig));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).toBeNull();
+      expect(result.error).toContain(
+        'All defaultProfiles items must be strings',
+      );
+    });
+
+    it('should load valid defaultProfiles', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      const validConfig: INpkillrcConfig = {
+        defaultProfiles: ['node', 'python', 'webdev'],
+      };
+
+      writeFileSync(configPath, JSON.stringify(validConfig, null, 2));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).not.toBeNull();
+      expect(result.error).toBeUndefined();
+      expect(result.config?.defaultProfiles).toEqual([
+        'node',
+        'python',
+        'webdev',
+      ]);
+    });
   });
 
   describe('getUserDefinedProfiles', () => {
@@ -212,7 +273,7 @@ describe('ConfigService', () => {
 
     it('should return empty object when profiles is undefined', () => {
       const config: INpkillrcConfig = {
-        targets: ['node_modules'],
+        exclude: ['.git'],
       };
 
       const profiles = configService.getUserDefinedProfiles(config);
@@ -251,7 +312,7 @@ describe('ConfigService', () => {
   describe('mergeConfigs', () => {
     it('should return base config when file config is null', () => {
       const baseConfig = {
-        targets: ['node_modules'],
+        exclude: ['.git'],
         sortBy: 'none',
       };
 
@@ -260,17 +321,17 @@ describe('ConfigService', () => {
       expect(merged).toEqual(baseConfig);
     });
 
-    it('should merge targets from file config', () => {
+    it('should merge sortBy from file config', () => {
       const baseConfig = {
-        targets: ['node_modules'],
+        sortBy: 'none' as const,
       };
       const fileConfig: INpkillrcConfig = {
-        targets: ['dist', '.venv'],
+        sortBy: 'size',
       };
 
       const merged = configService.mergeConfigs(baseConfig, fileConfig);
 
-      expect(merged.targets).toEqual(['dist', '.venv']);
+      expect(merged.sortBy).toBe('size');
     });
 
     it('should merge exclude arrays without duplicates', () => {
@@ -291,13 +352,11 @@ describe('ConfigService', () => {
     it('should override simple properties', () => {
       const baseConfig = {
         sortBy: 'none',
-        backgroundColor: 'bgBlue',
         sizeUnit: 'auto',
         dryRun: false,
       };
       const fileConfig: INpkillrcConfig = {
         sortBy: 'size',
-        backgroundColor: 'bgCyan',
         sizeUnit: 'mb',
         dryRun: true,
       };
@@ -305,14 +364,12 @@ describe('ConfigService', () => {
       const merged = configService.mergeConfigs(baseConfig, fileConfig);
 
       expect(merged.sortBy).toBe('size');
-      expect(merged.backgroundColor).toBe('bgCyan');
       expect(merged.sizeUnit).toBe('mb');
       expect(merged.dryRun).toBe(true);
     });
 
     it('should preserve base config properties not in file config', () => {
       const baseConfig = {
-        targets: ['node_modules'],
         sortBy: 'none',
         dryRun: false,
       };
@@ -322,9 +379,35 @@ describe('ConfigService', () => {
 
       const merged = configService.mergeConfigs(baseConfig, fileConfig);
 
-      expect(merged.targets).toEqual(['node_modules']);
       expect(merged.sortBy).toBe('size');
       expect(merged.dryRun).toBe(false);
+    });
+
+    it('should merge rootDir from file config', () => {
+      const baseConfig = {
+        folderRoot: '/default/path',
+        rootDir: undefined as string | undefined,
+      };
+      const fileConfig: INpkillrcConfig = {
+        rootDir: '/custom/projects',
+      };
+
+      const merged = configService.mergeConfigs(baseConfig, fileConfig);
+
+      expect(merged.rootDir).toBe('/custom/projects');
+    });
+
+    it('should merge defaultProfiles from file config', () => {
+      const baseConfig = {
+        defaultProfiles: ['node'],
+      };
+      const fileConfig: INpkillrcConfig = {
+        defaultProfiles: ['node', 'python', 'webdev'],
+      };
+
+      const merged = configService.mergeConfigs(baseConfig, fileConfig);
+
+      expect(merged.defaultProfiles).toEqual(['node', 'python', 'webdev']);
     });
   });
 
@@ -332,14 +415,14 @@ describe('ConfigService', () => {
     it('should load a complete realistic config file', () => {
       const configPath = join(tempDir, '.npkillrc');
       const realisticConfig: INpkillrcConfig = {
-        targets: ['node_modules', '.venv', '__pycache__'],
+        rootDir: '/home/user/my-projects',
         exclude: ['.git', 'important-project'],
         sortBy: 'last-mod',
-        backgroundColor: 'bgCyan',
         sizeUnit: 'auto',
-        excludeHiddenDirectories: false,
+        hideSensitiveResults: false,
         dryRun: false,
         checkUpdates: true,
+        defaultProfiles: ['node', 'python'],
         profiles: {
           frontend: {
             description: 'Frontend projects',
@@ -358,11 +441,8 @@ describe('ConfigService', () => {
 
       expect(result.config).not.toBeNull();
       expect(result.error).toBeUndefined();
-      expect(result.config?.targets).toEqual([
-        'node_modules',
-        '.venv',
-        '__pycache__',
-      ]);
+      expect(result.config?.rootDir).toBe('/home/user/my-projects');
+      expect(result.config?.defaultProfiles).toEqual(['node', 'python']);
       expect(result.config?.sortBy).toBe('last-mod');
       expect(result.config?.profiles).toBeDefined();
 
