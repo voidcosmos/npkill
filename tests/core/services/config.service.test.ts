@@ -1,6 +1,6 @@
 import { ConfigService } from '../../../src/core/services/config.service.js';
 import { INpkillrcConfig } from '../../../src/core/interfaces/npkillrc-config.interface.js';
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, rmSync, realpathSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -493,7 +493,8 @@ describe('ConfigService', () => {
       expect(result.config).not.toBeNull();
       expect(result.config?.sortBy).toBe('size');
       expect(result.config?.exclude).toContain('from-cwd');
-      expect(result.configPath).toBe(cwdPath);
+      // Use realpathSync to resolve symlinks (e.g., /var -> /private/var on macOS)
+      expect(realpathSync(result.configPath)).toBe(realpathSync(cwdPath));
     });
 
     it('should use home config when no custom path and no cwd config exists', () => {
@@ -539,7 +540,8 @@ describe('ConfigService', () => {
       expect(result.config).not.toBeNull();
       expect(result.config?.sortBy).toBe('size');
       expect(result.config?.exclude).toContain('from-cwd');
-      expect(result.configPath).toBe(cwdPath);
+      // Use realpathSync to resolve symlinks (e.g., /var -> /private/var on macOS)
+      expect(realpathSync(result.configPath)).toBe(realpathSync(cwdPath));
     });
 
     it('should return null config when no config file exists anywhere', () => {
