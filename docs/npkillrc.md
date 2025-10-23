@@ -21,13 +21,15 @@ You can customize the behavior of npkill through the config file (`.npkillrc` by
 
 ## Location
 
-Npkill will search for the config file in the directory by default and at startup.
+Npkill searches for the configuration file in the following order of priority:
 
-```bash
-~/.npkillrc
-```
+1. **Custom path** specified via `--config` flag
+2. **Current working directory**: `./.npkillrc`
+3. **User's home directory**: `~/.npkillrc`
 
-Alternatively, you can specify a custom location using the `--config` flag:
+The first configuration file found will be used.
+
+You can use `--config` in this way:
 
 ```bash
 npkill --config /path/to/your/config.json

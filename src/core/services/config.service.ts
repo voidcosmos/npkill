@@ -15,14 +15,15 @@ const DEFAULT_CONFIG_FILENAME = '.npkillrc';
  */
 export class ConfigService {
   /**
-   * Loads configuration from the default location (~/.npkillrc) or a custom path.
+   * Loads configuration with priority order:
+   * 1. Custom path specified via --config parameter
+   * 2. Current working directory ./.npkillrc
+   * 3. User's home directory ~/.npkillrc
    * @param customPath Optional custom path to a configuration file
    * @returns Configuration load result containing the parsed config or error information
    */
   loadConfig(customPath?: string): IConfigLoadResult {
-    const configPath = customPath
-      ? customPath
-      : join(homedir(), DEFAULT_CONFIG_FILENAME);
+    const configPath = this.resolveConfigPath(customPath);
 
     if (!existsSync(configPath)) {
       return {
@@ -60,6 +61,28 @@ export class ConfigService {
         error: `Failed to parse config file: ${errorMessage}.`,
       };
     }
+  }
+
+  /**
+   * Resolves the configuration file path based on priority order.
+   * Priority: custom path > cwd > home directory
+   * @param customPath Optional custom path specified by user
+   * @returns Resolved configuration file path
+   */
+  private resolveConfigPath(customPath?: string): string {
+    // Priority 1: Custom path from --config flag
+    if (customPath) {
+      return customPath;
+    }
+
+    // Priority 2: Current working directory
+    const cwdPath = join(process.cwd(), DEFAULT_CONFIG_FILENAME);
+    if (existsSync(cwdPath)) {
+      return cwdPath;
+    }
+
+    // Priority 3: User's home directory
+    return join(homedir(), DEFAULT_CONFIG_FILENAME);
   }
 
   /**
