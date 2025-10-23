@@ -352,25 +352,45 @@ export class CliController {
       options.isTrue('profiles') &&
       options.getStrings('profiles').length === 0
     ) {
-      // TODO check user defined
-      const defaultProfile = DEFAULT_PROFILE;
       console.log(pc.bold(pc.bgYellow(pc.black(' Available profiles '))));
       console.log(
         `Remember: ${pc.bold(pc.yellow('context matters'))}. What's safe to remove in one project or ecosystem could be important in another.\n`,
       );
 
-      const profiles = this.profilesService.getProfiles('all');
+      const defaultProfiles =
+        this.config.profiles.length > 0
+          ? this.config.profiles
+          : [DEFAULT_PROFILE];
 
-      const profilesToPrint = Object.entries(profiles).reduce(
+      const userProfiles = this.profilesService.getProfiles('user');
+      const baseProfiles = this.profilesService.getProfiles('base');
+
+      let profilesToPrint = '';
+
+      if (Object.keys(userProfiles).length > 0) {
+        profilesToPrint += Object.entries(userProfiles).reduce(
+          (acc, [name, profile]) => {
+            const isDefault = defaultProfiles.includes(name);
+            const entry =
+              ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} ${pc.cyan('(user-defined)')} - ${profile.description}\n` +
+              pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+            return acc + entry;
+          },
+          '',
+        );
+      }
+
+      profilesToPrint += Object.entries(baseProfiles).reduce(
         (acc, [name, profile]) => {
-          const isDefault = name === defaultProfile;
+          const isDefault = defaultProfiles.includes(name);
           const entry =
-            ` ${pc.green(name)}${isDefault ? pc.italic(' (default)') : ''} - ${profile.description}\n` +
+            ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} - ${profile.description}\n` +
             pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
           return acc + entry;
         },
         '',
       );
+
       console.log(profilesToPrint);
       this.exitGracefully();
     }
