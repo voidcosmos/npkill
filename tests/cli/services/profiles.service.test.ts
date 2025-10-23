@@ -1,5 +1,6 @@
-import { ProfilesService } from '../../../src/cli/services/profiles.service.js';
-import { DEFAULT_PROFILES } from '../../../src/constants/profiles.constants.js';
+import { ProfilesService } from '../../../src/core/services/profiles.service.js';
+import { DEFAULT_PROFILES } from '../../../src/core/constants/profiles.constants.js';
+import { PROFILE } from '../../../src/core/interfaces/profile.interface.js';
 
 describe('ProfilesService', () => {
   let profilesService: ProfilesService;
@@ -8,104 +9,224 @@ describe('ProfilesService', () => {
     profilesService = new ProfilesService();
   });
 
-  describe('getAvailableProfilesToPrint', () => {
-    it('should return a formatted string with all available profiles', () => {
-      const result = profilesService.getAvailableProfilesToPrint();
+  describe('setUserDefinedProfiles', () => {
+    it('should set user-defined profiles', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile for testing',
+          targets: ['custom_modules', 'custom_cache'],
+        },
+      };
 
-      expect(result).toBeTruthy();
-      expect(typeof result).toBe('string');
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getProfiles('user');
 
-      DEFAULT_PROFILES.forEach((profile) => {
-        expect(result).toContain(profile.name);
-        expect(result).toContain(profile.description);
-      });
+      expect(result).toEqual(userProfiles);
     });
 
-    it('should mark the specified profile as default', () => {
-      const defaultProfile = 'python';
-      const result =
-        profilesService.getAvailableProfilesToPrint(defaultProfile);
+    it('should override previous user-defined profiles', () => {
+      const firstProfiles: Record<string, PROFILE> = {
+        first: { description: 'First', targets: ['first'] },
+      };
+      const secondProfiles: Record<string, PROFILE> = {
+        second: { description: 'Second', targets: ['second'] },
+      };
 
-      expect(result).toContain('python');
-      expect(result).toContain('(default)');
-    });
+      profilesService.setUserDefinedProfiles(firstProfiles);
+      profilesService.setUserDefinedProfiles(secondProfiles);
+      const result = profilesService.getProfiles('user');
 
-    it('should mark "node" as default when specified', () => {
-      const result = profilesService.getAvailableProfilesToPrint('node');
-
-      expect(result).toContain('node');
-
-      const nodeSection = result
-        .split('\n')
-        .find((line) => line.includes('node'));
-      expect(nodeSection).toContain('(default)');
-    });
-
-    it('should not mark any profile as default when no default is specified', () => {
-      const result = profilesService.getAvailableProfilesToPrint();
-
-      expect(result).not.toContain('(default)');
-    });
-
-    it('should include profile targets in the output', () => {
-      const result = profilesService.getAvailableProfilesToPrint();
-
-      expect(result).toContain('node_modules');
-      expect(result).toContain('__pycache__');
-    });
-
-    it('should return empty string when no profiles exist', () => {
-      const originalProfiles = [...DEFAULT_PROFILES];
-      DEFAULT_PROFILES.length = 0;
-
-      const result = profilesService.getAvailableProfilesToPrint();
-
-      expect(result).toBe('');
-
-      DEFAULT_PROFILES.push(...originalProfiles);
+      expect(result).toEqual(secondProfiles);
+      expect(result['first']).toBeUndefined();
+      expect(result['second']).toBeDefined();
     });
   });
 
-  describe('getBadProfiles', () => {
+  describe('getProfiles', () => {
+    it('should return base profiles when filterType is "base"', () => {
+      const result = profilesService.getProfiles('base');
+
+      expect(result).toEqual(DEFAULT_PROFILES);
+      expect(result['node']).toBeDefined();
+      expect(result['python']).toBeDefined();
+    });
+
+    it('should return user profiles when filterType is "user"', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile',
+          targets: ['custom_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getProfiles('user');
+
+      expect(result).toEqual(userProfiles);
+      expect(result['custom']).toBeDefined();
+    });
+
+    it('should return all profiles when filterType is "all"', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile',
+          targets: ['custom_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getProfiles('all');
+
+      expect(result['node']).toBeDefined();
+      expect(result['python']).toBeDefined();
+      expect(result['custom']).toBeDefined();
+    });
+
+    it('should default to "all" when no filterType is provided', () => {
+      const result = profilesService.getProfiles();
+
+      expect(result).toEqual(DEFAULT_PROFILES);
+    });
+
+    it('should allow user profiles to override base profiles', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        node: {
+          description: 'Custom Node profile',
+          targets: ['custom_node_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getProfiles('all');
+
+      expect(result['node'].description).toBe('Custom Node profile');
+      expect(result['node'].targets).toEqual(['custom_node_modules']);
+    });
+  });
+
+  describe('getProfileByName', () => {
+    it('should return a base profile by name', () => {
+      const result = profilesService.getProfileByName('node');
+
+      expect(result).toBeDefined();
+      expect(result?.targets).toContain('node_modules');
+    });
+
+    it('should return a user-defined profile by name', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile',
+          targets: ['custom_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getProfileByName('custom');
+
+      expect(result).toBeDefined();
+      expect(result?.targets).toEqual(['custom_modules']);
+    });
+
+    it('should prioritize user-defined profiles over base profiles', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        node: {
+          description: 'Custom Node profile',
+          targets: ['custom_node_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getProfileByName('node');
+
+      expect(result?.description).toBe('Custom Node profile');
+      expect(result?.targets).toEqual(['custom_node_modules']);
+    });
+
+    it('should return undefined for non-existent profiles', () => {
+      const result = profilesService.getProfileByName('nonexistent');
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('hasProfile', () => {
+    it('should return true for existing base profiles', () => {
+      expect(profilesService.hasProfile('node')).toBe(true);
+      expect(profilesService.hasProfile('python')).toBe(true);
+    });
+
+    it('should return true for existing user-defined profiles', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile',
+          targets: ['custom_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+
+      expect(profilesService.hasProfile('custom')).toBe(true);
+    });
+
+    it('should return false for non-existent profiles', () => {
+      expect(profilesService.hasProfile('nonexistent')).toBe(false);
+    });
+  });
+
+  describe('getInvalidProfileNames', () => {
     it('should return empty array when all profiles are valid', () => {
       const validProfiles = ['node', 'python', 'java'];
-      const result = profilesService.getBadProfiles(validProfiles);
+      const result = profilesService.getInvalidProfileNames(validProfiles);
 
       expect(result).toEqual([]);
     });
 
     it('should return array with invalid profile names', () => {
       const profiles = ['node', 'invalid-profile', 'python', 'nonexistent'];
-      const result = profilesService.getBadProfiles(profiles);
+      const result = profilesService.getInvalidProfileNames(profiles);
 
       expect(result).toEqual(['invalid-profile', 'nonexistent']);
     });
 
     it('should return all profiles when none are valid', () => {
       const invalidProfiles = ['fake1', 'fake2', 'fake3'];
-      const result = profilesService.getBadProfiles(invalidProfiles);
+      const result = profilesService.getInvalidProfileNames(invalidProfiles);
 
       expect(result).toEqual(invalidProfiles);
     });
 
     it('should return empty array for empty input', () => {
-      const result = profilesService.getBadProfiles([]);
+      const result = profilesService.getInvalidProfileNames([]);
 
       expect(result).toEqual([]);
     });
 
     it('should be case-sensitive', () => {
       const profiles = ['Node', 'PYTHON', 'node'];
-      const result = profilesService.getBadProfiles(profiles);
+      const result = profilesService.getInvalidProfileNames(profiles);
 
       expect(result).toEqual(['Node', 'PYTHON']);
     });
 
     it('should handle profiles with special characters', () => {
       const profiles = ['node', 'python!', 'java@'];
-      const result = profilesService.getBadProfiles(profiles);
+      const result = profilesService.getInvalidProfileNames(profiles);
 
       expect(result).toEqual(['python!', 'java@']);
+    });
+
+    it('should recognize user-defined profiles as valid', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile',
+          targets: ['custom_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const result = profilesService.getInvalidProfileNames(['node', 'custom']);
+
+      expect(result).toEqual([]);
     });
   });
 
@@ -214,7 +335,7 @@ describe('ProfilesService', () => {
     });
 
     it('should handle all available profiles', () => {
-      const allProfileNames = DEFAULT_PROFILES.map((p) => p.name).filter(
+      const allProfileNames = Object.keys(DEFAULT_PROFILES).filter(
         (name) => name !== 'all',
       );
       const result = profilesService.getTargetsFromProfiles(allProfileNames);
@@ -226,9 +347,17 @@ describe('ProfilesService', () => {
     });
   });
 
+  describe('getDefaultProfileName', () => {
+    it('should return "node" as the default profile name', () => {
+      const result = profilesService.getDefaultProfileName();
+
+      expect(result).toBe('node');
+    });
+  });
+
   describe('Integration tests', () => {
     it('should only return valid targets when mixing valid and invalid profiles', () => {
-      const badProfiles = profilesService.getBadProfiles([
+      const badProfiles = profilesService.getInvalidProfileNames([
         'node',
         'fake-profile',
         'python',
@@ -244,23 +373,45 @@ describe('ProfilesService', () => {
       expect(targets).toContain('__pycache__');
     });
 
-    it('should handle workflow of listing profiles and getting targets', () => {
-      const profilesList = profilesService.getAvailableProfilesToPrint('node');
-      expect(profilesList).toContain('node');
-      expect(profilesList).toContain('(default)');
+    it('should handle workflow of managing profiles and getting targets', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        custom: {
+          description: 'Custom profile',
+          targets: ['custom_modules', 'custom_cache'],
+        },
+      };
 
-      const badProfiles = profilesService.getBadProfiles([
+      profilesService.setUserDefinedProfiles(userProfiles);
+
+      const badProfiles = profilesService.getInvalidProfileNames([
         'node',
         'invalid',
-        'python',
+        'custom',
       ]);
       expect(badProfiles).toEqual(['invalid']);
 
       const targets = profilesService.getTargetsFromProfiles([
         'node',
-        'python',
+        'custom',
       ]);
       expect(targets.length).toBeGreaterThan(0);
+      expect(targets).toContain('node_modules');
+      expect(targets).toContain('custom_modules');
+    });
+
+    it('should allow user profiles to override base profiles in target resolution', () => {
+      const userProfiles: Record<string, PROFILE> = {
+        node: {
+          description: 'Custom Node',
+          targets: ['my_custom_modules'],
+        },
+      };
+
+      profilesService.setUserDefinedProfiles(userProfiles);
+      const targets = profilesService.getTargetsFromProfiles(['node']);
+
+      expect(targets).toEqual(['my_custom_modules']);
+      expect(targets).not.toContain('node_modules');
     });
   });
 
@@ -277,25 +428,17 @@ describe('ProfilesService', () => {
       expect(result.length).toBe(uniqueTargets.length);
     });
 
-    it('should handle very long profile lists', () => {
-      const allProfiles = DEFAULT_PROFILES.map((p) => p.name);
-      const longList = [...allProfiles, ...allProfiles, ...allProfiles];
-
-      const result = profilesService.getTargetsFromProfiles(longList);
-
-      expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBeGreaterThan(0);
-    });
-
     it('should return consistent results for multiple calls', () => {
       const profiles = ['node', 'python', 'java'];
 
       const result1 = profilesService.getTargetsFromProfiles(profiles);
       const result2 = profilesService.getTargetsFromProfiles(profiles);
       const result3 = profilesService.getTargetsFromProfiles(profiles);
+      const result4 = profilesService.getTargetsFromProfiles(profiles);
 
       expect(result1).toEqual(result2);
       expect(result2).toEqual(result3);
+      expect(result3).toEqual(result4);
     });
   });
 });

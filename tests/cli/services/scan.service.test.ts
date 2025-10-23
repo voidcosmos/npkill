@@ -8,7 +8,7 @@ import {
 import { of, firstValueFrom } from 'rxjs';
 import { convertBytesToGb } from '../../../src/utils/unit-conversions.js';
 import path from 'node:path';
-import { DEFAULT_PROFILE } from '../../../src/constants/profiles.constants.js';
+import { DEFAULT_PROFILE } from '../../../src/core/constants/profiles.constants.js';
 
 describe('ScanService', () => {
   let scanService: ScanService;
