@@ -1,5 +1,5 @@
+import { DEFAULT_PROFILE } from '../core/constants/index.js';
 import { IConfig } from '../cli/interfaces/index.js';
-import { DEFAULT_PROFILE } from './profiles.constants.js';
 
 export const MIN_CLI_COLUMNS_SIZE = 60;
 export const CURSOR_SIMBOL = '~>';

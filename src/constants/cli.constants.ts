@@ -9,6 +9,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'profiles',
   },
   {
+    arg: ['--config'],
+    description:
+      'Path to a custom .npkillrc configuration file. By default, npkill looks for ~/.npkillrc.',
+    name: 'config',
+  },
+  {
     arg: ['-c', '--bg-color'],
     description:
       'Change row highlight color. Available colors are: blue, cyan, magenta, red, white and yellow. Default is blue.',
@@ -72,7 +78,6 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-t', '--target'],
     description:
-      // eslint-disable-next-line quotes
       'Specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
     name: 'target-folder',
   },
