@@ -11,7 +11,6 @@ export const OVERFLOW_CUT_FROM = 11;
 export const DEFAULT_CONFIG: IConfig = {
   profiles: [DEFAULT_PROFILE],
   folderRoot: '',
-  backgroundColor: 'bgBlue',
   warningColor: 'brightYellow',
   checkUpdates: true,
   deleteAll: false,

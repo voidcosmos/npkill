@@ -15,12 +15,6 @@ export const OPTIONS: ICliOptions[] = [
     name: 'config',
   },
   {
-    arg: ['-c', '--bg-color'],
-    description:
-      'Change row highlight color. Available colors are: blue, cyan, magenta, red, white and yellow. Default is blue.',
-    name: 'bg-color',
-  },
-  {
     arg: ['-d', '--directory'],
     description:
       'Set directory from which to start searching. By default, starting-point is .',

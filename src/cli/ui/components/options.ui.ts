@@ -4,7 +4,6 @@ import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import pc from 'picocolors';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
-import { COLORS } from '../../../constants/cli.constants.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
 
 type OptionType = 'checkbox' | 'dropdown' | 'input';
@@ -83,13 +82,6 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         key: 'sortBy',
         value: this.config.sortBy,
         options: ['path', 'size', 'last-mod'],
-      },
-      {
-        label: 'Cursor color',
-        type: 'dropdown',
-        key: 'backgroundColor',
-        value: this.config.backgroundColor,
-        options: Object.values(COLORS),
       },
       {
         label: 'Size unit',

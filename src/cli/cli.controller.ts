@@ -498,9 +498,6 @@ export class CliController {
     if (options.isTrue('target-folder')) {
       this.config.targets = options.getString('target-folder').split(',');
     }
-    if (options.isTrue('bg-color')) {
-      this.setColor(options.getString('bg-color'));
-    }
     if (options.isTrue('exclude-hidden-directories')) {
       this.config.excludeHiddenDirectories = true;
     }
@@ -558,12 +555,6 @@ export class CliController {
 
   private showProgramVersion(): void {
     this.uiService.print('v' + this.getVersion());
-  }
-
-  private setColor(color: string): void {
-    if (this.isValidColor(color)) {
-      this.config.backgroundColor = COLORS[color];
-    }
   }
 
   private isValidColor(color: string): boolean {

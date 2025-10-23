@@ -38,14 +38,11 @@ describe('Console Service', () => {
         '-f',
         'lala',
         '--sort=size',
-        '-c',
-        'red',
       ];
 
       const result = consoleService.getParameters(argvs);
       expect(result.isTrue('help')).toBeFalsy();
       expect(result.isTrue('full-scan')).not.toBeFalsy();
-      expect(result.getString('bg-color')).toBe('red');
       expect(result.getString('sort-by')).toBe('size');
       expect(result.isTrue('exclude-hidden-directories')).toBeFalsy();
     });
