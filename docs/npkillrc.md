@@ -37,22 +37,26 @@ npkill --config /path/to/your/config.json
 
 ```json
 {
-  "exclude": ["important-project"],
+  "rootDir": "/home/user/projects",
+  "exclude": [".git", "important-project", "production-app"],
   "sortBy": "size",
+  "sizeUnit": "auto",
   "hideSensitiveResults": true,
-  "defaultProfiles": ["node", "mystack"],
+  "dryRun": false,
+  "checkUpdates": true,
+  "defaultProfiles": ["node", "database"],
   "profiles": {
     "webdev": {
       "description": "Frontend web development artifacts and build outputs",
-      "targets": ["dist", ".next", ".nuxt", ".output"]
-    },
-    "mystack": {
-      "description": "Full-stack project artifacts (JS/Python/Java)",
-      "targets": ["venv", ".venv", "target", "__pycache__", ".gradle"]
+      "targets": ["dist", ".next", ".nuxt", ".output", "build", ".svelte-kit"]
     },
     "mobile": {
       "description": "Mobile platform build folders and caches",
-      "targets": ["Pods", "build", "DerivedData", "gradle"]
+      "targets": ["Pods", "build", "DerivedData", ".gradle", "android/build"]
+    },
+    "database": {
+      "description": "Database data folders (use with caution)",
+      "targets": ["data", "db", "mongodb", "postgres"]
     }
   }
 }
