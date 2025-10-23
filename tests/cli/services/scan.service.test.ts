@@ -26,7 +26,6 @@ describe('ScanService', () => {
     exclude: ['/test/root/excluded'],
     sortBy: 'size',
     excludeHiddenDirectories: false,
-    backgroundColor: '',
     warningColor: '',
     checkUpdates: false,
     deleteAll: false,

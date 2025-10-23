@@ -19,6 +19,8 @@ import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
 
+const CURSOR_ROW_COLOR = 'bgBlue';
+
 export class ResultsUi extends HeavyUi implements InteractiveUi {
   resultIndex = 0;
   previousIndex = 0;
@@ -320,9 +322,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       : MARGINS.FOLDER_COLUMN_START;
 
     if (isRowSelected) {
-      path = pc[this.config.backgroundColor](path);
-      size = pc[this.config.backgroundColor](size);
-      lastModification = pc[this.config.backgroundColor](lastModification);
+      path = pc[CURSOR_ROW_COLOR](path);
+      size = pc[CURSOR_ROW_COLOR](size);
+      lastModification = pc[CURSOR_ROW_COLOR](lastModification);
 
       this.paintBgRow(row);
     } else if (isRowSelected && this.selectMode) {
@@ -363,7 +365,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private paintCursorCell(row: number): void {
-    this.printAt(pc[this.config.backgroundColor](' '), {
+    this.printAt(pc[CURSOR_ROW_COLOR](' '), {
       x: MARGINS.FOLDER_COLUMN_START - 1,
       y: row,
     });
@@ -646,7 +648,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       paintSpaces += ' ';
     }
 
-    this.printAt(pc[this.config.backgroundColor](paintSpaces), {
+    this.printAt(pc[CURSOR_ROW_COLOR](paintSpaces), {
       x: startPaint,
       y: row,
     });

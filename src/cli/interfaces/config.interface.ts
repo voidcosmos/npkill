@@ -1,7 +1,6 @@
 export interface IConfig {
   profiles: string[];
   folderRoot: string;
-  backgroundColor: string;
   warningColor: string;
   checkUpdates: boolean;
   deleteAll: boolean;
