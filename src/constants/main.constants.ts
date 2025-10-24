@@ -54,6 +54,11 @@ export const UI_POSITIONS = {
   ERRORS_COUNT: { x: 43, y: 1 },
   TUTORIAL_TIP: { x: 1, y: 7 },
   WARNINGS: { x: 0, y: 9 },
+  RESULTS_TYPES_COUNT_ROW_1: { x: 73, y: 1 },
+  RESULTS_TYPES_COUNT_ROW_2: { x: 73, y: 2 },
+  RESULTS_TYPES_COUNT_ROW_3: { x: 73, y: 3 },
+  RESULTS_TYPES_COUNT_ROW_4: { x: 73, y: 4 },
+  RESULTS_TYPES_COUNT_ROW_5: { x: 73, y: 5 },
 };
 
 // export const VALID_KEYS: string[] = [
