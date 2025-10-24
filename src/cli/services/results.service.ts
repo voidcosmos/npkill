@@ -49,7 +49,12 @@ export class ResultsService {
       typeCounts.entries(),
     )
       .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.type.localeCompare(b.type);
+      });
 
     return {
       spaceReleased: formattedReleased.text,
