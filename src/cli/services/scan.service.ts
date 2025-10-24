@@ -87,7 +87,7 @@ export class ScanService {
           return nodeFolder;
         }
 
-        const parentFolder = join(nodeFolder.path, '..');
+        const parentFolder = join(nodeFolder.path, '../');
         const normalizedParent = parentFolder.replace(/\\/g, '/').toLowerCase();
         const normalizedHome = os.homedir().replace(/\\/g, '/').toLowerCase();
 
