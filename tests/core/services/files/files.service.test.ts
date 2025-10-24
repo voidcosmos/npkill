@@ -40,6 +40,7 @@ class WindowsFilesService extends WindowsFilesServiceConstructor {}
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../../../../src/core/services/stream.service.js';
 import { FileWorkerService } from '../../../../src/core/services/files/index.js';
+import os from 'os';
 
 jest.mock('../../../../src/dirname.js', () => {
   return { __esModule: true };
@@ -118,14 +119,20 @@ describe('File Service', () => {
       jest.spyOn(process, 'cwd').mockReturnValue(cwd);
     };
 
+    const mockHomedir = (homedir: string) => {
+      jest.spyOn(os, 'homedir').mockReturnValue(homedir);
+    };
+
     afterAll(() => {
       process.env = originalEnv;
+      jest.restoreAllMocks();
     });
 
     describe('POSIX paths', () => {
       beforeAll(() => {
         process.env.HOME = '/home/user';
         delete process.env.USERPROFILE;
+        mockHomedir('/home/user');
       });
 
       test('safe relative path', () => {
@@ -146,7 +153,19 @@ describe('File Service', () => {
         expect(
           fileService.isDangerous('/home/user/.cache/project/node_modules')
             .isSensitive,
-        ).toBe(false);
+        ).toBe(true);
+      });
+
+      test('~/.cache itself', () => {
+        expect(fileService.isDangerous('/home/user/.cache').isSensitive).toBe(
+          true,
+        );
+      });
+
+      test('~/.npm itself', () => {
+        expect(fileService.isDangerous('/home/user/.npm').isSensitive).toBe(
+          false,
+        );
       });
 
       test('parent relative path (..)', () => {
@@ -174,6 +193,7 @@ describe('File Service', () => {
       beforeAll(() => {
         process.env.USERPROFILE = 'C:\\Users\\user';
         process.env.HOME = '';
+        mockHomedir('C:\\Users\\user');
       });
 
       test('safe relative path', () => {
@@ -209,6 +229,7 @@ describe('File Service', () => {
       test('no home directory', () => {
         delete process.env.HOME;
         delete process.env.USERPROFILE;
+        mockHomedir('');
         expect(fileService.isDangerous('/some/path').isSensitive).toBe(false);
       });
 

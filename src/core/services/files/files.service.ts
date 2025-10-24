@@ -90,8 +90,17 @@ export abstract class FileService implements IFileService {
       : path.isAbsolute(originalPath)
         ? originalPath
         : path.resolve(process.cwd(), originalPath);
-    const normalizedPath = absolutePath.replace(/\\/g, '/').toLowerCase();
-    const normalizedOriginal = originalPath.replace(/\\/g, '/').toLowerCase();
+
+    const normalizePath = (p: string): string => {
+      let normalized = p.replace(/\\/g, '/').toLowerCase();
+      if (/^[a-z]:\//.test(normalized)) {
+        normalized = normalized.substring(2);
+      }
+      return normalized;
+    };
+
+    const normalizedPath = normalizePath(absolutePath);
+    const normalizedOriginal = normalizePath(originalPath);
 
     const home =
       process.env.HOME ?? process.env.USERPROFILE ?? os.homedir() ?? '';
@@ -99,7 +108,10 @@ export abstract class FileService implements IFileService {
     let normalizedHome = '';
 
     if (home !== '') {
-      normalizedHome = path.resolve(home).replace(/\\/g, '/').toLowerCase();
+      // Normalize the home path. If it's already absolute, just normalize separators.
+      // Only use path.resolve() if it's a relative path to avoid cross-platform issues.
+      const homeAbsolute = path.isAbsolute(home) ? home : path.resolve(home);
+      normalizedHome = normalizePath(homeAbsolute);
       isInHome =
         normalizedPath === normalizedHome ||
         normalizedPath.startsWith(normalizedHome + '/');
@@ -124,8 +136,16 @@ export abstract class FileService implements IFileService {
         };
       }
 
+      // ~/.cache is safe to delete but system-wide, mark as sensitive
+      if (rel === '.cache' || rel.startsWith('.cache/')) {
+        return {
+          isSensitive: true,
+          reason: 'System-wide cache directory (~/.cache)',
+        };
+      }
+
       // Whitelisted hidden top-level folders inside HOME
-      if (/^\.(cache|npm|pnpm)(\/|$)/.test(rel)) {
+      if (/^\.(npm|pnpm)(\/|$)/.test(rel)) {
         return { isSensitive: false };
       }
 
@@ -135,7 +155,7 @@ export abstract class FileService implements IFileService {
         topLevel.startsWith('.') &&
         topLevel !== '.' &&
         topLevel !== '..' &&
-        !['.cache', '.npm', '.pnpm'].includes(topLevel)
+        !['.npm', '.pnpm'].includes(topLevel)
       ) {
         return { isSensitive: true, reason: 'Contains unsafe hidden folder' };
       }
@@ -199,26 +219,37 @@ export abstract class FileService implements IFileService {
     const ignoredFolders = ['node_modules', '.git', 'coverage', 'dist'];
 
     let files: IFileStat[] = [];
-    const items = await readdir(dirname, { withFileTypes: true });
 
-    for (const item of items) {
-      if (item.isDirectory()) {
-        const itemNameLowerCase = item.name.toLowerCase();
-        if (ignoredFolders.includes(itemNameLowerCase)) {
-          continue;
+    try {
+      const items = await readdir(dirname, { withFileTypes: true });
+
+      for (const item of items) {
+        if (item.isDirectory()) {
+          const itemNameLowerCase = item.name.toLowerCase();
+          if (ignoredFolders.includes(itemNameLowerCase)) {
+            continue;
+          }
+          files = [
+            ...files,
+            ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(
+              () => [],
+            )),
+          ];
+        } else {
+          try {
+            const path = `${dirname}/${item.name}`;
+            const fileStat = await stat(path);
+
+            files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
+          } catch {
+            // Skip files that can't be accessed (e.g., permission denied, broken symlinks)
+            continue;
+          }
         }
-        files = [
-          ...files,
-          ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(
-            () => [],
-          )),
-        ];
-      } else {
-        const path = `${dirname}/${item.name}`;
-        const fileStat = await stat(path);
-
-        files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
       }
+    } catch {
+      // If we can't read the directory (e.j., permission denied), return empty array.
+      return [];
     }
 
     return files;

@@ -5,7 +5,7 @@ import {
   CliScanFoundFolder,
   IConfig,
 } from '../../../src/cli/interfaces/index.js';
-import { of, firstValueFrom } from 'rxjs';
+import { of, firstValueFrom, throwError } from 'rxjs';
 import { convertBytesToGb } from '../../../src/utils/unit-conversions.js';
 import path from 'node:path';
 import { DEFAULT_PROFILE } from '../../../src/core/constants/profiles.constants.js';
@@ -195,7 +195,35 @@ describe('ScanService', () => {
       const result = await firstValueFrom(result$);
 
       expect(result.size).toBe(convertBytesToGb(folderSize));
-      expect(result.modificationTime).toBe(-1);
+      expect(result.modificationTime).toBe(1);
+    });
+
+    it('should handle errors in getSize$ and set size to 0', async () => {
+      mockNpkill.getSize$.mockReturnValue(
+        throwError(() => new Error('Permission denied')),
+      );
+      mockNpkill.getNewestFile$.mockReturnValue(of(null));
+
+      const result$ = scanService.calculateFolderStats(mockCliScanFoundFolder);
+      const result = await firstValueFrom(result$);
+
+      expect(result.size).toBe(0);
+      expect(result.modificationTime).toBe(1);
+    });
+
+    it('should handle errors in getNewestFile$ and set modificationTime to 1', async () => {
+      const folderSize = 1024 * 1024 * 100; // 100 MB
+
+      mockNpkill.getSize$.mockReturnValue(of({ size: folderSize }));
+      mockNpkill.getNewestFile$.mockReturnValue(
+        throwError(() => new Error('Permission denied')),
+      );
+
+      const result$ = scanService.calculateFolderStats(mockCliScanFoundFolder);
+      const result = await firstValueFrom(result$);
+
+      expect(result.size).toBe(convertBytesToGb(folderSize));
+      expect(result.modificationTime).toBe(1);
     });
   });
 });

@@ -39,7 +39,8 @@ export type WorkerMessage =
   | { type: EVENTS.exploreConfig; value: WorkerScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined }
-  | { type: EVENTS.stop; value?: undefined };
+  | { type: EVENTS.stop; value?: undefined }
+  | { type: EVENTS.error; value: { error: Error } };
 
 export interface WorkerStats {
   pendingSearchTasks: number;
@@ -51,13 +52,17 @@ export class FileWorkerService {
   private index = 0;
   private workers: Worker[] = [];
   private workersPendingJobs: number[] = [];
-  private getSizePendings: Array<{ path: string; stream$: Subject<number> }> =
-    [];
+  private getSizePendings: Array<{
+    path: string;
+    stream$: Subject<number>;
+    timeoutId?: NodeJS.Timeout;
+  }> = [];
 
   private pendingJobs = 0;
   private totalJobs = 0;
   private tunnels: MessagePort[] = [];
   private shouldStop = false;
+  private readonly SIZE_TIMEOUT_MS = 60000; // 1 minute timeout per folder
 
   constructor(
     private readonly logger: LoggerService,
@@ -84,7 +89,25 @@ export class FileWorkerService {
       this.listenEvents(new Subject<string>());
       this.setWorkerConfig({ rootPath: path } as WorkerScanOptions);
     }
-    this.getSizePendings = [...this.getSizePendings, { path, stream$ }];
+
+    const timeoutId = setTimeout(() => {
+      const index = this.getSizePendings.findIndex((p) => p.path === path);
+      if (index !== -1) {
+        this.logger.error(
+          `Timeout calculating size for: ${path} (${this.SIZE_TIMEOUT_MS}ms)`,
+        );
+        const pending = this.getSizePendings[index];
+        pending.stream$.error(
+          new Error(`Timeout calculating size for ${path}`),
+        );
+        this.getSizePendings.splice(index, 1);
+      }
+    }, this.SIZE_TIMEOUT_MS);
+
+    this.getSizePendings = [
+      ...this.getSizePendings,
+      { path, stream$, timeoutId },
+    ];
     this.addJob({ job: EVENTS.getFolderSize, value: { path } });
   }
 
@@ -154,13 +177,21 @@ export class FileWorkerService {
       const workerId: number = value.workerId;
       this.workersPendingJobs[workerId] = value.pending;
 
-      this.getSizePendings.forEach((pending, index) => {
-        if (pending.path === result.path) {
-          pending.stream$.next(result.size);
-          pending.stream$.complete();
-          this.getSizePendings.splice(index, 1);
+      const index = this.getSizePendings.findIndex(
+        (pending) => pending.path === result.path,
+      );
+
+      if (index !== -1) {
+        const pending = this.getSizePendings[index];
+
+        if (pending.timeoutId) {
+          clearTimeout(pending.timeoutId);
         }
-      });
+
+        pending.stream$.next(result.size);
+        pending.stream$.complete();
+        this.getSizePendings.splice(index, 1);
+      }
 
       this.pendingJobs = this.getPendingJobs();
       this.checkJobComplete(stream$);
@@ -168,6 +199,10 @@ export class FileWorkerService {
 
     if (type === EVENTS.alive) {
       this.searchStatus.workerStatus = 'scanning';
+    }
+
+    if (type === EVENTS.error) {
+      this.logger.error(`Worker error: ${value.error.message}`);
     }
   }
 
@@ -221,6 +256,18 @@ export class FileWorkerService {
   }
 
   private async killWorkers(): Promise<void> {
+    this.getSizePendings.forEach((pending) => {
+      if (pending.timeoutId) {
+        clearTimeout(pending.timeoutId);
+      }
+      if (!pending.stream$.closed) {
+        pending.stream$.error(
+          new Error('Workers terminated before completion'),
+        );
+      }
+    });
+    this.getSizePendings = [];
+
     for (let i = 0; i < this.workers.length; i++) {
       this.workers[i].removeAllListeners();
       this.tunnels[i].removeAllListeners();

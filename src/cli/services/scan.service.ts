@@ -6,9 +6,20 @@ import {
   ScanOptions,
   SortBy,
 } from '../interfaces';
-import { Observable, filter, firstValueFrom, map, switchMap, tap } from 'rxjs';
+import {
+  Observable,
+  filter,
+  firstValueFrom,
+  map,
+  switchMap,
+  tap,
+  catchError,
+  of,
+  timeout,
+} from 'rxjs';
 import { convertBytesToGb } from '../../utils/unit-conversions.js';
 import { join } from 'path';
+import os from 'os';
 
 export interface CalculateFolderStatsOptions {
   getModificationTimeForSensitiveResults: boolean;
@@ -57,6 +68,13 @@ export class ScanService {
     },
   ): Observable<CliScanFoundFolder> {
     return this.npkill.getSize$(nodeFolder.path).pipe(
+      timeout(30000), // 30 seconds timeout
+      catchError(() => {
+        // If size calculation fails or times out, keep size as 0 but mark as calculated
+        nodeFolder.size = 0;
+        nodeFolder.modificationTime = 1; // 1 = calculated, -1 = not calculated
+        return of({ size: 0, unit: 'bytes' as const });
+      }),
       tap(({ size }) => {
         nodeFolder.size = convertBytesToGb(size);
       }),
@@ -68,13 +86,43 @@ export class ScanService {
           nodeFolder.modificationTime = -1;
           return nodeFolder;
         }
-        const parentFolder = join(nodeFolder.path, '../');
-        const result = await firstValueFrom(
-          this.npkill.getNewestFile$(parentFolder),
-        );
 
-        nodeFolder.modificationTime = result ? result.timestamp : -1;
-        return nodeFolder;
+        const parentFolder = join(nodeFolder.path, '../');
+        const normalizedParent = parentFolder.replace(/\\/g, '/').toLowerCase();
+        const normalizedHome = os.homedir().replace(/\\/g, '/').toLowerCase();
+
+        const isDirectChildOfHome =
+          normalizedHome && normalizedParent === normalizedHome;
+
+        // If it's directly under HOME, skip modification time calculation
+        if (isDirectChildOfHome) {
+          nodeFolder.modificationTime = -1;
+          return nodeFolder;
+        }
+
+        // For other folders, scan the parent folder for modification time
+        try {
+          const result = await firstValueFrom(
+            this.npkill.getNewestFile$(parentFolder).pipe(
+              timeout(10000), // 10 seconds timeout for modification time
+              catchError(() => of(null)),
+            ),
+          );
+
+          nodeFolder.modificationTime = result ? result.timestamp : 1;
+          return nodeFolder;
+        } catch {
+          nodeFolder.modificationTime = 1;
+          return nodeFolder;
+        }
+      }),
+      catchError(() => {
+        // Final fallback: mark as calculated with default values
+        nodeFolder.modificationTime = 1;
+        if (nodeFolder.size === undefined || nodeFolder.size === null) {
+          nodeFolder.size = 0;
+        }
+        return of(nodeFolder);
       }),
     );
   }
