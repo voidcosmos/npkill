@@ -90,8 +90,17 @@ export abstract class FileService implements IFileService {
       : path.isAbsolute(originalPath)
         ? originalPath
         : path.resolve(process.cwd(), originalPath);
-    const normalizedPath = absolutePath.replace(/\\/g, '/').toLowerCase();
-    const normalizedOriginal = originalPath.replace(/\\/g, '/').toLowerCase();
+
+    const normalizePath = (p: string): string => {
+      let normalized = p.replace(/\\/g, '/').toLowerCase();
+      if (/^[a-z]:\//.test(normalized)) {
+        normalized = normalized.substring(2);
+      }
+      return normalized;
+    };
+
+    const normalizedPath = normalizePath(absolutePath);
+    const normalizedOriginal = normalizePath(originalPath);
 
     const home =
       process.env.HOME ?? process.env.USERPROFILE ?? os.homedir() ?? '';
@@ -101,9 +110,8 @@ export abstract class FileService implements IFileService {
     if (home !== '') {
       // Normalize the home path. If it's already absolute, just normalize separators.
       // Only use path.resolve() if it's a relative path to avoid cross-platform issues.
-      normalizedHome = path.isAbsolute(home)
-        ? home.replace(/\\/g, '/').toLowerCase()
-        : path.resolve(home).replace(/\\/g, '/').toLowerCase();
+      const homeAbsolute = path.isAbsolute(home) ? home : path.resolve(home);
+      normalizedHome = normalizePath(homeAbsolute);
       isInHome =
         normalizedPath === normalizedHome ||
         normalizedPath.startsWith(normalizedHome + '/');
