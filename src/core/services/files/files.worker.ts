@@ -172,16 +172,27 @@ class FileWalker {
   private async runGetFolderSize(path: string): Promise<void> {
     this.updateProcs(1);
 
-    const collector = {
-      total: 0,
-      pending: 1,
-      onComplete: (finalSize: number) => {
-        this.events.emit('folderSizeResult', { path, size: finalSize });
-      },
-    };
+    try {
+      const collector = {
+        total: 0,
+        pending: 1,
+        onComplete: (finalSize: number) => {
+          this.events.emit('folderSizeResult', { path, size: finalSize });
+        },
+      };
 
-    this.enqueueTask(path, ETaskOperation.getFolderSizeChild, false, collector);
-    this.completeTask();
+      this.enqueueTask(
+        path,
+        ETaskOperation.getFolderSizeChild,
+        false,
+        collector,
+      );
+      this.completeTask();
+    } catch {
+      // If anything fails during setup, emit size 0 and complete
+      this.events.emit('folderSizeResult', { path, size: 0 });
+      this.completeTask();
+    }
   }
 
   private async runGetFolderSizeChild(
@@ -306,12 +317,19 @@ class FileWalker {
           });
           break;
         case ETaskOperation.getFolderSize:
-          this.runGetFolderSize(task.path).catch(() => {});
+          this.runGetFolderSize(task.path).catch(() => {
+            // If runGetFolderSize fails, we need to emit a size of 0
+            // Otherwise the stream will hang forever
+            this.events.emit('folderSizeResult', { path: task.path, size: 0 });
+          });
           break;
         case ETaskOperation.getFolderSizeChild:
           this.runGetFolderSizeChild(task.path, task.sizeCollector).catch(
             () => {
+              // Ensure we always decrement the collector even on errors
               if (task.sizeCollector == null) {
+                // This shouldn't happen, but if it does, we can't recover properly
+                // The best we can do is not crash
                 return;
               }
 
@@ -319,6 +337,8 @@ class FileWalker {
               if (task.sizeCollector.pending === 0) {
                 task.sizeCollector.onComplete(task.sizeCollector.total);
               }
+
+              this.completeTask();
             },
           );
           break;

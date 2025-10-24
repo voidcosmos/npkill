@@ -415,8 +415,12 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const spacePadding = ' '.repeat(Math.max(0, OFFSET_COLUMN - sizeLength));
     folderSize = `${spacePadding}${folderSize}`;
 
-    const folderSizeText =
-      folder.size > 0 ? folderSize : pc.bgBlack(pc.gray(' calc... '));
+    // Only show "calc..." if size is exactly 0 AND modificationTime is -1 (not yet calculated)
+    // If size is 0 but modificationTime is set, then it's a truly empty folder
+    const isCalculating = folder.size === 0 && folder.modificationTime === -1;
+    const folderSizeText = isCalculating
+      ? pc.bgBlack(pc.gray(' calc... '))
+      : folderSize;
 
     return {
       path: folderText,

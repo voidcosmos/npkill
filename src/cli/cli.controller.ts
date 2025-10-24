@@ -715,10 +715,12 @@ export class CliController {
     this.scanService
       .scan(this.config)
       .pipe(
-        mergeMap((nodeFolder) =>
-          this.scanService.calculateFolderStats(nodeFolder, {
-            getModificationTimeForSensitiveResults: true,
-          }),
+        mergeMap(
+          (nodeFolder) =>
+            this.scanService.calculateFolderStats(nodeFolder, {
+              getModificationTimeForSensitiveResults: true,
+            }),
+          10, // Limit to 10 concurrent stat calculations at a time
         ),
         tap((folder) => this.jsonOutputService.processResult(folder)),
       )
@@ -740,8 +742,9 @@ export class CliController {
       .scan(this.config)
       .pipe(
         tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)),
-        mergeMap((nodeFolder) =>
-          this.scanService.calculateFolderStats(nodeFolder),
+        mergeMap(
+          (nodeFolder) => this.scanService.calculateFolderStats(nodeFolder),
+          10, // Limit to 10 concurrent stat calculations at a time
         ),
         tap((folder) => this.processFolderStatsForUi(folder)),
       )

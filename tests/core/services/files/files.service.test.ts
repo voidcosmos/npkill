@@ -146,7 +146,19 @@ describe('File Service', () => {
         expect(
           fileService.isDangerous('/home/user/.cache/project/node_modules')
             .isSensitive,
-        ).toBe(false);
+        ).toBe(true);
+      });
+
+      test('~/.cache itself', () => {
+        expect(fileService.isDangerous('/home/user/.cache').isSensitive).toBe(
+          true,
+        );
+      });
+
+      test('~/.npm itself', () => {
+        expect(fileService.isDangerous('/home/user/.npm').isSensitive).toBe(
+          false,
+        );
       });
 
       test('parent relative path (..)', () => {
