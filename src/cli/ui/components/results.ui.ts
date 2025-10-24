@@ -327,8 +327,6 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       lastModification = pc[CURSOR_ROW_COLOR](lastModification);
 
       this.paintBgRow(row);
-    } else if (isRowSelected && this.selectMode) {
-      this.paintCursorCell(row);
     }
 
     if (folder.riskAnalysis?.isSensitive) {
@@ -360,13 +358,6 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
     this.printAt(size, {
       x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN,
-      y: row,
-    });
-  }
-
-  private paintCursorCell(row: number): void {
-    this.printAt(pc[CURSOR_ROW_COLOR](' '), {
-      x: MARGINS.FOLDER_COLUMN_START - 1,
       y: row,
     });
   }
