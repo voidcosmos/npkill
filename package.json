@@ -37,7 +37,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node -r tsconfig-paths/register --loader ts-node/esm --no-warnings ./src/index.ts",
-    "test": "node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js --verbose",
+    "test": "node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js",
     "test:watch": "npm run test -- --watch",
     "test:mutant": "stryker run",
     "release": "npm run build && np",
