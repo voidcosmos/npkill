@@ -1,16 +1,15 @@
 import {
   ConsoleService,
-  ProfilesService,
   ResultsService,
   SpinnerService,
   UpdateService,
 } from './services/index.js';
 import {
   DEFAULT_CONFIG,
-  DEFAULT_PROFILE,
   MIN_CLI_COLUMNS_SIZE,
   UI_POSITIONS,
 } from '../constants/index.js';
+import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
 import { firstValueFrom, Subject } from 'rxjs';
@@ -39,7 +38,7 @@ import pc from 'picocolors';
 import { homedir } from 'os';
 import path from 'path';
 import openExplorer from 'open-file-explorer';
-import { Npkill } from '../core/index.js';
+import { Npkill, ConfigService, ProfilesService } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
@@ -76,11 +75,13 @@ export class CliController {
     private readonly scanService: ScanService,
     private readonly jsonOutputService: JsonOutputService,
     private readonly profilesService: ProfilesService,
+    private readonly configService: ConfigService,
   ) {}
 
   init(): void {
     this.logger.info(`Npkill CLI started! v${this.getVersion()}`);
 
+    this.loadConfigFile();
     this.parseArguments();
 
     if (this.config.jsonStream) {
@@ -248,6 +249,87 @@ export class CliController {
     });
   }
 
+  private loadConfigFile(): void {
+    const configPathArg = process.argv.indexOf('--config');
+    const customConfigPath =
+      configPathArg !== -1 ? process.argv[configPathArg + 1] : undefined;
+
+    const result = this.configService.loadConfig(customConfigPath);
+
+    if (result.error) {
+      const isDefaultLocationNotFound =
+        !customConfigPath && result.error === undefined;
+
+      if (isDefaultLocationNotFound) {
+        this.logger.info(`No config file found at ${result.configPath}`);
+      } else {
+        this.logger.error(`Configuration error: ${result.error}`);
+        console.log(
+          `${pc.red(pc.bold('Configuration Error'))} (${pc.yellow(result.configPath)})`,
+        );
+        console.log(pc.red(`${result.error}\n`));
+        console.log(
+          pc.gray(
+            'Please fix the configuration file and try again.\n' +
+              'For configuration reference, see: https://npkill.js.org/docs/npkillrc',
+          ),
+        );
+        this.exitWithError();
+      }
+    }
+
+    if (!result.config) {
+      return;
+    }
+
+    this.logger.info(`Loaded config from ${result.configPath}`);
+
+    if (result.config.rootDir !== undefined) {
+      this.config.folderRoot = result.config.rootDir;
+    }
+
+    if (result.config.exclude !== undefined) {
+      this.config.exclude = [
+        ...new Set([...this.config.exclude, ...result.config.exclude]),
+      ];
+    }
+    if (result.config.sortBy !== undefined) {
+      this.config.sortBy = result.config.sortBy;
+    }
+
+    if (result.config.sizeUnit !== undefined) {
+      this.config.sizeUnit = result.config.sizeUnit;
+    }
+    if (result.config.hideSensitiveResults !== undefined) {
+      this.config.excludeHiddenDirectories = result.config.hideSensitiveResults;
+    }
+    if (result.config.dryRun !== undefined) {
+      this.config.dryRun = result.config.dryRun;
+    }
+    if (result.config.checkUpdates !== undefined) {
+      this.config.checkUpdates = result.config.checkUpdates;
+    }
+
+    const userProfiles = this.configService.getUserDefinedProfiles(
+      result.config,
+    );
+
+    const profileCount = Object.keys(userProfiles).length;
+
+    if (profileCount > 0) {
+      this.profilesService.setUserDefinedProfiles(userProfiles);
+      this.logger.info(`Loaded ${profileCount} custom profile(s) from config`);
+    }
+
+    if (result.config.defaultProfiles !== undefined) {
+      // Store default profiles from config to be used later if no CLI profiles are specified
+      this.config.profiles = result.config.defaultProfiles;
+      this.logger.info(
+        `Default profiles set from config: ${result.config.defaultProfiles.join(', ')}`,
+      );
+    }
+  }
+
   private parseArguments(): void {
     const options = this.consoleService.getParameters(process.argv);
     if (options.isTrue('help')) {
@@ -270,15 +352,46 @@ export class CliController {
       options.isTrue('profiles') &&
       options.getStrings('profiles').length === 0
     ) {
-      // TODO check user defined
-      const defaultProfile = DEFAULT_PROFILE;
       console.log(pc.bold(pc.bgYellow(pc.black(' Available profiles '))));
       console.log(
         `Remember: ${pc.bold(pc.yellow('context matters'))}. What's safe to remove in one project or ecosystem could be important in another.\n`,
       );
-      console.log(
-        this.profilesService.getAvailableProfilesToPrint(defaultProfile),
+
+      const defaultProfiles =
+        this.config.profiles.length > 0
+          ? this.config.profiles
+          : [DEFAULT_PROFILE];
+
+      const userProfiles = this.profilesService.getProfiles('user');
+      const baseProfiles = this.profilesService.getProfiles('base');
+
+      let profilesToPrint = '';
+
+      if (Object.keys(userProfiles).length > 0) {
+        profilesToPrint += Object.entries(userProfiles).reduce(
+          (acc, [name, profile]) => {
+            const isDefault = defaultProfiles.includes(name);
+            const entry =
+              ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} ${pc.cyan('(user-defined)')} - ${profile.description}\n` +
+              pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+            return acc + entry;
+          },
+          '',
+        );
+      }
+
+      profilesToPrint += Object.entries(baseProfiles).reduce(
+        (acc, [name, profile]) => {
+          const isDefault = defaultProfiles.includes(name);
+          const entry =
+            ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} - ${profile.description}\n` +
+            pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+          return acc + entry;
+        },
+        '',
       );
+
+      console.log(profilesToPrint);
       this.exitGracefully();
     }
 
@@ -312,9 +425,14 @@ export class CliController {
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
     }
 
-    this.config.folderRoot = options.isTrue('directory')
-      ? options.getString('directory')
-      : process.cwd();
+    // Set folder root: CLI --directory takes precedence, then config rootDir, then process.cwd()
+    if (options.isTrue('directory')) {
+      this.config.folderRoot = options.getString('directory');
+    } else if (!this.config.folderRoot) {
+      // Only use process.cwd() if folderRoot wasn't set by config
+      this.config.folderRoot = process.cwd();
+    }
+
     if (options.isTrue('full-scan')) {
       this.config.folderRoot = homedir();
     }
@@ -336,14 +454,21 @@ export class CliController {
 
     if (!options.isTrue('target-folder')) {
       if (!options.isTrue('profiles')) {
-        this.logger.info(`Using default profile targets (${DEFAULT_PROFILE})`);
-        this.config.targets = this.profilesService.getTargetsFromProfiles([
-          DEFAULT_PROFILE,
-        ]);
+        // Use defaultProfiles from config if available, otherwise use DEFAULT_PROFILE
+        const profilesToUse =
+          this.config.profiles.length > 0
+            ? this.config.profiles
+            : [DEFAULT_PROFILE];
+
+        this.logger.info(
+          `Using default profile targets (${profilesToUse.join(', ')})`,
+        );
+        this.config.targets =
+          this.profilesService.getTargetsFromProfiles(profilesToUse);
       } else {
         const selectedProfiles = options.getStrings('profiles');
         const badProfiles =
-          this.profilesService.getBadProfiles(selectedProfiles);
+          this.profilesService.getInvalidProfileNames(selectedProfiles);
 
         if (badProfiles.length > 0) {
           this.logger.warn(

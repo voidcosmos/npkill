@@ -1,7 +1,12 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
 import { Subject } from 'rxjs';
-import { DeleteResult, Npkill, ScanStatus } from '../../src/core/index.js';
+import {
+  ConfigService,
+  DeleteResult,
+  Npkill,
+  ScanStatus,
+} from '../../src/core/index.js';
 import { LoggerService } from '../../src/core/services/logger.service.js';
 import { ResultsService } from '../../src/cli/services/results.service.js';
 import { SpinnerService } from '../../src/cli/services/spinner.service.js';
@@ -11,7 +16,7 @@ import { UiService } from '../../src/cli/services/ui.service.js';
 import { ScanService } from '../../src/cli/services/scan.service.js';
 import { ERROR_MSG } from '../../src/constants/messages.constants.js';
 import { JsonOutputService } from '../../src/cli/services/json-output.service.js';
-import { ProfilesService } from '../../src/cli/services/profiles.service.js';
+import { ProfilesService } from '../../src/core/services/profiles.service.js';
 import { DEFAULT_CONFIG } from '../../src/constants/main.constants.js';
 
 const resultsUiDeleteMock$ = new Subject<DeleteResult>();
@@ -147,8 +152,14 @@ describe('CliController test', () => {
   } as unknown as Npkill;
   const profilesServiceMock = {
     getAvailableProfilesToPrint: jest.fn(),
-    getBadProfiles: jest.fn(),
+    getInvalidProfileNames: jest.fn(),
     getTargetsFromProfiles: jest.fn(() => ['node_modules']),
+  };
+  const configServiceMock = {
+    loadConfig: jest.fn().mockReturnValue(DEFAULT_CONFIG),
+    validateConfig: jest.fn(),
+    mergeConfigs: jest.fn(),
+    getUserDefinedProfiles: jest.fn(),
   };
 
   ////////// mocked Controller Methods
@@ -182,6 +193,7 @@ describe('CliController test', () => {
       scanServiceMock as unknown as ScanService,
       jsonOutputServiceMock as unknown as JsonOutputService,
       profilesServiceMock as unknown as ProfilesService,
+      configServiceMock as unknown as ConfigService,
     );
 
     Object.defineProperty(process.stdout, 'columns', { value: 80 });

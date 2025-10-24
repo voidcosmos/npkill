@@ -5,6 +5,7 @@ import { ScanStatus } from './interfaces/search-status.model.js';
 import _dirname from '../dirname.js';
 import { LoggerService } from './services/logger.service.js';
 import { StreamService } from './services/stream.service.js';
+import { ProfilesService } from './services/profiles.service.js';
 import { Services } from './interfaces/services.interface.js';
 import {
   ScanFoundFolder,
@@ -171,6 +172,7 @@ function createDefaultServices(
   );
   const streamService = new StreamService();
   const resultsService = new ResultsService();
+  const profilesService = new ProfilesService();
 
   const OSService = OSServiceMap[process.platform];
   if (typeof OSService === 'undefined') {
@@ -187,6 +189,7 @@ function createDefaultServices(
     fileWorkerService,
     streamService,
     resultsService,
+    profilesService,
   };
 }
 

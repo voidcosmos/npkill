@@ -1,6 +1,7 @@
 import { FileService, FileWorkerService } from '@core/services/files/index.js';
 import { LoggerService } from '@core/services/logger.service.js';
 import { StreamService } from '@core/services/stream.service.js';
+import { ProfilesService } from '@core/services/profiles.service.js';
 import { ResultsService } from '../../cli/services/index.js';
 import { ScanStatus } from './search-status.model.js';
 
@@ -21,4 +22,6 @@ export interface Services {
   streamService: StreamService;
   /** Service for managing and formatting scan results. */
   resultsService: ResultsService;
+  /** Service for managing profiles. */
+  profilesService: ProfilesService;
 }

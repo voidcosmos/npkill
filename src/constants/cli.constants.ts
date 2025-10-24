@@ -9,6 +9,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'profiles',
   },
   {
+    arg: ['--config'],
+    description:
+      'Path to a custom .npkillrc configuration file. By default, npkill looks for ~/.npkillrc.',
+    name: 'config',
+  },
+  {
     arg: ['-d', '--directory'],
     description:
       'Set directory from which to start searching. By default, starting-point is .',
@@ -66,7 +72,6 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-t', '--target'],
     description:
-      // eslint-disable-next-line quotes
       'Specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
     name: 'target-folder',
   },

@@ -5,4 +5,3 @@ export * from './spinner.service.js';
 export * from './update.service.js';
 export * from './json-output.service.js';
 export * from '../../core/services/stream.service.js';
-export * from './profiles.service.js';
