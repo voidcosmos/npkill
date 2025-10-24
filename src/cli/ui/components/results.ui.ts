@@ -299,7 +299,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private noResults(): void {
-    const targetFolderColored: string = pc[DEFAULT_CONFIG.warningColor](
+    const targetFolderColored: string = pc.yellowBright(
       this.config.targets.join(', '),
     );
     const message = `No ${targetFolderColored} found!`;
@@ -335,7 +335,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     const isFolderSelected = this.selectedFolders.has(folder.path);
     if (folder.riskAnalysis?.isSensitive) {
-      path = pc[isFolderSelected ? 'blue' : DEFAULT_CONFIG.warningColor](path);
+      path = pc[isFolderSelected ? 'blue' : 'yellowBright'](path);
     } else if (!isRowSelected && isFolderSelected) {
       path = pc.blue(path);
     }
