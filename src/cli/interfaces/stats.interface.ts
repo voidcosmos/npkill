@@ -6,7 +6,13 @@ export interface CliScanFoundFolder extends ScanFoundFolder {
   status: 'live' | 'deleting' | 'error-deleting' | 'deleted';
 }
 
+export interface IResultTypeCount {
+  type: string;
+  count: number;
+}
+
 export interface IStats {
   spaceReleased: string;
   totalSpace: string;
+  resultsTypesCount: IResultTypeCount[];
 }

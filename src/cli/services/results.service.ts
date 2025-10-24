@@ -1,6 +1,11 @@
-import { CliScanFoundFolder, IStats } from '../interfaces/index.js';
+import {
+  CliScanFoundFolder,
+  IStats,
+  IResultTypeCount,
+} from '../interfaces/index.js';
 import { FOLDER_SORT } from '../../constants/sort.result.js';
 import { formatSize } from '../../utils/unit-conversions.js';
+import path from 'path';
 
 export class ResultsService {
   results: CliScanFoundFolder[] = [];
@@ -24,11 +29,15 @@ export class ResultsService {
 
   getStats(): IStats {
     let spaceReleased = 0;
+    const typeCounts = new Map<string, number>();
 
     const totalSpace = this.results.reduce((total, folder) => {
       if (folder.status === 'deleted') {
         spaceReleased += folder.size;
       }
+
+      const folderType = path.basename(folder.path);
+      typeCounts.set(folderType, (typeCounts.get(folderType) || 0) + 1);
 
       return total + folder.size;
     }, 0);
@@ -36,9 +45,21 @@ export class ResultsService {
     const formattedTotal = formatSize(totalSpace, this.sizeUnit);
     const formattedReleased = formatSize(spaceReleased, this.sizeUnit);
 
+    const resultsTypesCount: IResultTypeCount[] = Array.from(
+      typeCounts.entries(),
+    )
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.type.localeCompare(b.type);
+      });
+
     return {
       spaceReleased: formattedReleased.text,
       totalSpace: formattedTotal.text,
+      resultsTypesCount,
     };
   }
 }
