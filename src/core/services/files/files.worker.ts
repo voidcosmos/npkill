@@ -267,7 +267,10 @@ class FileWalker {
     results: { path: string; isTarget: boolean }[],
   ): void {
     const subpath = join(path, entry.name);
-    const shouldSkip = !entry.isDirectory() || this.isExcluded(subpath);
+    const shouldSkip =
+      entry.isSymbolicLink() ||
+      !entry.isDirectory() ||
+      this.isExcluded(subpath);
     if (shouldSkip) {
       return;
     }
