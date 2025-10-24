@@ -99,7 +99,11 @@ export abstract class FileService implements IFileService {
     let normalizedHome = '';
 
     if (home !== '') {
-      normalizedHome = path.resolve(home).replace(/\\/g, '/').toLowerCase();
+      // Normalize the home path. If it's already absolute, just normalize separators.
+      // Only use path.resolve() if it's a relative path to avoid cross-platform issues.
+      normalizedHome = path.isAbsolute(home)
+        ? home.replace(/\\/g, '/').toLowerCase()
+        : path.resolve(home).replace(/\\/g, '/').toLowerCase();
       isInHome =
         normalizedPath === normalizedHome ||
         normalizedPath.startsWith(normalizedHome + '/');
