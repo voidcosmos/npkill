@@ -117,9 +117,9 @@ export class StatsUi extends BaseUi {
   private showResultsTypesCount(
     resultsTypesCount: Array<{ type: string; count: number }>,
   ): void {
-    const MAX_CONTENT_LENGTH = 33;
+    const MAX_CONTENT_LENGTH = 20;
     const RIGHT_MARGIN = 2;
-    const MIN_TERMINAL_WIDTH = 96;
+    const MIN_TERMINAL_WIDTH = 94;
     const START_Y = 1;
     const NUM_ROWS = 5;
 
@@ -177,7 +177,7 @@ export class StatsUi extends BaseUi {
         0,
       );
       const { key, yPosition } = positions[4];
-      const summaryText = `[+${remainingTypes.length} | total ${totalRemaining}]`;
+      const summaryText = `[+${remainingTypes.length}·total ${totalRemaining}]`;
       const trimmedSummary =
         summaryText.length > MAX_CONTENT_LENGTH
           ? summaryText.substring(0, MAX_CONTENT_LENGTH - 3) + '...'
@@ -197,10 +197,9 @@ export class StatsUi extends BaseUi {
     maxLength: number,
   ): string {
     const countStr = count.toString();
-    const separator = ' ';
-    const baseLength = countStr.length + separator.length;
+    const baseLength = countStr.length + 3; // ' (' and ')'
 
-    const fullText = `${countStr}${separator}${type}`;
+    const fullText = `${type} (${countStr})`;
     if (fullText.length <= maxLength) {
       return fullText;
     }
@@ -211,7 +210,7 @@ export class StatsUi extends BaseUi {
         ? type.substring(0, maxTypeLength - 3) + '...'
         : type;
 
-    return `${countStr}${separator}${trimmedType}`;
+    return `${trimmedType} (${countStr})`;
   }
 
   private showResultTypeRow(
