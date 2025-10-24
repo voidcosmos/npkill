@@ -87,32 +87,25 @@ export class ScanService {
           return nodeFolder;
         }
 
-        // Determine the folder to scan for modification time
-        // For folders directly under HOME (like ~/.npm, ~/.cache), scan the folder itself
-        // Otherwise, scan the parent folder.
-        const home =
-          process.env.HOME ?? process.env.USERPROFILE ?? os.homedir() ?? '';
-        const parentFolder = join(nodeFolder.path, '../');
+        const parentFolder = join(nodeFolder.path, '..');
         const normalizedParent = parentFolder.replace(/\\/g, '/').toLowerCase();
-        const normalizedHome = home
-          ? home.replace(/\\/g, '/').toLowerCase()
-          : '';
+        const normalizedHome = os.homedir().replace(/\\/g, '/').toLowerCase();
 
-        // Check if parent is HOME directory
         const isDirectChildOfHome =
           normalizedHome && normalizedParent === normalizedHome;
 
-        // If it's a direct child of HOME, scan the target folder itself
-        // Otherwise scan the parent folder (default behavior)
-        const folderToScan = isDirectChildOfHome
-          ? nodeFolder.path
-          : parentFolder;
+        // If it's directly under HOME, skip modification time calculation
+        if (isDirectChildOfHome) {
+          nodeFolder.modificationTime = -1;
+          return nodeFolder;
+        }
 
+        // For other folders, scan the parent folder for modification time
         try {
           const result = await firstValueFrom(
-            this.npkill.getNewestFile$(folderToScan).pipe(
-              timeout(20000), // 20 seconds timeout for modification time
-              catchError(() => of(null)), // On error, return null
+            this.npkill.getNewestFile$(parentFolder).pipe(
+              timeout(10000), // 10 seconds timeout for modification time
+              catchError(() => of(null)),
             ),
           );
 
