@@ -14,7 +14,10 @@ import { ConsoleService } from '../../src/cli/services/console.service.js';
 import { UpdateService } from '../../src/cli/services/update.service.js';
 import { UiService } from '../../src/cli/services/ui.service.js';
 import { ScanService } from '../../src/cli/services/scan.service.js';
-import { ERROR_MSG } from '../../src/constants/messages.constants.js';
+import {
+  ERROR_MSG,
+  INFO_MSGS,
+} from '../../src/constants/messages.constants.js';
 import { JsonOutputService } from '../../src/cli/services/json-output.service.js';
 import { ProfilesService } from '../../src/core/services/profiles.service.js';
 import { DEFAULT_CONFIG } from '../../src/constants/main.constants.js';
@@ -124,6 +127,7 @@ describe('CliController test', () => {
     setCursorVisible: jest.fn(),
     clear: jest.fn(),
     renderAll: jest.fn(),
+    stdin: { isTTY: true },
   };
   const scanServiceMock = {
     scan: jest.fn(),
@@ -196,8 +200,16 @@ describe('CliController test', () => {
       configServiceMock as unknown as ConfigService,
     );
 
-    Object.defineProperty(process.stdout, 'columns', { value: 80 });
-    Object.defineProperty(process.stdout, 'isTTY', { value: true });
+    Object.defineProperty(process.stdout, 'columns', {
+      value: 80,
+      configurable: true,
+      writable: true,
+    });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true,
+      writable: true,
+    });
 
     showHelpSpy = jest
       .spyOn(cliController, 'showHelp')
@@ -217,6 +229,34 @@ describe('CliController test', () => {
     expect(setupEventsListenerSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(checkVersionSpy).toHaveBeenCalledTimes(1);
+  });
+
+  describe('TTY detection behavior', () => {
+    afterEach(() => {
+      Object.defineProperty(process.stdout, 'isTTY', { value: true });
+      uiServiceMock.stdin.isTTY = true;
+    });
+
+    it('allows running when stdin is TTY and stdout is not', () => {
+      Object.defineProperty(process.stdout, 'isTTY', { value: false });
+      uiServiceMock.stdin.isTTY = true;
+
+      cliController.init();
+
+      expect(setupEventsListenerSpy).toHaveBeenCalledTimes(1);
+      expect(scanSpy).toHaveBeenCalledTimes(1);
+      expect(exitSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('exits with NO_TTY when both stdin and stdout are not TTY', () => {
+      Object.defineProperty(process.stdout, 'isTTY', { value: false });
+      uiServiceMock.stdin.isTTY = false;
+
+      // Expect graceful error exit due to NO_TTY
+      expect(() => cliController.init()).toThrow();
+      expect(uiServiceMock.print).toHaveBeenCalledWith(INFO_MSGS.NO_TTY);
+      expect(exitSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('#getArguments', () => {
