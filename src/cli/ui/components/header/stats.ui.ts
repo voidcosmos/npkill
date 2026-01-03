@@ -73,6 +73,7 @@ export class StatsUi extends BaseUi {
     }
 
     this.showResultsTypesCount(resultsTypesCount);
+    this.showActivePreset();
   }
 
   /** Print the value of the stat and if it is a different value from the
@@ -121,6 +122,27 @@ export class StatsUi extends BaseUi {
 
     const text = `${errors} error${errors > 1 ? 's' : ''}. 'e' to see`;
     this.printAt(pc.yellow(text), { ...UI_POSITIONS.ERRORS_COUNT });
+  }
+
+  private showActivePreset(): void {
+    const MIN_TERMINAL_WIDTH = 94;
+    if (this.terminal.columns < MIN_TERMINAL_WIDTH) {
+      return;
+    }
+
+    const RIGHT_MARGIN = 2;
+    const CLEAR_LENGTH = 50;
+    const xStartClear = this.terminal.columns - CLEAR_LENGTH - RIGHT_MARGIN;
+    const clearText = ' '.repeat(CLEAR_LENGTH);
+    this.printAt(clearText, { x: xStartClear, y: 0 });
+
+    if (!this.config.profiles || this.config.profiles.length === 0) {
+      return;
+    }
+
+    const text = `[${this.config.profiles.join(', ')}]`;
+    const xPosition = this.terminal.columns - text.length - RIGHT_MARGIN;
+    this.printAt(pc.magenta(text), { x: xPosition, y: 0 });
   }
 
   private showResultsTypesCount(
