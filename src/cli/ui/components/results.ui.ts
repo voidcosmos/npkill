@@ -243,7 +243,11 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     const tagStartXPosition = 16;
     // 14 for the selection counter, 56 for the instruction message
-    const clearSelectionCounterText = ' '.repeat(14 + 56);
+    const maxClearLength = 14 + 56;
+    const availableWidthForClear = this.terminal.columns - tagStartXPosition;
+    const clearLength = Math.min(maxClearLength, availableWidthForClear);
+    const clearSelectionCounterText = ' '.repeat(Math.max(0, clearLength));
+
     this.printAt(clearSelectionCounterText, {
       x: tagStartXPosition,
       y: MARGINS.ROW_RESULTS_START - 2,
@@ -265,8 +269,16 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
           pc.bold('ENTER') +
           ': delete',
       );
-      this.printAt(instructionMessage, {
-        x: tagStartXPosition + selectedMessage.length + 1,
+
+      const startX = tagStartXPosition + selectedMessage.length + 1;
+      const availableWidth = this.terminal.columns - startX;
+      const truncatedInstructionMessage = this.truncateText(
+        instructionMessage,
+        availableWidth,
+      );
+
+      this.printAt(truncatedInstructionMessage, {
+        x: startX,
         y: MARGINS.ROW_RESULTS_START - 2,
       });
     }
@@ -668,6 +680,41 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private showErrorsPopup(): void {
     this.showErrors$.next(null);
+  }
+
+  private truncateText(text: string, maxLength: number): string {
+    const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '');
+    const plainText = stripAnsi(text);
+
+    if (plainText.length <= maxLength) {
+      return text;
+    }
+
+    const targetLength = maxLength - 3;
+    if (targetLength <= 0) {
+      return '...';
+    }
+
+    let visibleLength = 0;
+    let output = '';
+    let i = 0;
+    const ansiRegex = /\x1b\[[0-9;]*m/;
+
+    while (i < text.length && visibleLength < targetLength) {
+      const remaining = text.substring(i);
+      const match = remaining.match(ansiRegex);
+
+      if (match && match.index === 0) {
+        output += match[0];
+        i += match[0].length;
+      } else {
+        output += text[i];
+        visibleLength++;
+        i++;
+      }
+    }
+
+    return output + '...' + '\x1b[0m';
   }
 
   private clamp(num: number, min: number, max: number): number {
