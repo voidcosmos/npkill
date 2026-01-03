@@ -96,6 +96,14 @@ To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
 
 **Important!** Some applications installed on the system need their node_modules directory to work and deleting them may break them. NPKILL will highlight them by displaying a :warning: to be careful.
 
+## Search Mode
+
+Press <kbd>/</kbd> to enter search mode. You can type a regex pattern to filter results.
+
+Press <kbd>Enter</kbd> to confirm the search and navigate the filtered results, or <kbd>Esc</kbd> to clear and exit.
+
+To exit from this mode, leave empty.
+
 ## Multi-Select Mode
 
 This mode allows you to select and delete multiple folders at once, making it more efficient when cleaning up many directories.

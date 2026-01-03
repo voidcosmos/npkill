@@ -121,6 +121,7 @@ ${getHeader('How to interact')}
  ${pc.green('PgDown / Ctrl+d / d / l')} Move one page down.
  ${pc.green('Home, End')}               Jump to first / last result.
  ${pc.green('o')}                       Open the parent directory.
+ ${pc.green('/')}                       Search (Regex supported).
  ${pc.green('e')}                       Show errors.
  ${pc.green('q')}                       Quit.`;
 
