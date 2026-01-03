@@ -173,6 +173,7 @@ export class CliController {
     this.uiService.add(optionsUi);
     this.activeComponent = optionsUi;
     this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
+    this.uiStats.reset();
     this.uiService.renderAll();
 
     changeConfig$.subscribe((configChanges) => {
@@ -202,6 +203,7 @@ export class CliController {
       optionsUi.clear();
       optionsUi.setVisible(false);
       this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.HELP);
+      this.uiStats.reset();
       this.uiService.renderAll();
       helpUi.render();
       helpUi.goToOptions$.subscribe(() => {
@@ -211,6 +213,7 @@ export class CliController {
         optionsUi.clear();
         optionsUi.setVisible(true);
         this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.OPTIONS);
+        this.uiStats.reset();
         this.uiService.renderAll();
       });
     });
@@ -222,6 +225,7 @@ export class CliController {
       this.uiResults.clear();
       this.uiResults.setVisible(true);
       this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.DELETE);
+      this.uiStats.reset();
       this.uiService.renderAll();
     });
   }
@@ -235,6 +239,7 @@ export class CliController {
     this.activeComponent = detailsUi;
     // detailsUi.render();
     this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.INFO);
+    this.uiStats.reset();
     this.uiService.renderAll();
 
     detailsUi.openFolder$.subscribe((path) => openExplorer(path));
@@ -245,6 +250,7 @@ export class CliController {
       this.uiResults.clear();
       this.uiResults.setVisible(true);
       this.uiHeader.menuIndex$.next(MENU_BAR_OPTIONS.DELETE);
+      this.uiStats.reset();
       this.uiService.renderAll();
     });
   }

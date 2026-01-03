@@ -39,6 +39,15 @@ export class StatsUi extends BaseUi {
     super();
   }
 
+  // Prevent bug where the "Releasable space" and "Saved Space" got o 0.
+  reset(): void {
+    this.lastValues = {
+      totalSpace: '',
+      spaceReleased: '',
+    };
+    this.lastResultTypesValues.clear();
+  }
+
   render(): void {
     const { totalSpace, spaceReleased, resultsTypesCount } =
       this.resultsService.getStats();
