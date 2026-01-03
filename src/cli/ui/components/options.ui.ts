@@ -260,10 +260,35 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
             : String(opt.value);
       }
 
-      const line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${valueText}`;
-      this.printAt(isSelected ? pc.cyan(line) : line, {
-        x: 2,
-        y: currentRow++,
+      // Move the options down to prevent the values from overlapping.
+      const LEFT_MARGIN = 2;
+      const terminalWidth = this.terminal.columns;
+      const PREFIX_LENGTH = 18; // Marker (1) + Space (1) + Label (16)
+      const valueStartX = LEFT_MARGIN + PREFIX_LENGTH;
+      const maxContentWidth = Math.max(10, terminalWidth - valueStartX);
+
+      const chunks: string[] = [];
+      if (valueText.length === 0) {
+        chunks.push('');
+      } else {
+        for (let k = 0; k < valueText.length; k += maxContentWidth) {
+          chunks.push(valueText.substring(k, k + maxContentWidth));
+        }
+      }
+
+      chunks.forEach((chunk, index) => {
+        let line = '';
+        if (index === 0) {
+          line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${chunk}`;
+        } else {
+          const padding = ' '.repeat(PREFIX_LENGTH);
+          line = `${padding}${chunk}`;
+        }
+
+        this.printAt(isSelected ? pc.cyan(line) : line, {
+          x: LEFT_MARGIN,
+          y: currentRow++,
+        });
       });
 
       // If selected and dropdown, show options
