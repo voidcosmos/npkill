@@ -160,6 +160,13 @@ export class CliController {
     );
     this.uiResults.endNpkill$.subscribe(() => this.quit());
     this.uiResults.goOptions$.subscribe(() => this.openOptions());
+    this.uiResults.search$.subscribe((state) => {
+      if (state === null) {
+        this.uiHeader.setSearch(null);
+      } else {
+        this.uiHeader.setSearch(state.text, state.isInputActive);
+      }
+    });
 
     // Activate the main interactive component
     this.activeComponent = this.uiResults;
