@@ -314,7 +314,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     let { path, lastModification, size } = this.getFolderTexts(folder);
     const isRowSelected = row === this.getRealCursorPosY();
 
-    lastModification = pc.gray(lastModification);
+    lastModification = isRowSelected
+      ? pc.white(lastModification)
+      : pc.gray(lastModification);
 
     // Adjust column start based on select mode
     const pathColumnStart = this.selectMode
