@@ -14,6 +14,9 @@ import { MENU_BAR_OPTIONS } from './header-ui.constants.js';
 export class HeaderUi extends BaseUi {
   programVersion: string;
   private activeMenuIndex = MENU_BAR_OPTIONS.DELETE;
+  private searchMode = false;
+  private searchText = '';
+  private isSearchInputActive = false;
 
   readonly menuIndex$ = new BehaviorSubject<MENU_BAR_OPTIONS>(
     MENU_BAR_OPTIONS.DELETE,
@@ -25,6 +28,19 @@ export class HeaderUi extends BaseUi {
       this.activeMenuIndex = menuIndex;
       this.render();
     });
+  }
+
+  setSearch(text: string | null, isInputActive = false) {
+    if (text === null) {
+      this.searchMode = false;
+      this.searchText = '';
+      this.isSearchInputActive = false;
+    } else {
+      this.searchMode = true;
+      this.searchText = text;
+      this.isSearchInputActive = isInputActive;
+    }
+    this.render();
   }
 
   render(): void {
@@ -73,6 +89,23 @@ export class HeaderUi extends BaseUi {
   }
 
   private renderMenuBar(): void {
+    if (this.searchMode) {
+      let searchText = ` Search: ${this.searchText} `;
+      if (this.isSearchInputActive) {
+        searchText = ` Search: ${this.searchText}_ `;
+        this.printAt(pc.bgBlue(pc.white(searchText)), {
+          x: 2,
+          y: UI_POSITIONS.TUTORIAL_TIP.y,
+        });
+      } else {
+        this.printAt(pc.bgWhite(pc.black(searchText)), {
+          x: 2,
+          y: UI_POSITIONS.TUTORIAL_TIP.y,
+        });
+      }
+      return;
+    }
+
     const options = Object.values(MENU_BAR);
     let xStart = 2;
     for (const option of options) {
