@@ -15,10 +15,6 @@ export const INFO_MSGS = {
     'Oh no! The terminal is too narrow. Please, ' +
     'enlarge it (This will be fixed in future versions. Disclose the inconveniences)',
   NEW_UPDATE_FOUND: 'New version found! npm i -g npkill for update.',
-  NO_TTY:
-    'Oh no! Npkill does not support this terminal (TTY is required). This ' +
-    'is a bug, which has to be fixed. Please try another command interpreter ' +
-    '(for example, CMD in windows)',
   NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size | last-mod',
   NO_VALID_SIZE_UNIT: 'Invalid size-unit option. Available: auto | mb | gb',
   STARTING: 'Initializing ',
