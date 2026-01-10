@@ -142,7 +142,7 @@ export class StatsUi extends BaseUi {
 
     const text = `[${this.config.profiles.join(', ')}]`;
     const xPosition = this.terminal.columns - text.length - RIGHT_MARGIN;
-    this.printAt(pc.magenta(text), { x: xPosition, y: 0 });
+    this.printAt(pc.gray(pc.bold(text)), { x: xPosition, y: 0 });
   }
 
   private showResultsTypesCount(
