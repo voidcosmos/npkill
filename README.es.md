@@ -204,7 +204,6 @@ npm run start -- -f -e
 # :bug: Bugs conocidos :bug:
 
 - A veces, el CLI se bloquea mientras un directorio se está borrando.
-- Algunas terminales que no utilizan TTY (como git bash en Windows) no funcionan.
 - La ordenación, especialmente por rutas, puede ralentizar la terminal cuando haya muchos resultados al mismo tiempo.
 - A veces, los cálculos de tamaño son mayores de lo que deberían ser.
 - (RESUELTO) Problemas de rendimiento al hacer la búsqueda desde directorios de alto nivel (como / en Linux).

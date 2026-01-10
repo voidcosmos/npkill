@@ -279,7 +279,6 @@ You can check the basic API [here](./API.md) or on the web (comming soon).
 # :bug: Known bugs :bug:
 
 - Sometimes, CLI is blocked while folder is deleting.
-- Some terminals that do not use TTY (like git bash in windows) do not work.
 - Sorting, especially by routes, can slow down the terminal when there are many results at the same time.
 - Sometimes, size calculations are higher than they should be.
 - (SOLVED) Performance issues when searching from high level directories (like / in linux).
