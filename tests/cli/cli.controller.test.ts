@@ -196,8 +196,14 @@ describe('CliController test', () => {
       configServiceMock as unknown as ConfigService,
     );
 
-    Object.defineProperty(process.stdout, 'columns', { value: 80 });
-    Object.defineProperty(process.stdout, 'isTTY', { value: true });
+    Object.defineProperty(process.stdout, 'columns', {
+      value: 80,
+      configurable: true,
+    });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      configurable: true,
+    });
 
     showHelpSpy = jest
       .spyOn(cliController, 'showHelp')
@@ -395,6 +401,21 @@ describe('CliController test', () => {
         expect(loggerServiceMock.error).toHaveBeenCalledWith(
           ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS,
         );
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('TTY Handling', () => {
+      it('Should run normally even if stdout is NOT TTY', () => {
+        Object.defineProperty(process.stdout, 'isTTY', { value: false });
+        cliController.init();
+        expect(scanSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should exit if terminal is too small', () => {
+        Object.defineProperty(process.stdout, 'columns', { value: 10 });
+        const exitWithErrorSpy = spyMethod('exitWithError');
+        cliController.init();
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
     });
