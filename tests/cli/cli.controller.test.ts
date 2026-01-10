@@ -407,13 +407,19 @@ describe('CliController test', () => {
 
     describe('TTY Handling', () => {
       it('Should run normally even if stdout is NOT TTY', () => {
-        Object.defineProperty(process.stdout, 'isTTY', { value: false });
+        Object.defineProperty(process.stdout, 'isTTY', {
+          value: false,
+          configurable: true,
+        });
         cliController.init();
         expect(scanSpy).toHaveBeenCalledTimes(1);
       });
 
       it('Should exit if terminal is too small', () => {
-        Object.defineProperty(process.stdout, 'columns', { value: 10 });
+        Object.defineProperty(process.stdout, 'columns', {
+          value: 10,
+          configurable: true,
+        });
         const exitWithErrorSpy = spyMethod('exitWithError');
         cliController.init();
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
