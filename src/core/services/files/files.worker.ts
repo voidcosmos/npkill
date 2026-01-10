@@ -212,30 +212,34 @@ class FileWalker {
       let currentLevelSize = 0;
       const directoriesToProcess: string[] = [];
 
-      await Promise.all(
-        entries.map(async (entry) => {
-          const fullPath = join(path, entry.name);
-          try {
-            if (entry.isSymbolicLink()) {
-              return;
+      for (let i = 0; i < entries.length; i += 100) {
+        const chunk = entries.slice(i, i + 100);
+        await Promise.all(
+          chunk.map(async (entry) => {
+            const fullPath = join(path, entry.name);
+            try {
+              if (entry.isSymbolicLink()) {
+                return;
+              }
+
+              if (entry.isDirectory()) {
+                currentLevelSize += 4096; // General directory size
+                directoriesToProcess.push(fullPath);
+              } else {
+                const stats = await lstat(fullPath);
+                const size =
+                  typeof stats.blocks === 'number'
+                    ? stats.blocks * 512
+                    : stats.size;
+
+                currentLevelSize += size;
+              }
+            } catch {
+              // Ignore permissions errors.
             }
-
-            const stats = await lstat(fullPath);
-            const size =
-              typeof stats.blocks === 'number'
-                ? stats.blocks * 512
-                : stats.size;
-
-            currentLevelSize += size;
-
-            if (stats.isDirectory()) {
-              directoriesToProcess.push(fullPath);
-            }
-          } catch {
-            // Ignore permissions errors.
-          }
-        }),
-      );
+          }),
+        );
+      }
 
       collector.total += currentLevelSize;
       collector.pending += directoriesToProcess.length;
