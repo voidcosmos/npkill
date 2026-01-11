@@ -44,6 +44,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       pc.cyan(pc.bold('Actions (normal mode)')),
       `  ${pc.green('SPACE / DEL')}      Delete folder.`,
       `  ${pc.green('o')}                Open parent folder.`,
+      `  ${pc.green('/')}                Search (Regex supported).`,
       `  ${pc.green('t')}                Enter ${pc.green('multi-select mode')}.`,
       '',
       pc.cyan(pc.bold('Actions (multi-select mode)')),
