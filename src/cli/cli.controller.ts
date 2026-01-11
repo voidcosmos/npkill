@@ -607,11 +607,6 @@ export class CliController {
       this.logger.error(INFO_MSGS.MIN_CLI_CLOMUNS);
       this.exitWithError();
     }
-    if (!this.stdout.isTTY) {
-      this.uiService.print(INFO_MSGS.NO_TTY);
-      this.logger.error(INFO_MSGS.NO_TTY);
-      this.exitWithError();
-    }
   }
 
   private checkFileRequirements(): void {

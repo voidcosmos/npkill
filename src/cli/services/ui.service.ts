@@ -7,7 +7,9 @@ export class UiService {
   uiComponents: BaseUi[] = [];
 
   setRawMode(set = true): void {
-    this.stdin.setRawMode(set);
+    if (this.stdin.isTTY) {
+      this.stdin.setRawMode(set);
+    }
     process.stdin.resume();
   }
 
