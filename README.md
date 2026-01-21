@@ -16,7 +16,7 @@
 
 **Your system remembers everything. npkill helps you forget.**
 This tool scans your system for heavy and unnecessary development directories.
-It shows you what is taking up space, when did you stop using it, why it’s there, and lets you remove it in seconds.
+It shows you what is taking up space, when you stopped using it, why it’s there, and lets you remove it in seconds.
 
 ## Table of Contents
 
@@ -46,14 +46,14 @@ It shows you what is taking up space, when did you stop using it, why it’s the
 - **Profiles-first scanning**  
   Scan your system using predefined profiles for Node.js, Python, Rust, game engines, and more. Or create your own to match your workflow.
 
-- **Effortless by default**
+- **Effortless by default**  
   A clean and responsive TUI designed to stay out of your way.
   See everything clearly, make decisions fast, and clean with confidence.
 
-- **Workspace awareness**
+- **Workspace awareness**  
   See at a glance when you last worked in that workspace and find out if it's an active project or a long-forgotten one.
 
-- **Built for speed**
+- **Built for speed**  
   npkill is written in TypeScript, but searches are performed at a low level, delivering blazing-fast performance and near-instant responsiveness.
 
 <a name="usage"></a>
@@ -82,6 +82,14 @@ You can see more navigation keys in the built-in **quick reference panel**.
 
 > [!WARNING]
 > Some applications installed on the system need their node_modules directory to work and deleting them may break them. npkill will try to identify them and highlight them by displaying a :warning: to be careful.
+
+> [!IMPORTANT]
+> npkill **find** candidates for deletion but does not decide what is safe for you.
+>
+> - Results are based on common conventions.
+> - Whether a folder is safe to delete always depends on the scope.
+>
+> Always review results before deleting anything.
 
 <a name="multi-select-mode"></a>
 
@@ -169,8 +177,6 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | --json                           | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                    |
 | --json-stream                    | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                     |
 | -v, --version                    | Show npkill version                                                                                                                                                           |
-
-**Warning:** _In future versions some commands may change_
 
 <a name="examples"></a>
 
@@ -276,15 +282,9 @@ We will continue to do things anyway, but donations are one of the many ways to 
 
 <span class="badge-opencollective"><a href="https://opencollective.com/npkill/contribute" title="Donate to this project using Open Collective"><img src="https://img.shields.io/badge/open%20collective-donate-green.svg" alt="Open Collective donate button" /></a></span>
 
-### Thanks!!
-
-## A huge thank you to our backers :heart:
-
-<a href="https://opencollective.com/npkill#backers" target="_blank"><img width="535" src="https://opencollective.com/npkill/tiers/backer.svg?width=535"></a>
-
 ---
 
-### Crypto alternative
+## Crypto alternative
 
 - btc: 1ML2DihUoFTqhoQnrWy4WLxKbVYkUXpMAX
 - bch: 1HVpaicQL5jWKkbChgPf6cvkH8nyktVnVk

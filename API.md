@@ -1,7 +1,11 @@
 # NPKill API
 
-This document does not include all project documentation at this stage. It brings together the basic concepts.
+This document describes the public core API of npkill and its fundamental concepts.
 For more details see the project interfaces.
+
+> [!WARNING]
+>
+> Some things may change in future patches until the API is 100% stable. Please leave me your feedback if you use it!
 
 - [NPKill API](#npkill-api)
   - [Interface: `Npkill`](#interface-npkill)
