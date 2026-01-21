@@ -70,7 +70,8 @@ By default, npkill will start searching for node-related development directories
 
 As the target directories are found, they will be listed for you.
 
-**TL;DR:** You can learn everything as you go because the TUI explains itself.
+> [!NOTE]
+> **TL;DR:** You can learn everything as you go because the TUI explains itself.
 
 You can navigate between them with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> or <kbd>Del</kbd> to delete the selected folder.
 
