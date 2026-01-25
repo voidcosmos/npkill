@@ -181,7 +181,7 @@ export class CliController {
       if (
         configChanges.targets ||
         configChanges.folderRoot ||
-        configChanges.excludeHiddenDirectories ||
+        configChanges.excludeSensitiveResults ||
         configChanges.exclude
       ) {
         this.scan();
@@ -306,8 +306,9 @@ export class CliController {
     if (result.config.sizeUnit !== undefined) {
       this.config.sizeUnit = result.config.sizeUnit;
     }
-    if (result.config.hideSensitiveResults !== undefined) {
-      this.config.excludeHiddenDirectories = result.config.hideSensitiveResults;
+    if (result.config.excludeSensitiveResults !== undefined) {
+      this.config.excludeSensitiveResults =
+        result.config.excludeSensitiveResults;
     }
     if (result.config.dryRun !== undefined) {
       this.config.dryRun = result.config.dryRun;
@@ -507,8 +508,8 @@ export class CliController {
     if (options.isTrue('target-folders')) {
       this.config.targets = options.getString('target-folders').split(',');
     }
-    if (options.isTrue('exclude-hidden-directories')) {
-      this.config.excludeHiddenDirectories = true;
+    if (options.isTrue('exclude-sensitive')) {
+      this.config.excludeSensitiveResults = true;
     }
 
     if (options.isTrue('dry-run')) {

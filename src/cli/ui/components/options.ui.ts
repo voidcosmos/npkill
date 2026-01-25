@@ -91,10 +91,10 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         options: ['auto', 'mb', 'gb'],
       },
       {
-        label: 'Exclude hidden dirs.',
+        label: 'Exclude sensitive results',
         type: 'checkbox',
-        key: 'excludeHiddenDirectories',
-        value: this.config.excludeHiddenDirectories,
+        key: 'excludeSensitiveResults',
+        value: this.config.excludeSensitiveResults,
       },
       {
         label: 'Dry-run mode',

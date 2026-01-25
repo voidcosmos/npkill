@@ -25,7 +25,7 @@ describe('ScanService', () => {
     targets: ['node_modules'],
     exclude: ['/test/root/excluded'],
     sortBy: 'size',
-    excludeHiddenDirectories: false,
+    excludeSensitiveResults: false,
     checkUpdates: false,
     deleteAll: false,
     sizeUnit: 'auto',
@@ -105,10 +105,10 @@ describe('ScanService', () => {
       });
     });
 
-    it('should filter out sensitive directories if excludeHiddenDirectories is true', (done) => {
+    it('should filter out sensitive directories if excludeSensitiveResults is true', (done) => {
       const configWithExclusion: IConfig = {
         ...mockConfig,
-        excludeHiddenDirectories: true,
+        excludeSensitiveResults: true,
       };
       mockNpkill.startScan$.mockReturnValue(
         of(mockScanFoundFolder, mockSensitiveScanFoundFolder),
@@ -125,7 +125,7 @@ describe('ScanService', () => {
       });
     });
 
-    it('should NOT filter out sensitive directories if excludeHiddenDirectories is false', (done) => {
+    it('should NOT filter out sensitive directories if excludeSensitiveResults is false', (done) => {
       mockNpkill.startScan$.mockReturnValue(
         of(mockScanFoundFolder, mockSensitiveScanFoundFolder),
       );

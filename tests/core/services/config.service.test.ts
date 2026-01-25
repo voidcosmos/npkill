@@ -427,7 +427,7 @@ describe('ConfigService', () => {
         exclude: ['.git', 'important-project'],
         sortBy: 'last-mod',
         sizeUnit: 'auto',
-        hideSensitiveResults: false,
+        excludeSensitiveResults: false,
         dryRun: false,
         checkUpdates: true,
         defaultProfiles: ['node', 'python'],

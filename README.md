@@ -124,28 +124,26 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 
 ## Options
 
-| ARGUMENT                         | DESCRIPTION                                                                                                                                                                         |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| -p, --profiles                   | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed.. _(**node** by default)_.             |
-| --config                         | Path to a custom .npkillrc configuration file. By default, npkill looks for `~/.npkillrc`.                                                                                          |
-| -d, --directory                  | Set the directory from which to begin searching. By default, starting-point is .                                                                                                    |
-| -D, --delete-all                 | Automatically delete all node_modules folders that are found. Suggested to be used together with `-x`.                                                                              |
-| -e, --hide-errors                | Hide errors if any                                                                                                                                                                  |
-| -E, --exclude                    | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                      |
-| -f, --full                       | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                          |
-| --size-unit                      | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).                 |
-| -h, --help, ?                    | Show this help page and exit                                                                                                                                                        |
-| -nu, --no-check-update           | Don't check for updates on startup                                                                                                                                                  |
-| -s, --sort                       | Sort results by: `size`, `path` or `last-mod`                                                                                                                                       |
-| -t, --target                     | Specify the name of the directories you want to search for (by default, it's 'node_modules'). You can define multiple targets separating with comma. Ej. `-t node_modules,.cache,`. |
-|                                  |
-| -x, --exclude-hidden-directories | Exclude hidden directories ("dot" directories) from search.                                                                                                                         |
-| --dry-run                        | It does not delete anything (will simulate it with a random delay).                                                                                                                 |
-| --json                           | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                          |
-| --json-stream                    | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                           |
-| -v, --version                    | Show npkill version                                                                                                                                                                 |
-
-**Warning:** _In future versions some commands may change_
+| ARGUMENT                | DESCRIPTION                                                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.         |
+| --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                   |
+| -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                              |
+| -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`.                                                                                     |
+| -e, --hide-errors       | Hide errors if any                                                                                                                                                            |
+| -E, --exclude           | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                |
+| -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                    |
+| --size-unit             | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).           |
+| -h, --help, ?           | Show help page                                                                                                                                                                |
+| -nu, --no-check-update  | Don't check for updates on startup                                                                                                                                            |
+| -s, --sort              | Sort results by: `size`, `path` or `last-mod`                                                                                                                                 |
+| -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`. |
+| -x, --exclude-sensitive | Exclude sensitive directories.                                                                                                                                                |
+| -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                       |
+| --dry-run               | It does not delete anything (will simulate it with a random delay).                                                                                                           |
+| --json                  | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                    |
+| --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                     |
+| -v, --version           | Show npkill version                                                                                                                                                           |
 
 <a name="examples"></a>
 
@@ -165,12 +163,6 @@ npkill
 
 ```bash
 npkill --target dist -e
-```
-
-- List **vendor** directories in your _projects_ directory, sort by size, and show size in gb:
-
-```bash
-npkill -d '~/more projects' --size-unit gb --sort size --target vendor
 ```
 
 - List **node_modules** in your _projects_ directory, excluding the ones in _progress_ and _ignore-this_ directories:

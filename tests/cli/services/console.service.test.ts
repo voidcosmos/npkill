@@ -18,7 +18,7 @@ describe('Console Service', () => {
         'lala',
         'random text',
         '-f',
-        '--exclude-hidden-directories',
+        '--exclude-sensitive',
       ];
 
       const result = consoleService.getParameters(argvs);
@@ -29,7 +29,7 @@ describe('Console Service', () => {
       expect(result.isTrue('lala')).toBeFalsy();
       expect(result.isTrue('inexistent')).toBeFalsy();
       expect(result.isTrue('full-scan')).not.toBeFalsy();
-      expect(result.isTrue('exclude-hidden-directories')).not.toBeFalsy();
+      expect(result.isTrue('exclude-sensitive')).toBeTruthy();
     });
     it('should get valid parameters 2', () => {
       const argvs = [
@@ -44,7 +44,7 @@ describe('Console Service', () => {
       expect(result.isTrue('help')).toBeFalsy();
       expect(result.isTrue('full-scan')).not.toBeFalsy();
       expect(result.getString('sort-by')).toBe('size');
-      expect(result.isTrue('exclude-hidden-directories')).toBeFalsy();
+      expect(result.isTrue('exclude-sensitive')).toBeFalsy();
     });
   });
 

@@ -9,7 +9,7 @@ export interface IConfig {
   sortBy: string;
   targets: string[];
   exclude: string[];
-  excludeHiddenDirectories: boolean;
+  excludeSensitiveResults: boolean;
   dryRun: boolean;
   yes: boolean;
   jsonStream: boolean;

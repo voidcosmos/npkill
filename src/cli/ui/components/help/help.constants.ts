@@ -163,7 +163,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   //       colors.dim('  "targets": ["node_modules", ".venv", "target"],'),
   //       colors.dim('  "exclude": [".git", "important-project"],'),
   //       colors.dim('  "sortBy": "size",'),
-  //       colors.dim('  "excludeHiddenDirectories": true,'),
+  //       colors.dim('  "excludeSensitiveResults": true,'),
   //       colors.dim('  "profiles": {'),
   //       colors.dim('    "mystack": {'),
   //       colors.dim('      "targets": ["node_modules", "venv", "target"]'),

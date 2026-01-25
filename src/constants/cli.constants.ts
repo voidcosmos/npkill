@@ -38,7 +38,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-E', '--exclude'],
     description:
-      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1, ignore2"',
+      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1,ignore2"',
     name: 'exclude',
   },
   {
@@ -76,9 +76,9 @@ export const OPTIONS: ICliOptions[] = [
     name: 'target-folders',
   },
   {
-    arg: ['-x', '--exclude-hidden-directories'],
-    description: 'Exclude hidden directories ("dot" directories) from search.',
-    name: 'exclude-hidden-directories',
+    arg: ['-x', '--exclude-sensitive'],
+    description: 'Exclude sensitive directories.',
+    name: 'exclude-sensitive',
   },
   {
     arg: ['--dry-run'],

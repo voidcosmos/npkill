@@ -57,12 +57,12 @@ export function applyFileConfigProperties(
     mergeProperty(merged, 'sizeUnit', fileConfig.sizeUnit);
   }
 
-  // hideSensitiveResults
-  if (isDefined(fileConfig.hideSensitiveResults)) {
+  // excludeSensitiveResults
+  if (isDefined(fileConfig.excludeSensitiveResults)) {
     mergeProperty(
       merged,
-      'hideSensitiveResults',
-      fileConfig.hideSensitiveResults,
+      'excludeSensitiveResults',
+      fileConfig.excludeSensitiveResults,
     );
   }
 

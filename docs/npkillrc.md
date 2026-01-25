@@ -11,7 +11,7 @@ You can customize the behavior of npkill through the config file (`.npkillrc` by
   - [exclude](#exclude)
   - [sortBy](#sortby)
   - [sizeUnit](#sizeunit)
-  - [hideSensitiveResults](#hidesensitiveresults)
+  - [excludeSensitiveResults](#excludeSensitiveResults)
   - [dryRun](#dryrun)
   - [checkUpdates](#checkupdates)
   - [defaultProfiles](#defaultProfiles)
@@ -43,7 +43,7 @@ npkill --config /path/to/your/config.json
   "exclude": [".git", "important-project", "production-app"],
   "sortBy": "size",
   "sizeUnit": "auto",
-  "hideSensitiveResults": true,
+  "excludeSensitiveResults": true,
   "dryRun": false,
   "checkUpdates": true,
   "defaultProfiles": ["node", "database"],
@@ -119,7 +119,7 @@ Unit for displaying folder sizes.
 "sizeUnit": "auto"
 ```
 
-### hideSensitiveResults
+### excludeSensitiveResults
 
 **Type:** `boolean`  
 **Default:** `false`
@@ -127,7 +127,7 @@ Unit for displaying folder sizes.
 Hide results that may be sensitive.
 
 ```json
-"hideSensitiveResults": true
+"excludeSensitiveResults": true
 ```
 
 ### dryRun

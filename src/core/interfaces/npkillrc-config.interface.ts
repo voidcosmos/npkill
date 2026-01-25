@@ -37,7 +37,7 @@ export interface INpkillrcConfig {
    * Exclude sensitive results.
    * @default false
    */
-  hideSensitiveResults?: boolean;
+  excludeSensitiveResults?: boolean;
 
   /**
    * Enable dry-run mode by default.
@@ -102,7 +102,7 @@ export const VALID_NPKILLRC_PROPERTIES = [
   'exclude',
   'sortBy',
   'sizeUnit',
-  'hideSensitiveResults',
+  'excludeSensitiveResults',
   'dryRun',
   'checkUpdates',
   'defaultProfiles',
