@@ -5,6 +5,7 @@ import { WorkerMessage, WorkerScanOptions } from './files.worker.service.js';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
+import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
 
 enum ETaskOperation {
   'explore',
@@ -156,6 +157,7 @@ class FileWalker {
   private async analizeDir(path: string, dir: Dir): Promise<void> {
     const results = [];
     let entry: Dirent | null = null;
+
     while ((entry = await dir.read().catch(() => null)) != null) {
       this.newDirEntry(path, entry, results);
     }
@@ -270,18 +272,25 @@ class FileWalker {
     entry: Dirent,
     results: { path: string; isTarget: boolean }[],
   ): void {
+    if (entry.isSymbolicLink() || !entry.isDirectory()) {
+      return;
+    }
+
+    const isTarget = this.isTargetFolder(entry.name);
+
+    if (GLOBAL_IGNORE.has(entry.name) && !isTarget) {
+      return;
+    }
+
     const subpath = join(path, entry.name);
-    const shouldSkip =
-      entry.isSymbolicLink() ||
-      !entry.isDirectory() ||
-      this.isExcluded(subpath);
-    if (shouldSkip) {
+
+    if (this.isExcluded(subpath)) {
       return;
     }
 
     results.push({
       path: subpath,
-      isTarget: this.isTargetFolder(entry.name),
+      isTarget,
     });
   }
 

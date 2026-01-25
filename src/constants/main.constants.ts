@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG: IConfig = {
   checkUpdates: true,
   deleteAll: false,
   dryRun: false,
-  exclude: ['.git'],
+  exclude: [],
   excludeSensitiveResults: false,
   sizeUnit: 'auto',
   maxSimultaneousSearch: 6,
