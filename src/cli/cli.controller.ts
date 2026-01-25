@@ -793,7 +793,7 @@ export class CliController {
 
   private finishFolderStats(): void {
     const needSort =
-      this.config.sortBy === 'size' || this.config.sortBy === 'last-mod';
+      this.config.sortBy === 'size' || this.config.sortBy === 'age';
     if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
       this.uiResults.clear();

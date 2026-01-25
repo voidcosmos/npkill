@@ -22,7 +22,7 @@ export interface INpkillrcConfig {
    * Default sort order for results.
    * @default "none"
    */
-  sortBy?: 'none' | 'size' | 'path' | 'last-mod';
+  sortBy?: 'none' | 'size' | 'path' | 'age';
 
   /**
    * Unit for displaying folder sizes.

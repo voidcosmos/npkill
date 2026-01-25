@@ -425,7 +425,7 @@ describe('ConfigService', () => {
       const realisticConfig: INpkillrcConfig = {
         rootDir: '/home/user/my-projects',
         exclude: ['.git', 'important-project'],
-        sortBy: 'last-mod',
+        sortBy: 'age',
         sizeUnit: 'auto',
         excludeSensitiveResults: false,
         dryRun: false,
@@ -451,7 +451,7 @@ describe('ConfigService', () => {
       expect(result.error).toBeUndefined();
       expect(result.config?.rootDir).toBe('/home/user/my-projects');
       expect(result.config?.defaultProfiles).toEqual(['node', 'python']);
-      expect(result.config?.sortBy).toBe('last-mod');
+      expect(result.config?.sortBy).toBe('age');
       expect(result.config?.profiles).toBeDefined();
 
       const userProfiles = configService.getUserDefinedProfiles(result.config);
@@ -505,7 +505,7 @@ describe('ConfigService', () => {
 
       const homeConfigPath = join(tempDir, 'simulated-home', '.npkillrc');
       const homeConfig: INpkillrcConfig = {
-        sortBy: 'last-mod',
+        sortBy: 'age',
         exclude: ['from-home'],
       };
 
@@ -520,7 +520,7 @@ describe('ConfigService', () => {
       const result = configService.loadConfig(homeConfigPath);
 
       expect(result.config).not.toBeNull();
-      expect(result.config?.sortBy).toBe('last-mod');
+      expect(result.config?.sortBy).toBe('age');
       expect(result.config?.exclude).toContain('from-home');
       expect(result.configPath).toBe(homeConfigPath);
     });

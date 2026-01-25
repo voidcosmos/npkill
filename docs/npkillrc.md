@@ -90,7 +90,7 @@ Array of directory names to exclude from search. Npkill will skip these director
 
 ### sortBy
 
-**Type:** `"none" | "size" | "path" | "last-mod"`  
+**Type:** `"none" | "size" | "path" | "age"`  
 **Default:** `"none"`
 
 Default sort order for results.
@@ -98,7 +98,7 @@ Default sort order for results.
 - `"none"`: Results appear in the order they're found
 - `"size"`: Largest folders first
 - `"path"`: Alphabetical by path
-- `"last-mod"`: Oldest modified projects first
+- `"age"`: Oldest modified projects first
 
 ```json
 "sortBy": "size"

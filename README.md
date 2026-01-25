@@ -136,7 +136,7 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 | --size-unit             | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).           |
 | -h, --help, ?           | Show help page                                                                                                                                                                |
 | -nu, --no-check-update  | Don't check for updates on startup                                                                                                                                            |
-| -s, --sort              | Sort results by: `size`, `path` or `last-mod`                                                                                                                                 |
+| -s, --sort              | Sort results by: `size`, `path` or `age`                                                                                                                                      |
 | -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`. |
 | -x, --exclude-sensitive | Exclude sensitive directories.                                                                                                                                                |
 | -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                       |

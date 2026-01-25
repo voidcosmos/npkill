@@ -81,7 +81,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         type: 'dropdown',
         key: 'sortBy',
         value: this.config.sortBy,
-        options: ['path', 'size', 'last-mod'],
+        options: ['path', 'size', 'age'],
       },
       {
         label: 'Size unit',

@@ -9,7 +9,7 @@ export const FOLDER_SORT = {
     }
     return FOLDER_SORT.path(a, b);
   },
-  'last-mod': (a: CliScanFoundFolder, b: CliScanFoundFolder) => {
+  age: (a: CliScanFoundFolder, b: CliScanFoundFolder) => {
     if (a.modificationTime === b.modificationTime) {
       return FOLDER_SORT.path(a, b);
     }
