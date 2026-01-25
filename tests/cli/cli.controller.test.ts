@@ -303,7 +303,7 @@ describe('CliController test', () => {
       it('Should show a warning before start scan with --target defined', () => {
         mockParameters({
           'delete-all': true,
-          'target-folder': 'node_modules',
+          'target-folders': 'node_modules',
         });
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
@@ -317,7 +317,7 @@ describe('CliController test', () => {
         mockParameters({
           'delete-all': true,
           yes: true,
-          'target-folder': 'node_modules',
+          'target-folders': 'node_modules',
         });
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
@@ -341,7 +341,7 @@ describe('CliController test', () => {
 
       it('Should call normal deleteDir function when no --dry-run is included', () => {
         mockParameters({
-          'target-folder': 'node_modules',
+          'target-folders': 'node_modules',
           'dry-run': 'false',
         });
         cliController.init();
@@ -357,7 +357,7 @@ describe('CliController test', () => {
       });
 
       it('Should call fake deleteDir function instead of deleteDir', () => {
-        mockParameters({ 'target-folder': 'node_modules', 'dry-run': true });
+        mockParameters({ 'target-folders': 'node_modules', 'dry-run': true });
         cliController.init();
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(0);

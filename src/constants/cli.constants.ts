@@ -70,10 +70,10 @@ export const OPTIONS: ICliOptions[] = [
     name: 'sort-by',
   },
   {
-    arg: ['-t', '--target'],
+    arg: ['-t', '--targets'],
     description:
-      'Specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
-    name: 'target-folder',
+      'Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
+    name: 'target-folders',
   },
   {
     arg: ['-x', '--exclude-hidden-directories'],
