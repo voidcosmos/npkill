@@ -130,7 +130,7 @@ Returns the current version of npkill from `package.json`.
 interface ScanOptions {
   targets: string[];
   exclude?: string[];
-  sortBy?: 'path' | 'size' | 'last-mod';
+  sortBy?: 'path' | 'size' | 'age';
   performRiskAnalysis?: boolean; // Default: true
 }
 ```

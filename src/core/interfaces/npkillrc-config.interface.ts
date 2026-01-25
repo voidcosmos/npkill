@@ -22,7 +22,7 @@ export interface INpkillrcConfig {
    * Default sort order for results.
    * @default "none"
    */
-  sortBy?: 'none' | 'size' | 'path' | 'last-mod';
+  sortBy?: 'none' | 'size' | 'path' | 'age';
 
   /**
    * Unit for displaying folder sizes.
@@ -37,7 +37,7 @@ export interface INpkillrcConfig {
    * Exclude sensitive results.
    * @default false
    */
-  hideSensitiveResults?: boolean;
+  excludeSensitiveResults?: boolean;
 
   /**
    * Enable dry-run mode by default.
@@ -102,7 +102,7 @@ export const VALID_NPKILLRC_PROPERTIES = [
   'exclude',
   'sortBy',
   'sizeUnit',
-  'hideSensitiveResults',
+  'excludeSensitiveResults',
   'dryRun',
   'checkUpdates',
   'defaultProfiles',

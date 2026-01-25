@@ -2,7 +2,7 @@
 export type SizeUnit = 'bytes'; // | 'kb' | 'mb' | 'gb'; // TODO implement
 
 /** Options soported for the sortBy scan option. */
-export type SortBy = 'path' | 'size' | 'last-mod';
+export type SortBy = 'path' | 'size' | 'age';
 /**
  * Analysis of potential risks associated with deleting a directory.
  */

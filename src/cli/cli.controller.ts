@@ -181,7 +181,7 @@ export class CliController {
       if (
         configChanges.targets ||
         configChanges.folderRoot ||
-        configChanges.excludeHiddenDirectories ||
+        configChanges.excludeSensitiveResults ||
         configChanges.exclude
       ) {
         this.scan();
@@ -306,8 +306,9 @@ export class CliController {
     if (result.config.sizeUnit !== undefined) {
       this.config.sizeUnit = result.config.sizeUnit;
     }
-    if (result.config.hideSensitiveResults !== undefined) {
-      this.config.excludeHiddenDirectories = result.config.hideSensitiveResults;
+    if (result.config.excludeSensitiveResults !== undefined) {
+      this.config.excludeSensitiveResults =
+        result.config.excludeSensitiveResults;
     }
     if (result.config.dryRun !== undefined) {
       this.config.dryRun = result.config.dryRun;
@@ -347,9 +348,9 @@ export class CliController {
       this.exitGracefully();
     }
 
-    if (options.isTrue('profiles') && options.isTrue('target-folder')) {
+    if (options.isTrue('profiles') && options.isTrue('target-folders')) {
       console.log(
-        'Cannot use both --profiles and --target-folder options together.',
+        'Cannot use both --profiles and --target-folders options together.',
       );
       this.exitGracefully();
     }
@@ -402,9 +403,12 @@ export class CliController {
     }
 
     if (options.isTrue('delete-all')) {
-      if (!options.isTrue('target-folder') || options.isTrue('profiles')) {
+      if (!options.isTrue('target-folders') || options.isTrue('profiles')) {
         // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
-        console.log('--delete-all only can be used with --target-folder.');
+        console.log('--delete-all only can be used with --target-folders.');
+        console.log(
+          'You can copy all targets from a profile with `npkill --profiles`.',
+        );
         this.exitWithError();
       }
       this.config.deleteAll = true;
@@ -458,7 +462,7 @@ export class CliController {
       this.config.checkUpdates = false;
     }
 
-    if (!options.isTrue('target-folder')) {
+    if (!options.isTrue('target-folders')) {
       if (!options.isTrue('profiles')) {
         // Use defaultProfiles from config if available, otherwise use DEFAULT_PROFILE
         const profilesToUse =
@@ -501,11 +505,11 @@ export class CliController {
       }
     }
 
-    if (options.isTrue('target-folder')) {
-      this.config.targets = options.getString('target-folder').split(',');
+    if (options.isTrue('target-folders')) {
+      this.config.targets = options.getString('target-folders').split(',');
     }
-    if (options.isTrue('exclude-hidden-directories')) {
-      this.config.excludeHiddenDirectories = true;
+    if (options.isTrue('exclude-sensitive')) {
+      this.config.excludeSensitiveResults = true;
     }
 
     if (options.isTrue('dry-run')) {
@@ -605,11 +609,6 @@ export class CliController {
     if (this.isTerminalTooSmall()) {
       this.uiService.print(INFO_MSGS.MIN_CLI_CLOMUNS);
       this.logger.error(INFO_MSGS.MIN_CLI_CLOMUNS);
-      this.exitWithError();
-    }
-    if (!this.stdout.isTTY) {
-      this.uiService.print(INFO_MSGS.NO_TTY);
-      this.logger.error(INFO_MSGS.NO_TTY);
       this.exitWithError();
     }
   }
@@ -794,7 +793,7 @@ export class CliController {
 
   private finishFolderStats(): void {
     const needSort =
-      this.config.sortBy === 'size' || this.config.sortBy === 'last-mod';
+      this.config.sortBy === 'size' || this.config.sortBy === 'age';
     if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
       this.uiResults.clear();

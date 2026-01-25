@@ -1,6 +1,6 @@
 import { INpkillrcConfig } from '../../interfaces/npkillrc-config.interface.js';
 
-const VALID_SORT_OPTIONS = ['none', 'size', 'path', 'last-mod'] as const;
+const VALID_SORT_OPTIONS = ['none', 'size', 'path', 'age'] as const;
 const VALID_SIZE_UNITS = ['auto', 'mb', 'gb'] as const;
 
 export interface ValidationResult {

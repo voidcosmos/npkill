@@ -38,7 +38,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-E', '--exclude'],
     description:
-      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1, ignore2"',
+      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1,ignore2"',
     name: 'exclude',
   },
   {
@@ -48,7 +48,7 @@ export const OPTIONS: ICliOptions[] = [
     name: 'full-scan',
   },
   {
-    arg: ['-s', '--size-unit'],
+    arg: ['--size-unit'],
     description:
       'Set the unit for displaying folder sizes. Options: auto (default), mb, gb. With auto, sizes < 1024MB are shown in MB, larger sizes in GB.',
     name: 'size-unit',
@@ -66,19 +66,19 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-s', '--sort'],
     description:
-      'Sort results by: size, path or last-mod (last time the most recent file was modified in the workspace)',
+      'Sort results by: size, path or age (last time the most recent file was modified in the workspace)',
     name: 'sort-by',
   },
   {
-    arg: ['-t', '--target'],
+    arg: ['-t', '--targets'],
     description:
-      'Specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
-    name: 'target-folder',
+      'Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
+    name: 'target-folders',
   },
   {
-    arg: ['-x', '--exclude-hidden-directories'],
-    description: 'Exclude hidden directories ("dot" directories) from search.',
-    name: 'exclude-hidden-directories',
+    arg: ['-x', '--exclude-sensitive'],
+    description: 'Exclude sensitive directories.',
+    name: 'exclude-sensitive',
   },
   {
     arg: ['--dry-run'],

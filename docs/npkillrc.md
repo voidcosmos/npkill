@@ -11,7 +11,7 @@ You can customize the behavior of npkill through the config file (`.npkillrc` by
   - [exclude](#exclude)
   - [sortBy](#sortby)
   - [sizeUnit](#sizeunit)
-  - [hideSensitiveResults](#hidesensitiveresults)
+  - [excludeSensitiveResults](#excludeSensitiveResults)
   - [dryRun](#dryrun)
   - [checkUpdates](#checkupdates)
   - [defaultProfiles](#defaultProfiles)
@@ -43,7 +43,7 @@ npkill --config /path/to/your/config.json
   "exclude": [".git", "important-project", "production-app"],
   "sortBy": "size",
   "sizeUnit": "auto",
-  "hideSensitiveResults": true,
+  "excludeSensitiveResults": true,
   "dryRun": false,
   "checkUpdates": true,
   "defaultProfiles": ["node", "database"],
@@ -90,7 +90,7 @@ Array of directory names to exclude from search. Npkill will skip these director
 
 ### sortBy
 
-**Type:** `"none" | "size" | "path" | "last-mod"`  
+**Type:** `"none" | "size" | "path" | "age"`  
 **Default:** `"none"`
 
 Default sort order for results.
@@ -98,7 +98,7 @@ Default sort order for results.
 - `"none"`: Results appear in the order they're found
 - `"size"`: Largest folders first
 - `"path"`: Alphabetical by path
-- `"last-mod"`: Oldest modified projects first
+- `"age"`: Oldest modified projects first
 
 ```json
 "sortBy": "size"
@@ -119,7 +119,7 @@ Unit for displaying folder sizes.
 "sizeUnit": "auto"
 ```
 
-### hideSensitiveResults
+### excludeSensitiveResults
 
 **Type:** `boolean`  
 **Default:** `false`
@@ -127,7 +127,7 @@ Unit for displaying folder sizes.
 Hide results that may be sensitive.
 
 ```json
-"hideSensitiveResults": true
+"excludeSensitiveResults": true
 ```
 
 ### dryRun

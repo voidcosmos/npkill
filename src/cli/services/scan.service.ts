@@ -44,7 +44,7 @@ export class ScanService {
         (path) =>
           !this.isExcludedDangerousDirectory(
             path,
-            config.excludeHiddenDirectories,
+            config.excludeSensitiveResults,
           ),
       ),
     );
@@ -129,10 +129,10 @@ export class ScanService {
 
   private isExcludedDangerousDirectory(
     scanResult: ScanFoundFolder,
-    excludeHiddenDirectories: boolean,
+    excludeSensitiveResults: boolean,
   ): boolean {
     return Boolean(
-      excludeHiddenDirectories && scanResult.riskAnalysis?.isSensitive,
+      excludeSensitiveResults && scanResult.riskAnalysis?.isSensitive,
     );
   }
 }
