@@ -199,6 +199,12 @@ npkill
 npkill --profiles node,python
 ```
 
+- I only want clean `node_modules` like in the old times:
+
+```bash
+npkill -t node_modules
+```
+
 - List **node_modules** in your _projects_ directory, excluding the ones in _progress_ and _ignore-this_ directories:
 
 ```bash
