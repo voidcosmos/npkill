@@ -48,7 +48,7 @@ export const OPTIONS: ICliOptions[] = [
     name: 'full-scan',
   },
   {
-    arg: ['-s', '--size-unit'],
+    arg: ['--size-unit'],
     description:
       'Set the unit for displaying folder sizes. Options: auto (default), mb, gb. With auto, sizes < 1024MB are shown in MB, larger sizes in GB.',
     name: 'size-unit',
