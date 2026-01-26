@@ -38,6 +38,14 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   readonly showDetails$ = new Subject<CliScanFoundFolder>();
   readonly goOptions$ = new Subject<null>();
   readonly endNpkill$ = new Subject<null>();
+  readonly search$ = new Subject<{
+    text: string;
+    isInputActive: boolean;
+  } | null>();
+
+  private isSearchInputMode = false;
+  private searchText = '';
+  private filteredResults: CliScanFoundFolder[] = [];
 
   private readonly config: IConfig = DEFAULT_CONFIG;
   private readonly KEYS = {
@@ -75,13 +83,13 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private openFolder(): void {
-    const folder = this.resultsService.results[this.resultIndex];
+    const folder = this.results[this.resultIndex];
     const parentPath = resolve(folder.path, '..');
     this.openFolder$.next(parentPath);
   }
 
   private showDetails(): void {
-    const result = this.resultsService.results[this.resultIndex];
+    const result = this.results[this.resultIndex];
     if (!result) {
       return;
     }
@@ -89,6 +97,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private goOptions(): void {
+    if (this.searchText) {
+      return;
+    }
     this.goOptions$.next(null);
   }
 
@@ -120,7 +131,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.isRangeSelectionMode = true;
     this.rangeSelectionStart = this.resultIndex;
 
-    const folder = this.resultsService.results[this.resultIndex];
+    const folder = this.results[this.resultIndex];
     if (folder) {
       if (this.selectedFolders.has(folder.path)) {
         this.selectedFolders.delete(folder.path);
@@ -135,7 +146,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       return;
     }
 
-    const allFolders = this.resultsService.results;
+    const allFolders = this.results;
     const totalFolders = allFolders.length;
     const selectedCount = this.selectedFolders.size;
 
@@ -160,7 +171,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private toggleFolderSelection(): void {
-    const folder = this.resultsService.results[this.resultIndex];
+    const folder = this.results[this.resultIndex];
     if (!folder) {
       return;
     }
@@ -184,7 +195,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const start = Math.min(this.rangeSelectionStart, this.resultIndex);
     const end = Math.max(this.rangeSelectionStart, this.resultIndex);
 
-    const firstFolder = this.resultsService.results[this.rangeSelectionStart];
+    const firstFolder = this.results[this.rangeSelectionStart];
     if (!firstFolder) {
       return;
     }
@@ -192,7 +203,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const shouldSelect = this.selectedFolders.has(firstFolder.path);
 
     for (let i = start; i <= end; i++) {
-      const folder = this.resultsService.results[i];
+      const folder = this.results[i];
       if (!folder) {
         continue;
       }
@@ -217,8 +228,74 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.selectedFolders.clear();
   }
 
-  onKeyInput({ name }: IKeyPress): void {
-    const action: (() => void) | undefined = this.KEYS[name];
+  private activateSearchInputMode(): void {
+    this.isSearchInputMode = true;
+    this.search$.next({ text: this.searchText, isInputActive: true });
+    this.render();
+  }
+
+  private handleSearchInput(key: IKeyPress): void {
+    if (key.name === 'return' || key.name === 'enter') {
+      this.isSearchInputMode = false;
+      if (this.searchText.trim() === '') {
+        this.searchText = '';
+        this.search$.next(null);
+      } else {
+        this.search$.next({ text: this.searchText, isInputActive: false });
+      }
+      this.render();
+      return;
+    }
+
+    if (key.name === 'backspace') {
+      this.searchText = this.searchText.slice(0, -1);
+    } else if (key.name === 'escape') {
+      this.isSearchInputMode = false;
+      this.searchText = '';
+      this.search$.next(null);
+      this.render();
+      return;
+    } else if (
+      key.sequence &&
+      key.sequence.length === 1 &&
+      !key.ctrl &&
+      !key.meta
+    ) {
+      this.searchText += key.sequence;
+    } else {
+      return;
+    }
+
+    this.filterResults();
+    this.search$.next({ text: this.searchText, isInputActive: true });
+    this.resultIndex = 0;
+    this.scroll = 0;
+    this.render();
+  }
+
+  private filterResults(): void {
+    try {
+      const regex = new RegExp(this.searchText, 'i');
+      this.filteredResults = this.resultsService.results.filter((r) =>
+        regex.test(r.path),
+      );
+    } catch {
+      this.filteredResults = [];
+    }
+  }
+
+  onKeyInput(key: IKeyPress): void {
+    if (this.isSearchInputMode) {
+      this.handleSearchInput(key);
+      return;
+    }
+
+    if (key.sequence === '/') {
+      this.activateSearchInputMode();
+      return;
+    }
+
+    const action: (() => void) | undefined = this.KEYS[key.name];
     if (action === undefined) {
       return;
     }
@@ -233,6 +310,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     if (!this.visible) {
       return;
     }
+
+    this.clear();
 
     if (!this.haveResultsAfterCompleted) {
       this.noResults();
@@ -324,7 +403,8 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   private printFolderRow(folder: CliScanFoundFolder, row: number): void {
     this.clearLine(row);
     let { path, lastModification, size } = this.getFolderTexts(folder);
-    const isRowSelected = row === this.getRealCursorPosY();
+    const isRowSelected =
+      row === this.getRealCursorPosY() && !this.isSearchInputMode;
 
     lastModification = isRowSelected
       ? pc.white(lastModification)
@@ -466,7 +546,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   cursorLastResult(): void {
-    this.moveCursor(this.resultsService.results.length - 1);
+    this.moveCursor(this.results.length - 1);
   }
 
   fitScroll(): void {
@@ -477,8 +557,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const shouldScrollDown =
       this.getRow(this.resultIndex) > this.terminal.rows + this.scroll - 2;
 
-    const isOnBotton =
-      this.resultIndex === this.resultsService.results.length - 1;
+    const isOnBotton = this.resultIndex === this.results.length - 1;
 
     let scrollRequired = 0;
 
@@ -504,11 +583,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   scrollFolderResults(scrollAmount: number): void {
     const virtualFinalScroll = this.scroll + scrollAmount;
-    this.scroll = this.clamp(
-      virtualFinalScroll,
-      0,
-      this.resultsService.results.length,
-    );
+    this.scroll = this.clamp(virtualFinalScroll, 0, this.results.length);
     this.clear();
   }
 
@@ -523,7 +598,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     // Lower limit
     if (this.isCursorInUpperLimit()) {
-      this.resultIndex = this.resultsService.results.length - 1;
+      this.resultIndex = this.results.length - 1;
     }
 
     this.fitScroll();
@@ -602,7 +677,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const SCROLLBAR_ACTIVE = pc.gray('█');
     const SCROLLBAR_BG = pc.gray('░');
 
-    const totalResults = this.resultsService.results.length;
+    const totalResults = this.results.length;
     const visibleRows = this.getRowsAvailable();
 
     if (totalResults <= visibleRows) {
@@ -634,7 +709,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private isCursorInUpperLimit(): boolean {
-    return this.resultIndex >= this.resultsService.results.length;
+    return this.resultIndex >= this.results.length;
   }
 
   private getRealCursorPosY(): number {
@@ -642,7 +717,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private getVisibleScrollFolders(): CliScanFoundFolder[] {
-    return this.resultsService.results.slice(
+    return this.results.slice(
       this.scroll,
       this.getRowsAvailable() + this.scroll,
     );
@@ -664,7 +739,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private delete(): void {
-    const folder = this.resultsService.results[this.resultIndex];
+    const folder = this.results[this.resultIndex];
     this.delete$.next(folder);
   }
 
@@ -719,5 +794,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private clamp(num: number, min: number, max: number): number {
     return Math.min(Math.max(num, min), max);
+  }
+
+  private get results(): CliScanFoundFolder[] {
+    return this.searchText ? this.filteredResults : this.resultsService.results;
   }
 }
