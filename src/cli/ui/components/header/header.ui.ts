@@ -4,7 +4,6 @@ import {
   UI_POSITIONS,
   MENU_BAR,
   INFO_MSGS,
-  DEFAULT_SIZE,
 } from '../../../../constants/index.js';
 import { BaseUi } from '../../base.ui.js';
 import pc from 'picocolors';
@@ -69,12 +68,9 @@ export class HeaderUi extends BaseUi {
     }
 
     // npkill stats
+    this.printAt(pc.gray(INFO_MSGS.TOTAL_SPACE), UI_POSITIONS.TOTAL_SPACE);
     this.printAt(
-      pc.gray(INFO_MSGS.TOTAL_SPACE + DEFAULT_SIZE),
-      UI_POSITIONS.TOTAL_SPACE,
-    );
-    this.printAt(
-      pc.gray(INFO_MSGS.SPACE_RELEASED + DEFAULT_SIZE),
+      pc.gray(INFO_MSGS.SPACE_RELEASED),
       UI_POSITIONS.SPACE_RELEASED,
     );
   }

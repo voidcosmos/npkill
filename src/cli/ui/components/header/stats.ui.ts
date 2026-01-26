@@ -86,31 +86,31 @@ export class StatsUi extends BaseUi {
     position,
     updateColor,
   }: ShowStatProps): void {
-    if (value === this.lastValues[lastValueKey]) {
-      return;
-    }
-
     const statPosition = { ...position };
     statPosition.x += description.length;
 
-    // If is first render, initialize.
-    if (!this.lastValues[lastValueKey]) {
-      this.printAt(value, statPosition);
+    if (value !== this.lastValues[lastValueKey]) {
+      // If is first render, initialize.
+      if (!this.lastValues[lastValueKey]) {
+        this.printAt(value, statPosition);
+        this.lastValues[lastValueKey] = value;
+        return;
+      }
+
+      this.printAt(pc[updateColor](`${value} ▲`), statPosition);
+
+      if (this.timeouts[lastValueKey]) {
+        clearTimeout(this.timeouts[lastValueKey]);
+      }
+
+      this.timeouts[lastValueKey] = setTimeout(() => {
+        this.printAt(value + '  ', statPosition);
+      }, 700);
+
       this.lastValues[lastValueKey] = value;
-      return;
+    } else {
+      this.printAt(value, statPosition);
     }
-
-    this.printAt(pc[updateColor](`${value} ▲`), statPosition);
-
-    if (this.timeouts[lastValueKey]) {
-      clearTimeout(this.timeouts[lastValueKey]);
-    }
-
-    this.timeouts[lastValueKey] = setTimeout(() => {
-      this.printAt(value + '  ', statPosition);
-    }, 700);
-
-    this.lastValues[lastValueKey] = value;
   }
 
   private showErrorsCount(): void {
