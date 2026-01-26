@@ -188,7 +188,7 @@ export class CliController {
       if (
         configChanges.targets ||
         configChanges.folderRoot ||
-        configChanges.excludeSensitiveResults ||
+        Object.keys(configChanges).includes('excludeSensitiveResults') ||
         configChanges.exclude
       ) {
         this.scan();
