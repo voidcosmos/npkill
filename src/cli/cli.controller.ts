@@ -514,6 +514,7 @@ export class CliController {
 
     if (options.isTrue('target-folders')) {
       this.config.targets = options.getString('target-folders').split(',');
+      this.config.profiles = [];
     }
     if (options.isTrue('exclude-sensitive')) {
       this.config.excludeSensitiveResults = true;
