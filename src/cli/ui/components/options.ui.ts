@@ -126,8 +126,12 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           [K in keyof IConfig]: IConfig[K] extends boolean ? K : never;
         }[keyof IConfig]
       >;
-      this.config[key] = !!opt.value;
-      this.emitConfigChange(opt.key, opt.value);
+
+      const valueToSave =
+        key === 'excludeSensitiveResults' ? !opt.value : opt.value;
+
+      this.config[key] = !!valueToSave;
+      this.emitConfigChange(opt.key, valueToSave);
       this.render();
     } else if (opt.type === 'dropdown') {
       const key = opt.key as keyof Pick<
