@@ -489,7 +489,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
         (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
       )}d`;
     } else {
-      daysSinceLastModification = pc.bgBlack('calc');
+      daysSinceLastModification = pc.gray('  ...');
     }
 
     if (folder.riskAnalysis?.isSensitive) {
@@ -509,12 +509,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     const spacePadding = ' '.repeat(Math.max(0, OFFSET_COLUMN - sizeLength));
     folderSize = `${spacePadding}${folderSize}`;
 
-    // Only show "calc..." if size is exactly 0 AND modificationTime is -1 (not yet calculated)
+    // Only show "..." if size is exactly 0 AND modificationTime is -1 (not yet calculated)
     // If size is 0 but modificationTime is set, then it's a truly empty folder
     const isCalculating = folder.size === 0 && folder.modificationTime === -1;
-    const folderSizeText = isCalculating
-      ? pc.bgBlack(pc.gray(' calc... '))
-      : folderSize;
+    const folderSizeText = isCalculating ? pc.gray('   .....') : folderSize;
 
     return {
       path: folderText,
