@@ -300,7 +300,7 @@ describe('CliController test', () => {
         ).mockReturnValue(['node_modules']);
       });
 
-      it('Should show a warning before start scan with --target defined', () => {
+      it('Should show a warning before start scan with --targets defined', () => {
         mockParameters({
           'delete-all': true,
           'target-folders': 'node_modules',

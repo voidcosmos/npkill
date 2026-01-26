@@ -356,9 +356,7 @@ export class CliController {
     }
 
     if (options.isTrue('profiles') && options.isTrue('target-folders')) {
-      console.log(
-        'Cannot use both --profiles and --target-folders options together.',
-      );
+      console.log('Cannot use both --profiles and --targets options together.');
       this.exitGracefully();
     }
 
@@ -412,7 +410,7 @@ export class CliController {
     if (options.isTrue('delete-all')) {
       if (!options.isTrue('target-folders') || options.isTrue('profiles')) {
         // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
-        console.log('--delete-all only can be used with --target-folders.');
+        console.log('--delete-all only can be used with --targets.');
         console.log(
           'You can copy all targets from a profile with `npkill --profiles`.',
         );
