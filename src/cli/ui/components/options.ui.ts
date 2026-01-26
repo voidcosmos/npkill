@@ -55,18 +55,23 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
   private initializeOptions(): void {
     this.options = [
       {
-        label: 'Target folder',
-        type: 'input',
-        key: 'targets',
-        value: Array.isArray(this.config.targets)
-          ? this.config.targets.join(',')
-          : '',
+        label: 'Sensitive results',
+        type: 'checkbox',
+        key: 'excludeSensitiveResults',
+        value: !this.config.excludeSensitiveResults,
       },
       {
-        label: 'Cwd',
-        type: 'input',
-        key: 'folderRoot',
-        value: this.config.folderRoot,
+        label: 'Sort by',
+        type: 'dropdown',
+        key: 'sortBy',
+        value: this.config.sortBy,
+        options: ['path', 'size', 'age'],
+      },
+      {
+        label: 'Dry-run',
+        type: 'checkbox',
+        key: 'dryRun',
+        value: this.config.dryRun,
       },
       {
         label: 'Exclude',
@@ -77,30 +82,25 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           : '',
       },
       {
-        label: 'Sort by',
-        type: 'dropdown',
-        key: 'sortBy',
-        value: this.config.sortBy,
-        options: ['path', 'size', 'age'],
-      },
-      {
         label: 'Size unit',
         type: 'dropdown',
         key: 'sizeUnit',
         value: this.config.sizeUnit,
-        options: ['auto', 'mb', 'gb'],
+        options: ['auto', 'MB', 'GB'],
       },
       {
-        label: 'Exclude sensitive results',
-        type: 'checkbox',
-        key: 'excludeSensitiveResults',
-        value: this.config.excludeSensitiveResults,
+        label: 'Cwd',
+        type: 'input',
+        key: 'folderRoot',
+        value: this.config.folderRoot,
       },
       {
-        label: 'Dry-run mode',
-        type: 'checkbox',
-        key: 'dryRun',
-        value: this.config.dryRun,
+        label: 'Target folder',
+        type: 'input',
+        key: 'targets',
+        value: Array.isArray(this.config.targets)
+          ? this.config.targets.join(',')
+          : '',
       },
     ];
   }
@@ -246,7 +246,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
     for (let i = 0; i < this.options.length; i++) {
       const opt = this.options[i];
       const isSelected = i === this.selectedIndex;
-      const label = `${opt.label.padEnd(16)}`;
+      const label = `${opt.label.padEnd(18)}`;
 
       let valueText = '';
       if (opt.type === 'checkbox') {
@@ -257,13 +257,15 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         valueText =
           this.isEditing && isSelected
             ? this.editBuffer + '_'
-            : String(opt.value);
+            : String(opt.value) === ''
+              ? 'none'
+              : String(opt.value);
       }
 
       // Move the options down to prevent the values from overlapping.
       const LEFT_MARGIN = 2;
       const terminalWidth = this.terminal.columns;
-      const PREFIX_LENGTH = 18; // Marker (1) + Space (1) + Label (16)
+      const PREFIX_LENGTH = 20; // Marker (1) + Space (1) + Label (18)
       const valueStartX = LEFT_MARGIN + PREFIX_LENGTH;
       const maxContentWidth = Math.max(10, terminalWidth - valueStartX);
 
@@ -278,11 +280,20 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
 
       chunks.forEach((chunk, index) => {
         let line = '';
+        let chunkText = chunk;
+        if (
+          opt.type === 'input' &&
+          String(opt.value) === '' &&
+          chunk === 'none'
+        ) {
+          chunkText = pc.gray(chunk);
+        }
+
         if (index === 0) {
-          line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${chunk}`;
+          line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${chunkText}`;
         } else {
           const padding = ' '.repeat(PREFIX_LENGTH);
-          line = `${padding}${chunk}`;
+          line = `${padding}${chunkText}`;
         }
 
         this.printAt(isSelected ? pc.cyan(line) : line, {
@@ -307,7 +318,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
               ? pc.bgCyan(pc.black(` ${paddedOption} `))
               : pc.bgBlack(pc.white(` ${paddedOption} `));
           this.printAt(optionEntryText, {
-            x: 34,
+            x: 28,
             y: currentRow - Math.round(optionsNumber / 2) + i,
           });
         }
