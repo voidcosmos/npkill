@@ -744,12 +744,18 @@ export class CliController {
       });
   }
 
+  private scanSubscription: any = null;
+
   private scanInUiMode(): void {
+    if (this.scanSubscription) {
+      this.scanSubscription.unsubscribe();
+    }
+
     this.uiStatus.reset();
     this.uiStatus.start();
     this.searchStart = Date.now();
 
-    this.scanService
+    this.scanSubscription = this.scanService
       .scan(this.config)
       .pipe(
         tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)),

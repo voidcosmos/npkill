@@ -149,6 +149,10 @@ export class StatusUi extends BaseUi {
     barLenght -= searchBarLenght;
     searchBarLenght -= doneBarLenght;
 
+    barLenght = Math.max(0, barLenght);
+    searchBarLenght = Math.max(0, searchBarLenght);
+    doneBarLenght = Math.max(0, doneBarLenght);
+
     // Debug
     // this.printAt(
     //   `V: ${barSearchMax},T: ${barLenght},C: ${searchBarLenght},D:${doneBarLenght}   `,

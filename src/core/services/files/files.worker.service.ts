@@ -74,6 +74,12 @@ export class FileWorkerService {
     params: WorkerScanOptions,
   ): Promise<void> {
     await this.killWorkers();
+
+    this.totalJobs = 0;
+    this.pendingJobs = 0;
+    this.index = 0;
+    this.workersPendingJobs = [];
+
     this.shouldStop = false;
     this.instantiateWorkers(this.getOptimalNumberOfWorkers());
     this.listenEvents(stream$);
