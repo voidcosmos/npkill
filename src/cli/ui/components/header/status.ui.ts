@@ -55,8 +55,12 @@ export class StatusUi extends BaseUi {
     this.text = '';
     this.pendingTasksPosition = { ...UI_POSITIONS.PENDING_TASKS };
     this.searchEnd$.next(true);
+    this.searchEnd$.complete();
     this.searchEnd$ = new Subject();
 
+    if (this.activeAnimation) {
+      clearTimeout(this.activeAnimation);
+    }
     this.clearPendingTasks();
     this.render();
   }
@@ -67,7 +71,10 @@ export class StatusUi extends BaseUi {
 
     this.text = pc.green(INFO_MSGS.SEARCH_COMPLETED) + pc.gray(`${duration}s`);
     this.render();
-    setTimeout(() => this.animateClose(), 2000);
+    if (this.activeAnimation) {
+      clearTimeout(this.activeAnimation);
+    }
+    this.activeAnimation = setTimeout(() => this.animateClose(), 2000);
   }
 
   render(): void {
@@ -156,6 +163,8 @@ export class StatusUi extends BaseUi {
     this.printProgressBar(progressBar);
   }
 
+  private activeAnimation: NodeJS.Timeout | null = null;
+
   private animateProgressBar(): void {
     if (this.barNormalizedWidth > 1) {
       this.barNormalizedWidth = 1;
@@ -164,7 +173,13 @@ export class StatusUi extends BaseUi {
     this.barNormalizedWidth += 0.05;
 
     this.renderProgressBar();
-    setTimeout(() => this.animateProgressBar(), SPINNER_INTERVAL);
+    if (this.activeAnimation) {
+      clearTimeout(this.activeAnimation);
+    }
+    this.activeAnimation = setTimeout(
+      () => this.animateProgressBar(),
+      SPINNER_INTERVAL,
+    );
   }
 
   private animateClose(): void {
@@ -179,7 +194,13 @@ export class StatusUi extends BaseUi {
     this.barNormalizedWidth -= 0.05;
 
     this.renderProgressBar();
-    setTimeout(() => this.animateClose(), SPINNER_INTERVAL);
+    if (this.activeAnimation) {
+      clearTimeout(this.activeAnimation);
+    }
+    this.activeAnimation = setTimeout(
+      () => this.animateClose(),
+      SPINNER_INTERVAL,
+    );
   }
 
   /** When the progress bar disappears, "pending tasks" will move up one
