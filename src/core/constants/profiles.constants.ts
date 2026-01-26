@@ -11,7 +11,6 @@ export const BASE_PROFILES: { [profileName: string]: PROFILE } = {
       'node_modules',
       '.npm',
       '.pnpm-store',
-      '.yarn/cache',
       '.next',
       '.nuxt',
       '.angular',

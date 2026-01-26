@@ -3,6 +3,8 @@ import { BaseUi, InteractiveUi } from '../base.ui.js';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import pc from 'picocolors';
+import path from 'path';
+import { existsSync } from 'fs';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
 
@@ -92,7 +94,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         label: 'Cwd',
         type: 'input',
         key: 'folderRoot',
-        value: this.config.folderRoot,
+        value: path.resolve(this.config.folderRoot),
       },
       {
         label: 'Target folder',
@@ -181,9 +183,20 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         >;
         const newValue: IConfig[typeof opt.key] = this
           .editBuffer as IConfig[typeof opt.key];
-        this.config[key as any] = newValue as unknown as string;
-        opt.value = newValue;
-        this.emitConfigChange(opt.key, newValue);
+
+        if (key === 'folderRoot') {
+          const newPath = path.resolve(newValue as string);
+          if (existsSync(newPath)) {
+            this.config[key] = newPath;
+            opt.value = newPath;
+            this.emitConfigChange(opt.key, newPath);
+          }
+          // if not valid, revert visually to old value on render
+        } else {
+          this.config[key as any] = newValue as unknown as string;
+          opt.value = newValue;
+          this.emitConfigChange(opt.key, newValue);
+        }
       }
       this.isEditing = false;
       this.render();
@@ -242,6 +255,11 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
       y: currentRow++,
     });
     currentRow++;
+
+    let activeDropdown: {
+      options: string[];
+      yBase: number;
+    } | null = null;
 
     for (let i = 0; i < this.options.length; i++) {
       const opt = this.options[i];
@@ -302,26 +320,35 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         });
       });
 
-      // If selected and dropdown, show options
+      // If selected and dropdown, queue for rendering
       if (opt.type === 'dropdown' && isSelected) {
-        const dropdownOptions = opt.options || [];
-        const optionsNumber = dropdownOptions.length;
-        const maxLength =
-          dropdownOptions.length > 0
-            ? Math.max(...dropdownOptions.map((o) => o.length))
-            : 0;
-        for (let i = 0; i < optionsNumber; i++) {
-          const option = dropdownOptions[i];
-          const paddedOption = option.padEnd(maxLength, ' ');
-          const optionEntryText =
-            option === opt.value
-              ? pc.bgCyan(pc.black(` ${paddedOption} `))
-              : pc.bgBlack(pc.white(` ${paddedOption} `));
-          this.printAt(optionEntryText, {
-            x: 28,
-            y: currentRow - Math.round(optionsNumber / 2) + i,
-          });
-        }
+        activeDropdown = {
+          options: opt.options || [],
+          yBase: currentRow,
+        };
+      }
+    }
+
+    if (activeDropdown) {
+      const dropdownOptions = activeDropdown.options;
+      const optionsNumber = dropdownOptions.length;
+      const maxLength =
+        dropdownOptions.length > 0
+          ? Math.max(...dropdownOptions.map((o) => o.length))
+          : 0;
+      const activeOpt = this.options[this.selectedIndex];
+
+      for (let i = 0; i < optionsNumber; i++) {
+        const option = dropdownOptions[i];
+        const paddedOption = option.padEnd(maxLength, ' ');
+        const optionEntryText =
+          option === activeOpt.value
+            ? pc.bgCyan(pc.black(` ${paddedOption} `))
+            : pc.bgBlack(pc.white(` ${paddedOption} `));
+        this.printAt(optionEntryText, {
+          x: 28,
+          y: activeDropdown.yBase - Math.round(optionsNumber / 2) + i,
+        });
       }
     }
   }
