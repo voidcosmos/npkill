@@ -57,8 +57,8 @@ export class ResultsService {
       });
 
     return {
-      spaceReleased: formattedReleased.text,
-      totalSpace: formattedTotal.text,
+      spaceReleased: formattedReleased,
+      totalSpace: formattedTotal,
       resultsTypesCount,
     };
   }

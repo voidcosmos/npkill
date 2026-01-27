@@ -25,6 +25,7 @@ export interface FormattedSize {
   value: number;
   unit: 'MB' | 'GB';
   text: string;
+  bytes: number;
 }
 
 export function formatSize(
@@ -63,6 +64,7 @@ export function formatSize(
   }
 
   const text = `${formattedValue} ${unit}`;
+  const bytes = convertGbToBytes(sizeInGB);
 
-  return { value, unit, text };
+  return { value, unit, text, bytes };
 }

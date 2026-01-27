@@ -863,8 +863,8 @@ export class CliController {
   }
 
   private printExitMessage(): void {
-    const { spaceReleased } = this.resultsService.getStats();
-    new GeneralUi().printExitMessage({ spaceReleased });
+    const stats = this.resultsService.getStats();
+    new GeneralUi().printExitMessage({ stats });
   }
 
   private deleteFolder(folder: CliScanFoundFolder): void {

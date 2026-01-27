@@ -1,3 +1,4 @@
+import { FormattedSize } from 'src/utils/unit-conversions.js';
 import { ScanFoundFolder } from '../../core/interfaces/index.js';
 
 export interface CliScanFoundFolder extends ScanFoundFolder {
@@ -12,7 +13,7 @@ export interface IResultTypeCount {
 }
 
 export interface IStats {
-  spaceReleased: string;
-  totalSpace: string;
+  spaceReleased: FormattedSize;
+  totalSpace: FormattedSize;
   resultsTypesCount: IResultTypeCount[];
 }

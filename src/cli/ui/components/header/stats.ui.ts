@@ -54,7 +54,7 @@ export class StatsUi extends BaseUi {
 
     this.showStat({
       description: INFO_MSGS.TOTAL_SPACE,
-      value: totalSpace,
+      value: totalSpace.text,
       lastValueKey: 'totalSpace',
       position: UI_POSITIONS.TOTAL_SPACE,
       updateColor: 'yellow',
@@ -62,7 +62,7 @@ export class StatsUi extends BaseUi {
 
     this.showStat({
       description: INFO_MSGS.SPACE_RELEASED,
-      value: spaceReleased,
+      value: spaceReleased.text,
       lastValueKey: 'spaceReleased',
       position: UI_POSITIONS.SPACE_RELEASED,
       updateColor: 'green',
