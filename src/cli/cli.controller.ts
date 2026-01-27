@@ -844,11 +844,14 @@ export class CliController {
     process.exit(0);
   }
 
-  private quit(): void {
+  private async quit(): Promise<void> {
     this.uiService.setRawMode(false);
     this.uiService.clear();
+    this.uiService.setFreezeAll(true);
     this.uiService.setCursorVisible(true);
-    this.printExitMessage();
+    this.scanSubscription.unsubscribe();
+
+    await this.printExitMessage();
     this.logger.info('Thank for using npkill. Bye!');
     const logPath = this.logger.getSuggestLogFilePath();
     this.logger.saveToFile(logPath);
@@ -862,9 +865,9 @@ export class CliController {
     this.uiService.setCursorVisible(true);
   }
 
-  private printExitMessage(): void {
+  private async printExitMessage(): Promise<void> {
     const stats = this.resultsService.getStats();
-    new GeneralUi().printExitMessage({ stats });
+    await new GeneralUi().printExitMessage({ stats });
   }
 
   private deleteFolder(folder: CliScanFoundFolder): void {
