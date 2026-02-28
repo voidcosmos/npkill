@@ -56,7 +56,7 @@
     "@eslint/js": "9.38.0",
     "@jest/globals": "30.2.0",
     "@stryker-mutator/core": "9.2.0",
-    "@stryker-mutator/jest-runner": "9.2.0",
+    "@stryker-mutator/jest-runner": "9.6.0",
     "@types/jest": "30.0.0",
     "@types/node": "18.18.0",
     "commitlint": "20.1.0",
