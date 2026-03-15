@@ -90,12 +90,12 @@ export class HeaderUi extends BaseUi {
       if (this.isSearchInputActive) {
         searchText = ` Search: ${this.searchText}_ `;
         this.printAt(pc.bgBlue(pc.white(searchText)), {
-          x: 2,
+          x: 1,
           y: UI_POSITIONS.TUTORIAL_TIP.y,
         });
       } else {
         this.printAt(pc.bgWhite(pc.black(searchText)), {
-          x: 2,
+          x: 1,
           y: UI_POSITIONS.TUTORIAL_TIP.y,
         });
       }
