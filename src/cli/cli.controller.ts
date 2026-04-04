@@ -12,7 +12,7 @@ import {
 import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
-import { firstValueFrom, Subject } from 'rxjs';
+import { firstValueFrom, Subject, Subscription } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
@@ -745,7 +745,7 @@ export class CliController {
       });
   }
 
-  private scanSubscription: any = null;
+  private scanSubscription: Subscription | null = null;
 
   private scanInUiMode(): void {
     if (this.scanSubscription) {
@@ -850,7 +850,7 @@ export class CliController {
     this.uiService.clear();
     this.uiService.setFreezeAll(true);
     this.uiService.setCursorVisible(true);
-    this.scanSubscription.unsubscribe();
+    this.scanSubscription?.unsubscribe();
 
     await this.printExitMessage();
     this.logger.info('Thank for using npkill. Bye!');
