@@ -39,8 +39,7 @@ export class UpdateService {
 
   /** Valid to compare versions up to 99999.99999.99999 */
   private isLocalVersionGreater(local: string, remote: string): boolean {
-    const leadingZeros = (value: string): string =>
-      ('00000' + value).substring(-5);
+    const leadingZeros = (value: string): string => value.padStart(5, '0');
 
     const localLeaded = +local.split('.').map(leadingZeros).join('');
     const remoteLeaded = +remote.split('.').map(leadingZeros).join('');
