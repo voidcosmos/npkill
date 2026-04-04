@@ -233,7 +233,6 @@ export class FileWorkerService {
     if (isCompleted) {
       this.searchStatus.workerStatus = 'finished';
       stream$.complete();
-      void this.killWorkers();
     }
   }
 

@@ -162,9 +162,9 @@ class FileWalker {
       this.newDirEntry(path, entry, results);
     }
 
-    this.events.emit('newResult', { results });
     await dir.close();
     this.completeTask();
+    this.events.emit('newResult', { results });
 
     if (this.taskQueue.length === 0 && this.procs === 0) {
       this.completeAll();
@@ -192,8 +192,8 @@ class FileWalker {
       this.completeTask();
     } catch {
       // If anything fails during setup, emit size 0 and complete
-      this.events.emit('folderSizeResult', { path, size: 0 });
       this.completeTask();
+      this.events.emit('folderSizeResult', { path, size: 0 });
     }
   }
 
@@ -258,12 +258,11 @@ class FileWalker {
       // Ignore permissions errors.
     } finally {
       collector.pending -= 1;
+      this.completeTask();
 
       if (collector.pending === 0) {
         collector.onComplete(collector.total);
       }
-
-      this.completeTask();
     }
   }
 
@@ -375,6 +374,6 @@ class FileWalker {
   } */
 
   get pendingJobs(): number {
-    return this.taskQueue.length;
+    return this.taskQueue.length + this.procs;
   }
 }
