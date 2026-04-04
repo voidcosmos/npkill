@@ -98,13 +98,14 @@ export class CliController {
       return;
     }
 
+    this.checkRequirements();
+
     this.initUi();
     if (this.consoleService.isRunningBuild()) {
       this.uiHeader.programVersion = this.getVersion();
     }
 
     this.consoleService.startListenKeyEvents();
-    this.checkRequirements();
     this.prepareScreen();
     this.setupEventsListener();
     if (this.config.checkUpdates) {
