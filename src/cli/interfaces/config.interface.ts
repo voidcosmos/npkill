@@ -14,4 +14,5 @@ export interface IConfig {
   yes: boolean;
   jsonStream: boolean;
   jsonSimple: boolean;
+  disableSize: boolean;
 }

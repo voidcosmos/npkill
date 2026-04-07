@@ -138,7 +138,11 @@ export class CliController {
   private initUi(): void {
     this.uiHeader = new HeaderUi(this.config);
     this.uiService.add(this.uiHeader);
-    this.uiResults = new ResultsUi(this.resultsService, this.consoleService);
+    this.uiResults = new ResultsUi(
+      this.resultsService,
+      this.consoleService,
+      this.config,
+    );
     this.uiService.add(this.uiResults);
     this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
     this.uiService.add(this.uiStats);
@@ -535,6 +539,10 @@ export class CliController {
       this.config.jsonSimple = true;
     }
 
+    if (options.isTrue('disable-size')) {
+      this.config.disableSize = true;
+    }
+
     if (this.config.jsonStream && this.config.jsonSimple) {
       this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
       this.exitWithError();
@@ -756,21 +764,31 @@ export class CliController {
     this.uiStatus.start();
     this.searchStart = Date.now();
 
-    this.scanSubscription = this.scanService
+    const scan$ = this.scanService
       .scan(this.config)
-      .pipe(
-        tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)),
-        mergeMap(
-          (nodeFolder) => this.scanService.calculateFolderStats(nodeFolder),
-          10, // Limit to 10 concurrent stat calculations at a time
-        ),
-        tap((folder) => this.processFolderStatsForUi(folder)),
-      )
-      .subscribe({
+      .pipe(tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)));
+
+    if (this.config.disableSize) {
+      this.scanSubscription = scan$.subscribe({
         next: () => this.printFoldersSection(),
         error: (error) => this.newError(error),
         complete: () => this.completeSearch(),
       });
+    } else {
+      this.scanSubscription = scan$
+        .pipe(
+          mergeMap(
+            (nodeFolder) => this.scanService.calculateFolderStats(nodeFolder),
+            10, // Limit to 10 concurrent stat calculations at a time
+          ),
+          tap((folder) => this.processFolderStatsForUi(folder)),
+        )
+        .subscribe({
+          next: () => this.printFoldersSection(),
+          error: (error) => this.newError(error),
+          complete: () => this.completeSearch(),
+        });
+    }
   }
 
   private setupJsonModeSignalHandlers(): void {
@@ -790,6 +808,10 @@ export class CliController {
     if (this.config.sortBy === 'path') {
       this.resultsService.sortResults(this.config.sortBy);
       this.uiResults.clear();
+    }
+
+    if (this.config.disableSize && this.config.deleteAll) {
+      this.deleteFolder(nodeFolder);
     }
 
     this.uiResults.render();
