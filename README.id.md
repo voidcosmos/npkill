@@ -22,6 +22,7 @@ Alat ini memungkinkan Anda untuk mencantumkan semua direktori _node_modules_ di 
 Kami berusaha untuk menerjemahkan dokumen Npkill ke berbagai bahasa. Berikut daftar terjemahan yang tersedia:
 
 - [Español](./README.es.md)
+- [Français](./README.fr.md)
 - [Indonesian](./README.id.md)
 - [Portugis](./README.pt.md)
 - [Turki](./README.tr.md)

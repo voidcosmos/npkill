@@ -22,7 +22,10 @@ Esta herramienta te permite listar cualquier directorio _node_modules_ que haya 
 Nos estamos esforzando por internacionalizar la documentación de Npkill. Aquí tienes una lista de las traducciones disponibles:
 
 - [Español](./README.es.md)
+- [Français](./README.fr.md)
 - [Português](./README.pt.md)
+- [Indonesian](./README.id.md)
+- [Turkish](./README.tr.md)
 
 ## Table of Contents
 
