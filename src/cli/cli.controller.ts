@@ -768,27 +768,22 @@ export class CliController {
       .scan(this.config)
       .pipe(tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)));
 
-    if (this.config.disableSize) {
-      this.scanSubscription = scan$.subscribe({
+    this.scanSubscription = scan$
+      .pipe(
+        mergeMap(
+          (nodeFolder) =>
+            this.scanService.calculateFolderStats(nodeFolder, {
+              disableSize: this.config.disableSize,
+            }),
+          10, // Limit to 10 concurrent stat calculations at a time
+        ),
+        tap((folder) => this.processFolderStatsForUi(folder)),
+      )
+      .subscribe({
         next: () => this.printFoldersSection(),
         error: (error) => this.newError(error),
         complete: () => this.completeSearch(),
       });
-    } else {
-      this.scanSubscription = scan$
-        .pipe(
-          mergeMap(
-            (nodeFolder) => this.scanService.calculateFolderStats(nodeFolder),
-            10, // Limit to 10 concurrent stat calculations at a time
-          ),
-          tap((folder) => this.processFolderStatsForUi(folder)),
-        )
-        .subscribe({
-          next: () => this.printFoldersSection(),
-          error: (error) => this.newError(error),
-          complete: () => this.completeSearch(),
-        });
-    }
   }
 
   private setupJsonModeSignalHandlers(): void {

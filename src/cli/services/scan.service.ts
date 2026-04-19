@@ -22,7 +22,8 @@ import { join } from 'path';
 import os from 'os';
 
 export interface CalculateFolderStatsOptions {
-  getModificationTimeForSensitiveResults: boolean;
+  getModificationTimeForSensitiveResults?: boolean;
+  disableSize?: boolean;
 }
 
 export class ScanService {
@@ -67,17 +68,22 @@ export class ScanService {
       getModificationTimeForSensitiveResults: false,
     },
   ): Observable<CliScanFoundFolder> {
-    return this.npkill.getSize$(nodeFolder.path).pipe(
-      timeout(30000), // 30 seconds timeout
-      catchError(() => {
-        // If size calculation fails or times out, keep size as 0 but mark as calculated
-        nodeFolder.size = 0;
-        nodeFolder.modificationTime = 1; // 1 = calculated, -1 = not calculated
-        return of({ size: 0, unit: 'bytes' as const });
-      }),
-      tap(({ size }) => {
-        nodeFolder.size = convertBytesToGb(size);
-      }),
+    const size$ = options.disableSize
+      ? of({ size: 0, unit: 'bytes' as const })
+      : this.npkill.getSize$(nodeFolder.path).pipe(
+          timeout(30000), // 30 seconds timeout
+          catchError(() => {
+            // If size calculation fails or times out, keep size as 0 but mark as calculated
+            nodeFolder.size = 0;
+            nodeFolder.modificationTime = 1; // 1 = calculated, -1 = not calculated
+            return of({ size: 0, unit: 'bytes' as const });
+          }),
+          tap(({ size }) => {
+            nodeFolder.size = convertBytesToGb(size);
+          }),
+        );
+
+    return size$.pipe(
       switchMap(async () => {
         if (
           nodeFolder.riskAnalysis?.isSensitive &&
