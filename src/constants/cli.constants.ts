@@ -103,6 +103,17 @@ export const OPTIONS: ICliOptions[] = [
     name: 'disable-size',
   },
   {
+    arg: ['--disable-age'],
+    description: 'Skip age (last modification time) calculation.',
+    name: 'disable-age',
+  },
+  {
+    arg: ['--disable-stats'],
+    description:
+      'Skip both size and age calculation. Shortcut for --disable-size --disable-age.',
+    name: 'disable-stats',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',

@@ -543,6 +543,15 @@ export class CliController {
       this.config.disableSize = true;
     }
 
+    if (options.isTrue('disable-age')) {
+      this.config.disableAge = true;
+    }
+
+    if (options.isTrue('disable-stats')) {
+      this.config.disableSize = true;
+      this.config.disableAge = true;
+    }
+
     if (this.config.jsonStream && this.config.jsonSimple) {
       this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
       this.exitWithError();
@@ -774,6 +783,7 @@ export class CliController {
           (nodeFolder) =>
             this.scanService.calculateFolderStats(nodeFolder, {
               disableSize: this.config.disableSize,
+              disableAge: this.config.disableAge,
             }),
           10, // Limit to 10 concurrent stat calculations at a time
         ),

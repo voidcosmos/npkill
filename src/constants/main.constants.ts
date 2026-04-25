@@ -25,6 +25,8 @@ export const DEFAULT_CONFIG: IConfig = {
   jsonStream: false,
   jsonSimple: false,
   disableSize: false,
+  disableAge: false,
+  disableStats: false,
 };
 
 export const MARGINS = {
