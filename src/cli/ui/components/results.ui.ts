@@ -47,7 +47,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   private searchText = '';
   private filteredResults: CliScanFoundFolder[] = [];
 
-  private readonly config: IConfig = DEFAULT_CONFIG;
+  private config: IConfig = DEFAULT_CONFIG;
   private readonly KEYS = {
     up: () => this.cursorUp(),
     down: () => this.cursorDown(),
@@ -78,8 +78,12 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   constructor(
     private readonly resultsService: ResultsService,
     private readonly consoleService: ConsoleService,
+    config?: IConfig,
   ) {
     super();
+    if (config) {
+      this.config = config;
+    }
   }
 
   private openFolder(): void {
@@ -512,7 +516,12 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     // Only show "..." if size is exactly 0 AND modificationTime is -1 (not yet calculated)
     // If size is 0 but modificationTime is set, then it's a truly empty folder
     const isCalculating = folder.size === 0 && folder.modificationTime === -1;
-    const folderSizeText = isCalculating ? pc.gray('   .....') : folderSize;
+    let folderSizeText: string;
+    if (this.config.disableSize) {
+      folderSizeText = pc.gray('     ...');
+    } else {
+      folderSizeText = isCalculating ? pc.gray('   .....') : folderSize;
+    }
 
     return {
       path: folderText,
