@@ -177,6 +177,9 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | --dry-run               | It does not delete anything (will simulate it with a random delay).                                                                                                                                          |
 | --json                  | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                                                   |
 | --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                                                    |
+| --no-size               | Skip size calculation. Useful for faster scanning and deletion when space info is not needed.                                                                                                                |
+| --no-age                | Skip age (last modification time) calculation.                                                                                                                                                               |
+| --no-stats              | Skip both size and age calculation. Shortcut for `--no-size --no-age`.                                                                                                                                       |
 | -v, --version           | Show npkill version                                                                                                                                                                                          |
 
 <a name="examples"></a>

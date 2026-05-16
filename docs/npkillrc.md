@@ -40,7 +40,7 @@ npkill --config /path/to/your/config.json
 ```json
 {
   "rootDir": "/home/user/projects",
-  "exclude": [".git", "important-project", "production-app"],
+  "exclude": ["important-project", "production-app"],
   "sortBy": "size",
   "sizeUnit": "auto",
   "excludeSensitiveResults": true,
@@ -80,12 +80,12 @@ Absolute path from which the search will begin.
 ### exclude
 
 **Type:** `string[]`  
-**Default:** `[".git"]`
+**Default:** `[]`
 
 Array of directory names to exclude from search. Npkill will skip these directories and their subdirectories.
 
 ```json
-"exclude": [".git", "production-project", "node_modules/.cache"]
+"exclude": ["production-project", "node_modules/.cache"]
 ```
 
 ### sortBy
