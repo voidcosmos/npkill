@@ -22,6 +22,7 @@ Bu araç, sisteminizdeki tüm _node_modules_ dizinlerini ve kapladıkları alan�
 Npkill dokümantasyonunu uluslararası hale getirmek için çaba gösteriyoruz. İşte mevcut çevirilerin listesi:
 
 - [Endonezce](./README.id.md)
+- [Fransızca](./README.fr.md)
 - [İspanyolca](./README.es.md)
 - [Portekizce](./README.pt.md)
 - [Türkçe](./README.tr.md)
