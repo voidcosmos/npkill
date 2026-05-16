@@ -15,7 +15,7 @@ export class GeneralUi extends BaseUi {
     const gb = bytes / (1024 * 1024 * 1024);
     const isZero = bytes === 0;
     const isEpic = gb >= 50;
-    const emoji = isZero ? '😐' : !isEpic ? '🚀' : '🤑';
+    const emoji = isZero ? '👋' : !isEpic ? '🚀' : '🤑';
     // const finalSymbol = isZero ? '.' : '!'.repeat(Math.floor(gb / 10) + 1);
     const title = pc.bold(pc.redBright('NPKILL'));
     const spaceSaved = pc.green(pc.bold(spaceReleased.text));
