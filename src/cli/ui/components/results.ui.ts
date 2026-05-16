@@ -686,7 +686,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private printScrollBar(): void {
     const SCROLLBAR_ACTIVE = pc.gray('█');
-    const SCROLLBAR_BG = pc.gray('░');
+    const SCROLLBAR_BG = pc.gray('┊');
 
     const totalResults = this.results.length;
     const visibleRows = this.getRowsAvailable();
