@@ -87,7 +87,7 @@ export class ScanService {
     return size$.pipe(
       switchMap(async () => {
         if (options.disableAge) {
-          nodeFolder.modificationTime = 1;
+          nodeFolder.modificationTime = -1;
           return nodeFolder;
         }
 
