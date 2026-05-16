@@ -15,4 +15,6 @@ export interface IConfig {
   jsonStream: boolean;
   jsonSimple: boolean;
   disableSize: boolean;
+  disableAge: boolean;
+  disableStats: boolean;
 }

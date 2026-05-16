@@ -24,6 +24,7 @@ import os from 'os';
 export interface CalculateFolderStatsOptions {
   getModificationTimeForSensitiveResults?: boolean;
   disableSize?: boolean;
+  disableAge?: boolean;
 }
 
 export class ScanService {
@@ -85,6 +86,11 @@ export class ScanService {
 
     return size$.pipe(
       switchMap(async () => {
+        if (options.disableAge) {
+          nodeFolder.modificationTime = 1;
+          return nodeFolder;
+        }
+
         if (
           nodeFolder.riskAnalysis?.isSensitive &&
           !options.getModificationTimeForSensitiveResults

@@ -500,6 +500,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       daysSinceLastModification = '';
     }
 
+    if (this.config.disableAge) {
+      daysSinceLastModification = pc.gray('  ...');
+    }
+
     // Align to right
     const alignMargin = 4 - daysSinceLastModification.length;
     daysSinceLastModification =
