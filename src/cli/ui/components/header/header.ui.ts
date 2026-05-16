@@ -9,6 +9,7 @@ import { BaseUi } from '../../base.ui.js';
 import pc from 'picocolors';
 import { IConfig } from '../../../../cli/interfaces/config.interface.js';
 import { MENU_BAR_OPTIONS } from './header-ui.constants.js';
+import { getColumnLayout, getResultColumns } from '../result-columns.js';
 
 export class HeaderUi extends BaseUi {
   programVersion: string;
@@ -61,18 +62,26 @@ export class HeaderUi extends BaseUi {
 
     // Columns headers
     if (this.activeMenuIndex === MENU_BAR_OPTIONS.DELETE) {
-      this.printAt(pc.bgYellow(pc.black(INFO_MSGS.HEADER_COLUMNS)), {
-        x: this.terminal.columns - INFO_MSGS.HEADER_COLUMNS.length - 2,
-        y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
-      });
+      const layout = getColumnLayout(
+        getResultColumns(this.config),
+        this.terminal.columns,
+      );
+      if (layout.columns.length > 0) {
+        this.printAt(pc.bgYellow(pc.black(layout.headerText)), {
+          x: layout.firstColumnX,
+          y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
+        });
+      }
     }
 
     // npkill stats
-    this.printAt(pc.gray(INFO_MSGS.TOTAL_SPACE), UI_POSITIONS.TOTAL_SPACE);
-    this.printAt(
-      pc.gray(INFO_MSGS.SPACE_RELEASED),
-      UI_POSITIONS.SPACE_RELEASED,
-    );
+    if (!this.config.disableSize) {
+      this.printAt(pc.gray(INFO_MSGS.TOTAL_SPACE), UI_POSITIONS.TOTAL_SPACE);
+      this.printAt(
+        pc.gray(INFO_MSGS.SPACE_RELEASED),
+        UI_POSITIONS.SPACE_RELEASED,
+      );
+    }
   }
 
   private renderHeader(): void {

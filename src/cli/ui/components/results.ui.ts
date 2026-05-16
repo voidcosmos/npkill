@@ -18,6 +18,12 @@ import pc from 'picocolors';
 import { resolve } from 'node:path';
 import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
+import {
+  ResultColumnId,
+  ResultColumnLayout,
+  getColumnLayout,
+  getResultColumns,
+} from './result-columns.js';
 
 const CURSOR_ROW_COLOR = 'bgBlue';
 
@@ -386,11 +392,19 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private printResults(): void {
     const visibleFolders = this.getVisibleScrollFolders();
+    const layout = this.computeColumnLayout();
 
     visibleFolders.forEach((folder: CliScanFoundFolder, index: number) => {
       const row = MARGINS.ROW_RESULTS_START + index;
-      this.printFolderRow(folder, row);
+      this.printFolderRow(folder, row, layout);
     });
+  }
+
+  private computeColumnLayout(): ResultColumnLayout {
+    return getColumnLayout(
+      getResultColumns(this.config),
+      this.terminal.columns,
+    );
   }
 
   private noResults(): void {
@@ -404,15 +418,15 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     });
   }
 
-  private printFolderRow(folder: CliScanFoundFolder, row: number): void {
+  private printFolderRow(
+    folder: CliScanFoundFolder,
+    row: number,
+    layout: ResultColumnLayout,
+  ): void {
     this.clearLine(row);
-    let { path, lastModification, size } = this.getFolderTexts(folder);
+    let path = this.getFolderPathText(folder, layout);
     const isRowSelected =
       row === this.getRealCursorPosY() && !this.isSearchInputMode;
-
-    lastModification = isRowSelected
-      ? pc.white(lastModification)
-      : pc.gray(lastModification);
 
     // Adjust column start based on select mode
     const pathColumnStart = this.selectMode
@@ -421,10 +435,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     if (isRowSelected) {
       path = pc[CURSOR_ROW_COLOR](path);
-      size = pc[CURSOR_ROW_COLOR](size);
-      lastModification = pc[CURSOR_ROW_COLOR](lastModification);
-
-      this.paintBgRow(row);
+      this.paintBgRow(row, layout);
     }
 
     if (folder.riskAnalysis?.isSensitive) {
@@ -450,14 +461,73 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       x: pathColumnStart,
       y: row,
     });
-    this.printAt(lastModification, {
-      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN - 4,
-      y: row,
-    });
-    this.printAt(size, {
-      x: this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN,
-      y: row,
-    });
+
+    for (const { column, x } of layout.positions) {
+      let cellText = this.getCellText(column.id, folder, isRowSelected);
+      if (isRowSelected) {
+        cellText = pc[CURSOR_ROW_COLOR](cellText);
+      }
+      this.printAt(cellText, { x, y: row });
+    }
+  }
+
+  private getCellText(
+    columnId: ResultColumnId,
+    folder: CliScanFoundFolder,
+    isRowSelected: boolean,
+  ): string {
+    switch (columnId) {
+      case 'age':
+        return this.getAgeCellText(folder, isRowSelected);
+      case 'size':
+        return this.getSizeCellText(folder);
+    }
+  }
+
+  private getAgeCellText(
+    folder: CliScanFoundFolder,
+    isRowSelected: boolean,
+  ): string {
+    const WIDTH = 4;
+    let text: string;
+
+    if (folder.riskAnalysis?.isSensitive) {
+      text = '';
+    } else if (
+      folder.modificationTime !== null &&
+      folder.modificationTime > 0
+    ) {
+      const days = Math.floor(
+        (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+      );
+      text = `${Math.min(days, 999)}d`;
+    } else {
+      text = '...';
+    }
+
+    const padded = text.padStart(WIDTH).slice(0, WIDTH);
+    return isRowSelected ? pc.white(padded) : pc.gray(padded);
+  }
+
+  private getSizeCellText(folder: CliScanFoundFolder): string {
+    const WIDTH = 9;
+    const alignSizeText = (text: string) =>
+      text
+        .padStart(WIDTH - 1)
+        .padEnd(WIDTH)
+        .slice(0, WIDTH);
+    const isCalculating = folder.size === 0 && folder.modificationTime === -1;
+    if (isCalculating) {
+      return pc.gray(alignSizeText('.....'));
+    }
+
+    const formattedSize = formatSize(
+      folder.size,
+      this.config.sizeUnit,
+      DECIMALS_SIZE,
+    );
+
+    return alignSizeText(formattedSize.text);
   }
 
   private rangeSelectedCursor(row: number): void {
@@ -473,65 +543,6 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       x: MARGINS.FOLDER_COLUMN_START - 1,
       y: row,
     });
-  }
-
-  private getFolderTexts(folder: CliScanFoundFolder): {
-    path: string;
-    size: string;
-    lastModification: string;
-  } {
-    const folderText = this.getFolderPathText(folder);
-    const formattedSize = formatSize(
-      folder.size,
-      this.config.sizeUnit,
-      DECIMALS_SIZE,
-    );
-    let daysSinceLastModification: string;
-
-    if (folder.modificationTime !== null && folder.modificationTime > 0) {
-      daysSinceLastModification = `${Math.floor(
-        (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
-      )}d`;
-    } else {
-      daysSinceLastModification = pc.gray('  ...');
-    }
-
-    if (folder.riskAnalysis?.isSensitive) {
-      daysSinceLastModification = '';
-    }
-
-    if (this.config.disableAge) {
-      daysSinceLastModification = pc.gray('  ...');
-    }
-
-    // Align to right
-    const alignMargin = 4 - daysSinceLastModification.length;
-    daysSinceLastModification =
-      ' '.repeat(alignMargin > 0 ? alignMargin : 0) + daysSinceLastModification;
-
-    const OFFSET_COLUMN = 9;
-    let folderSize = formattedSize.text;
-
-    // Right-align size text
-    const sizeLength = folderSize.length;
-    const spacePadding = ' '.repeat(Math.max(0, OFFSET_COLUMN - sizeLength));
-    folderSize = `${spacePadding}${folderSize}`;
-
-    // Only show "..." if size is exactly 0 AND modificationTime is -1 (not yet calculated)
-    // If size is 0 but modificationTime is set, then it's a truly empty folder
-    const isCalculating = folder.size === 0 && folder.modificationTime === -1;
-    let folderSizeText: string;
-    if (this.config.disableSize) {
-      folderSizeText = pc.gray('     ...');
-    } else {
-      folderSizeText = isCalculating ? pc.gray('   .....') : folderSize;
-    }
-
-    return {
-      path: folderText,
-      size: folderSizeText,
-      lastModification: daysSinceLastModification,
-    };
   }
 
   cursorUp(): void {
@@ -619,7 +630,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
   }
 
-  private getFolderPathText(folder: CliScanFoundFolder): string {
+  private getFolderPathText(
+    folder: CliScanFoundFolder,
+    layout: ResultColumnLayout,
+  ): string {
     let cutFrom = OVERFLOW_CUT_FROM;
     let text = folder.path;
     const ACTIONS = {
@@ -641,10 +655,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       ACTIONS[folder.status]();
     }
 
-    // Adjust text width based if select mode is enabled
     const columnEnd = this.selectMode
-      ? MARGINS.FOLDER_COLUMN_END + 1
-      : MARGINS.FOLDER_COLUMN_END;
+      ? layout.pathReservedWidth + 1
+      : layout.pathReservedWidth;
 
     text = this.consoleService.shortenText(
       text,
@@ -734,9 +747,12 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     );
   }
 
-  private paintBgRow(row: number): void {
+  private paintBgRow(row: number, layout: ResultColumnLayout): void {
     const startPaint = MARGINS.FOLDER_COLUMN_START;
-    const endPaint = this.terminal.columns - MARGINS.FOLDER_SIZE_COLUMN;
+    const endPaint =
+      layout.positions.length > 0
+        ? layout.firstColumnX
+        : this.terminal.columns - 1;
     let paintSpaces = '';
 
     for (let i = startPaint; i < endPaint; ++i) {

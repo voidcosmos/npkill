@@ -9,7 +9,6 @@ export const INFO_MSGS = {
   DELETED_FOLDER: '[DELETED] ',
   DELETING_FOLDER: '[..deleting..] ',
   ERROR_DELETING_FOLDER: '[ ERROR ] ',
-  HEADER_COLUMNS: 'Age    Size', // Δ (delta) for last_mod/age?
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +

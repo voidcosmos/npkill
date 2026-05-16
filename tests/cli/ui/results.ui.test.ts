@@ -26,6 +26,7 @@ class ResultsUi extends ResultsUiConstructor {}
 
 describe('ResultsUi', () => {
   let resultsUi: ResultsUi;
+  const ANSI_REGEX = /\u001b\[[0-9;]*m/g;
 
   const resultsServiceMock: ResultsService = {
     results: [],
@@ -69,6 +70,33 @@ describe('ResultsUi', () => {
       expect(stdoutWriteMock).toHaveBeenCalledWith(
         expect.stringContaining('path/folder/2'),
       );
+    });
+
+    it('should render age in days with the day suffix', () => {
+      const now = Math.floor(Date.now() / 1000);
+
+      const cellText = resultsUi['getAgeCellText'](
+        {
+          path: 'path/folder/1',
+          size: 1,
+          status: 'live',
+          modificationTime: now - 12 * 86400,
+        } as CliScanFoundFolder,
+        false,
+      );
+
+      expect(cellText.replace(ANSI_REGEX, '')).toBe(' 12d');
+    });
+
+    it('should reduce the visible gap before the size value', () => {
+      const cellText = resultsUi['getSizeCellText']({
+        path: 'path/folder/1',
+        size: 4.48,
+        status: 'live',
+        modificationTime: 1,
+      } as CliScanFoundFolder);
+
+      expect(cellText).toBe(' 4.48 GB ');
     });
 
     // eslint-disable-next-line quotes
