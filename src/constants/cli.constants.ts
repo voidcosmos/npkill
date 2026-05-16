@@ -97,20 +97,20 @@ export const OPTIONS: ICliOptions[] = [
     name: 'jsonSimple',
   },
   {
-    arg: ['--disable-size'],
+    arg: ['--no-size'],
     description:
       'Skip size and age calculation. Useful for faster scanning and deletion when space info is not needed.',
     name: 'disable-size',
   },
   {
-    arg: ['--disable-age'],
+    arg: ['--no-age'],
     description: 'Skip age (last modification time) calculation.',
     name: 'disable-age',
   },
   {
-    arg: ['--disable-stats'],
+    arg: ['--no-stats'],
     description:
-      'Skip both size and age calculation. Shortcut for --disable-size --disable-age.',
+      'Skip both size and age calculation. Shortcut for --no-size --no-age.',
     name: 'disable-stats',
   },
   {
