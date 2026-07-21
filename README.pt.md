@@ -25,7 +25,7 @@ Esta ferramenta permite que você liste as pastas _node_modules_ em seu sistema,
   - [Opções](#options)
   - [Exemplos](#examples)
 - [Configurar localmente](#setup-locally)
-- [Roteiro](#roadmap)
+- [Roadmap](#roadmap)
 - [Problemas conhecidos](#known-bugs)
 - [Contribuindo](#contributing)
 - [Compre-nos um café](#donations)
