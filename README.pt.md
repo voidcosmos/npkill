@@ -15,14 +15,7 @@
   <img src="/docs/npkill-demo-0.10.0.gif" alt="npkill demo GIF" />
 </p>
 
-Esta ferramenta permite que você liste as pastas _node_modules_ em seu sistema, bem como o espaço que ocupam. Então você pode selecionar quais deles deseja apagar para liberar espaço. ¡Yay!
-
-## i18n
-
-Estamos fazendo esforço para internacionalizar a documentação do Npkill. Aqui está uma lista das traduções disponíveis:
-
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
+Esta ferramenta permite que você liste as pastas _node_modules_ em seu sistema, bem como o espaço que ocupam. Então você pode selecionar quais deles deseja apagar para liberar espaço. Oba!
 
 ## Table of Contents
 
@@ -46,7 +39,7 @@ Estamos fazendo esforço para internacionalizar a documentação do Npkill. Aqui
 
 - **Último Uso do Espaço de Trabalho**: Verifique quando foi a última vez que você modificou um arquivo no espaço de trabalho (indicado na coluna **última_modificação**).
 
-- **Muito rápido:** O NPKILL é escrito em TypeScript, mas as pesquisas são realizadas em um nível baixo, melhorando muito o desempenho.
+- **Muito rápido:** O NPKILL é escrito em TypeScript, mas as pesquisas são realizadas em baixo nível, melhorando muito o desempenho.
 
 - **Fácil de usar:** Diga adeus aos comandos longos. Usar o npkill é tão simples quanto ler uma lista de seus node_modules e pressionar Delete para se livrar deles. Pode ser mais fácil do que isso? ;)
 
@@ -99,7 +92,7 @@ Para sair, use <kbd>Q</kbd> ou <kbd>Ctrl</kbd> + <kbd>c</kbd> se você estiver s
 | Comando                          | Descrição                                                                                                                                                           |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | -c, --bg-color                   | Troca a cor de destaque da linha. _(Disponível: **blue**, cyan, magenta, white, red e yellow)_                                                                      |
-| -d, --directory                  | Defina o diretório a partir do qual iniciar a pesquisa. Por padrão, o ponto de partida é a raiz is .                                                                |
+| -d, --directory                  | Defina o diretório a partir do qual iniciar a pesquisa. Por padrão, o ponto de partida é o diretório atual (.) .                                                                |
 | -D, --delete-all                 | Exclui automaticamente todos os node_modules encontrados. Recomendado para usar junto com `-x`                                                                      |
 | -e, --hide-errors                | Oculta erros                                                                                                                                                        |
 | -E, --exclude                    | Excluir diretórios da pesquisa (a lista de diretórios deve estar entre aspas duplas "", com cada diretório separado por vírgula ','). Exemplo: "ignorar1, ignorar2" |
@@ -117,7 +110,7 @@ Para sair, use <kbd>Q</kbd> ou <kbd>Ctrl</kbd> + <kbd>c</kbd> se você estiver s
 
 <a name="examples"></a>
 
-## Examples
+## Exemplos
 
 - Busque pastas **node_modules** no seu diretório de projetos:
 
@@ -129,7 +122,7 @@ cd ~/projetos
 npkill
 ```
 
-- Listar diretórios com o nome "dist" e mostrar erros, se houver algum:
+- Listar diretórios com o nome "dist" sem exibir erros (se houver algum):
 
 ```bash
 npkill --target dist -e
@@ -183,7 +176,7 @@ npm run start -- -f -e
 
 <a name="roadmap"></a>
 
-# :crystal_ball: Roteiro
+# :crystal_ball: Roadmap
 
 - [x] Lançamento 0.1.0 !
 - [x] Melhorias de código
@@ -216,14 +209,14 @@ npm run start -- -f -e
 
 # :revolving_hearts: Contribuindo
 
-Se você quer contribuir confira o [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+Se você quer contribuir, confira o [CONTRIBUTING.md](.github/CONTRIBUTING.pt.md)
 
 <a name="donations"></a>
 
 # :coffee: Compre-nos um café
 
 <img align="right" width="300" src="https://npkill.js.org/img/cat-donation-cup.png">
-Desenvolvemos o npkill em nosso tempo livre, porque somos apaixonados pelo setor de programação. Amanhã, gostaríamos de nos dedicar mais a isso, mas antes, temos um longo caminho a percorrer.
+Desenvolvemos o npkill em nosso tempo livre, porque somos apaixonados por programação. No futuro, gostaríamos de nos dedicar mais a isso, mas antes, temos um longo caminho a percorrer.
 
 Continuaremos a fazer as coisas de qualquer maneira, mas as doações são uma das muitas formas de apoiar o que fazemos.
 

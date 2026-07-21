@@ -221,7 +221,7 @@ let files: {
 }[] = [];
 
 npkill
-  .startScan$('/home/user/projects/', { target: '.nx' })
+  .startScan$('/home/user/projects/', { targets: ['.nx'] })
   .pipe(
     // Step 1: For each scan result, get the newest file
     mergeMap((scanResult) =>

@@ -17,15 +17,6 @@
 
 Bu araç, sisteminizdeki tüm _node_modules_ dizinlerini ve kapladıkları alanı listelemenizi sağlar. Daha sonra, hangilerini silmek istediğinizi seçerek yer açabilirsiniz. Yaşasın!
 
-## i18n
-
-Npkill dokümantasyonunu uluslararası hale getirmek için çaba gösteriyoruz. İşte mevcut çevirilerin listesi:
-
-- [Endonezce](./README.id.md)
-- [İspanyolca](./README.es.md)
-- [Portekizce](./README.pt.md)
-- [Türkçe](./README.tr.md)
-
 ## İçindekiler
 
 - [Özellikler](#features)

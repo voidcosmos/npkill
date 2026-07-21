@@ -1,5 +1,3 @@
-**_(this doc is under construction)_**
-
 # How to contribute on NPKILL 🎉
 
 I know that what I am going to say sounds like something typical, but I am sincerely glad that you are reading this, because that means that you are interested in helping to improve Npkill, _or you may simply be here out of curiosity `cof cof`_.
@@ -11,13 +9,13 @@ Anyway, you are sincerely welcome. I will try to explain the recommended guideli
 
 - Following this protocol helps to avoid working in vain. It would be a shame to dedicate hours to a pull request and have to reject it because there is already someone working on a similar issue.
 
--Unless they are minor and fast modifications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects)
+- Unless they are minor and fast modifications, try to let everyone know that you are modifying something by opening an issue for example, or consulting the [projects](https://github.com/voidcosmos/npkill/projects).
 
 - Change only the necessary lines for your modification. This will help to avoid conflicts, and in case of there being any, it will be easier to solve them.
 
-- Make sure you to run `npm install`, because some development packages are meant to maintain harmony. Prettier, for example, makes sure that in each commit the files are well indented, and Commitlint makes sure that your messages follow the convention.
+- Make sure to run `npm install`, because some development packages are meant to maintain harmony. Prettier, for example, makes sure that in each commit the files are well indented, and Commitlint makes sure that your messages follow the convention.
 
-- Whenever possible, write tests, tests and more tests! tests tests tests tests tests tests tests tests tests tests tests
+- Whenever possible, write tests, tests and more tests! tests tests tests tests tests tests tests tests tests tests tests.
 
 # New feature
 
@@ -35,7 +33,7 @@ Yay! Green light to work!
 
 6. Write code and create commits regularly following the [recommended convention]()
 
-7. Create a PULL REQUEST using **master as the base branch**.
+7. Create a PULL REQUEST using **main as the base branch**.
    As a title, use the same (or similar) one you used in the creation of the issue, and in the description, any information that you consider relevant next to the link of the issue and "close" text (example: close #issueNumber) [more info](https://help.github.com/en/articles/closing-issues-using-keywords)
 
 # Conventions
@@ -65,8 +63,8 @@ All commits must use a convention similar to `Angular`. [Here all the rules](htt
 It is important to apply the principles of clean code.
 
 If you use `VS Code`, there are some add-ons that I recommend:
--TSLint: Lets you know if you are breaking any of the _coding rules_ (do not use var, use const if possible, if some type has not been defined etc)
+- **TSLint**: Lets you know if you are breaking any of the _coding rules_ (do not use var, use const if possible, if some type has not been defined etc)
 
-- CodeMetrics: Calculates the complexity of the methods, to ensure that your functions do only 1 thing. (green is ok, yellow is meh, red is oh god why)
+- **CodeMetrics**: Calculates the complexity of the methods, to ensure that your functions do only one thing. (green is ok, yellow is meh, red is oh god why)
 
 If you use a different IDE, there are probably similar add-ons available.

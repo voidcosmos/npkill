@@ -6,11 +6,11 @@ While these directories are **generally safe to delete**, it all depends on thei
 
 - Profiles are opt-in via `--profiles` (comma-separated). Example: `--profiles node,python`.
 - Only directory base names are matched (the last path segment) (more advanced heuristics will be implemented in the future).
-- All targets below are rebuildable caches, dependencies, or compiled outputs. So doesnt should have any problem deleting it. But before delete, peek if is secure to remove for your case.
+- All targets below are rebuildable caches, dependencies, or compiled outputs, so they generally should not cause any issues when deleted. But before deleting, check whether it is safe to remove them in your case.
 
 Default behavior
 
-- By default (no `--profiles`), npkill use the `node` profile.
+- By default (no `--profiles`), npkill uses the `node` profile.
 
 Special profile: all
 

@@ -17,13 +17,6 @@
 
 Esta herramienta te permite listar cualquier directorio _node_modules_ que haya en tu sistema, además del espacio que ocupa. Entonces puedes seleccionar los que quieras borrar para liberar espacio. ¡Yay!
 
-## i18n
-
-Nos estamos esforzando por internacionalizar la documentación de Npkill. Aquí tienes una lista de las traducciones disponibles:
-
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
-
 ## Table of Contents
 
 - [Características](#features)

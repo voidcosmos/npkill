@@ -17,15 +17,6 @@
 
 Alat ini memungkinkan Anda untuk mencantumkan semua direktori _node_modules_ di sistem Anda, serta ruang yang mereka gunakan. Anda kemudian dapat memilih mana yang ingin Anda hapus untuk mengosongkan ruang penyimpanan. Yay!
 
-## i18n
-
-Kami berusaha untuk menerjemahkan dokumen Npkill ke berbagai bahasa. Berikut daftar terjemahan yang tersedia:
-
-- [Español](./README.es.md)
-- [Indonesian](./README.id.md)
-- [Portugis](./README.pt.md)
-- [Turki](./README.tr.md)
-
 ## Daftar Isi
 
 - [Fitur](#features)

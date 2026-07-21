@@ -74,7 +74,7 @@ npkill --config /path/to/your/config.json
 Absolute path from which the search will begin.
 
 ```json
-"rootdir": "/home/user/my-projects/"
+"rootDir": "/home/user/my-projects/"
 ```
 
 ### exclude
