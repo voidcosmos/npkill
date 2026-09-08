@@ -20,7 +20,9 @@
     "skipLibCheck": true,
     "paths": {
       "@core/*": ["src/core/*"]
-    }
+    },
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "__tests__"]
