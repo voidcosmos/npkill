@@ -2,7 +2,7 @@ import { Dir, Dirent } from 'fs';
 import { lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import { WorkerMessage, WorkerScanOptions } from './files.worker.service.js';
-import { join } from 'path';
+import { basename, isAbsolute, join, normalize } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
@@ -105,6 +105,8 @@ class FileWalker {
     targets: [''],
     exclude: [],
   };
+  private readonly excludedTargets = new Set<string>();
+  private substringExclusions: string[] = [];
 
   private readonly taskQueue: Task[] = [];
   private completedTasks = 0;
@@ -113,6 +115,22 @@ class FileWalker {
 
   setSearchConfig(params: WorkerScanOptions): void {
     this.searchConfig = params;
+    this.excludedTargets.clear();
+    this.substringExclusions = [];
+
+    for (const ex of params.exclude ?? []) {
+      const normalizedExclude = normalize(ex).replace(/[\\/]+$/, '');
+      if (params.targets.includes(normalizedExclude)) {
+        this.excludedTargets.add(join(params.rootPath, normalizedExclude));
+      } else if (
+        isAbsolute(normalizedExclude) &&
+        params.targets.includes(basename(normalizedExclude))
+      ) {
+        this.excludedTargets.add(normalizedExclude);
+      } else {
+        this.substringExclusions.push(ex);
+      }
+    }
   }
 
   stop(): void {
@@ -294,10 +312,10 @@ class FileWalker {
   }
 
   private isExcluded(path: string): boolean {
-    if (this.searchConfig.exclude == null) {
-      return false;
-    }
-    return this.searchConfig.exclude.some((ex) => path.includes(ex));
+    return (
+      this.excludedTargets.has(path) ||
+      this.substringExclusions.some((ex) => path.includes(ex))
+    );
   }
 
   private isTargetFolder(path: string): boolean {

@@ -157,6 +157,8 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 | --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                     |
 | -v, --version           | Show npkill version                                                                                                                                                           |
 
+When an exclusion matches a target name, such as `node_modules`, it excludes only that target directly under the starting directory. Use an absolute path to exclude a specific nested target.
+
 <a name="examples"></a>
 
 ## Examples
