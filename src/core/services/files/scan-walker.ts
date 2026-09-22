@@ -1,5 +1,5 @@
 import { Dirent, readdirSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, isAbsolute, join, normalize } from 'node:path';
 import { setImmediate as yieldToEventLoop } from 'node:timers/promises';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
 import { TargetMatcher } from '../targets/index.js';
@@ -20,6 +20,8 @@ interface ScanEntry {
  */
 export class ScanWalker {
   private readonly matcher: TargetMatcher;
+  private readonly excludedTargets = new Set<string>();
+  private readonly substringExclusions: string[] = [];
   private readonly localFolders: string[] = [];
   private found: string[] = [];
 
@@ -29,6 +31,20 @@ export class ScanWalker {
     private readonly onProgress: (found: string[]) => void,
   ) {
     this.matcher = new TargetMatcher(options.targets);
+
+    for (const ex of options.exclude ?? []) {
+      const normalizedExclude = normalize(ex).replace(/[\\/]+$/, '');
+      if (options.targets.includes(normalizedExclude)) {
+        this.excludedTargets.add(join(options.rootPath, normalizedExclude));
+      } else if (
+        isAbsolute(normalizedExclude) &&
+        options.targets.includes(basename(normalizedExclude))
+      ) {
+        this.excludedTargets.add(normalizedExclude);
+      } else {
+        this.substringExclusions.push(ex);
+      }
+    }
   }
 
   async run(): Promise<void> {
@@ -130,10 +146,10 @@ export class ScanWalker {
   }
 
   private isExcluded(path: string): boolean {
-    if (this.options.exclude == null) {
-      return false;
-    }
-    return this.options.exclude.some((ex) => path.includes(ex));
+    return (
+      this.excludedTargets.has(path) ||
+      this.substringExclusions.some((ex) => path.includes(ex))
+    );
   }
 
   private recognizeTargets(

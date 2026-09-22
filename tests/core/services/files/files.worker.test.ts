@@ -133,6 +133,30 @@ describe('FileWorker', () => {
   });
 
   describe('should exclude dir', () => {
+    it('does not exclude a similarly named sibling for an absolute target path', async () => {
+      createTree(['node_modules', 'node_modules-backup/node_modules']);
+
+      const found = await scan({
+        targets: ['node_modules'],
+        exclude: [join(root, 'node_modules')],
+      });
+
+      expect(found).toEqual([join('node_modules-backup', 'node_modules')]);
+    });
+
+    ['node_modules', './node_modules'].forEach((excluded) => {
+      it(`excludes only the root target for ${excluded}`, async () => {
+        createTree(['node_modules', 'project/node_modules']);
+
+        const found = await scan({
+          targets: ['node_modules'],
+          exclude: [excluded],
+        });
+
+        expect(found).toEqual([join('project', 'node_modules')]);
+      });
+    });
+
     it('when a simple pattern is given', async () => {
       createTree(['ignorethis/node_modules', 'keep/node_modules']);
 
