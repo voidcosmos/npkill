@@ -114,6 +114,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'disable-stats',
   },
   {
+    arg: ['--older-than'],
+    description:
+      'Only show results whose project has not been modified in more than the given number of days (based on age). Example: `--older-than 90`.',
+    name: 'older-than',
+  },
+  {
     arg: ['-v', '--version'],
     description: 'Show version.',
     name: 'version',
