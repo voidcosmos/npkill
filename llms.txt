@@ -1,0 +1,27 @@
+# npkill
+
+> A CLI tool to list `node_modules` directories anywhere on your system, show how much disk space each one uses, and interactively select and delete them to reclaim space.
+
+## Getting Started
+
+- [Installation](https://github.com/voidcosmos/npkill#installation): `npx npkill` (no install needed) or `npm i -g npkill`.
+- [Usage](https://github.com/voidcosmos/npkill#usage): Interactive controls (arrow keys, Space/Del to delete, search mode, multi-select mode).
+- [Options](https://github.com/voidcosmos/npkill#options): Full CLI flag reference (`-d`/`--directory`, `-e`/`--exclude`, `-x`/`--exclude-sensitive`, `--dry-run`, `--json`, `--json-stream`, etc.).
+- [Examples](https://github.com/voidcosmos/npkill#examples): Common invocations for scanning specific paths, excluding directories, and automated deletion.
+
+## Configuration
+
+- [Profiles](https://github.com/voidcosmos/npkill/blob/master/docs/profiles.md): Predefined target sets selectable with `-p`/`--profiles`.
+- [.npkillrc config file](https://github.com/voidcosmos/npkill/blob/master/docs/npkillrc.md): Persistent configuration, loaded from `./.npkillrc` or `~/.npkillrc`.
+- [JSON output](https://github.com/voidcosmos/npkill/blob/master/docs/json-output.md): `--json` and `--json-stream` formats for scripting/automation, with TypeScript interfaces.
+
+## Development
+
+- [Set up locally](https://github.com/voidcosmos/npkill#set-up-locally): Clone, `npm install`, `npm run start`.
+- [Node.js API](https://github.com/voidcosmos/npkill/blob/master/API.md): The `Npkill` interface (`startScan$`, `getSize$`, `delete$`, etc.) for embedding npkill in scripts.
+- [Contributing](https://github.com/voidcosmos/npkill/blob/master/.github/CONTRIBUTING.md): Contribution guidelines.
+
+## Optional
+
+- [Roadmap](https://github.com/voidcosmos/npkill#roadmap): Planned and completed features.
+- [License](https://github.com/voidcosmos/npkill/blob/master/LICENSE): MIT.
