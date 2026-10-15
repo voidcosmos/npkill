@@ -9,6 +9,7 @@ import {
  */
 export const OSServiceMap = {
   linux: UnixFilesService,
+  android: UnixFilesService,
   darwin: UnixFilesService,
   win32: WindowsFilesService,
 };

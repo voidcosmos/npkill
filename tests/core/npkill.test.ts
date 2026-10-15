@@ -16,7 +16,10 @@ import {
 } from '../../src/core/interfaces/folder.interface.js';
 import { LogEntry } from '../../src/core/interfaces/logger-service.interface.js';
 import { IsValidRootFolderResult } from '../../src/core/interfaces/npkill.interface.js';
-import { FileService } from '../../src/core/services/files/index.js';
+import {
+  FileService,
+  UnixFilesService,
+} from '../../src/core/services/files/index.js';
 
 describe('Npkill', () => {
   let npkill: Npkill;
@@ -91,6 +94,19 @@ describe('Npkill', () => {
     it('should initialize with default services when none provided', () => {
       const defaultNpkill = new Npkill();
       expect(defaultNpkill).toBeInstanceOf(Npkill);
+    });
+
+    it('should use the unix file service on android (Termux)', () => {
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', { value: 'android' });
+      try {
+        const androidNpkill = new Npkill();
+        expect(androidNpkill['services'].fileService).toBeInstanceOf(
+          UnixFilesService,
+        );
+      } finally {
+        Object.defineProperty(process, 'platform', { value: originalPlatform });
+      }
     });
   });
 
