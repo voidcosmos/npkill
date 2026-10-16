@@ -17,4 +17,6 @@ export interface IConfig {
   disableSize: boolean;
   disableAge: boolean;
   disableStats: boolean;
+  /** Only show results whose project is older than this many days. 0 = disabled. */
+  olderThan: number;
 }

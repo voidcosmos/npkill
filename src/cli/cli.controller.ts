@@ -13,7 +13,7 @@ import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { filter, mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
 import { FOLDER_SORT } from '../constants/sort.result.js';
@@ -43,6 +43,7 @@ import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
 import { getFileContent } from '../utils/get-file-content.js';
+import { isOlderThan } from '../utils/is-older-than.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 import { ScanService } from './services/scan.service.js';
 import { JsonOutputService } from './services/json-output.service.js';
@@ -552,6 +553,22 @@ export class CliController {
       this.config.disableAge = true;
     }
 
+    if (options.isTrue('older-than')) {
+      const olderThan = options.getString('older-than');
+      if (!/^\d+$/.test(olderThan) || Number(olderThan) <= 0) {
+        this.uiService.print(ERROR_MSG.INVALID_OLDER_THAN);
+        this.logger.error(ERROR_MSG.INVALID_OLDER_THAN);
+        this.exitWithError();
+      }
+      this.config.olderThan = Number(olderThan);
+    }
+
+    if (this.config.olderThan > 0 && this.config.disableAge) {
+      this.uiService.print(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
+      this.logger.error(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
+      this.exitWithError();
+    }
+
     if (this.config.jsonStream && this.config.jsonSimple) {
       this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
       this.exitWithError();
@@ -751,6 +768,7 @@ export class CliController {
             }),
           10, // Limit to 10 concurrent stat calculations at a time
         ),
+        filter((folder) => this.passesAgeFilter(folder)),
         tap((folder) => this.jsonOutputService.processResult(folder)),
       )
       .subscribe({
@@ -808,12 +826,13 @@ export class CliController {
 
   private processNodeFolderForUi(nodeFolder: CliScanFoundFolder): void {
     this.searchStatus.newResult();
-    this.resultsService.addResult(nodeFolder);
 
-    if (this.config.sortBy === 'path') {
-      this.resultsService.sortResults(this.config.sortBy);
-      this.uiResults.clear();
+    // The age is not known yet, so wait for the stats before showing it.
+    if (this.isFilteringByAge()) {
+      return;
     }
+
+    this.addResultToUi(nodeFolder);
 
     if (this.config.disableSize && this.config.deleteAll) {
       this.deleteFolder(nodeFolder);
@@ -824,11 +843,37 @@ export class CliController {
 
   private processFolderStatsForUi(folder: CliScanFoundFolder): void {
     this.searchStatus.completeStatCalculation();
+
+    const passesAgeFilter = this.passesAgeFilter(folder);
+    if (this.isFilteringByAge() && passesAgeFilter) {
+      this.addResultToUi(folder);
+    }
+
     this.finishFolderStats();
 
-    if (this.config.deleteAll) {
+    if (this.config.deleteAll && passesAgeFilter) {
       this.deleteFolder(folder);
     }
+  }
+
+  private addResultToUi(folder: CliScanFoundFolder): void {
+    this.resultsService.addResult(folder);
+
+    if (this.config.sortBy === 'path') {
+      this.resultsService.sortResults(this.config.sortBy);
+      this.uiResults.clear();
+    }
+  }
+
+  private isFilteringByAge(): boolean {
+    return this.config.olderThan > 0;
+  }
+
+  private passesAgeFilter(folder: CliScanFoundFolder): boolean {
+    return (
+      !this.isFilteringByAge() ||
+      isOlderThan(folder.modificationTime, this.config.olderThan)
+    );
   }
 
   private finishFolderStats(): void {

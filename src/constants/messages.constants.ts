@@ -38,4 +38,8 @@ export const ERROR_MSG = {
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
   CANT_USE_BOTH_JSON_OPTIONS:
     'Cannot use both --json and --json-stream options simultaneously.',
+  INVALID_OLDER_THAN:
+    'Invalid --older-than value. It must be a positive whole number of days (e.g. --older-than 90).',
+  CANT_USE_OLDER_THAN_WITHOUT_AGE:
+    '--older-than needs the age of each result, so it cannot be used with --no-age or --no-stats.',
 };

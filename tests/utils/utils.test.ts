@@ -5,6 +5,7 @@ import {
   formatSize,
 } from '../../src/utils/unit-conversions.js';
 import { isSafeToDelete } from '../../src/utils/is-safe-to-delete.js';
+import { isOlderThan } from '../../src/utils/is-older-than.js';
 
 describe('unit-conversions', () => {
   it('#convertBytesToKB', () => {
@@ -97,5 +98,27 @@ describe('is-safe-to-delete', () => {
       isSafeToDelete('/home/user/.angular', [...target, '.angular']),
     ).toBeTruthy();
     expect(isSafeToDelete('/home/user/dIst', [...target, 'dIst'])).toBeTruthy();
+  });
+});
+
+describe('is-older-than', () => {
+  const now = new Date('2026-10-01T00:00:00Z').getTime();
+  const daysAgo = (days: number) => now / 1000 - days * 86400;
+
+  it('should return true when the result is older than the given days', () => {
+    expect(isOlderThan(daysAgo(91), 90, now)).toBe(true);
+    expect(isOlderThan(daysAgo(365), 90, now)).toBe(true);
+  });
+
+  it('should return false when the result is not older than the given days', () => {
+    expect(isOlderThan(daysAgo(89), 90, now)).toBe(false);
+    expect(isOlderThan(daysAgo(90), 90, now)).toBe(false);
+    expect(isOlderThan(daysAgo(0), 90, now)).toBe(false);
+  });
+
+  it('should return false when the age is unknown', () => {
+    expect(isOlderThan(-1, 90, now)).toBe(false);
+    expect(isOlderThan(0, 90, now)).toBe(false);
+    expect(isOlderThan(1, 90, now)).toBe(false);
   });
 });

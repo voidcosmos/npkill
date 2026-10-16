@@ -149,6 +149,7 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 | -h, --help, ?           | Show help page                                                                                                                                                                |
 | -nu, --no-check-update  | Don't check for updates on startup                                                                                                                                            |
 | -s, --sort              | Sort results by: `size`, `path` or `age`                                                                                                                                      |
+| --older-than            | Only show results whose project has not been modified in more than the given number of days (see the `last_mod` column). Example: `--older-than 90`.                          |
 | -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`. |
 | -x, --exclude-sensitive | Exclude sensitive directories.                                                                                                                                                |
 | -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                       |
@@ -175,6 +176,12 @@ npkill
 
 ```bash
 npkill -d 'projects' --exclude "progress, ignore-this"
+```
+
+- Automatically delete all node_modules from projects you have not touched in the last 90 days:
+
+```bash
+npkill -d ~/projects --older-than 90 --delete-all --targets node_modules
 ```
 
 - Automatically delete all node_modules that have sneaked into your backups:
