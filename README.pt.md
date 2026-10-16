@@ -22,7 +22,10 @@ Esta ferramenta permite que você liste as pastas _node_modules_ em seu sistema,
 Estamos fazendo esforço para internacionalizar a documentação do Npkill. Aqui está uma lista das traduções disponíveis:
 
 - [Español](./README.es.md)
+- [Français](./README.fr.md)
 - [Português](./README.pt.md)
+- [Indonesian](./README.id.md)
+- [Turkish](./README.tr.md)
 
 ## Table of Contents
 
