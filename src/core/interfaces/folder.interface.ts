@@ -29,7 +29,7 @@ export interface ScanFoundFolder {
 export interface ScanOptions {
   /** Target directories to scan for matching folders. */
   targets: string[];
-  /** Array of directory paths to exclude from the scan. */
+  /** Array of directory patterns to exclude from the scan, relative to the scan root unless absolute. */
   exclude?: string[];
   /** Criteria for sorting scan results. */
   sortBy?: SortBy;
