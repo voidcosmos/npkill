@@ -2,15 +2,20 @@ import { Dir, Dirent } from 'fs';
 import { lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import { WorkerMessage, WorkerScanOptions } from './files.worker.service.js';
-import { basename, isAbsolute, join, normalize } from 'path';
+import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
+import {
+  type CompiledExclusions,
+  compileExclusions,
+  isExcludedDirectory,
+} from './exclude-patterns.js';
 
 enum ETaskOperation {
-  'explore',
-  'getFolderSize',
-  'getFolderSizeChild',
+  explore,
+  getFolderSize,
+  getFolderSizeChild,
 }
 
 interface Task {
@@ -105,8 +110,7 @@ class FileWalker {
     targets: [''],
     exclude: [],
   };
-  private readonly excludedTargets = new Set<string>();
-  private substringExclusions: string[] = [];
+  private exclusions!: CompiledExclusions;
 
   private readonly taskQueue: Task[] = [];
   private completedTasks = 0;
@@ -114,23 +118,9 @@ class FileWalker {
   private shouldStop = false;
 
   setSearchConfig(params: WorkerScanOptions): void {
+    const exclusions = compileExclusions(params.rootPath, params.exclude);
     this.searchConfig = params;
-    this.excludedTargets.clear();
-    this.substringExclusions = [];
-
-    for (const ex of params.exclude ?? []) {
-      const normalizedExclude = normalize(ex).replace(/[\\/]+$/, '');
-      if (params.targets.includes(normalizedExclude)) {
-        this.excludedTargets.add(join(params.rootPath, normalizedExclude));
-      } else if (
-        isAbsolute(normalizedExclude) &&
-        params.targets.includes(basename(normalizedExclude))
-      ) {
-        this.excludedTargets.add(normalizedExclude);
-      } else {
-        this.substringExclusions.push(ex);
-      }
-    }
+    this.exclusions = exclusions;
   }
 
   stop(): void {
@@ -169,12 +159,15 @@ class FileWalker {
       await this.analizeDir(path, dir);
     } catch {
       this.completeTask();
+      // Every dispatched explore job needs a reply, including unreadable or
+      // removed directories, so the coordinator can finish its job count.
+      this.events.emit('newResult', { results: [] });
     }
   }
 
   private async analizeDir(path: string, dir: Dir): Promise<void> {
     const results = [];
-    let entry: Dirent | null = null;
+    let entry: Dirent | null;
 
     while ((entry = await dir.read().catch(() => null)) != null) {
       this.newDirEntry(path, entry, results);
@@ -301,7 +294,7 @@ class FileWalker {
 
     const subpath = join(path, entry.name);
 
-    if (this.isExcluded(subpath)) {
+    if (isExcludedDirectory(subpath, this.exclusions)) {
       return;
     }
 
@@ -309,13 +302,6 @@ class FileWalker {
       path: subpath,
       isTarget,
     });
-  }
-
-  private isExcluded(path: string): boolean {
-    return (
-      this.excludedTargets.has(path) ||
-      this.substringExclusions.some((ex) => path.includes(ex))
-    );
   }
 
   private isTargetFolder(path: string): boolean {
