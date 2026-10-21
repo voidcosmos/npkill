@@ -41,7 +41,6 @@ import { UiService } from './services/ui.service.js';
 import _dirname from '../dirname.js';
 import pc from 'picocolors';
 import { homedir } from 'os';
-import path from 'path';
 import openExplorer from 'open-file-explorer';
 import { Npkill, ConfigService, ProfilesService } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
@@ -455,8 +454,7 @@ export class CliController {
       const userExcludeList = this.consoleService
         .splitData(this.consoleService.replaceString(exclude, '"', ''), ',')
         .map((path) => path.trim())
-        .filter(Boolean)
-        .map(path.normalize);
+        .filter(Boolean);
 
       // Add custom filters to the default exclude list.
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
