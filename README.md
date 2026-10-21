@@ -136,6 +136,7 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 
 ## Options
 
+<!-- prettier-ignore -->
 | ARGUMENT                | DESCRIPTION                                                                                                                                                                   |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.         |
@@ -143,7 +144,7 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 | -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                              |
 | -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`.                                                                                     |
 | -e, --hide-errors       | Hide errors if any                                                                                                                                                            |
-| -E, --exclude           | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                |
+| -E, --exclude | Skip matching directories and their contents. Separate patterns with commas. Relative paths start at the scan root (`-d` if set); matches use whole directory names.<br>• `name`: any depth<br>• `./name`: directly below the scan root<br>• `parent/name`: that path below the scan root<br>• `**/parent/name`: that path at any depth<br>• `/absolute/path`: exactly that directory (Windows drive and UNC paths also work).<br>Only `**/` acts as a wildcard; unescaped `*` and `?` are rejected. On Unix, quote patterns and use `\*` or `\?` for literal characters (`\\` for a literal backslash). A trailing slash is optional. |
 | -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                    |
 | --size-unit             | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).           |
 | -h, --help, ?           | Show help page                                                                                                                                                                |
@@ -156,8 +157,6 @@ After pressing <kbd>V</kbd> to enter range selection mode:
 | --json                  | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                    |
 | --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                     |
 | -v, --version           | Show npkill version                                                                                                                                                           |
-
-When an exclusion matches a target name, such as `node_modules`, it excludes only that target directly under the starting directory. Use an absolute path to exclude a specific nested target.
 
 <a name="examples"></a>
 
