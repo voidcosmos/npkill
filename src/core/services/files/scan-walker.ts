@@ -1,8 +1,13 @@
 import { Dirent, readdirSync } from 'node:fs';
-import { basename, isAbsolute, join, normalize } from 'node:path';
+import { basename, join } from 'node:path';
 import { setImmediate as yieldToEventLoop } from 'node:timers/promises';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
 import { TargetMatcher } from '../targets/index.js';
+import {
+  type CompiledExclusions,
+  compileExclusions,
+  isExcludedDirectory,
+} from './exclude-patterns.js';
 import { WorkerScanOptions } from './files.worker.service.js';
 import { SharedScan } from './shared-scan.js';
 
@@ -20,8 +25,7 @@ interface ScanEntry {
  */
 export class ScanWalker {
   private readonly matcher: TargetMatcher;
-  private readonly excludedTargets = new Set<string>();
-  private readonly substringExclusions: string[] = [];
+  private readonly exclusions: CompiledExclusions;
   private readonly localFolders: string[] = [];
   private found: string[] = [];
 
@@ -31,20 +35,7 @@ export class ScanWalker {
     private readonly onProgress: (found: string[]) => void,
   ) {
     this.matcher = new TargetMatcher(options.targets);
-
-    for (const ex of options.exclude ?? []) {
-      const normalizedExclude = normalize(ex).replace(/[\\/]+$/, '');
-      if (options.targets.includes(normalizedExclude)) {
-        this.excludedTargets.add(join(options.rootPath, normalizedExclude));
-      } else if (
-        isAbsolute(normalizedExclude) &&
-        options.targets.includes(basename(normalizedExclude))
-      ) {
-        this.excludedTargets.add(normalizedExclude);
-      } else {
-        this.substringExclusions.push(ex);
-      }
-    }
+    this.exclusions = compileExclusions(options.rootPath, options.exclude);
   }
 
   async run(): Promise<void> {
@@ -131,7 +122,7 @@ export class ScanWalker {
 
     const subpath = join(path, entry.name);
 
-    if (this.isExcluded(subpath)) {
+    if (isExcludedDirectory(subpath, this.exclusions)) {
       return;
     }
 
@@ -143,13 +134,6 @@ export class ScanWalker {
 
   private isIgnored(name: string): boolean {
     return this.options.useDefaultIgnore !== false && GLOBAL_IGNORE.has(name);
-  }
-
-  private isExcluded(path: string): boolean {
-    return (
-      this.excludedTargets.has(path) ||
-      this.substringExclusions.some((ex) => path.includes(ex))
-    );
   }
 
   private recognizeTargets(
