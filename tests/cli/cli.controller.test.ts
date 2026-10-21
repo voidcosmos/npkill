@@ -130,6 +130,9 @@ describe('CliController test', () => {
     getParameters: () => new StartParameters(),
     isRunningBuild: () => false,
     startListenKeyEvents: jest.fn(),
+    splitData: (data: string, separator: string) => data.split(separator),
+    replaceString: (data: string, from: string, to: string) =>
+      data.replace(from, to),
   };
 
   const jsonOutputServiceMock = {
@@ -259,6 +262,7 @@ describe('CliController test', () => {
       DEFAULT_CONFIG.disableSize = false;
       DEFAULT_CONFIG.disableDefaultIgnore = false;
       DEFAULT_CONFIG.yes = false;
+      DEFAULT_CONFIG.exclude = [];
     });
 
     it('#showHelp should called if --help flag is present and exit', () => {
@@ -295,6 +299,21 @@ describe('CliController test', () => {
       });
 
       // TODO test that check sortBy property is changed
+    });
+
+    it('preserves exclusion prefixes when parsing CLI arguments', () => {
+      mockParameters({
+        exclude: String.raw`./node_modules,project/test,**/project/test,foo\*,what\?`,
+      });
+      cliController.init();
+
+      expect(DEFAULT_CONFIG.exclude).toEqual([
+        './node_modules',
+        'project/test',
+        '**/project/test',
+        String.raw`foo\*`,
+        String.raw`what\?`,
+      ]);
     });
 
     describe('--delete-all', () => {

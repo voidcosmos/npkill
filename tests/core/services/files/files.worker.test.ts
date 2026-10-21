@@ -15,7 +15,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join, relative } from 'node:path';
+import { join, relative } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
 import { EVENTS } from '../../../../src/constants/workers.constants.js';
@@ -145,7 +145,7 @@ describe('FileWorker', () => {
     });
 
     ['node_modules', './node_modules'].forEach((excluded) => {
-      it(`excludes only the root target for ${excluded}`, async () => {
+      it(`applies the expected scope for ${excluded}`, async () => {
         createTree(['node_modules', 'project/node_modules']);
 
         const found = await scan({
@@ -153,7 +153,9 @@ describe('FileWorker', () => {
           exclude: [excluded],
         });
 
-        expect(found).toEqual([join('project', 'node_modules')]);
+        expect(found).toEqual(
+          excluded === 'node_modules' ? [] : [join('project', 'node_modules')],
+        );
       });
     });
 
@@ -168,12 +170,12 @@ describe('FileWorker', () => {
       expect(found).toEqual([join('keep', 'node_modules')]);
     });
 
-    it('when a part of the path is given', async () => {
+    it('excludes an exact relative directory path', async () => {
       createTree(['ignorethis/node_modules', 'other/ignorethis/node_modules']);
 
       const found = await scan({
         targets: ['node_modules'],
-        exclude: [join(basename(root), 'ignorethis')],
+        exclude: ['./ignorethis'],
       });
 
       expect(found).toEqual([join('other', 'ignorethis', 'node_modules')]);
