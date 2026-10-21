@@ -41,6 +41,7 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../../../../src/core/services/stream.service.js';
 import { FileWorkerService } from '../../../../src/core/services/files/index.js';
 import os from 'os';
+import { resolve } from 'node:path';
 
 jest.mock('../../../../src/dirname.js', () => {
   return { __esModule: true };
@@ -56,6 +57,41 @@ describe('File Service', () => {
       new StreamService(),
       fileWorkerService as unknown as FileWorkerService,
     );
+  });
+
+  describe('listDir', () => {
+    it('does not start a scan when the root itself is excluded', () => {
+      const worker = { startScan: jest.fn() };
+      const service = new UnixFilesService(
+        new StreamService(),
+        worker as unknown as FileWorkerService,
+      );
+      const root = resolve('scan-root', 'node_modules');
+      const completed = jest.fn();
+
+      service
+        .listDir(root, { targets: ['node_modules'], exclude: ['node_modules'] })
+        .subscribe({ complete: completed });
+
+      expect(worker.startScan).not.toHaveBeenCalled();
+      expect(completed).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects invalid exclusions before starting a scan', () => {
+      const worker = { startScan: jest.fn() };
+      const service = new UnixFilesService(
+        new StreamService(),
+        worker as unknown as FileWorkerService,
+      );
+
+      expect(() =>
+        service.listDir(resolve('scan-root'), {
+          targets: ['node_modules'],
+          exclude: ['foo*'],
+        }),
+      ).toThrow('Unsupported exclude pattern: foo*');
+      expect(worker.startScan).not.toHaveBeenCalled();
+    });
   });
 
   describe('isValidRootFolder', () => {
