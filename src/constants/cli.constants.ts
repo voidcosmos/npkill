@@ -38,7 +38,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-E', '--exclude'],
     description:
-      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1,ignore2"',
+      'Exclude directories: name matches anywhere, ./path or path/subpath matches from the scan root, **/path matches anywhere, absolute path matches exactly. Separate multiple patterns with commas. On Unix, backslash escapes literal *, ?, and backslash.',
     name: 'exclude',
   },
   {

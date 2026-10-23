@@ -160,7 +160,7 @@ export class FileWorkerService {
     if (type === EVENTS.scanResult) {
       const results: Array<{ path: string; isTarget: boolean }> = value.results;
       const workerId: number = value.workerId;
-      this.workersPendingJobs[workerId] = value.pending;
+      this.workersPendingJobs[workerId]--;
 
       results.forEach((result) => {
         const { path, isTarget } = result;
@@ -181,7 +181,7 @@ export class FileWorkerService {
     if (type === EVENTS.GetSizeResult) {
       const result: { path: string; size: number } = value.results;
       const workerId: number = value.workerId;
-      this.workersPendingJobs[workerId] = value.pending;
+      this.workersPendingJobs[workerId]--;
 
       const index = this.getSizePendings.findIndex(
         (pending) => pending.path === result.path,
@@ -238,6 +238,9 @@ export class FileWorkerService {
 
   private instantiateWorkers(amount: number): void {
     this.logger.info(`Instantiating ${amount} workers..`);
+    // Track jobs dispatched by this process. Worker pending snapshots can be
+    // stale by the time they arrive, after more jobs have been dispatched.
+    this.workersPendingJobs = Array(amount).fill(0);
     for (let i = 0; i < amount; i++) {
       const { port1, port2 } = new MessageChannel();
       const worker = new Worker(this.getWorkerPath());

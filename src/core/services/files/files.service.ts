@@ -12,6 +12,7 @@ import { readdir, stat } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
 import { IsValidRootFolderResult } from '@core/interfaces/npkill.interface.js';
+import { compileExclusions, isExcludedDirectory } from './exclude-patterns.js';
 
 export abstract class FileService implements IFileService {
   public fileWorkerService: FileWorkerService;
@@ -23,7 +24,12 @@ export abstract class FileService implements IFileService {
   abstract deleteDir(path: string): Promise<boolean>;
 
   listDir(path: string, params: ScanOptions): Observable<string> {
+    const exclusions = compileExclusions(path, params.exclude);
     const stream$ = new Subject<string>();
+    if (isExcludedDirectory(path, exclusions)) {
+      stream$.complete();
+      return stream$;
+    }
     this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
     return stream$;
   }

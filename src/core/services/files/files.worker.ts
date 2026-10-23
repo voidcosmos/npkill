@@ -6,11 +6,16 @@ import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
+import {
+  type CompiledExclusions,
+  compileExclusions,
+  isExcludedDirectory,
+} from './exclude-patterns.js';
 
 enum ETaskOperation {
-  'explore',
-  'getFolderSize',
-  'getFolderSizeChild',
+  explore,
+  getFolderSize,
+  getFolderSizeChild,
 }
 
 interface Task {
@@ -105,6 +110,7 @@ class FileWalker {
     targets: [''],
     exclude: [],
   };
+  private exclusions!: CompiledExclusions;
 
   private readonly taskQueue: Task[] = [];
   private completedTasks = 0;
@@ -112,7 +118,9 @@ class FileWalker {
   private shouldStop = false;
 
   setSearchConfig(params: WorkerScanOptions): void {
+    const exclusions = compileExclusions(params.rootPath, params.exclude);
     this.searchConfig = params;
+    this.exclusions = exclusions;
   }
 
   stop(): void {
@@ -151,12 +159,15 @@ class FileWalker {
       await this.analizeDir(path, dir);
     } catch {
       this.completeTask();
+      // Every dispatched explore job needs a reply, including unreadable or
+      // removed directories, so the coordinator can finish its job count.
+      this.events.emit('newResult', { results: [] });
     }
   }
 
   private async analizeDir(path: string, dir: Dir): Promise<void> {
     const results = [];
-    let entry: Dirent | null = null;
+    let entry: Dirent | null;
 
     while ((entry = await dir.read().catch(() => null)) != null) {
       this.newDirEntry(path, entry, results);
@@ -283,7 +294,7 @@ class FileWalker {
 
     const subpath = join(path, entry.name);
 
-    if (this.isExcluded(subpath)) {
+    if (isExcludedDirectory(subpath, this.exclusions)) {
       return;
     }
 
@@ -291,13 +302,6 @@ class FileWalker {
       path: subpath,
       isTarget,
     });
-  }
-
-  private isExcluded(path: string): boolean {
-    if (this.searchConfig.exclude == null) {
-      return false;
-    }
-    return this.searchConfig.exclude.some((ex) => path.includes(ex));
   }
 
   private isTargetFolder(path: string): boolean {

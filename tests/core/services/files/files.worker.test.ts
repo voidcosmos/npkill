@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import EventEmitter from 'node:events';
 import { Dir } from 'node:fs';
-import { join, normalize } from 'node:path';
+import { join, resolve } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
 import { GLOBAL_IGNORE } from '../../../../src/core/constants/global-ignored.constants.js';
@@ -17,6 +17,7 @@ let dirEntriesMock: {
   isDirectory: () => void;
   isSymbolicLink: () => void;
 }[] = [];
+let opendirError: Error | null = null;
 const basePath = '/home/user/';
 const target = 'node_modules';
 
@@ -54,7 +55,8 @@ const mockDir = {
 } as unknown as Dir;
 
 jest.unstable_mockModule('fs/promises', () => ({
-  opendir: () => new Promise((resolve) => resolve(mockDir)),
+  opendir: () =>
+    opendirError ? Promise.reject(opendirError) : Promise.resolve(mockDir),
   lstat: () =>
     Promise.resolve({
       blocks: 1,
@@ -77,11 +79,12 @@ describe('FileWorker', () => {
   const setExploreConfig = (params: ScanOptions) => {
     tunnelEmitter.postMessage({
       type: EVENTS.exploreConfig,
-      value: params,
+      value: { ...params, rootPath: basePath },
     });
   };
 
   beforeEach(async () => {
+    opendirError = null;
     await import('../../../../src/core/services/files/files.worker.js');
 
     const { port1, port2 } = new MessageChannel();
@@ -103,6 +106,24 @@ describe('FileWorker', () => {
   });
 
   // it('should plant a listener over the passed MessagePort',()=>{})
+
+  it('reports an empty result when a directory cannot be opened', (done) => {
+    setExploreConfig({ targets: [target] });
+    opendirError = new Error('ENOENT');
+
+    tunnelEmitter.on('message', (message) => {
+      if (message.type === EVENTS.scanResult) {
+        expect(message.value.results).toEqual([]);
+        expect(message.value.pending).toBe(0);
+        done();
+      }
+    });
+
+    tunnelEmitter.postMessage({
+      type: EVENTS.explore,
+      value: { path: '/missing' },
+    });
+  });
 
   it('should return only sub-directories from given parent', (done) => {
     setExploreConfig({ targets: [target] });
@@ -230,6 +251,83 @@ describe('FileWorker', () => {
   });
 
   describe('should exclude dir', () => {
+    it('does not exclude a similarly named sibling for an absolute target path', (done) => {
+      const rootPath = resolve('scan-root');
+      tunnelEmitter.postMessage({
+        type: EVENTS.exploreConfig,
+        value: {
+          rootPath,
+          targets: [target],
+          exclude: [join(rootPath, target)],
+        },
+      });
+      dirEntriesMock = ['node_modules', 'node_modules-backup'].map((name) => ({
+        name,
+        isDirectory: () => true,
+        isSymbolicLink: () => false,
+      }));
+
+      tunnelEmitter.on('message', (message) => {
+        if (message.type === EVENTS.scanResult) {
+          expect(message.value.results).toEqual([
+            { path: join(rootPath, 'node_modules-backup'), isTarget: false },
+          ]);
+          done();
+        }
+      });
+      tunnelEmitter.postMessage({
+        type: EVENTS.explore,
+        value: { path: rootPath },
+      });
+    });
+
+    ['node_modules', './node_modules'].forEach((excluded) => {
+      it(`applies the expected scope for ${excluded}`, (done) => {
+        setExploreConfig({ targets: [target], exclude: [excluded] });
+        const directory = (name: string) => ({
+          name,
+          isDirectory: () => true,
+          isSymbolicLink: () => false,
+        });
+        dirEntriesMock = [directory('node_modules'), directory('project')];
+
+        let scans = 0;
+        tunnelEmitter.on('message', (message) => {
+          if (message.type !== EVENTS.scanResult) {
+            return;
+          }
+
+          if (scans++ === 0) {
+            expect(message.value.results).toEqual([
+              { path: join(basePath, 'project'), isTarget: false },
+            ]);
+            dirEntriesMock = [directory('node_modules')];
+            tunnelEmitter.postMessage({
+              type: EVENTS.explore,
+              value: { path: join(basePath, 'project') },
+            });
+          } else {
+            expect(message.value.results).toEqual(
+              excluded === 'node_modules'
+                ? []
+                : [
+                    {
+                      path: join(basePath, 'project', 'node_modules'),
+                      isTarget: true,
+                    },
+                  ],
+            );
+            done();
+          }
+        });
+
+        tunnelEmitter.postMessage({
+          type: EVENTS.explore,
+          value: { path: basePath },
+        });
+      });
+    });
+
     it('when a simple patterns is gived', (done) => {
       const excluded = ['ignorethis', 'andignorethis'];
       setExploreConfig({
@@ -292,11 +390,11 @@ describe('FileWorker', () => {
       });
     });
 
-    it('when a part of path is gived', (done) => {
-      const excluded = ['user/ignorethis'];
+    it('excludes an exact relative directory path', (done) => {
+      const excluded = ['./ignorethis'];
       setExploreConfig({
         targets: ['node_modules'],
-        exclude: excluded.map(normalize),
+        exclude: excluded,
       });
       const subDirectories = [
         {
