@@ -52,14 +52,14 @@
     "picocolors": "1.1.1"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "20.5.3",
+    "@commitlint/config-conventional": "21.2.4",
     "@eslint/js": "10.0.1",
     "@jest/globals": "30.5.1",
     "@stryker-mutator/core": "9.6.1",
     "@stryker-mutator/jest-runner": "9.6.1",
     "@types/jest": "30.0.0",
     "@types/node": "20.19.43",
-    "commitlint": "20.5.3",
+    "commitlint": "21.2.4",
     "del": "8.0.1",
     "eslint": "10.10.0",
     "eslint-config-prettier": "10.1.8",
@@ -80,8 +80,12 @@
     "rxjs": "^7.8.2"
   },
   "overrides": {
-    "tmp": "^0.2.7",
-    "qs": "^6.16.0"
+    "tmp": "0.2.7",
+    "qs": "6.17.1",
+    "fast-uri": "3.1.9",
+    "zod": "4.6.7",
+    "glob": "14.0.3",
+    "minimatch": "11.0.3"
   },
   "husky": {
     "hooks": {
