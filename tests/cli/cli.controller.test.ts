@@ -105,8 +105,8 @@ describe('CliController test', () => {
     getFileContent: jest.fn().mockReturnValue('{}'),
     isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
     isSafeToDelete: jest.fn().mockReturnValue(true),
-    deleteDir: filesServiceDeleteMock,
-    fakeDeleteDir: filesServiceFakeDeleteMock,
+    delete: filesServiceDeleteMock,
+    fakeDelete: filesServiceFakeDeleteMock,
   };
   const spinnerServiceMock = jest.fn();
   const updateServiceMock = jest.fn();
@@ -128,7 +128,7 @@ describe('CliController test', () => {
   };
   const scanServiceMock = {
     scan: jest.fn(),
-    calculateFolderStats: jest.fn(),
+    calculateResultStats: jest.fn(),
   };
   const consoleServiceMock = {
     getParameters: () => new StartParameters(),
@@ -307,7 +307,7 @@ describe('CliController test', () => {
       it('Should show a warning before start scan with --targets defined', () => {
         mockParameters({
           'delete-all': true,
-          'target-folders': 'node_modules',
+          targets: 'node_modules',
         });
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
@@ -321,7 +321,7 @@ describe('CliController test', () => {
         mockParameters({
           'delete-all': true,
           yes: true,
-          'target-folders': 'node_modules',
+          targets: 'node_modules',
         });
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
@@ -333,43 +333,43 @@ describe('CliController test', () => {
     });
 
     describe('--dry-run', () => {
-      let testFolder: DeleteResult;
+      let testTarget: DeleteResult;
 
       beforeEach(() => {
-        testFolder = {
+        testTarget = {
           path: '/my/path/node_modules',
           success: true,
         };
         jest.clearAllMocks();
       });
 
-      it('Should call normal deleteDir function when no --dry-run is included', () => {
+      it('Should call normal delete function when no --dry-run is included', () => {
         mockParameters({
-          'target-folders': 'node_modules',
+          targets: 'node_modules',
           'dry-run': 'false',
         });
         cliController.init();
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(0);
 
-        resultsUiDeleteMock$.next(testFolder);
+        resultsUiDeleteMock$.next(testTarget);
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(1);
-        expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
+        expect(npkillDeleteMock).toHaveBeenCalledWith(testTarget.path, {
           dryRun: false,
         });
       });
 
-      it('Should call fake deleteDir function instead of deleteDir', () => {
-        mockParameters({ 'target-folders': 'node_modules', 'dry-run': true });
+      it('Should call fake delete function instead of delete', () => {
+        mockParameters({ targets: 'node_modules', 'dry-run': true });
         cliController.init();
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(0);
 
-        resultsUiDeleteMock$.next(testFolder);
+        resultsUiDeleteMock$.next(testTarget);
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(1);
-        expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
+        expect(npkillDeleteMock).toHaveBeenCalledWith(testTarget.path, {
           dryRun: true,
         });
       });
@@ -468,7 +468,7 @@ describe('CliController test', () => {
       });
 
       let addResultMock;
-      let deleteFolderSpy;
+      let deleteTargetSpy;
 
       beforeEach(() => {
         addResultMock = jest.fn();
@@ -481,19 +481,19 @@ describe('CliController test', () => {
           completeStatCalculation: jest.fn(),
         };
         cliController.uiResults = { render: jest.fn(), clear: jest.fn() };
-        spyMethod('finishFolderStats');
-        deleteFolderSpy = spyMethod('deleteFolder');
+        spyMethod('finishResultStats');
+        deleteTargetSpy = spyMethod('deleteTarget');
       });
 
       it('Should add results as soon as they are found when not filtering', () => {
         DEFAULT_CONFIG.olderThan = 0;
-        cliController.processNodeFolderForUi(folder(-1));
+        cliController.processResultForUi(folder(-1));
         expect(addResultMock).toHaveBeenCalledTimes(1);
       });
 
       it('Should wait for the stats before adding results when filtering', () => {
         DEFAULT_CONFIG.olderThan = 90;
-        cliController.processNodeFolderForUi(folder(-1));
+        cliController.processResultForUi(folder(-1));
         expect(addResultMock).not.toHaveBeenCalled();
       });
 
@@ -505,14 +505,14 @@ describe('CliController test', () => {
         const recentFolder = folder(daysAgo(10));
         const unknownAgeFolder = folder(1);
 
-        cliController.processFolderStatsForUi(oldFolder);
-        cliController.processFolderStatsForUi(recentFolder);
-        cliController.processFolderStatsForUi(unknownAgeFolder);
+        cliController.processResultStatsForUi(oldFolder);
+        cliController.processResultStatsForUi(recentFolder);
+        cliController.processResultStatsForUi(unknownAgeFolder);
 
         expect(addResultMock).toHaveBeenCalledTimes(1);
         expect(addResultMock).toHaveBeenCalledWith(oldFolder);
-        expect(deleteFolderSpy).toHaveBeenCalledTimes(1);
-        expect(deleteFolderSpy).toHaveBeenCalledWith(oldFolder);
+        expect(deleteTargetSpy).toHaveBeenCalledTimes(1);
+        expect(deleteTargetSpy).toHaveBeenCalledWith(oldFolder);
       });
 
       it('Should not delete results before their age is known with --no-size', () => {
@@ -520,9 +520,9 @@ describe('CliController test', () => {
         DEFAULT_CONFIG.deleteAll = true;
         DEFAULT_CONFIG.disableSize = true;
 
-        cliController.processNodeFolderForUi(folder(-1));
+        cliController.processResultForUi(folder(-1));
 
-        expect(deleteFolderSpy).not.toHaveBeenCalled();
+        expect(deleteTargetSpy).not.toHaveBeenCalled();
       });
     });
 

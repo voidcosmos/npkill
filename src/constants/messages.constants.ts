@@ -6,9 +6,9 @@ export const MENU_BAR = {
 };
 
 export const INFO_MSGS = {
-  DELETED_FOLDER: '[DELETED] ',
-  DELETING_FOLDER: '[..deleting..] ',
-  ERROR_DELETING_FOLDER: '[ ERROR ] ',
+  DELETED: '[DELETED] ',
+  DELETING: '[..deleting..] ',
+  ERROR_DELETING: '[ ERROR ] ',
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
@@ -33,8 +33,7 @@ export const INFO_MSGS = {
 };
 
 export const ERROR_MSG = {
-  CANT_DELETE_FOLDER:
-    'The directory cannot be deleted. Do you have permission?',
+  CANT_DELETE: 'The target cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
   CANT_USE_BOTH_JSON_OPTIONS:
     'Cannot use both --json and --json-stream options simultaneously.',

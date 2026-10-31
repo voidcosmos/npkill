@@ -8,14 +8,14 @@ import { StreamService } from './services/stream.service.js';
 import { ProfilesService } from './services/profiles.service.js';
 import { Services } from './interfaces/services.interface.js';
 import {
-  ScanFoundFolder,
+  ScanFoundTarget,
   GetNewestFileResult,
   GetSizeResult,
   ScanOptions,
   DeleteOptions,
   DeleteResult,
   SizeUnit,
-} from './interfaces/folder.interface.js';
+} from './interfaces/target.interface.js';
 import { OSServiceMap } from '../constants/os-service-map.constants.js';
 import {
   IsValidRootFolderResult,
@@ -49,7 +49,7 @@ export class Npkill implements NpkillInterface {
   startScan$(
     rootPath: string,
     options: ScanOptions,
-  ): Observable<ScanFoundFolder> {
+  ): Observable<ScanFoundTarget> {
     const { fileService } = this.services;
     this.logger.info(`Scan started in ${rootPath}`);
     const startTime = Date.now();
@@ -58,7 +58,7 @@ export class Npkill implements NpkillInterface {
       catchError(() => {
         throw new Error('Error while listing directories');
       }),
-      mergeMap((dataFolder) => from(splitData(dataFolder))),
+      mergeMap((data) => from(splitData(data))),
       filter((path) => path !== ''),
       map((path) => {
         if (
@@ -73,9 +73,7 @@ export class Npkill implements NpkillInterface {
           riskAnalysis,
         };
       }),
-      tap((nodeFolder) =>
-        this.logger.info(`Folder found: ${String(nodeFolder.path)}`),
-      ),
+      tap((target) => this.logger.info(`Target found: ${String(target.path)}`)),
       tap({
         complete: () => {
           this.searchDuration = (Date.now() - startTime) / 1000;
@@ -87,8 +85,8 @@ export class Npkill implements NpkillInterface {
 
   getSize$(path: string): Observable<GetSizeResult> {
     const { fileService } = this.services;
-    this.logger.info(`Calculating folder size for ${String(path)}`);
-    return fileService.getFolderSize(path).pipe(
+    this.logger.info(`Calculating size for ${String(path)}`);
+    return fileService.getSize(path).pipe(
       take(1),
       map((size) => ({ size, unit: 'bytes' as SizeUnit })),
       tap(({ size }) => this.logger.info(`Size of ${path}: ${size} bytes`)),
@@ -117,8 +115,8 @@ export class Npkill implements NpkillInterface {
       `Deleting ${String(path)} ${options?.dryRun ? '(dry run)' : ''}...`,
     );
     const deleteOperation = options?.dryRun
-      ? from(fileService.fakeDeleteDir())
-      : from(fileService.deleteDir(path));
+      ? from(fileService.fakeDelete())
+      : from(fileService.delete(path));
 
     return deleteOperation.pipe(
       map((result) => {

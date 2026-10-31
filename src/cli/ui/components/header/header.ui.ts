@@ -69,7 +69,7 @@ export class HeaderUi extends BaseUi {
       if (layout.columns.length > 0) {
         this.printAt(pc.bgYellow(pc.black(layout.headerText)), {
           x: layout.firstColumnX,
-          y: UI_POSITIONS.FOLDER_SIZE_HEADER.y,
+          y: UI_POSITIONS.SIZE_HEADER.y,
         });
       }
     }

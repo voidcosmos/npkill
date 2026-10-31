@@ -1,13 +1,13 @@
 import { Observable } from 'rxjs';
 import {
-  ScanFoundFolder,
+  ScanFoundTarget,
   GetNewestFileResult,
   GetSizeOptions,
   GetSizeResult,
   ScanOptions,
   DeleteResult,
   DeleteOptions,
-} from './folder.interface.js';
+} from './target.interface.js';
 import { LogEntry } from '@core/interfaces/logger-service.interface.js';
 
 export type ProfileFilterType = 'base' | 'user' | 'all';
@@ -37,7 +37,7 @@ export interface NpkillInterface {
   startScan$(
     rootPath: string,
     options?: ScanOptions,
-  ): Observable<ScanFoundFolder>;
+  ): Observable<ScanFoundTarget>;
 
   /**
    * Stops the current scan if any.

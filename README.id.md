@@ -108,7 +108,7 @@ Untuk keluar, tekan <kbd>Q</kbd> atau <kbd>Ctrl</kbd> + <kbd>c</kbd> jika Anda p
 | -h, --help, ?                    | Tampilkan halaman bantuan ini dan keluar                                                                      |
 | -nu, --no-check-update           | Jangan memeriksa pembaruan saat startup                                                                       |
 | -s, --sort                       | Urutkan hasil berdasarkan: `size`, `path`, atau `last-mod`                                                    |
-| -t, --target                     | Tentukan nama direktori yang ingin Anda cari (default: node_modules)                                          |
+| -t, --targets                    | Tentukan nama direktori yang ingin Anda cari (default: node_modules)                                          |
 | -x, --exclude-hidden-directories | Kecualikan direktori tersembunyi dari pencarian.                                                              |
 | --dry-run                        | Tidak menghapus apa pun (hanya simulasi dengan delay acak).                                                   |
 | -v, --version                    | Tampilkan versi npkill                                                                                        |

@@ -4,7 +4,7 @@ import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import pc from 'picocolors';
 import { resolve } from 'node:path';
-import { CliScanFoundFolder } from '../../../cli/interfaces/stats.interface.js';
+import { CliScanFoundTarget } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
 import { RESULT_TYPE_INFO } from '../../../constants/index.js';
 import { IConfig } from '../../interfaces/config.interface.js';
@@ -24,7 +24,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
   };
 
   constructor(
-    private readonly result: CliScanFoundFolder,
+    private readonly result: CliScanFoundTarget,
     private readonly config: IConfig,
   ) {
     super();
@@ -101,15 +101,15 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     this.printAt('-'.repeat(maxWidth - 4), { x: 2, y: currentRow++ });
 
     // Path
-    const folderName = path.split(/[/\\]/).filter(Boolean).pop() || '';
+    const targetName = path.split(/[/\\]/).filter(Boolean).pop() || '';
     const wrappedPath = wrapPath(path, maxWidth - 4);
     this.printAt(pc.cyan('Path:'), { x: 2, y: currentRow++ });
     for (let i = 0; i < wrappedPath.length; i++) {
       const line = wrappedPath[i];
       const isLastLine = i === wrappedPath.length - 1;
 
-      if (isLastLine && line.includes(folderName)) {
-        const idx = line.lastIndexOf(folderName);
+      if (isLastLine && line.includes(targetName)) {
+        const idx = line.lastIndexOf(targetName);
         const before = line.slice(0, idx);
         const name = line.slice(idx);
         this.printAt('  ' + before + pc.yellow(pc.underline(name)), {
@@ -169,13 +169,13 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
       y: currentRow++,
     });
 
-    // Target folder details
-    const folderKey = folderName.toLowerCase();
-    const targetInfo: string = RESULT_TYPE_INFO[folderKey];
+    // Target details
+    const targetKey = targetName.toLowerCase();
+    const targetInfo: string = RESULT_TYPE_INFO[targetKey];
 
     if (targetInfo) {
       currentRow += 2;
-      this.printAt(pc.bold(pc.bgBlack(pc.gray(` ${folderName} info `))), {
+      this.printAt(pc.bold(pc.bgBlack(pc.gray(` ${targetName} info `))), {
         x: 2,
         y: currentRow++,
       });

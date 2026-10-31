@@ -22,7 +22,7 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-D', '--delete-all'],
-    description: 'Auto-delete all target folders that are found.',
+    description: 'Auto-delete all targets that are found.',
     name: 'delete-all',
   },
   {
@@ -73,7 +73,7 @@ export const OPTIONS: ICliOptions[] = [
     arg: ['-t', '--targets'],
     description:
       'Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
-    name: 'target-folders',
+    name: 'targets',
   },
   {
     arg: ['-x', '--exclude-sensitive'],

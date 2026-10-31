@@ -1,6 +1,6 @@
 import { FileWorkerService } from '../services/files/files.worker.service.js';
 import { GetNewestFileResult, RiskAnalysis } from '../interfaces/index.js';
-import { ScanOptions } from './folder.interface.js';
+import { ScanOptions } from './target.interface.js';
 import { Observable } from 'rxjs';
 import { IsValidRootFolderResult } from './npkill.interface.js';
 
@@ -17,7 +17,7 @@ export interface IFileService {
    * @param path Path to the directory to measure.
    * @returns Observable emitting the size in bytes.
    */
-  getFolderSize: (path: string) => Observable<number>;
+  getSize: (path: string) => Observable<number>;
 
   /**
    * Lists directories matching scan criteria.
@@ -32,14 +32,14 @@ export interface IFileService {
    * @param path Path to the directory to delete.
    * @returns Promise resolving to true if deletion was successful.
    */
-  deleteDir: (path: string) => Promise<boolean>;
+  delete: (path: string) => Promise<boolean>;
 
   /**
    * Simulates directory deletion without actually removing files.
    * @param _path Path to the directory that would be deleted.
    * @returns Promise resolving to true (always succeeds for dry run).
    */
-  fakeDeleteDir: (_path: string) => Promise<boolean>;
+  fakeDelete: (_path: string) => Promise<boolean>;
 
   /**
    * Validates whether a path is suitable as a scan root directory.

@@ -1,4 +1,4 @@
-import { CliScanFoundFolder } from '../../../src/cli/interfaces/stats.interface.js';
+import { CliScanFoundTarget } from '../../../src/cli/interfaces/stats.interface.js';
 import { ResultsService } from '../../../src/cli/services/results.service.js';
 
 describe('Result Service', () => {
@@ -9,7 +9,7 @@ describe('Result Service', () => {
 
   describe('#addResult', () => {
     it('should add folder if that is the first', () => {
-      const newResult: CliScanFoundFolder = {
+      const newResult: CliScanFoundTarget = {
         path: 'path',
         size: 5,
         status: 'live',
@@ -20,8 +20,8 @@ describe('Result Service', () => {
       resultService.addResult(newResult);
       expect(resultService.results).toMatchObject(resultExpected);
     });
-    it('should add folders', () => {
-      const newResults: CliScanFoundFolder[] = [
+    it('should add results', () => {
+      const newResults: CliScanFoundTarget[] = [
         {
           path: 'path',
           size: 1,
@@ -53,7 +53,7 @@ describe('Result Service', () => {
   });
 
   describe('#sortResults', () => {
-    let mockResults: CliScanFoundFolder[];
+    let mockResults: CliScanFoundTarget[];
     beforeEach(() => {
       mockResults = [
         {
@@ -198,7 +198,7 @@ describe('Result Service', () => {
   });
 
   describe('#getStats', () => {
-    let mockResults: CliScanFoundFolder[];
+    let mockResults: CliScanFoundTarget[];
     beforeEach(() => {
       mockResults = [
         {
