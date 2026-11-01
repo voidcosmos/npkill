@@ -12,7 +12,7 @@ export class UnixFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  async deleteDir(path: string): Promise<boolean> {
+  async delete(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       execFile('rm', ['-rf', path], (error) => {
         if (error) {

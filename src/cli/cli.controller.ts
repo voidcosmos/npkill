@@ -11,12 +11,12 @@ import {
 } from '../constants/index.js';
 import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
-import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
+import { IConfig, CliScanFoundTarget, IKeyPress } from './interfaces/index.js';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
 import { filter, mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
-import { FOLDER_SORT } from '../constants/sort.result.js';
+import { RESULT_SORT } from '../constants/sort.result.js';
 import {
   StatusUi,
   StatsUi,
@@ -157,12 +157,12 @@ export class CliController {
     this.uiService.add(this.uiWarning);
 
     // Set Events
-    this.uiResults.delete$.subscribe((folder) => this.deleteFolder(folder));
+    this.uiResults.delete$.subscribe((result) => this.deleteTarget(result));
     this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
     this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
     this.uiResults.openFolder$.subscribe((path) => openExplorer(path));
-    this.uiResults.showDetails$.subscribe((folder) =>
-      this.openResultsDetails(folder),
+    this.uiResults.showDetails$.subscribe((result) =>
+      this.openResultsDetails(result),
     );
     this.uiResults.endNpkill$.subscribe(() => this.quit());
     this.uiResults.goOptions$.subscribe(() => this.openOptions());
@@ -243,8 +243,8 @@ export class CliController {
     });
   }
 
-  private openResultsDetails(folder: CliScanFoundFolder): void {
-    const detailsUi = new ResultDetailsUi(folder, this.config);
+  private openResultsDetails(result: CliScanFoundTarget): void {
+    const detailsUi = new ResultDetailsUi(result, this.config);
     this.uiResults.clear();
     this.uiResults.setVisible(false);
 
@@ -361,7 +361,7 @@ export class CliController {
       this.exitGracefully();
     }
 
-    if (options.isTrue('profiles') && options.isTrue('target-folders')) {
+    if (options.isTrue('profiles') && options.isTrue('targets')) {
       console.log('Cannot use both --profiles and --targets options together.');
       this.exitGracefully();
     }
@@ -414,7 +414,7 @@ export class CliController {
     }
 
     if (options.isTrue('delete-all')) {
-      if (!options.isTrue('target-folders') || options.isTrue('profiles')) {
+      if (!options.isTrue('targets') || options.isTrue('profiles')) {
         // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
         console.log('--delete-all only can be used with --targets.');
         console.log(
@@ -473,7 +473,7 @@ export class CliController {
       this.config.checkUpdates = false;
     }
 
-    if (!options.isTrue('target-folders')) {
+    if (!options.isTrue('targets')) {
       if (!options.isTrue('profiles')) {
         // Use defaultProfiles from config if available, otherwise use DEFAULT_PROFILE
         const profilesToUse =
@@ -516,8 +516,8 @@ export class CliController {
       }
     }
 
-    if (options.isTrue('target-folders')) {
-      this.config.targets = options.getString('target-folders').split(',');
+    if (options.isTrue('targets')) {
+      this.config.targets = options.getString('targets').split(',');
       this.config.profiles = [];
     }
     if (options.isTrue('exclude-sensitive')) {
@@ -613,7 +613,7 @@ export class CliController {
   }
 
   private isValidSortParam(sortName: string): boolean {
-    return Object.keys(FOLDER_SORT).includes(sortName);
+    return Object.keys(RESULT_SORT).includes(sortName);
   }
 
   private isValidSizeUnit(sizeUnit: string): boolean {
@@ -694,7 +694,7 @@ export class CliController {
     return this.stdout.columns <= MIN_CLI_COLUMNS_SIZE;
   }
 
-  private printFoldersSection(): void {
+  private printResultsSection(): void {
     this.uiResults.render();
   }
 
@@ -762,14 +762,14 @@ export class CliController {
       .scan(this.config)
       .pipe(
         mergeMap(
-          (nodeFolder) =>
-            this.scanService.calculateFolderStats(nodeFolder, {
+          (result) =>
+            this.scanService.calculateResultStats(result, {
               getModificationTimeForSensitiveResults: true,
             }),
           10, // Limit to 10 concurrent stat calculations at a time
         ),
-        filter((folder) => this.passesAgeFilter(folder)),
-        tap((folder) => this.jsonOutputService.processResult(folder)),
+        filter((result) => this.passesAgeFilter(result)),
+        tap((result) => this.jsonOutputService.processResult(result)),
       )
       .subscribe({
         error: (error) => this.jsonOutputService.writeError(error),
@@ -793,22 +793,22 @@ export class CliController {
 
     const scan$ = this.scanService
       .scan(this.config)
-      .pipe(tap((nodeFolder) => this.processNodeFolderForUi(nodeFolder)));
+      .pipe(tap((result) => this.processResultForUi(result)));
 
     this.scanSubscription = scan$
       .pipe(
         mergeMap(
-          (nodeFolder) =>
-            this.scanService.calculateFolderStats(nodeFolder, {
+          (result) =>
+            this.scanService.calculateResultStats(result, {
               disableSize: this.config.disableSize,
               disableAge: this.config.disableAge,
             }),
           10, // Limit to 10 concurrent stat calculations at a time
         ),
-        tap((folder) => this.processFolderStatsForUi(folder)),
+        tap((result) => this.processResultStatsForUi(result)),
       )
       .subscribe({
-        next: () => this.printFoldersSection(),
+        next: () => this.printResultsSection(),
         error: (error) => this.newError(error),
         complete: () => this.completeSearch(),
       });
@@ -824,7 +824,7 @@ export class CliController {
     process.on('SIGTERM', gracefulShutdown);
   }
 
-  private processNodeFolderForUi(nodeFolder: CliScanFoundFolder): void {
+  private processResultForUi(result: CliScanFoundTarget): void {
     this.searchStatus.newResult();
 
     // The age is not known yet, so wait for the stats before showing it.
@@ -832,32 +832,32 @@ export class CliController {
       return;
     }
 
-    this.addResultToUi(nodeFolder);
+    this.addResultToUi(result);
 
     if (this.config.disableSize && this.config.deleteAll) {
-      this.deleteFolder(nodeFolder);
+      this.deleteTarget(result);
     }
 
     this.uiResults.render();
   }
 
-  private processFolderStatsForUi(folder: CliScanFoundFolder): void {
+  private processResultStatsForUi(result: CliScanFoundTarget): void {
     this.searchStatus.completeStatCalculation();
 
-    const passesAgeFilter = this.passesAgeFilter(folder);
+    const passesAgeFilter = this.passesAgeFilter(result);
     if (this.isFilteringByAge() && passesAgeFilter) {
-      this.addResultToUi(folder);
+      this.addResultToUi(result);
     }
 
-    this.finishFolderStats();
+    this.finishResultStats();
 
     if (this.config.deleteAll && passesAgeFilter) {
-      this.deleteFolder(folder);
+      this.deleteTarget(result);
     }
   }
 
-  private addResultToUi(folder: CliScanFoundFolder): void {
-    this.resultsService.addResult(folder);
+  private addResultToUi(result: CliScanFoundTarget): void {
+    this.resultsService.addResult(result);
 
     if (this.config.sortBy === 'path') {
       this.resultsService.sortResults(this.config.sortBy);
@@ -869,14 +869,14 @@ export class CliController {
     return this.config.olderThan > 0;
   }
 
-  private passesAgeFilter(folder: CliScanFoundFolder): boolean {
+  private passesAgeFilter(result: CliScanFoundTarget): boolean {
     return (
       !this.isFilteringByAge() ||
-      isOlderThan(folder.modificationTime, this.config.olderThan)
+      isOlderThan(result.modificationTime, this.config.olderThan)
     );
   }
 
-  private finishFolderStats(): void {
+  private finishResultStats(): void {
     const needSort =
       this.config.sortBy === 'size' || this.config.sortBy === 'age';
     if (needSort) {
@@ -884,7 +884,7 @@ export class CliController {
       this.uiResults.clear();
     }
     this.uiStats.render();
-    this.printFoldersSection();
+    this.printResultsSection();
   }
 
   private completeSearch(): void {
@@ -943,37 +943,37 @@ export class CliController {
     await new GeneralUi().printExitMessage({ stats });
   }
 
-  private deleteFolder(folder: CliScanFoundFolder): void {
-    if (folder.status === 'deleted' || folder.status === 'deleting') {
+  private deleteTarget(target: CliScanFoundTarget): void {
+    if (target.status === 'deleted' || target.status === 'deleting') {
       return;
     }
 
-    if (!isSafeToDelete(folder.path, this.config.targets)) {
-      this.newError(`Folder not safe to delete: ${String(folder.path)}`);
+    if (!isSafeToDelete(target.path, this.config.targets)) {
+      this.newError(`Target not safe to delete: ${String(target.path)}`);
       return;
     }
 
-    folder.status = 'deleting';
+    target.status = 'deleting';
     this.searchStatus.pendingDeletions++;
     this.uiStatus.render();
-    this.printFoldersSection();
+    this.printResultsSection();
 
     firstValueFrom(
-      this.npkill.delete$(String(folder.path), { dryRun: this.config.dryRun }),
+      this.npkill.delete$(String(target.path), { dryRun: this.config.dryRun }),
     )
       .then(() => {
-        folder.status = 'deleted';
+        target.status = 'deleted';
         this.searchStatus.pendingDeletions--;
         this.uiStats.render();
         this.uiStatus.render();
-        this.printFoldersSection();
-        return folder;
+        this.printResultsSection();
+        return target;
       })
       .catch((e) => {
-        folder.status = 'error-deleting';
+        target.status = 'error-deleting';
         this.searchStatus.pendingDeletions--;
         this.uiStatus.render();
-        this.printFoldersSection();
+        this.printResultsSection();
         this.newError(e.message);
       });
   }

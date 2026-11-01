@@ -97,7 +97,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         value: path.resolve(this.config.folderRoot),
       },
       {
-        label: 'Target folder',
+        label: 'Targets',
         type: 'input',
         key: 'targets',
         value: Array.isArray(this.config.targets)

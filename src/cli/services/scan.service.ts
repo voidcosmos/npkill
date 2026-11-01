@@ -1,8 +1,8 @@
 import { Npkill } from '@core/npkill';
 import {
-  CliScanFoundFolder,
+  CliScanFoundTarget,
   IConfig,
-  ScanFoundFolder,
+  ScanFoundTarget,
   ScanOptions,
   SortBy,
 } from '../interfaces';
@@ -21,7 +21,7 @@ import { convertBytesToGb } from '../../utils/unit-conversions.js';
 import { join } from 'path';
 import os from 'os';
 
-export interface CalculateFolderStatsOptions {
+export interface CalculateResultStatsOptions {
   getModificationTimeForSensitiveResults?: boolean;
   disableSize?: boolean;
   disableAge?: boolean;
@@ -30,7 +30,7 @@ export interface CalculateFolderStatsOptions {
 export class ScanService {
   constructor(private readonly npkill: Npkill) {}
 
-  scan(config: IConfig): Observable<CliScanFoundFolder> {
+  scan(config: IConfig): Observable<CliScanFoundTarget> {
     const { targets, exclude, sortBy } = config;
 
     const params: ScanOptions = {
@@ -44,15 +44,12 @@ export class ScanService {
     const nonExcludedResults$ = results$.pipe(
       filter(
         (path) =>
-          !this.isExcludedDangerousDirectory(
-            path,
-            config.excludeSensitiveResults,
-          ),
+          !this.isExcludedDangerousResult(path, config.excludeSensitiveResults),
       ),
     );
 
     return nonExcludedResults$.pipe(
-      map<ScanFoundFolder, CliScanFoundFolder>(({ path, riskAnalysis }) => ({
+      map<ScanFoundTarget, CliScanFoundTarget>(({ path, riskAnalysis }) => ({
         path,
         size: 0,
         modificationTime: -1,
@@ -62,44 +59,44 @@ export class ScanService {
     );
   }
 
-  calculateFolderStats(
-    nodeFolder: CliScanFoundFolder,
-    options: CalculateFolderStatsOptions = {
+  calculateResultStats(
+    target: CliScanFoundTarget,
+    options: CalculateResultStatsOptions = {
       /** Saves resources by not scanning a result that is probably not of interest. */
       getModificationTimeForSensitiveResults: false,
     },
-  ): Observable<CliScanFoundFolder> {
+  ): Observable<CliScanFoundTarget> {
     const size$ = options.disableSize
       ? of({ size: 0, unit: 'bytes' as const })
-      : this.npkill.getSize$(nodeFolder.path).pipe(
+      : this.npkill.getSize$(target.path).pipe(
           timeout(30000), // 30 seconds timeout
           catchError(() => {
             // If size calculation fails or times out, keep size as 0 but mark as calculated
-            nodeFolder.size = 0;
-            nodeFolder.modificationTime = 1; // 1 = calculated, -1 = not calculated
+            target.size = 0;
+            target.modificationTime = 1; // 1 = calculated, -1 = not calculated
             return of({ size: 0, unit: 'bytes' as const });
           }),
           tap(({ size }) => {
-            nodeFolder.size = convertBytesToGb(size);
+            target.size = convertBytesToGb(size);
           }),
         );
 
     return size$.pipe(
       switchMap(async () => {
         if (options.disableAge) {
-          nodeFolder.modificationTime = -1;
-          return nodeFolder;
+          target.modificationTime = -1;
+          return target;
         }
 
         if (
-          nodeFolder.riskAnalysis?.isSensitive &&
+          target.riskAnalysis?.isSensitive &&
           !options.getModificationTimeForSensitiveResults
         ) {
-          nodeFolder.modificationTime = -1;
-          return nodeFolder;
+          target.modificationTime = -1;
+          return target;
         }
 
-        const parentFolder = join(nodeFolder.path, '../');
+        const parentFolder = join(target.path, '../');
         const normalizedParent = parentFolder.replace(/\\/g, '/').toLowerCase();
         const normalizedHome = os.homedir().replace(/\\/g, '/').toLowerCase();
 
@@ -108,8 +105,8 @@ export class ScanService {
 
         // If it's directly under HOME, skip modification time calculation
         if (isDirectChildOfHome) {
-          nodeFolder.modificationTime = -1;
-          return nodeFolder;
+          target.modificationTime = -1;
+          return target;
         }
 
         // For other folders, scan the parent folder for modification time
@@ -121,26 +118,26 @@ export class ScanService {
             ),
           );
 
-          nodeFolder.modificationTime = result ? result.timestamp : 1;
-          return nodeFolder;
+          target.modificationTime = result ? result.timestamp : 1;
+          return target;
         } catch {
-          nodeFolder.modificationTime = 1;
-          return nodeFolder;
+          target.modificationTime = 1;
+          return target;
         }
       }),
       catchError(() => {
         // Final fallback: mark as calculated with default values
-        nodeFolder.modificationTime = 1;
-        if (nodeFolder.size === undefined || nodeFolder.size === null) {
-          nodeFolder.size = 0;
+        target.modificationTime = 1;
+        if (target.size === undefined || target.size === null) {
+          target.size = 0;
         }
-        return of(nodeFolder);
+        return of(target);
       }),
     );
   }
 
-  private isExcludedDangerousDirectory(
-    scanResult: ScanFoundFolder,
+  private isExcludedDangerousResult(
+    scanResult: ScanFoundTarget,
     excludeSensitiveResults: boolean,
   ): boolean {
     return Boolean(

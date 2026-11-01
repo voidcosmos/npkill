@@ -1,22 +1,22 @@
 import {
-  CliScanFoundFolder,
+  CliScanFoundTarget,
   IStats,
   IResultTypeCount,
 } from '../interfaces/index.js';
-import { FOLDER_SORT } from '../../constants/sort.result.js';
+import { RESULT_SORT } from '../../constants/sort.result.js';
 import { formatSize } from '../../utils/unit-conversions.js';
 import path from 'path';
 
 export class ResultsService {
-  results: CliScanFoundFolder[] = [];
+  results: CliScanFoundTarget[] = [];
   private sizeUnit: 'auto' | 'mb' | 'gb' = 'auto';
 
-  addResult(result: CliScanFoundFolder): void {
+  addResult(result: CliScanFoundTarget): void {
     this.results = [...this.results, result];
   }
 
   sortResults(method: string): void {
-    this.results = this.results.sort(FOLDER_SORT[method]);
+    this.results = this.results.sort(RESULT_SORT[method]);
   }
 
   reset(): void {
@@ -31,15 +31,15 @@ export class ResultsService {
     let spaceReleased = 0;
     const typeCounts = new Map<string, number>();
 
-    const totalSpace = this.results.reduce((total, folder) => {
-      if (folder.status === 'deleted') {
-        spaceReleased += folder.size;
+    const totalSpace = this.results.reduce((total, result) => {
+      if (result.status === 'deleted') {
+        spaceReleased += result.size;
       }
 
-      const folderType = path.basename(folder.path);
-      typeCounts.set(folderType, (typeCounts.get(folderType) || 0) + 1);
+      const resultType = path.basename(result.path);
+      typeCounts.set(resultType, (typeCounts.get(resultType) || 0) + 1);
 
-      return total + folder.size;
+      return total + result.size;
     }, 0);
 
     const formattedTotal = formatSize(totalSpace, this.sizeUnit);

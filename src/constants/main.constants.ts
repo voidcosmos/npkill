@@ -31,7 +31,7 @@ export const DEFAULT_CONFIG: IConfig = {
 };
 
 export const MARGINS = {
-  FOLDER_COLUMN_START: 1,
+  PATH_COLUMN_START: 1,
   ROW_RESULTS_START: 8,
 };
 
@@ -43,7 +43,7 @@ export const UI_HELP = {
 };
 
 export const UI_POSITIONS = {
-  FOLDER_SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
+  SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
   INITIAL: { x: 0, y: 0 },
   VERSION: { x: 30, y: 5 },
   DRY_RUN_NOTICE: { x: 1, y: 6 },

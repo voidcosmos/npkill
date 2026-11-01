@@ -176,11 +176,11 @@ interface JsonOutputBase {
 }
 
 interface JsonStreamOutput extends JsonOutputBase {
-  result: CliScanFoundFolder;
+  result: CliScanFoundTarget;
 }
 
 interface JsonSimpleOutput extends JsonOutputBase {
-  results: CliScanFoundFolder[];
+  results: CliScanFoundTarget[];
   meta: {
     resultsCount: number;
     runDuration: number; // milliseconds
@@ -193,7 +193,7 @@ interface JsonErrorOutput extends JsonOutputBase {
   timestamp: string;
 }
 
-interface CliScanFoundFolder {
+interface CliScanFoundTarget {
   path: string;
   size: number; // bytes
   modificationTime: number; // Unix timestamp

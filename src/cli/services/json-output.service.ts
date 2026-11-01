@@ -1,15 +1,15 @@
-import { CliScanFoundFolder } from '../interfaces/stats.interface.js';
+import { CliScanFoundTarget } from '../interfaces/stats.interface.js';
 import {
   JsonStreamOutput,
   JsonSimpleOutput,
   JsonErrorOutput,
-  JsonCliScanFoundFolder,
+  JsonCliScanFoundTarget,
 } from '../interfaces/json-output.interface.js';
 import { convertGbToBytes } from '../../utils/unit-conversions.js';
 
 export class JsonOutputService {
   private readonly OUTPUT_VERSION = 1;
-  private results: JsonCliScanFoundFolder[] = [];
+  private results: JsonCliScanFoundTarget[] = [];
   private scanStartTime: number = 0;
   private isStreamMode: boolean = false;
 
@@ -24,11 +24,11 @@ export class JsonOutputService {
     this.isStreamMode = streamMode;
   }
 
-  processResult(folder: CliScanFoundFolder): void {
+  processResult(result: CliScanFoundTarget): void {
     if (this.isStreamMode) {
-      this.writeStreamResult(folder);
+      this.writeStreamResult(result);
     } else {
-      this.addResult(folder);
+      this.addResult(result);
     }
   }
 
@@ -38,10 +38,10 @@ export class JsonOutputService {
     }
   }
 
-  private writeStreamResult(folder: CliScanFoundFolder): void {
+  private writeStreamResult(result: CliScanFoundTarget): void {
     const output: JsonStreamOutput = {
       version: this.OUTPUT_VERSION,
-      result: this.sanitizeFolderForOutput(folder),
+      result: this.sanitizeResultForOutput(result),
     };
 
     try {
@@ -55,8 +55,8 @@ export class JsonOutputService {
     }
   }
 
-  private addResult(folder: CliScanFoundFolder): void {
-    this.results.push(this.sanitizeFolderForOutput(folder));
+  private addResult(result: CliScanFoundTarget): void {
+    this.results.push(this.sanitizeResultForOutput(result));
   }
 
   private writeSimpleResults(): void {
@@ -103,17 +103,17 @@ export class JsonOutputService {
     }
   }
 
-  private sanitizeFolderForOutput(
-    folder: CliScanFoundFolder,
-  ): JsonCliScanFoundFolder {
+  private sanitizeResultForOutput(
+    result: CliScanFoundTarget,
+  ): JsonCliScanFoundTarget {
     return {
-      path: folder.path,
-      size: convertGbToBytes(folder.size),
-      modificationTime: folder.modificationTime,
-      riskAnalysis: folder.riskAnalysis
+      path: result.path,
+      size: convertGbToBytes(result.size),
+      modificationTime: result.modificationTime,
+      riskAnalysis: result.riskAnalysis
         ? {
-            isSensitive: folder.riskAnalysis.isSensitive,
-            reason: folder.riskAnalysis.reason,
+            isSensitive: result.riskAnalysis.isSensitive,
+            reason: result.riskAnalysis.reason,
           }
         : undefined,
     };

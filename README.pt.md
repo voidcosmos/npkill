@@ -108,7 +108,7 @@ Para sair, use <kbd>Q</kbd> ou <kbd>Ctrl</kbd> + <kbd>c</kbd> se você estiver s
 | -h, --help, ?                    | Mostrar a página de ajuda e sair                                                                                                                                    |
 | -nu, --no-check-update           | Não verificar atualizações na inicialização                                                                                                                         |
 | -s, --sort                       | Ordenar resultados por: `size` (tamanho), `path`(localização) ou `last-mod`(última modificação)                                                                     |
-| -t, --target                     | Especifique o nome dos diretórios que deseja pesquisar (por padrão, é node_modules)                                                                                 |
+| -t, --targets                    | Especifique o nome dos diretórios que deseja pesquisar (por padrão, é node_modules)                                                                                 |
 | -x, --exclude-hidden-directories | Excluir diretórios ocultos ("diretórios com ponto") da pesquisa.                                                                                                    |
 | --dry-run                        | Não exclui nada (irá simular com um atraso aleatório).                                                                                                              |
 | -v, --version                    | Mostrar versão do npkill                                                                                                                                            |

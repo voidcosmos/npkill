@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 import { ScanService } from '../../../src/cli/services/scan.service.js';
-import { Npkill, ScanFoundFolder, SortBy } from '../../../src/core/index.js';
+import { Npkill, ScanFoundTarget, SortBy } from '../../../src/core/index.js';
 import {
-  CliScanFoundFolder,
+  CliScanFoundTarget,
   IConfig,
 } from '../../../src/cli/interfaces/index.js';
 import { of, firstValueFrom, throwError } from 'rxjs';
@@ -40,25 +40,25 @@ describe('ScanService', () => {
     disableStats: false,
   };
 
-  const mockScanFoundFolder: ScanFoundFolder = {
+  const mockScanFoundTarget: ScanFoundTarget = {
     path: '/test/root/project/node_modules',
     riskAnalysis: {
       isSensitive: false,
     },
   };
 
-  const mockSensitiveScanFoundFolder: ScanFoundFolder = {
+  const mockSensitiveScanFoundTarget: ScanFoundTarget = {
     path: '/test/root/.hidden/node_modules',
     riskAnalysis: {
       isSensitive: true,
     },
   };
 
-  const mockCliScanFoundFolder: CliScanFoundFolder = {
+  const mockCliScanFoundTarget: CliScanFoundTarget = {
     path: '/test/root/project/node_modules',
     size: 0,
     modificationTime: -1,
-    riskAnalysis: mockScanFoundFolder.riskAnalysis,
+    riskAnalysis: mockScanFoundTarget.riskAnalysis,
     status: 'live',
   };
 
@@ -78,7 +78,7 @@ describe('ScanService', () => {
 
   describe('scan', () => {
     it('should call npkill.startScan$ with the correct parameters', () => {
-      mockNpkill.startScan$.mockReturnValue(of(mockScanFoundFolder));
+      mockNpkill.startScan$.mockReturnValue(of(mockScanFoundTarget));
 
       scanService.scan(mockConfig);
 
@@ -93,17 +93,17 @@ describe('ScanService', () => {
       );
     });
 
-    it('should emit a CliScanFoundFolder for each non-sensitive result', async () => {
-      mockNpkill.startScan$.mockReturnValue(of(mockScanFoundFolder));
+    it('should emit a CliScanFoundTarget for each non-sensitive result', async () => {
+      mockNpkill.startScan$.mockReturnValue(of(mockScanFoundTarget));
 
       const result$ = scanService.scan(mockConfig);
       const emittedValue = await firstValueFrom(result$);
 
       expect(emittedValue).toEqual({
-        path: mockScanFoundFolder.path,
+        path: mockScanFoundTarget.path,
         size: 0,
         modificationTime: -1,
-        riskAnalysis: mockScanFoundFolder.riskAnalysis,
+        riskAnalysis: mockScanFoundTarget.riskAnalysis,
         status: 'live',
       });
     });
@@ -114,15 +114,15 @@ describe('ScanService', () => {
         excludeSensitiveResults: true,
       };
       mockNpkill.startScan$.mockReturnValue(
-        of(mockScanFoundFolder, mockSensitiveScanFoundFolder),
+        of(mockScanFoundTarget, mockSensitiveScanFoundTarget),
       );
 
-      const results: CliScanFoundFolder[] = [];
+      const results: CliScanFoundTarget[] = [];
       scanService.scan(configWithExclusion).subscribe({
         next: (value) => results.push(value),
         complete: () => {
           expect(results.length).toBe(1);
-          expect(results[0].path).toBe(mockScanFoundFolder.path);
+          expect(results[0].path).toBe(mockScanFoundTarget.path);
           done();
         },
       });
@@ -130,74 +130,74 @@ describe('ScanService', () => {
 
     it('should NOT filter out sensitive directories if excludeSensitiveResults is false', (done) => {
       mockNpkill.startScan$.mockReturnValue(
-        of(mockScanFoundFolder, mockSensitiveScanFoundFolder),
+        of(mockScanFoundTarget, mockSensitiveScanFoundTarget),
       );
 
-      const results: CliScanFoundFolder[] = [];
+      const results: CliScanFoundTarget[] = [];
       scanService.scan(mockConfig).subscribe({
         next: (value) => results.push(value),
         complete: () => {
           expect(results.length).toBe(2);
-          expect(results[0].path).toBe(mockScanFoundFolder.path);
-          expect(results[1].path).toBe(mockSensitiveScanFoundFolder.path);
+          expect(results[0].path).toBe(mockScanFoundTarget.path);
+          expect(results[1].path).toBe(mockSensitiveScanFoundTarget.path);
           done();
         },
       });
     });
   });
 
-  describe('calculateFolderStats', () => {
+  describe('calculateResultStats', () => {
     it('should calculate size and get modification time for a non-sensitive folder', async () => {
-      const folderSize = 1024 * 1024 * 500; // 500 MB
+      const mockSize = 1024 * 1024 * 500; // 500 MB
       const newestFile = { path: 'index.js', timestamp: 1672531200000 }; // Jan 1, 2023
 
-      mockNpkill.getSize$.mockReturnValue(of({ size: folderSize }));
+      mockNpkill.getSize$.mockReturnValue(of({ size: mockSize }));
       mockNpkill.getNewestFile$.mockReturnValue(of(newestFile));
 
-      const result$ = scanService.calculateFolderStats(mockCliScanFoundFolder);
+      const result$ = scanService.calculateResultStats(mockCliScanFoundTarget);
       const result = await firstValueFrom(result$);
 
       expect(mockNpkill.getSize$).toHaveBeenCalledWith(
-        mockCliScanFoundFolder.path,
+        mockCliScanFoundTarget.path,
       );
       expect(mockNpkill.getNewestFile$).toHaveBeenCalledWith(
         path.normalize('/test/root/project/'), // parent folder
       );
-      expect(result.size).toBe(convertBytesToGb(folderSize));
+      expect(result.size).toBe(convertBytesToGb(mockSize));
       expect(result.modificationTime).toBe(newestFile.timestamp);
     });
 
     it('should NOT get modification time for a sensitive folder', async () => {
-      const sensitiveCliFolder: CliScanFoundFolder = {
-        ...mockCliScanFoundFolder,
+      const sensitiveCliResult: CliScanFoundTarget = {
+        ...mockCliScanFoundTarget,
         riskAnalysis: {
           isSensitive: true,
         },
       };
-      const folderSize = 1024 * 1024 * 200; // 200 MB
+      const mockSize = 1024 * 1024 * 200; // 200 MB
 
-      mockNpkill.getSize$.mockReturnValue(of({ size: folderSize }));
+      mockNpkill.getSize$.mockReturnValue(of({ size: mockSize }));
 
-      const result$ = scanService.calculateFolderStats(sensitiveCliFolder);
+      const result$ = scanService.calculateResultStats(sensitiveCliResult);
       const result = await firstValueFrom(result$);
 
-      expect(mockNpkill.getSize$).toHaveBeenCalledWith(sensitiveCliFolder.path);
-      // Should not attempt to get the newest file for sensitive folders
+      expect(mockNpkill.getSize$).toHaveBeenCalledWith(sensitiveCliResult.path);
+      // Should not attempt to get the newest file for sensitive results
       expect(mockNpkill.getNewestFile$).not.toHaveBeenCalled();
-      expect(result.size).toBe(convertBytesToGb(folderSize));
+      expect(result.size).toBe(convertBytesToGb(mockSize));
       expect(result.modificationTime).toBe(-1);
     });
 
     it('should handle the case where getNewestFile$ emits null', async () => {
-      const folderSize = 1024 * 1024 * 100; // 100 MB
+      const mockSize = 1024 * 1024 * 100; // 100 MB
 
-      mockNpkill.getSize$.mockReturnValue(of({ size: folderSize }));
+      mockNpkill.getSize$.mockReturnValue(of({ size: mockSize }));
       mockNpkill.getNewestFile$.mockReturnValue(of(null)); // Simulate no file found
 
-      const result$ = scanService.calculateFolderStats(mockCliScanFoundFolder);
+      const result$ = scanService.calculateResultStats(mockCliScanFoundTarget);
       const result = await firstValueFrom(result$);
 
-      expect(result.size).toBe(convertBytesToGb(folderSize));
+      expect(result.size).toBe(convertBytesToGb(mockSize));
       expect(result.modificationTime).toBe(1);
     });
 
@@ -207,7 +207,7 @@ describe('ScanService', () => {
       );
       mockNpkill.getNewestFile$.mockReturnValue(of(null));
 
-      const result$ = scanService.calculateFolderStats(mockCliScanFoundFolder);
+      const result$ = scanService.calculateResultStats(mockCliScanFoundTarget);
       const result = await firstValueFrom(result$);
 
       expect(result.size).toBe(0);
@@ -215,17 +215,17 @@ describe('ScanService', () => {
     });
 
     it('should handle errors in getNewestFile$ and set modificationTime to 1', async () => {
-      const folderSize = 1024 * 1024 * 100; // 100 MB
+      const mockSize = 1024 * 1024 * 100; // 100 MB
 
-      mockNpkill.getSize$.mockReturnValue(of({ size: folderSize }));
+      mockNpkill.getSize$.mockReturnValue(of({ size: mockSize }));
       mockNpkill.getNewestFile$.mockReturnValue(
         throwError(() => new Error('Permission denied')),
       );
 
-      const result$ = scanService.calculateFolderStats(mockCliScanFoundFolder);
+      const result$ = scanService.calculateResultStats(mockCliScanFoundTarget);
       const result = await firstValueFrom(result$);
 
-      expect(result.size).toBe(convertBytesToGb(folderSize));
+      expect(result.size).toBe(convertBytesToGb(mockSize));
       expect(result.modificationTime).toBe(1);
     });
   });

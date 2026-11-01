@@ -20,7 +20,7 @@ export abstract class FileService implements IFileService {
     this.fileWorkerService = fileWorkerService;
   }
 
-  abstract deleteDir(path: string): Promise<boolean>;
+  abstract delete(path: string): Promise<boolean>;
 
   listDir(path: string, params: ScanOptions): Observable<string> {
     const stream$ = new Subject<string>();
@@ -28,9 +28,9 @@ export abstract class FileService implements IFileService {
     return stream$;
   }
 
-  getFolderSize(path: string): Observable<number> {
+  getSize(path: string): Observable<number> {
     const stream$ = new Subject<number>();
-    this.fileWorkerService.getFolderSize(stream$, path);
+    this.fileWorkerService.getSize(stream$, path);
     return stream$.pipe(map((data) => data));
   }
 
@@ -39,7 +39,7 @@ export abstract class FileService implements IFileService {
   }
 
   /** Used for dry-run or testing. */
-  async fakeDeleteDir(): Promise<boolean> {
+  async fakeDelete(): Promise<boolean> {
     const randomDelay = Math.floor(Math.random() * 4000 + 200);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
     return true;

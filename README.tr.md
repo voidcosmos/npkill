@@ -110,7 +110,7 @@ Seçili sonucun bulunduğu klasörü açmak için <kbd>o</kbd> tuşuna basabilir
 | -h, --help, ?                    | Bu yardım sayfasını göster ve çık.                                                                                                               |
 | -nu, --no-check-update           | Başlangıçta güncellemeleri kontrol etme.                                                                                                         |
 | -s, --sort                       | Sonuçları şu kriterlere göre sırala: `size`, `path` veya `last-mod`                                                                              |
-| -t, --target                     | Aramak istediğiniz dizinlerin adını belirtin (varsayılan olarak node_modules).                                                                   |
+| -t, --targets                    | Aramak istediğiniz dizinlerin adını belirtin (varsayılan olarak node_modules).                                                                   |
 | -x, --exclude-hidden-directories | Gizli dizinleri ("nokta" dizinleri) arama kapsamı dışında bırak.                                                                                 |
 | --dry-run                        | Hiçbir şeyi silmez (rastgele bir gecikme ile simüle eder).                                                                                       |
 | -v, --version                    | npkill sürümünü gösterir.                                                                                                                        |

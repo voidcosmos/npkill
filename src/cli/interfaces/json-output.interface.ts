@@ -1,18 +1,18 @@
-import { CliScanFoundFolder } from './stats.interface.js';
+import { CliScanFoundTarget } from './stats.interface.js';
 
 export interface JsonOutputBase {
   version: number;
 }
 
-export interface JsonCliScanFoundFolder
-  extends Omit<CliScanFoundFolder, 'status'> {}
+export interface JsonCliScanFoundTarget
+  extends Omit<CliScanFoundTarget, 'status'> {}
 
 /**
  * JSON output format for streaming mode (--json-stream).
  * Each result is output as a separate JSON object on its own line.
  */
 export interface JsonStreamOutput extends JsonOutputBase {
-  result: JsonCliScanFoundFolder;
+  result: JsonCliScanFoundTarget;
 }
 
 /**
@@ -20,7 +20,7 @@ export interface JsonStreamOutput extends JsonOutputBase {
  * All results are collected and output as a single JSON object at the end.
  */
 export interface JsonSimpleOutput extends JsonOutputBase {
-  results: JsonCliScanFoundFolder[];
+  results: JsonCliScanFoundTarget[];
   meta: {
     resultsCount: number;
     /** Scan duration in milliseconds */

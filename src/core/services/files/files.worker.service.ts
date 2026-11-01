@@ -10,7 +10,7 @@ import { ScanOptions } from '../../index.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 type WorkerJob = {
-  job: EVENTS.explore | EVENTS.getFolderSize;
+  job: EVENTS.explore | EVENTS.getSize;
   value: { path: string };
 };
 
@@ -35,7 +35,7 @@ export type WorkerMessage =
         pending: number;
       };
     }
-  | { type: EVENTS.explore | EVENTS.getFolderSize; value: { path: string } }
+  | { type: EVENTS.explore | EVENTS.getSize; value: { path: string } }
   | { type: EVENTS.exploreConfig; value: WorkerScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined }
@@ -89,7 +89,7 @@ export class FileWorkerService {
     this.addJob({ job: EVENTS.explore, value: { path: params.rootPath } });
   }
 
-  getFolderSize(stream$: Subject<number>, path: string): void {
+  getSize(stream$: Subject<number>, path: string): void {
     if (this.workers.length === 0) {
       this.instantiateWorkers(this.getOptimalNumberOfWorkers());
       this.listenEvents(new Subject<string>());
@@ -114,7 +114,7 @@ export class FileWorkerService {
       ...this.getSizePendings,
       { path, stream$, timeoutId },
     ];
-    this.addJob({ job: EVENTS.getFolderSize, value: { path } });
+    this.addJob({ job: EVENTS.getSize, value: { path } });
   }
 
   stopScan(): void {

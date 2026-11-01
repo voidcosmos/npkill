@@ -7,13 +7,13 @@ import { LoggerService } from '../../src/core/services/logger.service.js';
 import { ScanStatus } from '../../src/core/interfaces/search-status.model.js';
 import {
   ScanOptions,
-  ScanFoundFolder,
+  ScanFoundTarget,
   GetSizeResult,
   GetNewestFileResult,
   DeleteResult,
   DeleteOptions,
   RiskAnalysis,
-} from '../../src/core/interfaces/folder.interface.js';
+} from '../../src/core/interfaces/target.interface.js';
 import { LogEntry } from '../../src/core/interfaces/logger-service.interface.js';
 import { IsValidRootFolderResult } from '../../src/core/interfaces/npkill.interface.js';
 import {
@@ -35,17 +35,17 @@ describe('Npkill', () => {
     // Create mock services
     fileServiceMock = {
       listDir: jest.fn(),
-      getFolderSize: jest.fn(),
+      getSize: jest.fn(),
       getRecentModificationInDir: jest.fn(),
-      deleteDir: jest.fn(),
-      fakeDeleteDir: jest.fn(() => Promise.resolve(true)),
+      delete: jest.fn(),
+      fakeDelete: jest.fn(() => Promise.resolve(true)),
       isValidRootFolder: jest.fn(),
       isDangerous: jest.fn(),
       getFileStatsInDir: jest.fn(),
       stopScan: jest.fn(),
       fileWorkerService: {
         startScan: jest.fn(),
-        getFolderSize: jest.fn(),
+        getSize: jest.fn(),
         stopScan: jest.fn(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as unknown as any,
@@ -128,7 +128,7 @@ describe('Npkill', () => {
       fileServiceMock.listDir.mockReturnValue(of(mockFolderData));
       fileServiceMock.isDangerous.mockReturnValue(mockRiskAnalysis);
 
-      const results: ScanFoundFolder[] = [];
+      const results: ScanFoundTarget[] = [];
       npkill.startScan$(mockRootPath, mockOptions).subscribe({
         next: (result) => {
           results.push(result);
@@ -154,7 +154,7 @@ describe('Npkill', () => {
 
       fileServiceMock.listDir.mockReturnValue(of(mockFolderData));
 
-      const results: ScanFoundFolder[] = [];
+      const results: ScanFoundTarget[] = [];
       npkill.startScan$(mockRootPath, optionsWithoutRisk).subscribe({
         next: (result) => {
           results.push(result);
@@ -172,7 +172,7 @@ describe('Npkill', () => {
       const mockFolderData = 'folder1\n\nfolder3\n';
       fileServiceMock.listDir.mockReturnValue(of(mockFolderData));
 
-      const results: ScanFoundFolder[] = [];
+      const results: ScanFoundTarget[] = [];
       npkill.startScan$(mockRootPath, mockOptions).subscribe({
         next: (result) => {
           results.push(result);
@@ -219,7 +219,7 @@ describe('Npkill', () => {
 
     it('should return folder size in bytes', (done) => {
       const mockSize = 1024;
-      fileServiceMock.getFolderSize.mockReturnValue(of(mockSize));
+      fileServiceMock.getSize.mockReturnValue(of(mockSize));
 
       npkill.getSize$(mockPath).subscribe((result: GetSizeResult) => {
         expect(result).toEqual({
@@ -227,7 +227,7 @@ describe('Npkill', () => {
           unit: 'bytes',
         });
         expect(loggerMock.info).toHaveBeenCalledWith(
-          `Calculating folder size for ${mockPath}`,
+          `Calculating size for ${mockPath}`,
         );
         expect(loggerMock.info).toHaveBeenCalledWith(
           `Size of ${mockPath}: ${mockSize} bytes`,
@@ -237,7 +237,7 @@ describe('Npkill', () => {
     });
 
     it('should take only one value from the stream', () => {
-      fileServiceMock.getFolderSize.mockReturnValue(of(100, 200, 300));
+      fileServiceMock.getSize.mockReturnValue(of(100, 200, 300));
 
       npkill
         .getSize$(mockPath)
@@ -293,7 +293,7 @@ describe('Npkill', () => {
     const mockPath = '/test/folder/node_modules';
 
     it('should successfully delete folder', (done) => {
-      fileServiceMock.deleteDir.mockResolvedValue(true);
+      fileServiceMock.delete.mockResolvedValue(true);
 
       npkill.delete$(mockPath).subscribe({
         next: (result: DeleteResult) => {
@@ -301,7 +301,7 @@ describe('Npkill', () => {
             path: mockPath,
             success: true,
           });
-          expect(fileServiceMock.deleteDir).toHaveBeenCalledWith(mockPath);
+          expect(fileServiceMock.delete).toHaveBeenCalledWith(mockPath);
           expect(loggerMock.info).toHaveBeenCalledWith(
             `Deleting ${mockPath} ...`,
           );
@@ -317,7 +317,7 @@ describe('Npkill', () => {
     });
 
     it('should handle deletion failure', (done) => {
-      fileServiceMock.deleteDir.mockResolvedValue(false);
+      fileServiceMock.delete.mockResolvedValue(false);
 
       npkill.delete$(mockPath).subscribe((result: DeleteResult) => {
         expect(result).toEqual({
@@ -333,15 +333,15 @@ describe('Npkill', () => {
 
     it('should perform dry run when specified', (done) => {
       const options: DeleteOptions = { dryRun: true };
-      fileServiceMock.fakeDeleteDir.mockResolvedValue(true);
+      fileServiceMock.fakeDelete.mockResolvedValue(true);
 
       npkill.delete$(mockPath, options).subscribe((result: DeleteResult) => {
         expect(result).toEqual({
           path: mockPath,
           success: true,
         });
-        expect(fileServiceMock.fakeDeleteDir).toHaveBeenCalled();
-        expect(fileServiceMock.deleteDir).not.toHaveBeenCalled();
+        expect(fileServiceMock.fakeDelete).toHaveBeenCalled();
+        expect(fileServiceMock.delete).not.toHaveBeenCalled();
         expect(loggerMock.info).toHaveBeenCalledWith(
           `Deleting ${mockPath} (dry run)...`,
         );
@@ -420,7 +420,7 @@ describe('Npkill', () => {
     it('should handle empty scan results', (done) => {
       fileServiceMock.listDir.mockReturnValue(of(''));
 
-      const results: ScanFoundFolder[] = [];
+      const results: ScanFoundTarget[] = [];
       npkill.startScan$('/test', { targets: ['node_modules'] }).subscribe({
         next: (result) => results.push(result),
         complete: () => {
@@ -442,7 +442,7 @@ describe('Npkill', () => {
     });
 
     it('should handle size calculation errors gracefully', (done) => {
-      fileServiceMock.getFolderSize.mockReturnValue(
+      fileServiceMock.getSize.mockReturnValue(
         throwError(() => new Error('Access denied')),
       );
 
@@ -468,9 +468,7 @@ describe('Npkill', () => {
     });
 
     it('should handle deletion errors', (done) => {
-      fileServiceMock.deleteDir.mockRejectedValue(
-        new Error('Permission denied'),
-      );
+      fileServiceMock.delete.mockRejectedValue(new Error('Permission denied'));
 
       npkill.delete$('/test').subscribe({
         error: (error) => {
@@ -502,7 +500,7 @@ describe('Npkill', () => {
     });
 
     it('should maintain consistent return types for getSize$', () => {
-      fileServiceMock.getFolderSize.mockReturnValue(of(1024));
+      fileServiceMock.getSize.mockReturnValue(of(1024));
 
       const observable = npkill.getSize$('/test');
       expect(observable).toBeDefined();
@@ -516,7 +514,7 @@ describe('Npkill', () => {
     });
 
     it('should maintain consistent return types for delete$', () => {
-      fileServiceMock.deleteDir.mockResolvedValue(true);
+      fileServiceMock.delete.mockResolvedValue(true);
 
       const observable = npkill.delete$('/test');
       expect(observable).toBeDefined();

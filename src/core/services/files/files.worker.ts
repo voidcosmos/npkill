@@ -9,8 +9,8 @@ import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
 
 enum ETaskOperation {
   'explore',
-  'getFolderSize',
-  'getFolderSizeChild',
+  'getSize',
+  'getSizeChild',
 }
 
 interface Task {
@@ -60,10 +60,10 @@ interface Task {
         fileWalker.enqueueTask(message.value.path, ETaskOperation.explore);
       }
 
-      if (message?.type === EVENTS.getFolderSize) {
+      if (message?.type === EVENTS.getSize) {
         fileWalker.enqueueTask(
           message.value.path,
-          ETaskOperation.getFolderSize,
+          ETaskOperation.getSize,
           true,
         );
       }
@@ -83,7 +83,7 @@ interface Task {
     });
 
     fileWalker.events.on(
-      'folderSizeResult',
+      'sizeResult',
       (result: { path: string; size: number }) => {
         tunnel.postMessage({
           type: EVENTS.GetSizeResult,
@@ -171,7 +171,7 @@ class FileWalker {
     }
   }
 
-  private async runGetFolderSize(path: string): Promise<void> {
+  private async runGetSize(path: string): Promise<void> {
     this.updateProcs(1);
 
     try {
@@ -179,25 +179,20 @@ class FileWalker {
         total: 0,
         pending: 1,
         onComplete: (finalSize: number) => {
-          this.events.emit('folderSizeResult', { path, size: finalSize });
+          this.events.emit('sizeResult', { path, size: finalSize });
         },
       };
 
-      this.enqueueTask(
-        path,
-        ETaskOperation.getFolderSizeChild,
-        false,
-        collector,
-      );
+      this.enqueueTask(path, ETaskOperation.getSizeChild, false, collector);
       this.completeTask();
     } catch {
       // If anything fails during setup, emit size 0 and complete
       this.completeTask();
-      this.events.emit('folderSizeResult', { path, size: 0 });
+      this.events.emit('sizeResult', { path, size: 0 });
     }
   }
 
-  private async runGetFolderSizeChild(
+  private async runGetSizeChild(
     path: string,
     collector: Task['sizeCollector'],
   ): Promise<void> {
@@ -249,7 +244,7 @@ class FileWalker {
       for (const dirPath of directoriesToProcess) {
         this.enqueueTask(
           dirPath,
-          ETaskOperation.getFolderSizeChild,
+          ETaskOperation.getSizeChild,
           false,
           collector,
         );
@@ -275,7 +270,7 @@ class FileWalker {
       return;
     }
 
-    const isTarget = this.isTargetFolder(entry.name);
+    const isTarget = this.isTarget(entry.name);
 
     if (GLOBAL_IGNORE.has(entry.name) && !isTarget) {
       return;
@@ -300,7 +295,7 @@ class FileWalker {
     return this.searchConfig.exclude.some((ex) => path.includes(ex));
   }
 
-  private isTargetFolder(path: string): boolean {
+  private isTarget(path: string): boolean {
     return this.searchConfig.targets.includes(path);
   }
 
@@ -331,31 +326,29 @@ class FileWalker {
             this.completeTask();
           });
           break;
-        case ETaskOperation.getFolderSize:
-          this.runGetFolderSize(task.path).catch(() => {
-            // If runGetFolderSize fails, we need to emit a size of 0
+        case ETaskOperation.getSize:
+          this.runGetSize(task.path).catch(() => {
+            // If runGetSize fails, we need to emit a size of 0
             // Otherwise the stream will hang forever
-            this.events.emit('folderSizeResult', { path: task.path, size: 0 });
+            this.events.emit('sizeResult', { path: task.path, size: 0 });
           });
           break;
-        case ETaskOperation.getFolderSizeChild:
-          this.runGetFolderSizeChild(task.path, task.sizeCollector).catch(
-            () => {
-              // Ensure we always decrement the collector even on errors
-              if (task.sizeCollector == null) {
-                // This shouldn't happen, but if it does, we can't recover properly
-                // The best we can do is not crash
-                return;
-              }
+        case ETaskOperation.getSizeChild:
+          this.runGetSizeChild(task.path, task.sizeCollector).catch(() => {
+            // Ensure we always decrement the collector even on errors
+            if (task.sizeCollector == null) {
+              // This shouldn't happen, but if it does, we can't recover properly
+              // The best we can do is not crash
+              return;
+            }
 
-              task.sizeCollector.pending -= 1;
-              if (task.sizeCollector.pending === 0) {
-                task.sizeCollector.onComplete(task.sizeCollector.total);
-              }
+            task.sizeCollector.pending -= 1;
+            if (task.sizeCollector.pending === 0) {
+              task.sizeCollector.onComplete(task.sizeCollector.total);
+            }
 
-              this.completeTask();
-            },
-          );
+            this.completeTask();
+          });
           break;
       }
     }
