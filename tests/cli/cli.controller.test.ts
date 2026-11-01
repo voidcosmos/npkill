@@ -255,6 +255,9 @@ describe('CliController test', () => {
       DEFAULT_CONFIG.deleteAll = false;
       DEFAULT_CONFIG.dryRun = false;
       DEFAULT_CONFIG.sortBy = 'none';
+      DEFAULT_CONFIG.olderThan = 0;
+      DEFAULT_CONFIG.disableAge = false;
+      DEFAULT_CONFIG.disableSize = false;
     });
 
     it('#showHelp should called if --help flag is present and exit', () => {
@@ -403,6 +406,123 @@ describe('CliController test', () => {
           ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS,
         );
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('--older-than', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('Should set olderThan in the config when a valid number is given', () => {
+        mockParameters({ 'older-than': '90' });
+        cliController.init();
+        expect(DEFAULT_CONFIG.olderThan).toBe(90);
+        expect(scanSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it.each(['abc', '0', '-5', '1.5', '90d'])(
+        'Should show error and exit when the value is %p',
+        (value) => {
+          mockParameters({ 'older-than': value });
+          const exitWithErrorSpy = spyMethod('exitWithError');
+          cliController.init();
+          expect(loggerServiceMock.error).toHaveBeenCalledWith(
+            ERROR_MSG.INVALID_OLDER_THAN,
+          );
+          expect(exitWithErrorSpy).toHaveBeenCalled();
+        },
+      );
+
+      it('Should show error and exit when no value is given', () => {
+        mockParameters({ 'older-than': true });
+        const exitWithErrorSpy = spyMethod('exitWithError');
+        cliController.init();
+        expect(loggerServiceMock.error).toHaveBeenCalledWith(
+          ERROR_MSG.INVALID_OLDER_THAN,
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalled();
+      });
+
+      it.each(['disable-age', 'disable-stats'])(
+        'Should show error and exit when used with %p',
+        (option) => {
+          mockParameters({ 'older-than': '90', [option]: true });
+          const exitWithErrorSpy = spyMethod('exitWithError');
+          cliController.init();
+          expect(loggerServiceMock.error).toHaveBeenCalledWith(
+            ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE,
+          );
+          expect(exitWithErrorSpy).toHaveBeenCalled();
+        },
+      );
+    });
+
+    describe('age filtering', () => {
+      const daysAgo = (days: number) => Date.now() / 1000 - days * 86400;
+      const folder = (modificationTime: number) => ({
+        path: '/my/project/node_modules',
+        size: 1,
+        modificationTime,
+        status: 'live',
+      });
+
+      let addResultMock;
+      let deleteFolderSpy;
+
+      beforeEach(() => {
+        addResultMock = jest.fn();
+        cliController.resultsService = {
+          addResult: addResultMock,
+          sortResults: jest.fn(),
+        };
+        cliController.searchStatus = {
+          newResult: jest.fn(),
+          completeStatCalculation: jest.fn(),
+        };
+        cliController.uiResults = { render: jest.fn(), clear: jest.fn() };
+        spyMethod('finishFolderStats');
+        deleteFolderSpy = spyMethod('deleteFolder');
+      });
+
+      it('Should add results as soon as they are found when not filtering', () => {
+        DEFAULT_CONFIG.olderThan = 0;
+        cliController.processNodeFolderForUi(folder(-1));
+        expect(addResultMock).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should wait for the stats before adding results when filtering', () => {
+        DEFAULT_CONFIG.olderThan = 90;
+        cliController.processNodeFolderForUi(folder(-1));
+        expect(addResultMock).not.toHaveBeenCalled();
+      });
+
+      it('Should only add and delete results older than the given days', () => {
+        DEFAULT_CONFIG.olderThan = 90;
+        DEFAULT_CONFIG.deleteAll = true;
+
+        const oldFolder = folder(daysAgo(120));
+        const recentFolder = folder(daysAgo(10));
+        const unknownAgeFolder = folder(1);
+
+        cliController.processFolderStatsForUi(oldFolder);
+        cliController.processFolderStatsForUi(recentFolder);
+        cliController.processFolderStatsForUi(unknownAgeFolder);
+
+        expect(addResultMock).toHaveBeenCalledTimes(1);
+        expect(addResultMock).toHaveBeenCalledWith(oldFolder);
+        expect(deleteFolderSpy).toHaveBeenCalledTimes(1);
+        expect(deleteFolderSpy).toHaveBeenCalledWith(oldFolder);
+      });
+
+      it('Should not delete results before their age is known with --no-size', () => {
+        DEFAULT_CONFIG.olderThan = 90;
+        DEFAULT_CONFIG.deleteAll = true;
+        DEFAULT_CONFIG.disableSize = true;
+
+        cliController.processNodeFolderForUi(folder(-1));
+
+        expect(deleteFolderSpy).not.toHaveBeenCalled();
       });
     });
 

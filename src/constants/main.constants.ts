@@ -27,6 +27,7 @@ export const DEFAULT_CONFIG: IConfig = {
   disableSize: false,
   disableAge: false,
   disableStats: false,
+  olderThan: 0,
 };
 
 export const MARGINS = {
