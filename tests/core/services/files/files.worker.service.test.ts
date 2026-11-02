@@ -55,6 +55,7 @@ jest.unstable_mockModule('worker_threads', () => ({
 
 const logger = {
   info: jest.fn(),
+  error: jest.fn(),
 } as unknown as jest.Mocked<LoggerService>;
 
 const FileWorkerServiceConstructor = (
@@ -62,25 +63,57 @@ const FileWorkerServiceConstructor = (
 ).FileWorkerService;
 class FileWorkerService extends FileWorkerServiceConstructor {}
 
-xdescribe('FileWorkerService', () => {
+const SCAN_OPTIONS: WorkerScanOptions = {
+  rootPath: '/sample/path',
+  targets: ['node_modules'],
+};
+
+function answerExplore(
+  results: Array<{ path: string; isTarget: boolean }>,
+  scanId = 1,
+): void {
+  const message: WorkerMessage = {
+    type: EVENTS.scanResult,
+    value: { workerId: 0, scanId, results },
+  };
+  port1Emitter.emit('message', message);
+}
+
+function answerSize(id: number, size: number, error?: string): void {
+  const message: WorkerMessage = {
+    type: EVENTS.GetSizeResult,
+    value: { workerId: 0, results: { id, path: '/sample/path', size, error } },
+  };
+  port1Emitter.emit('message', message);
+}
+
+interface StreamOutcome<T> {
+  values: T[];
+  completed: boolean;
+  error?: Error;
+}
+
+function record<T>(stream$: Subject<T>): StreamOutcome<T> {
+  const outcome: StreamOutcome<T> = { values: [], completed: false };
+  stream$.subscribe({
+    next: (value) => outcome.values.push(value),
+    complete: () => (outcome.completed = true),
+    error: (error: Error) => (outcome.error = error),
+  });
+  return outcome;
+}
+
+describe('FileWorkerService', () => {
   let fileWorkerService: FileWorkerService;
   let searchStatus: ScanStatus;
-  let params: WorkerScanOptions;
 
-  beforeEach(async () => {
-    const aa = new URL('file:///dev/null'); // Any valid URL. Is not used
-    jest.spyOn(global, 'URL').mockReturnValue(aa);
-
+  beforeEach(() => {
+    jest.clearAllMocks();
     searchStatus = new ScanStatus();
     fileWorkerService = new FileWorkerService(logger, searchStatus);
-    params = {
-      rootPath: '/sample/path',
-      targets: ['node_modules'],
-    };
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
     workerEmitter.removeAllListeners();
     port1Emitter.removeAllListeners();
     port2Emitter.removeAllListeners();
@@ -93,138 +126,137 @@ xdescribe('FileWorkerService', () => {
       stream$ = new Subject<string>();
     });
 
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('should emit "explore" and parameters to the worker', () => {
-      fileWorkerService.startScan(stream$, params);
-      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
-        type: EVENTS.explore,
-        value: { rootPath: params.rootPath },
-      });
-    });
-
-    it('should emit result to the streams on "scanResult"', (done) => {
-      fileWorkerService.startScan(stream$, params);
-      const val1 = ['/sample/path1/node_modules'];
-      const val2 = ['/sample/path2/node_modules', '/sample/path3/otherDir'];
-
-      const result: string[] = [];
-      stream$.subscribe((data) => {
-        result.push(data);
-        if (result.length === 3) {
-          expect(result[0]).toBe(val1[0]);
-          expect(result[1]).toBe(val2[0]);
-          expect(result[2]).toBe(val2[1]);
-          done();
-        }
-      });
-
-      port1Emitter.emit('message', {
-        type: EVENTS.scanResult,
-        value: {
-          workerId: 1,
-          results: [{ path: val1[0], isTarget: true }],
-          pending: 0,
-        },
-      } as WorkerMessage);
-      port1Emitter.emit('message', {
-        type: EVENTS.scanResult,
-        value: {
-          workerId: 2,
-          results: [
-            { path: val2[0], isTarget: true },
-            { path: val2[1], isTarget: true },
-          ],
-          pending: 342,
-        },
-      });
-    });
-
-    it('should add a job on "scanResult" when folder is not a target', () => {
-      fileWorkerService.startScan(stream$, params);
-      const val = [
-        '/path/1/valid',
-        '/path/im/target',
-        '/path/other/target',
-        '/path/2/valid',
-      ];
-
-      port1Emitter.emit('message', {
-        type: EVENTS.scanResult,
-        value: {
-          workerId: 1,
-          results: [
-            { path: val[0], isTarget: false },
-            { path: val[1], isTarget: true },
-            { path: val[2], isTarget: true },
-            { path: val[3], isTarget: false },
-          ],
-          pending: 0,
-        },
-      } as WorkerMessage);
+    it('should send the scan options and the root folder to the workers', () => {
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
       expect(messageChannelPort1Mock).toHaveBeenCalledWith({
-        type: EVENTS.explore,
-        value: { path: val[0] },
+        type: EVENTS.exploreConfig,
+        value: SCAN_OPTIONS,
       });
-
       expect(messageChannelPort1Mock).toHaveBeenCalledWith({
         type: EVENTS.explore,
-        value: { path: val[3] },
+        value: { path: SCAN_OPTIONS.rootPath, scanId: 1 },
       });
+    });
 
-      expect(messageChannelPort1Mock).not.toHaveBeenCalledWith({
+    it('should emit the targets and explore the other folders', () => {
+      const outcome = record(stream$);
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
+
+      answerExplore([
+        { path: '/sample/path/app/node_modules', isTarget: true },
+        { path: '/sample/path/lib', isTarget: false },
+      ]);
+
+      expect(outcome.values).toEqual(['/sample/path/app/node_modules']);
+      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
         type: EVENTS.explore,
-        value: { path: val[2] },
+        value: { path: '/sample/path/lib', scanId: 1 },
       });
     });
 
-    it('should update searchStatus workerStatus on "alive"', () => {
-      fileWorkerService.startScan(stream$, params);
-      port1Emitter.emit('message', {
-        type: 'alive',
-        value: null,
-      });
+    it('should complete only when every explored folder has answered', () => {
+      const outcome = record(stream$);
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
-      expect(searchStatus.workerStatus).toBe('scanning');
-    });
+      answerExplore([{ path: '/sample/path/lib', isTarget: false }]);
+      expect(outcome.completed).toBe(false);
 
-    it('should complete the stream and change worker status when all works have 0 pending tasks', (done) => {
-      fileWorkerService.startScan(stream$, params);
-      stream$.subscribe({
-        complete: () => {
-          done();
-        },
-      });
-
-      port1Emitter.emit('message', {
-        type: EVENTS.scanResult,
-        value: {
-          workerId: 0,
-          results: [],
-          pending: 0,
-        },
-      });
-
+      answerExplore([]);
+      expect(outcome.completed).toBe(true);
       expect(searchStatus.workerStatus).toBe('finished');
     });
 
-    it('should throw error on "error"', () => {
-      expect(() => {
-        fileWorkerService.startScan(stream$, params);
-        workerEmitter.emit('error');
-        expect(searchStatus.workerStatus).toBe('dead');
-      }).toThrow();
+    it('should ignore results from another scan', () => {
+      const outcome = record(stream$);
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
+
+      answerExplore([{ path: '/old/node_modules', isTarget: true }], 99);
+
+      expect(outcome.values).toEqual([]);
+      expect(outcome.completed).toBe(false);
     });
 
-    it('should register worker exit on "exit"', () => {
-      fileWorkerService.startScan(stream$, params);
+    it('should complete the scan and tell the workers to stop on stopScan', () => {
+      const outcome = record(stream$);
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
-      logger.info.mockReset();
-      workerEmitter.emit('exit');
-      expect(logger.info).toHaveBeenCalledTimes(1);
+      fileWorkerService.stopScan();
+
+      expect(outcome.completed).toBe(true);
+      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
+        type: EVENTS.stop,
+      });
+    });
+
+    it('should reject a second scan while the first is running', () => {
+      const second$ = new Subject<string>();
+      const second = record(second$);
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
+
+      fileWorkerService.startScan(second$, SCAN_OPTIONS);
+
+      expect(second.error).toBeInstanceOf(Error);
+    });
+
+    it('should report a worker crash to the scan', () => {
+      const outcome = record(stream$);
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
+
+      workerEmitter.emit('error', new Error('Worker crashed'));
+
+      expect(outcome.error?.message).toBe('Worker crashed');
+      expect(searchStatus.workerStatus).toBe('dead');
+    });
+  });
+
+  describe('getSize', () => {
+    let size$: Subject<number>;
+
+    beforeEach(() => {
+      size$ = new Subject<number>();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should emit the size and complete', () => {
+      const outcome = record(size$);
+      fileWorkerService.getSize(size$, '/sample/path');
+
+      answerSize(1, 4096);
+
+      expect(outcome.values).toEqual([4096]);
+      expect(outcome.completed).toBe(true);
+    });
+
+    it('should error when the worker cannot read the path', () => {
+      const outcome = record(size$);
+      fileWorkerService.getSize(size$, '/sample/path');
+
+      answerSize(1, 0, 'ENOENT: no such file or directory');
+
+      expect(outcome.error?.message).toContain('ENOENT');
+    });
+
+    it('should error when the worker takes too long', () => {
+      jest.useFakeTimers();
+      const outcome = record(size$);
+      fileWorkerService.getSize(size$, '/sample/path');
+
+      jest.advanceTimersByTime(60000);
+
+      expect(outcome.error?.message).toContain('Timeout');
+    });
+
+    it('should report a worker crash to pending size requests', () => {
+      const outcome = record(size$);
+      fileWorkerService.getSize(size$, '/sample/path');
+
+      workerEmitter.emit('error', new Error('Worker crashed'));
+
+      expect(outcome.error?.message).toBe('Worker crashed');
     });
   });
 });
@@ -243,66 +275,11 @@ describe('FileWorkerService idle workers', () => {
 
   it('should terminate the workers once there is no work left', () => {
     const fileWorkerService = new FileWorkerService(logger, new ScanStatus());
-    fileWorkerService.startScan(new Subject<string>(), {
-      rootPath: '/sample/path',
-      targets: ['node_modules'],
-    });
+    fileWorkerService.startScan(new Subject<string>(), SCAN_OPTIONS);
 
-    port1Emitter.emit('message', {
-      type: EVENTS.scanResult,
-      value: { workerId: 0, scanId: 1, results: [] },
-    });
+    answerExplore([]);
     jest.runOnlyPendingTimers();
 
     expect(workerTerminateMock).toHaveBeenCalledTimes(1);
   });
 });
-
-// describe('getSize', () => {
-//   let stream$: Subject<string>;
-//   const path = '/sample/file/path';
-
-//   const mockRandom = (value: number) =>
-//     jest.spyOn(global.Math, 'random').mockReturnValue(value);
-
-//   beforeEach(() => {
-//     stream$ = new Subject<string>();
-//     workerPostMessageMock.mockClear();
-//   });
-
-//   it('should emit "start-explore" and parameters to the worker', () => {
-//     const randomNumber = 0.12341234;
-//     mockRandom(randomNumber);
-
-//     fileWorkerService.getSize(stream$, path);
-//     expect(workerPostMessageMock).toHaveBeenCalledWith({
-//       type: 'start-getSize',
-//       value: { path: path, id: randomNumber },
-//     });
-//   });
-
-//   it('should received "job completed" with same id, emit to the stream and complete it', (done) => {
-//     const randomNumber = 0.8832342;
-//     const response = 42342;
-//     mockRandom(randomNumber);
-
-//     fileWorkerService.getSize(stream$, path);
-
-//     let streamValues = [];
-//     stream$.subscribe({
-//       next: (data) => {
-//         streamValues.push(data);
-//       },
-//       complete: () => {
-//         expect(streamValues.length).toBe(1);
-//         expect(streamValues[0]).toBe(response);
-//         done();
-//       },
-//     });
-
-//     eventEmitter.emit('message', {
-//       type: `getsize-job-completed-${randomNumber}`,
-//       value: response,
-//     });
-//   });
-// });

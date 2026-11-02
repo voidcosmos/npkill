@@ -1,8 +1,5 @@
 import { jest } from '@jest/globals';
 
-import { IFileService } from '../../../../src/core/interfaces/file-service.interface.js';
-import * as rimraf from 'rimraf';
-
 let statSyncReturnMock = (): { isDirectory: () => boolean } | null => null;
 let accessSyncReturnMock = (): boolean | null => null;
 const readFileSyncSpy = jest.fn();
@@ -32,12 +29,6 @@ const UnixFilesServiceConstructor = (
 ).UnixFilesService;
 class UnixFilesService extends UnixFilesServiceConstructor {}
 
-const WindowsFilesServiceConstructor = (
-  await import('../../../../src/core/services/files/windows-files.service.js')
-).WindowsFilesService;
-class WindowsFilesService extends WindowsFilesServiceConstructor {}
-
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../../../../src/core/services/stream.service.js';
 import { FileWorkerService } from '../../../../src/core/services/files/index.js';
 import os from 'os';
@@ -258,75 +249,6 @@ describe('File Service', () => {
             .isSensitive,
         ).toBe(false);
       });
-    });
-  });
-
-  xdescribe('Functional test for #delete', () => {
-    let fileService: IFileService;
-    const testFolder = 'test-files';
-    const directories = [
-      'testProject',
-      'awesome-fake-project',
-      'a',
-      'ewez',
-      'potato and bananas',
-    ];
-
-    const createDir = (dir) => mkdirSync(dir);
-    const isDirEmpty = (dir) => readdirSync(dir).length === 0;
-    const createFileWithSize = (filename, mb) =>
-      writeFileSync(filename, new Uint8Array(1024 * 1024 * mb));
-
-    beforeAll(() => {
-      const getOS = () => process.platform;
-      const OSService = {
-        linux: UnixFilesService,
-        darwin: UnixFilesService,
-        win32: WindowsFilesService,
-      };
-      const streamService: StreamService = new StreamService();
-      fileService = new OSService[getOS()](streamService);
-
-      if (existsSync(testFolder)) {
-        rimraf.sync(testFolder);
-      }
-      createDir(testFolder);
-
-      directories.forEach((dirName) => {
-        const basePath = `${testFolder}/${dirName}`;
-        const targetFolder = `${basePath}/node_modules`;
-        const subfolder = `${targetFolder}/sample subfolder`;
-        createDir(basePath);
-        createDir(targetFolder);
-        createDir(subfolder);
-        createFileWithSize(targetFolder + '/a', 30);
-        createFileWithSize(subfolder + '/sample file', 12);
-        // Create this structure:
-        //   test-files
-        //    |testProject
-        //      |a (file)
-        //      |sample subfolder
-        //       |sample file (file)
-        //    |etc...
-      });
-    });
-
-    afterAll(() => {
-      rimraf.sync(testFolder);
-    });
-
-    it('Test folder should not be empty', () => {
-      expect(isDirEmpty(testFolder)).toBeFalsy();
-    });
-
-    it('Should delete all folders created in test folder', async () => {
-      for (const dirName of directories) {
-        const path = `${testFolder}/${dirName}`;
-        expect(existsSync(path)).toBeTruthy();
-        await fileService.delete(path);
-        expect(existsSync(path)).toBeFalsy();
-      }
-      expect(isDirEmpty(testFolder)).toBeTruthy();
     });
   });
 });
