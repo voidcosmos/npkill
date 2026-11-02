@@ -388,12 +388,6 @@ describe('Npkill', () => {
     });
   });
 
-  describe('logger getter', () => {
-    it('should return the logger service', () => {
-      expect(npkill.logger).toBe(loggerMock);
-    });
-  });
-
   describe('error handling and edge cases', () => {
     it('should handle empty scan results', (done) => {
       fileServiceMock.listDir.mockReturnValue(of(''));

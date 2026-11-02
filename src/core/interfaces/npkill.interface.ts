@@ -7,7 +7,7 @@ import {
   DeleteResult,
   DeleteOptions,
 } from './folder.interface.js';
-import { LogEntry } from '@core/interfaces/logger-service.interface.js';
+import { LogEntry } from './logger-service.interface.js';
 
 export type ProfileFilterType = 'base' | 'user' | 'all';
 

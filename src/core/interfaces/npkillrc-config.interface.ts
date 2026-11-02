@@ -1,4 +1,4 @@
-import { PROFILE } from './profile.interface.js';
+import { Profile } from './profile.interface.js';
 
 /**
  * Represents the structure of .npkillrc configuration file.
@@ -74,7 +74,7 @@ export interface INpkillrcConfig {
    *   }
    * }
    */
-  profiles?: Record<string, PROFILE>;
+  profiles?: Record<string, Profile>;
 }
 
 /**

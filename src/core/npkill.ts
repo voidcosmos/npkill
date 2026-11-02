@@ -23,7 +23,6 @@ import {
 
 import { LogEntry } from './interfaces/logger-service.interface.js';
 import { getFileContent } from '../utils/get-file-content.js';
-import { ResultsService } from '../cli/services/results.service.js';
 
 /**
  * Main npkill class that implements the core directory scanning and cleanup functionality.
@@ -33,10 +32,12 @@ import { ResultsService } from '../cli/services/results.service.js';
 export class Npkill implements NpkillInterface {
   private readonly services: Services;
 
+  /** @internal */
   constructor(customServices?: Partial<Services>) {
     const defaultServices = createDefaultServices(
       customServices?.searchStatus,
       customServices?.logger,
+      customServices?.fileWorkerService,
     );
     this.services = { ...defaultServices, ...customServices };
     this.logger.info(process.argv.join(' '));
@@ -169,7 +170,7 @@ export class Npkill implements NpkillInterface {
     return packageData.version;
   }
 
-  get logger(): LoggerService {
+  private get logger(): LoggerService {
     return this.services.logger;
   }
 }
@@ -177,15 +178,14 @@ export class Npkill implements NpkillInterface {
 function createDefaultServices(
   searchStatus?: ScanStatus,
   logger?: LoggerService,
+  fileWorkerService?: FileWorkerService,
 ): Services {
   const actualLogger = logger || new LoggerService();
   const actualSearchStatus = searchStatus || new ScanStatus();
-  const fileWorkerService = new FileWorkerService(
-    actualLogger,
-    actualSearchStatus,
-  );
+  const actualFileWorkerService =
+    fileWorkerService ||
+    new FileWorkerService(actualLogger, actualSearchStatus);
   const streamService = new StreamService();
-  const resultsService = new ResultsService();
   const profilesService = new ProfilesService();
 
   const OSService = OSServiceMap[process.platform];
@@ -194,15 +194,14 @@ function createDefaultServices(
       `Unsupported platform: ${process.platform}. Cannot load OS service.`,
     );
   }
-  const fileService = new OSService(streamService, fileWorkerService);
+  const fileService = new OSService(streamService, actualFileWorkerService);
 
   return {
     logger: actualLogger,
     searchStatus: actualSearchStatus,
     fileService,
-    fileWorkerService,
+    fileWorkerService: actualFileWorkerService,
     streamService,
-    resultsService,
     profilesService,
   };
 }

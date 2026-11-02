@@ -1,6 +1,6 @@
 import { ProfilesService } from '../../../src/core/services/profiles.service.js';
 import { DEFAULT_PROFILES } from '../../../src/core/constants/profiles.constants.js';
-import { PROFILE } from '../../../src/core/interfaces/profile.interface.js';
+import { Profile } from '../../../src/core/interfaces/profile.interface.js';
 
 describe('ProfilesService', () => {
   let profilesService: ProfilesService;
@@ -11,7 +11,7 @@ describe('ProfilesService', () => {
 
   describe('setUserDefinedProfiles', () => {
     it('should set user-defined profiles', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile for testing',
           targets: ['custom_modules', 'custom_cache'],
@@ -25,10 +25,10 @@ describe('ProfilesService', () => {
     });
 
     it('should override previous user-defined profiles', () => {
-      const firstProfiles: Record<string, PROFILE> = {
+      const firstProfiles: Record<string, Profile> = {
         first: { description: 'First', targets: ['first'] },
       };
-      const secondProfiles: Record<string, PROFILE> = {
+      const secondProfiles: Record<string, Profile> = {
         second: { description: 'Second', targets: ['second'] },
       };
 
@@ -52,7 +52,7 @@ describe('ProfilesService', () => {
     });
 
     it('should return user profiles when filterType is "user"', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile',
           targets: ['custom_modules'],
@@ -67,7 +67,7 @@ describe('ProfilesService', () => {
     });
 
     it('should return all profiles when filterType is "all"', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile',
           targets: ['custom_modules'],
@@ -89,7 +89,7 @@ describe('ProfilesService', () => {
     });
 
     it('should allow user profiles to override base profiles', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         node: {
           description: 'Custom Node profile',
           targets: ['custom_node_modules'],
@@ -113,7 +113,7 @@ describe('ProfilesService', () => {
     });
 
     it('should return a user-defined profile by name', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile',
           targets: ['custom_modules'],
@@ -128,7 +128,7 @@ describe('ProfilesService', () => {
     });
 
     it('should prioritize user-defined profiles over base profiles', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         node: {
           description: 'Custom Node profile',
           targets: ['custom_node_modules'],
@@ -156,7 +156,7 @@ describe('ProfilesService', () => {
     });
 
     it('should return true for existing user-defined profiles', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile',
           targets: ['custom_modules'],
@@ -216,7 +216,7 @@ describe('ProfilesService', () => {
     });
 
     it('should recognize user-defined profiles as valid', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile',
           targets: ['custom_modules'],
@@ -374,7 +374,7 @@ describe('ProfilesService', () => {
     });
 
     it('should handle workflow of managing profiles and getting targets', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         custom: {
           description: 'Custom profile',
           targets: ['custom_modules', 'custom_cache'],
@@ -400,7 +400,7 @@ describe('ProfilesService', () => {
     });
 
     it('should allow user profiles to override base profiles in target resolution', () => {
-      const userProfiles: Record<string, PROFILE> = {
+      const userProfiles: Record<string, Profile> = {
         node: {
           description: 'Custom Node',
           targets: ['my_custom_modules'],

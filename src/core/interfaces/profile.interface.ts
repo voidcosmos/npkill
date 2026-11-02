@@ -1,7 +1,7 @@
 /**
  * Represents a profile with target directories and description.
  */
-export interface PROFILE {
+export interface Profile {
   /** Array of directory names to search for */
   targets: string[];
   /** Description of what this profile is for */
