@@ -42,7 +42,8 @@
     "lib/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf lib && tsc",
+    "check:package": "npm run build && node scripts/check-package.mjs",
     "start": "node --loader ts-node/esm --no-warnings ./src/cli.ts",
     "test": "node --experimental-vm-modules --disable-warning=ExperimentalWarning node_modules/jest/bin/jest.js",
     "test:watch": "npm run test -- --watch",
