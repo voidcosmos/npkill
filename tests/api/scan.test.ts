@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
-import { writeFileSync } from 'node:fs';
+import { symlinkSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { tap } from 'rxjs';
 import type { ScanOptions } from '../../src/index.js';
@@ -11,6 +11,8 @@ import {
   createTempDir,
   createTree,
   itOnUnix,
+  itWithUnixPermissions,
+  lockPermissions,
   observe,
   relativePaths,
   removeTempDirs,
@@ -158,5 +160,189 @@ describe('startScan$', () => {
       'a2/node_modules',
     ]);
     expect(first.completed).toBe(true);
+  });
+
+  it('accepts a new scan once the previous one is unsubscribed', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const npkill = createNpkill();
+    npkill.startScan$(createTempDir(), NODE_MODULES).subscribe().unsubscribe();
+
+    const outcome = await observe(
+      npkill.startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+    expect(outcome.completed).toBe(true);
+  });
+
+  it('runs scans in parallel on different instances', async () => {
+    const firstRoot = createTree(['a/node_modules/pkg']);
+    const secondRoot = createTree(['b/node_modules/pkg']);
+
+    const [first, second] = await Promise.all([
+      observe(createNpkill().startScan$(firstRoot, NODE_MODULES), 5000),
+      observe(createNpkill().startScan$(secondRoot, NODE_MODULES), 5000),
+    ]);
+
+    expect(relativePaths(first.values, firstRoot)).toEqual(['a/node_modules']);
+    expect(relativePaths(second.values, secondRoot)).toEqual([
+      'b/node_modules',
+    ]);
+  });
+
+  it('finds every target name at any depth', async () => {
+    const root = createTree([
+      'web/.next/cache',
+      'api/node_modules/pkg',
+      'libs/a/b/c/node_modules/pkg',
+      'docs/src',
+    ]);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, { targets: ['node_modules', '.next'] }),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual([
+      'api/node_modules',
+      'libs/a/b/c/node_modules',
+      'web/.next',
+    ]);
+  });
+
+  it('does not look inside a target it found', async () => {
+    const root = createTree(['app/node_modules/pkg/node_modules/dep']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+  });
+
+  it('only reports directories', async () => {
+    const root = createTree(['app', 'lib/node_modules/pkg']);
+    writeFileSync(join(root, 'app', 'node_modules'), '');
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['lib/node_modules']);
+  });
+
+  it('skips the always ignored folders unless they are targets', async () => {
+    const root = createTree([
+      '.git/node_modules/pkg',
+      'app/dist/node_modules/pkg',
+      'app/node_modules/pkg',
+    ]);
+
+    const [withoutDist, withDist] = await Promise.all([
+      observe(createNpkill().startScan$(root, NODE_MODULES), SCAN_TIMEOUT_MS),
+      observe(
+        createNpkill().startScan$(root, { targets: ['node_modules', 'dist'] }),
+        SCAN_TIMEOUT_MS,
+      ),
+    ]);
+
+    expect(relativePaths(withoutDist.values, root)).toEqual([
+      'app/node_modules',
+    ]);
+    expect(relativePaths(withDist.values, root)).toEqual([
+      'app/dist',
+      'app/node_modules',
+    ]);
+  });
+
+  itOnUnix('does not follow symlinks', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const outside = createTree(['project/node_modules/pkg']);
+    symlinkSync(outside, join(root, 'linked'), 'dir');
+    symlinkSync(
+      join(outside, 'project', 'node_modules'),
+      join(root, 'node_modules'),
+      'dir',
+    );
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+  });
+
+  itWithUnixPermissions(
+    'skips the folders it cannot read and completes',
+    async () => {
+      const root = createTree([
+        'locked/node_modules/pkg',
+        'open/node_modules/pkg',
+      ]);
+      lockPermissions(join(root, 'locked'), 0o000);
+
+      const outcome = await observe(
+        createNpkill().startScan$(root, NODE_MODULES),
+        SCAN_TIMEOUT_MS,
+      );
+
+      expect(relativePaths(outcome.values, root)).toEqual([
+        'open/node_modules',
+      ]);
+      expect(outcome.completed).toBe(true);
+    },
+  );
+
+  it('analyses the risk of each result by default', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.values).toEqual([
+      {
+        path: join(root, 'app', 'node_modules'),
+        riskAnalysis: expect.objectContaining({
+          isSensitive: expect.any(Boolean),
+        }),
+      },
+    ]);
+  });
+
+  it('flags results that are risky to delete and says why', async () => {
+    const root = createTree(['Applications/Editor.app/Contents/node_modules']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.values).toEqual([
+      expect.objectContaining({
+        riskAnalysis: { isSensitive: true, reason: expect.any(String) },
+      }),
+    ]);
+  });
+
+  it('leaves the risk analysis out when it is disabled', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, {
+        ...NODE_MODULES,
+        performRiskAnalysis: false,
+      }),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.values).toEqual([
+      { path: join(root, 'app', 'node_modules') },
+    ]);
   });
 });

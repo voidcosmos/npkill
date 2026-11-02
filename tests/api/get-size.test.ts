@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
-import { symlinkSync } from 'node:fs';
+import { mkdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ScanOptions } from '../../src/index.js';
 import {
@@ -9,6 +9,8 @@ import {
 import {
   createTempDir,
   itOnUnix,
+  itWithUnixPermissions,
+  lockPermissions,
   observe,
   removeTempDirs,
   writeRandomFile,
@@ -44,6 +46,94 @@ describe('getSize$', () => {
 
     expect(outcome.error).toBeInstanceOf(Error);
   });
+
+  it('emits the size of a folder once and completes', async () => {
+    const outcome = await observe(
+      createNpkill().getSize$(createFolderWithFile()),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(outcome).toEqual({
+      values: [{ size: FILE_SIZE }],
+      completed: true,
+      error: undefined,
+    });
+  });
+
+  it('counts every file of a folder', async () => {
+    const folder = createTempDir();
+    const fileCount = 10;
+    for (let index = 0; index < fileCount; index++) {
+      writeRandomFile(join(folder, `chunk-${index}.bin`), FILE_SIZE);
+    }
+
+    const outcome = await observe(
+      createNpkill().getSize$(folder),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(sizes(outcome.values)).toEqual([fileCount * FILE_SIZE]);
+  });
+
+  it('adds up the files in every subfolder', async () => {
+    const folder = createTempDir();
+    mkdirSync(join(folder, 'lib', 'deep'), { recursive: true });
+    writeRandomFile(join(folder, 'lib', 'a.bin'), FILE_SIZE);
+    writeRandomFile(join(folder, 'lib', 'deep', 'b.bin'), FILE_SIZE);
+
+    const outcome = await observe(
+      createNpkill().getSize$(folder),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(sizes(outcome.values)[0]).toBeGreaterThanOrEqual(2 * FILE_SIZE);
+  });
+
+  it('answers each request with its own size', async () => {
+    const small = createFolderWithFile();
+    const big = createFolderWithFile();
+    writeRandomFile(join(big, 'other.bin'), FILE_SIZE);
+    const npkill = createNpkill();
+
+    const [smallOutcome, bigOutcome] = await Promise.all([
+      observe(npkill.getSize$(small), SIZE_TIMEOUT_MS),
+      observe(npkill.getSize$(big), SIZE_TIMEOUT_MS),
+    ]);
+
+    expect(sizes(smallOutcome.values)).toEqual([FILE_SIZE]);
+    expect(sizes(bigOutcome.values)).toEqual([2 * FILE_SIZE]);
+  });
+
+  itWithUnixPermissions('errors when the folder cannot be read', async () => {
+    const folder = createFolderWithFile();
+    lockPermissions(folder, 0o000);
+
+    const outcome = await observe(
+      createNpkill().getSize$(folder),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toBeInstanceOf(Error);
+  });
+
+  itWithUnixPermissions(
+    'still answers when a subfolder cannot be read',
+    async () => {
+      const folder = createFolderWithFile();
+      const locked = join(folder, 'locked');
+      mkdirSync(locked);
+      writeRandomFile(join(locked, 'hidden.bin'), FILE_SIZE);
+      lockPermissions(locked, 0o000);
+
+      const outcome = await observe(
+        createNpkill().getSize$(folder),
+        SIZE_TIMEOUT_MS,
+      );
+
+      expect(sizes(outcome.values)[0]).toBeGreaterThanOrEqual(FILE_SIZE);
+      expect(sizes(outcome.values)[0]).toBeLessThan(2 * FILE_SIZE);
+    },
+  );
 
   it('measures a file', async () => {
     const file = join(createTempDir(), 'model.gguf');
