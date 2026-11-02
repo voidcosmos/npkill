@@ -1,4 +1,4 @@
-import path from 'path';
+import path, { basename, join } from 'path';
 import os from 'os';
 import {
   ScanOptions,
@@ -214,7 +214,7 @@ export abstract class FileService implements IFileService {
 
     return {
       timestamp: newestFile.modificationTime,
-      name: newestFile.path.split('/').pop() || '',
+      name: basename(newestFile.path),
       path: newestFile.path,
     };
   }
@@ -239,13 +239,13 @@ export abstract class FileService implements IFileService {
           }
           files = [
             ...files,
-            ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(
+            ...(await this.getFileStatsInDir(join(dirname, item.name)).catch(
               () => [],
             )),
           ];
         } else {
           try {
-            const path = `${dirname}/${item.name}`;
+            const path = join(dirname, item.name);
             const fileStat = await lstat(path);
 
             files.push({ path, modificationTime: fileStat.mtime.getTime() });
