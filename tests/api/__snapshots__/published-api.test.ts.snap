@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`npkill published API keeps the public declarations unchanged 1`] = `
+"export declare class Npkill implements NpkillInterface {
+    startScan$(rootPath: string, options: ScanOptions): Observable<ScanFoundTarget>;
+    getSize$(path: string): Observable<GetSizeResult>;
+    getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
+    delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
+    getLogs$(): Observable<LogEntry>;
+    stopScan(): void;
+    isValidRootFolder(path: string): IsValidRootFolderResult;
+    getVersion(): string;
+}
+
+export declare const DEFAULT_PROFILES: {
+    [profileName: string]: Profile;
+};
+
+export interface DeleteOptions {
+    dryRun?: boolean;
+}
+
+export interface DeleteResult {
+    path: string;
+    success: boolean;
+    error?: {
+        message: string;
+        code?: string;
+    };
+}
+
+export interface GetNewestFileResult {
+    path: string;
+    name: string;
+    timestamp: number;
+}
+
+export interface GetSizeResult {
+    size: number;
+}
+
+export interface IsValidRootFolderResult {
+    isValid: boolean;
+    invalidReason?: string;
+}
+
+export interface LogEntry {
+    type: 'info' | 'warn' | 'error';
+    timestamp: number;
+    message: string;
+}
+
+export interface NpkillInterface {
+    startScan$(rootPath: string, options: ScanOptions): Observable<ScanFoundTarget>;
+    stopScan(): void;
+    getSize$(path: string): Observable<GetSizeResult>;
+    getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
+    delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
+    getLogs$(): Observable<LogEntry>;
+    isValidRootFolder(path: string): IsValidRootFolderResult;
+    getVersion(): string;
+}
+
+export interface Profile {
+    targets: string[];
+    description: string;
+}
+
+export interface RiskAnalysis {
+    isSensitive: boolean;
+    reason?: string;
+}
+
+export interface ScanFoundTarget {
+    path: string;
+    riskAnalysis?: RiskAnalysis;
+}
+
+export interface ScanOptions {
+    targets: string[];
+    exclude?: string[];
+    performRiskAnalysis?: boolean;
+}"
+`;
