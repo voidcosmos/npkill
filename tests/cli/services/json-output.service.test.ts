@@ -139,6 +139,42 @@ describe('JsonOutputService', () => {
       },
     );
 
+    it('should include the deletion when the result was deleted', () => {
+      jsonOutputService.initializeSession(true);
+      jsonOutputService.processResult(
+        {
+          path: '/test/node_modules',
+          size: 1,
+          modificationTime: 1640995200000,
+          status: 'live',
+        },
+        {
+          path: '/test/node_modules',
+          success: false,
+          error: { message: 'Permission denied' },
+        },
+      );
+
+      const parsedData = JSON.parse(mockStdout.write.mock.calls[0][0]);
+      expect(parsedData.result.deletion).toEqual({
+        success: false,
+        error: 'Permission denied',
+      });
+    });
+
+    it('should not include a deletion when nothing was deleted', () => {
+      jsonOutputService.initializeSession(true);
+      jsonOutputService.processResult({
+        path: '/test/node_modules',
+        size: 1,
+        modificationTime: 1640995200000,
+        status: 'live',
+      });
+
+      const parsedData = JSON.parse(mockStdout.write.mock.calls[0][0]);
+      expect(parsedData.result).not.toHaveProperty('deletion');
+    });
+
     it('should not output anything on completeScan in stream mode', () => {
       const mockResult: CliScanFoundTarget = {
         path: '/test/node_modules',

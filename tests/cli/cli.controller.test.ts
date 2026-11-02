@@ -138,6 +138,7 @@ describe('CliController test', () => {
     getResultsCount: jest.fn(() => 0),
     writeError: jest.fn(),
     completeScan: jest.fn(),
+    processResult: jest.fn(),
   };
 
   const npkillDeleteMock = jest.fn();
@@ -256,6 +257,7 @@ describe('CliController test', () => {
       DEFAULT_CONFIG.olderThan = 0;
       DEFAULT_CONFIG.disableAge = false;
       DEFAULT_CONFIG.disableSize = false;
+      DEFAULT_CONFIG.yes = false;
     });
 
     it('#showHelp should called if --help flag is present and exit', () => {
@@ -430,6 +432,89 @@ describe('CliController test', () => {
           ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS,
         );
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('--delete-all with JSON output', () => {
+      const target = {
+        path: '/my/project/node_modules',
+        size: 1,
+        modificationTime: 1640995200000,
+        status: 'live',
+      };
+
+      const scanInJson = async () => {
+        cliController.scanInJson();
+        await new Promise((resolve) => setImmediate(resolve));
+      };
+
+      beforeEach(() => {
+        DEFAULT_CONFIG.targets = ['node_modules'];
+        DEFAULT_CONFIG.jsonSimple = true;
+        scanServiceMock.scan.mockReturnValue(of(target));
+        scanServiceMock.calculateResultStats.mockReturnValue(of(target));
+      });
+
+      it('Should ask for -y because it cannot show the warning', () => {
+        mockParameters({
+          'delete-all': true,
+          targets: 'node_modules',
+          jsonSimple: true,
+        });
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.init();
+
+        expect(loggerServiceMock.error).toHaveBeenCalledWith(
+          ERROR_MSG.DELETE_ALL_NEEDS_YES,
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalled();
+      });
+
+      it('Should delete each result and report the deletion', async () => {
+        DEFAULT_CONFIG.deleteAll = true;
+        const deletion = { path: target.path, success: true };
+        npkillDeleteMock.mockReturnValueOnce(of(deletion));
+        const exitGracefullySpy = spyMethod('exitGracefully');
+
+        await scanInJson();
+
+        expect(npkillDeleteMock).toHaveBeenCalledWith(target.path, {
+          dryRun: false,
+        });
+        expect(jsonOutputServiceMock.processResult).toHaveBeenCalledWith(
+          target,
+          deletion,
+        );
+        expect(exitGracefullySpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should exit with an error when a deletion fails', async () => {
+        DEFAULT_CONFIG.deleteAll = true;
+        npkillDeleteMock.mockReturnValueOnce(
+          of({
+            path: target.path,
+            success: false,
+            error: { message: 'Permission denied' },
+          }),
+        );
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        await scanInJson();
+
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should not delete anything without --delete-all', async () => {
+        spyMethod('exitGracefully');
+
+        await scanInJson();
+
+        expect(npkillDeleteMock).not.toHaveBeenCalled();
+        expect(jsonOutputServiceMock.processResult).toHaveBeenCalledWith(
+          target,
+          undefined,
+        );
       });
     });
 

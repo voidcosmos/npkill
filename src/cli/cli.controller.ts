@@ -11,7 +11,12 @@ import {
 } from '../constants/index.js';
 import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
-import { IConfig, CliScanFoundTarget, IKeyPress } from './interfaces/index.js';
+import {
+  IConfig,
+  CliScanFoundTarget,
+  DeleteResult,
+  IKeyPress,
+} from './interfaces/index.js';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
 import { delay, filter, mergeMap, tap } from 'rxjs/operators';
 
@@ -54,6 +59,7 @@ export class CliController {
   private searchStart: number;
   private searchDuration: number;
   private isScreenPrepared = false;
+  private failedJsonDeletions = 0;
 
   private uiHeader: HeaderUi;
   private uiGeneral: GeneralUi;
@@ -577,6 +583,11 @@ export class CliController {
       this.exitWithError();
     }
 
+    if (this.config.deleteAll && this.isJsonOutput() && !this.config.yes) {
+      this.printError(ERROR_MSG.DELETE_ALL_NEEDS_YES);
+      this.exitWithError();
+    }
+
     // Remove trailing slash from folderRoot for consistency
     this.config.folderRoot = this.config.folderRoot.replace(/[/\\]$/, '');
   }
@@ -746,9 +757,7 @@ export class CliController {
   private scan(): void {
     this.initializeScan();
 
-    const shouldOutputInJson = this.config.jsonSimple || this.config.jsonStream;
-
-    if (shouldOutputInJson) {
+    if (this.isJsonOutput()) {
       this.scanInJson();
     } else {
       this.scanInUiMode();
@@ -776,7 +785,7 @@ export class CliController {
           10, // Limit to 10 concurrent stat calculations at a time
         ),
         filter((result) => this.passesAgeFilter(result)),
-        tap((result) => this.jsonOutputService.processResult(result)),
+        mergeMap((result) => this.outputJsonResult(result), 10),
       )
       .subscribe({
         error: (error) => {
@@ -785,9 +794,43 @@ export class CliController {
         },
         complete: () => {
           this.jsonOutputService.completeScan();
-          this.exitGracefully();
+          if (this.failedJsonDeletions > 0) {
+            this.exitWithError();
+          } else {
+            this.exitGracefully();
+          }
         },
       });
+  }
+
+  private async outputJsonResult(result: CliScanFoundTarget): Promise<void> {
+    const deletion = this.config.deleteAll
+      ? await this.deleteForJsonOutput(result)
+      : undefined;
+    this.jsonOutputService.processResult(result, deletion);
+  }
+
+  private async deleteForJsonOutput(
+    target: CliScanFoundTarget,
+  ): Promise<DeleteResult> {
+    const deletion = isSafeToDelete(target.path, this.config.targets)
+      ? await firstValueFrom(
+          this.npkill.delete$(target.path, { dryRun: this.config.dryRun }),
+        )
+      : {
+          path: target.path,
+          success: false,
+          error: { message: `Target not safe to delete: ${target.path}` },
+        };
+
+    if (!deletion.success) {
+      this.failedJsonDeletions++;
+    }
+    return deletion;
+  }
+
+  private isJsonOutput(): boolean {
+    return this.config.jsonSimple || this.config.jsonStream;
   }
 
   private scanSubscription: Subscription | null = null;

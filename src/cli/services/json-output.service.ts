@@ -1,9 +1,11 @@
 import { CliScanFoundTarget } from '../interfaces/stats.interface.js';
+import { DeleteResult } from '../../core/interfaces/target.interface.js';
 import {
   JsonStreamOutput,
   JsonSimpleOutput,
   JsonErrorOutput,
   JsonCliScanFoundTarget,
+  JsonDeletion,
 } from '../interfaces/json-output.interface.js';
 import { convertGbToBytes } from '../../utils/unit-conversions.js';
 import { isModificationTimeKnown } from '../../utils/is-modification-time-known.js';
@@ -25,11 +27,12 @@ export class JsonOutputService {
     this.isStreamMode = streamMode;
   }
 
-  processResult(result: CliScanFoundTarget): void {
+  processResult(result: CliScanFoundTarget, deletion?: DeleteResult): void {
+    const output = this.sanitizeResultForOutput(result, deletion);
     if (this.isStreamMode) {
-      this.writeStreamResult(result);
+      this.writeStreamResult(output);
     } else {
-      this.addResult(result);
+      this.results.push(output);
     }
   }
 
@@ -39,10 +42,10 @@ export class JsonOutputService {
     }
   }
 
-  private writeStreamResult(result: CliScanFoundTarget): void {
+  private writeStreamResult(result: JsonCliScanFoundTarget): void {
     const output: JsonStreamOutput = {
       version: this.OUTPUT_VERSION,
-      result: this.sanitizeResultForOutput(result),
+      result,
     };
 
     try {
@@ -54,10 +57,6 @@ export class JsonOutputService {
           : 'Unknown JSON serialization error';
       this.writeError(`Failed to serialize result to JSON: ${errorMessage}`);
     }
-  }
-
-  private addResult(result: CliScanFoundTarget): void {
-    this.results.push(this.sanitizeResultForOutput(result));
   }
 
   private writeSimpleResults(): void {
@@ -106,6 +105,7 @@ export class JsonOutputService {
 
   private sanitizeResultForOutput(
     result: CliScanFoundTarget,
+    deletion?: DeleteResult,
   ): JsonCliScanFoundTarget {
     return {
       path: result.path,
@@ -119,6 +119,13 @@ export class JsonOutputService {
             reason: result.riskAnalysis.reason,
           }
         : undefined,
+      ...(deletion ? { deletion: this.toJsonDeletion(deletion) } : {}),
     };
+  }
+
+  private toJsonDeletion(deletion: DeleteResult): JsonDeletion {
+    return deletion.success
+      ? { success: true }
+      : { success: false, error: deletion.error?.message };
   }
 }

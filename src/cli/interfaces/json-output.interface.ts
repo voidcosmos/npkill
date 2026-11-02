@@ -10,6 +10,13 @@ export interface JsonCliScanFoundTarget extends Omit<
 > {
   /** Milliseconds since the Unix epoch, or null when the age is unknown. */
   modificationTime: number | null;
+  /** Only present when --delete-all is used. */
+  deletion?: JsonDeletion;
+}
+
+export interface JsonDeletion {
+  success: boolean;
+  error?: string;
 }
 
 /**

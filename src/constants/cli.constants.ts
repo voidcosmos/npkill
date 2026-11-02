@@ -22,7 +22,8 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-D', '--delete-all'],
-    description: 'Auto-delete all targets that are found.',
+    description:
+      'Auto-delete all targets that are found. Use it with --json or --json-stream and -y to delete without the interface.',
     name: 'delete-all',
   },
   {
