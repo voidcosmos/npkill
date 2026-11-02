@@ -48,6 +48,33 @@ describe('Console Service', () => {
     });
   });
 
+  describe('#getParameters with unknown options', () => {
+    it('should collect the options it does not know', () => {
+      const argvs = [
+        '/usr/bin/node',
+        '/usr/bin/npkill',
+        '--exlcude',
+        'foo',
+        '-t',
+        'node_modules',
+        '--color',
+      ];
+
+      const result = consoleService.getParameters(argvs);
+
+      expect(result.getUnknownOptions()).toEqual(['--exlcude', '--color']);
+      expect(result.getString('targets')).toBe('node_modules');
+    });
+
+    it('should not report known options as unknown', () => {
+      const argvs = ['/usr/bin/node', '/usr/bin/npkill', '--sort=size', '-x'];
+
+      const result = consoleService.getParameters(argvs);
+
+      expect(result.getUnknownOptions()).toEqual([]);
+    });
+  });
+
   describe('#splitData', () => {
     it('should split data with default separator', () => {
       expect(consoleService.splitData('foo\nbar\nfoot')).toEqual([

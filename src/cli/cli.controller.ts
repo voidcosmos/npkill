@@ -353,6 +353,11 @@ export class CliController {
 
   private parseArguments(): void {
     const options = this.consoleService.getParameters(process.argv);
+    const unknownOptions = options.getUnknownOptions();
+    if (unknownOptions.length > 0) {
+      this.invalidOptions(unknownOptions);
+    }
+
     if (options.isTrue('help')) {
       this.showHelp();
       this.exitGracefully();
@@ -594,6 +599,13 @@ export class CliController {
 
   private invalidSortParam(): void {
     this.printError(INFO_MSGS.NO_VALID_SORT_NAME);
+    this.exitWithError();
+  }
+
+  private invalidOptions(unknownOptions: string[]): void {
+    this.printError(
+      `${ERROR_MSG.UNKNOWN_OPTIONS} ${unknownOptions.join(', ')}\n${ERROR_MSG.SEE_HELP}`,
+    );
     this.exitWithError();
   }
 

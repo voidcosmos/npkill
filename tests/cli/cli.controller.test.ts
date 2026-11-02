@@ -433,6 +433,24 @@ describe('CliController test', () => {
       });
     });
 
+    describe('unknown options', () => {
+      it('Should show the unknown options and exit with an error', () => {
+        consoleServiceMock.getParameters = () => {
+          const parameters = new StartParameters();
+          parameters.addUnknownOption('--exlcude');
+          return parameters;
+        };
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.init();
+
+        expect(uiServiceMock.print).toHaveBeenCalledWith(
+          expect.stringContaining('--exlcude'),
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalled();
+      });
+    });
+
     describe('exiting', () => {
       it('Should not write terminal escape codes when the interactive ui never started', () => {
         expect(() => cliController.exitGracefully()).toThrow('process.exit: 0');

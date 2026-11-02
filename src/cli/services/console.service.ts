@@ -13,7 +13,12 @@ export class ConsoleService {
     const options: StartParameters = new StartParameters();
 
     argvs.forEach((argv, index) => {
-      if (!this.isArgOption(argv) || !this.isValidOption(argv)) {
+      if (!this.isArgOption(argv)) {
+        return;
+      }
+
+      if (!this.isValidOption(argv)) {
+        options.addUnknownOption(argv);
         return;
       }
       const nextArgv = argvs[index + 1];
