@@ -20,6 +20,8 @@ interface Outcome<T> {
 export const itWithUnixPermissions =
   process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
 
+export const itOnUnix = process.platform === 'win32' ? it.skip : it;
+
 const temporaryDirs: string[] = [];
 const lockedPaths: string[] = [];
 

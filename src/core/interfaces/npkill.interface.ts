@@ -36,9 +36,12 @@ export interface NpkillInterface {
    * Only one scan can run at a time on each instance. Subscribing to a second
    * scan while the first one is running emits an error. Use another instance
    * to run scans in parallel. Unsubscribing stops the scan.
-   * @param rootPath Root directory to scan from.
+   * @param rootPath Root directory to scan from. A relative path is resolved
+   * against the current working directory.
    * @param options Scan options. `targets` must be a non-empty array of names.
-   * @returns Observable that emits the results that are found in real time.
+   * @returns Observable that emits the results that are found in real time,
+   * always with absolute paths. Errors if the root is not a readable
+   * directory, with the same reason that `isValidRootFolder` gives.
    */
   startScan$(
     rootPath: string,

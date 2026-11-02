@@ -1,6 +1,7 @@
+import { resolve } from 'path';
 import { FileWorkerService } from './services/files/index.js';
 import { defer, from, Observable, of } from 'rxjs';
-import { catchError, filter, map, mergeMap, take, tap } from 'rxjs/operators';
+import { catchError, map, take, tap } from 'rxjs/operators';
 import { ScanStatus } from './interfaces/search-status.model.js';
 import _dirname from '../dirname.js';
 import { LoggerService } from './services/logger.service.js';
@@ -54,12 +55,15 @@ export class Npkill implements NpkillInterface {
 
     return defer(() => {
       assertValidScanOptions(options);
-      this.logger.info(`Scan started in ${rootPath}`);
+      const absoluteRootPath = resolve(rootPath);
+      assertValidRootFolder(
+        absoluteRootPath,
+        fileService.isValidRootFolder(absoluteRootPath),
+      );
+      this.logger.info(`Scan started in ${absoluteRootPath}`);
       const startTime = Date.now();
 
-      return fileService.listDir(rootPath, options).pipe(
-        mergeMap((data) => from(splitData(data))),
-        filter((path) => path !== ''),
+      return fileService.listDir(absoluteRootPath, options).pipe(
         map((path) => {
           if (
             options.performRiskAnalysis !== undefined &&
@@ -220,6 +224,15 @@ function assertValidScanOptions(options: ScanOptions): void {
   }
 }
 
+function assertValidRootFolder(
+  rootPath: string,
+  validation: IsValidRootFolderResult,
+): void {
+  if (!validation.isValid) {
+    throw new Error(`Cannot scan ${rootPath}. ${validation.invalidReason}`);
+  }
+}
+
 function toFailedDeleteResult(path: string, error: unknown): DeleteResult {
   const { message, code } = (error ?? {}) as {
     message?: unknown;
@@ -234,11 +247,4 @@ function toFailedDeleteResult(path: string, error: unknown): DeleteResult {
       ...(typeof code === 'string' ? { code } : {}),
     },
   };
-}
-
-function splitData(data: string, separator = '\n'): string[] {
-  if (data === '') {
-    return [];
-  }
-  return data.split(separator);
 }

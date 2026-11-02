@@ -12,7 +12,7 @@ export interface RiskAnalysis {
  * Represents a target found during the scan process.
  */
 export interface ScanFoundTarget {
-  /** Full path to the found target. */
+  /** Absolute path to the found target. */
   path: string;
   /** Optional risk analysis for the target. */
   riskAnalysis?: RiskAnalysis;

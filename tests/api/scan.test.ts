@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
+import { writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { tap } from 'rxjs';
 import type { ScanOptions } from '../../src/index.js';
 import {
@@ -6,7 +8,9 @@ import {
   stopCreatedInstances,
 } from './support/npkill-package.js';
 import {
+  createTempDir,
   createTree,
+  itOnUnix,
   observe,
   relativePaths,
   removeTempDirs,
@@ -48,6 +52,63 @@ describe('startScan$', () => {
     );
 
     expect(outcome.error).toBeInstanceOf(Error);
+  });
+
+  it('errors when the root folder does not exist', async () => {
+    const missing = join(createTempDir(), 'missing');
+
+    const outcome = await observe(
+      createNpkill().startScan$(missing, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining('does not exist'),
+      }),
+    );
+  });
+
+  it('errors when the root is a file', async () => {
+    const file = join(createTempDir(), 'package.json');
+    writeFileSync(file, '{}');
+
+    const outcome = await observe(
+      createNpkill().startScan$(file, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining('directory'),
+      }),
+    );
+  });
+
+  it('emits absolute paths when the root is relative', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(relative(process.cwd(), root), NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.values.map(({ path }) => path)).toEqual([
+      join(root, 'app', 'node_modules'),
+    ]);
+  });
+
+  itOnUnix('keeps paths with line breaks intact', async () => {
+    const root = createTree(['weird\nname/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual([
+      'weird\nname/node_modules',
+    ]);
   });
 
   it('ignores unknown options such as callbacks', async () => {

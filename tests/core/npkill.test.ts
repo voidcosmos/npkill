@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
-import { of, throwError, Subject } from 'rxjs';
+import { resolve } from 'path';
+import { EMPTY, of, throwError, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Npkill } from '../../src/core/npkill.js';
 import { IFileService } from '../../src/core/interfaces/file-service.interface.js';
@@ -49,6 +50,7 @@ describe('Npkill', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as unknown as any,
     };
+    fileServiceMock.isValidRootFolder.mockReturnValue({ isValid: true });
 
     logEntries$ = new Subject<LogEntry>();
     loggerMock = {
@@ -116,12 +118,13 @@ describe('Npkill', () => {
     };
 
     it('should emit scan results with risk analysis enabled', (done) => {
-      const mockFolderData = 'folder1\nfolder2\nfolder3';
       const mockRiskAnalysis: RiskAnalysis = {
         isSensitive: false,
       };
 
-      fileServiceMock.listDir.mockReturnValue(of(mockFolderData));
+      fileServiceMock.listDir.mockReturnValue(
+        of('folder1', 'folder2', 'folder3'),
+      );
       fileServiceMock.isDangerous.mockReturnValue(mockRiskAnalysis);
 
       const results: ScanFoundTarget[] = [];
@@ -137,7 +140,7 @@ describe('Npkill', () => {
           });
           expect(fileServiceMock.isDangerous).toHaveBeenCalledTimes(3);
           expect(loggerMock.info).toHaveBeenCalledWith(
-            `Scan started in ${mockRootPath}`,
+            `Scan started in ${resolve(mockRootPath)}`,
           );
           done();
         },
@@ -145,10 +148,9 @@ describe('Npkill', () => {
     });
 
     it('should emit scan results without risk analysis when disabled', (done) => {
-      const mockFolderData = 'folder1\nfolder2';
       const optionsWithoutRisk = { ...mockOptions, performRiskAnalysis: false };
 
-      fileServiceMock.listDir.mockReturnValue(of(mockFolderData));
+      fileServiceMock.listDir.mockReturnValue(of('folder1', 'folder2'));
 
       const results: ScanFoundTarget[] = [];
       npkill.startScan$(mockRootPath, optionsWithoutRisk).subscribe({
@@ -164,9 +166,8 @@ describe('Npkill', () => {
       });
     });
 
-    it('should filter out empty paths', (done) => {
-      const mockFolderData = 'folder1\n\nfolder3\n';
-      fileServiceMock.listDir.mockReturnValue(of(mockFolderData));
+    it('should keep paths with line breaks intact', (done) => {
+      fileServiceMock.listDir.mockReturnValue(of('weird\nname/node_modules'));
 
       const results: ScanFoundTarget[] = [];
       npkill.startScan$(mockRootPath, mockOptions).subscribe({
@@ -174,8 +175,38 @@ describe('Npkill', () => {
           results.push(result);
         },
         complete: () => {
-          expect(results).toHaveLength(2);
-          expect(results.map((r) => r.path)).toEqual(['folder1', 'folder3']);
+          expect(results.map((r) => r.path)).toEqual([
+            'weird\nname/node_modules',
+          ]);
+          done();
+        },
+      });
+    });
+
+    it('should scan from the absolute root path', (done) => {
+      fileServiceMock.listDir.mockReturnValue(EMPTY);
+
+      npkill.startScan$('relative/root', mockOptions).subscribe({
+        complete: () => {
+          expect(fileServiceMock.listDir).toHaveBeenCalledWith(
+            resolve('relative/root'),
+            mockOptions,
+          );
+          done();
+        },
+      });
+    });
+
+    it('should error without scanning when the root folder is not valid', (done) => {
+      fileServiceMock.isValidRootFolder.mockReturnValue({
+        isValid: false,
+        invalidReason: 'The path does not exist.',
+      });
+
+      npkill.startScan$(mockRootPath, mockOptions).subscribe({
+        error: (error) => {
+          expect(error.message).toContain('The path does not exist.');
+          expect(fileServiceMock.listDir).not.toHaveBeenCalled();
           done();
         },
       });
@@ -406,7 +437,7 @@ describe('Npkill', () => {
 
   describe('error handling and edge cases', () => {
     it('should handle empty scan results', (done) => {
-      fileServiceMock.listDir.mockReturnValue(of(''));
+      fileServiceMock.listDir.mockReturnValue(EMPTY);
 
       const results: ScanFoundTarget[] = [];
       npkill.startScan$('/test', { targets: ['node_modules'] }).subscribe({
