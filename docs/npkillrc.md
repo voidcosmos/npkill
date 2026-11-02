@@ -54,7 +54,7 @@ npkill --config /path/to/your/config.json
     },
     "mobile": {
       "description": "Mobile platform build folders and caches",
-      "targets": ["Pods", "build", "DerivedData", ".gradle", "android/build"]
+      "targets": ["Pods", "build", "DerivedData", ".gradle"]
     },
     "database": {
       "description": "Database data folders (use with caution)",
@@ -74,7 +74,7 @@ npkill --config /path/to/your/config.json
 Absolute path from which the search will begin.
 
 ```json
-"rootdir": "/home/user/my-projects/"
+"rootDir": "/home/user/my-projects/"
 ```
 
 ### exclude
@@ -186,7 +186,7 @@ You can check the existing ones with `--profiles` and even copy the output of th
   },
   "mobile": {
     "description": "Mobile platform build folders and caches",
-    "targets": ["Pods", "build", "DerivedData", "gradle"]
+    "targets": ["Pods", "build", "DerivedData", ".gradle"]
   }
 }
 ```
