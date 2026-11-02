@@ -103,7 +103,7 @@ describe('is-safe-to-delete', () => {
 
 describe('is-older-than', () => {
   const now = new Date('2026-10-01T00:00:00Z').getTime();
-  const daysAgo = (days: number) => now / 1000 - days * 86400;
+  const daysAgo = (days: number) => now - days * 86400000;
 
   it('should return true when the result is older than the given days', () => {
     expect(isOlderThan(daysAgo(91), 90, now)).toBe(true);

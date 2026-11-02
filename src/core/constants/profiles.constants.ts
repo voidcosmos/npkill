@@ -1,9 +1,9 @@
 /* eslint-disable quotes */
-import { PROFILE } from '../interfaces/profile.interface.js';
+import { Profile } from '../interfaces/profile.interface.js';
 
 export const DEFAULT_PROFILE = 'node';
 
-export const BASE_PROFILES: { [profileName: string]: PROFILE } = {
+export const BASE_PROFILES: { [profileName: string]: Profile } = {
   node: {
     description:
       'All the usual suspects related with the node/web/javascript dev toolchain: node_modules, caches, build artifacts, and assorted JavaScript junk. Safe to clean and your disk will thank you.',
@@ -150,7 +150,7 @@ const ALL_TARGETS = [
   ),
 ];
 
-export const DEFAULT_PROFILES: { [profileName: string]: PROFILE } = {
+export const DEFAULT_PROFILES: { [profileName: string]: Profile } = {
   ...BASE_PROFILES,
   all: {
     targets: ALL_TARGETS,

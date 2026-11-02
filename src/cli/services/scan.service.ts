@@ -4,7 +4,6 @@ import {
   IConfig,
   ScanFoundTarget,
   ScanOptions,
-  SortBy,
 } from '../interfaces';
 import {
   Observable,
@@ -31,13 +30,12 @@ export class ScanService {
   constructor(private readonly npkill: Npkill) {}
 
   scan(config: IConfig): Observable<CliScanFoundTarget> {
-    const { targets, exclude, sortBy } = config;
+    const { targets, exclude } = config;
 
     const params: ScanOptions = {
       targets,
       exclude,
       performRiskAnalysis: true,
-      sortBy: sortBy as SortBy,
     };
 
     const results$ = this.npkill.startScan$(config.folderRoot, params);
@@ -67,14 +65,14 @@ export class ScanService {
     },
   ): Observable<CliScanFoundTarget> {
     const size$ = options.disableSize
-      ? of({ size: 0, unit: 'bytes' as const })
+      ? of({ size: 0 })
       : this.npkill.getSize$(target.path).pipe(
           timeout(30000), // 30 seconds timeout
           catchError(() => {
             // If size calculation fails or times out, keep size as 0 but mark as calculated
             target.size = 0;
             target.modificationTime = 1; // 1 = calculated, -1 = not calculated
-            return of({ size: 0, unit: 'bytes' as const });
+            return of({ size: 0 });
           }),
           tap(({ size }) => {
             target.size = convertBytesToGb(size);

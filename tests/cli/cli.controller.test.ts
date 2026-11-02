@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import {
   ConfigService,
   DeleteResult,
@@ -97,16 +97,12 @@ describe('CliController test', () => {
   const filesServiceDeleteMock = jest
     .fn<() => Promise<boolean>>()
     .mockResolvedValue(true);
-  const filesServiceFakeDeleteMock = jest
-    .fn<() => Promise<boolean>>()
-    .mockResolvedValue(true);
 
   const linuxFilesServiceMock = {
     getFileContent: jest.fn().mockReturnValue('{}'),
     isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
     isSafeToDelete: jest.fn().mockReturnValue(true),
     delete: filesServiceDeleteMock,
-    fakeDelete: filesServiceFakeDeleteMock,
   };
   const spinnerServiceMock = jest.fn();
   const updateServiceMock = jest.fn();
@@ -341,6 +337,12 @@ describe('CliController test', () => {
           success: true,
         };
         jest.clearAllMocks();
+        jest.useFakeTimers();
+        npkillDeleteMock.mockReturnValueOnce(of(testTarget));
+      });
+
+      afterEach(() => {
+        jest.useRealTimers();
       });
 
       it('Should call normal delete function when no --dry-run is included', () => {
@@ -372,6 +374,26 @@ describe('CliController test', () => {
         expect(npkillDeleteMock).toHaveBeenCalledWith(testTarget.path, {
           dryRun: true,
         });
+      });
+    });
+
+    describe('deleting a target', () => {
+      it('Should mark the target as failed when delete$ reports success: false', async () => {
+        const target = { path: '/my/path/node_modules', status: 'live' };
+        npkillDeleteMock.mockReturnValueOnce(
+          of({
+            path: target.path,
+            success: false,
+            error: { message: 'Permission denied' },
+          }),
+        );
+        mockParameters({ targets: 'node_modules' });
+        cliController.init();
+
+        resultsUiDeleteMock$.next(target as unknown as DeleteResult);
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(target.status).toBe('error-deleting');
       });
     });
 
@@ -459,7 +481,7 @@ describe('CliController test', () => {
     });
 
     describe('age filtering', () => {
-      const daysAgo = (days: number) => Date.now() / 1000 - days * 86400;
+      const daysAgo = (days: number) => Date.now() - days * 86400000;
       const folder = (modificationTime: number) => ({
         path: '/my/project/node_modules',
         size: 1,

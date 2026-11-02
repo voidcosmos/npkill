@@ -131,7 +131,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     drawLabel(
       'Modified:',
       modificationTime > 0
-        ? new Date(modificationTime * 1000).toLocaleString()
+        ? new Date(modificationTime).toLocaleString()
         : '...',
       pc.gray,
     );

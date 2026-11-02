@@ -329,11 +329,4 @@ describe('File Service', () => {
       expect(isDirEmpty(testFolder)).toBeTruthy();
     });
   });
-
-  describe('fakeDelete', () => {
-    it('Should return a Promise', () => {
-      const result = fileService.fakeDelete();
-      expect(result).toBeInstanceOf(Promise);
-    });
-  });
 });

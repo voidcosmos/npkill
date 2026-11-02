@@ -13,7 +13,7 @@ import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundTarget, IKeyPress } from './interfaces/index.js';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
-import { filter, mergeMap, tap } from 'rxjs/operators';
+import { delay, filter, mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
 import { RESULT_SORT } from '../constants/sort.result.js';
@@ -958,10 +958,22 @@ export class CliController {
     this.uiStatus.render();
     this.printResultsSection();
 
+    const deletion$ = this.npkill.delete$(String(target.path), {
+      dryRun: this.config.dryRun,
+    });
+    const simulatedDeletionMs = Math.floor(Math.random() * 4000 + 200);
+
     firstValueFrom(
-      this.npkill.delete$(String(target.path), { dryRun: this.config.dryRun }),
+      this.config.dryRun
+        ? deletion$.pipe(delay(simulatedDeletionMs))
+        : deletion$,
     )
-      .then(() => {
+      .then((result) => {
+        if (!result.success) {
+          throw new Error(
+            result.error?.message ?? `Could not delete ${target.path}`,
+          );
+        }
         target.status = 'deleted';
         this.searchStatus.pendingDeletions--;
         this.uiStats.render();

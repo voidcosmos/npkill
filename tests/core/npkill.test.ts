@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Npkill } from '../../src/core/npkill.js';
 import { IFileService } from '../../src/core/interfaces/file-service.interface.js';
@@ -26,7 +26,7 @@ describe('Npkill', () => {
   let fileServiceMock: jest.Mocked<IFileService>;
   let loggerMock: jest.Mocked<LoggerService>;
   let searchStatusMock: jest.Mocked<ScanStatus>;
-  let logSubject: BehaviorSubject<LogEntry[]>;
+  let logEntries$: Subject<LogEntry>;
 
   beforeEach(() => {
     // Reset all mocks
@@ -38,7 +38,6 @@ describe('Npkill', () => {
       getSize: jest.fn(),
       getRecentModificationInDir: jest.fn(),
       delete: jest.fn(),
-      fakeDelete: jest.fn(() => Promise.resolve(true)),
       isValidRootFolder: jest.fn(),
       isDangerous: jest.fn(),
       getFileStatsInDir: jest.fn(),
@@ -51,19 +50,17 @@ describe('Npkill', () => {
       } as unknown as any,
     };
 
-    logSubject = new BehaviorSubject<LogEntry[]>([]);
+    logEntries$ = new Subject<LogEntry>();
     loggerMock = {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
       get: jest.fn(),
-      getLog$: jest.fn(() => logSubject.asObservable()),
-      getLogByType$: jest.fn(),
+      getEntries$: jest.fn(() => logEntries$.asObservable()),
       saveToFile: jest.fn(),
       getSuggestLogFilePath: jest.fn(),
       // Private properties (for mocking purposes)
       log: [],
-      logSubject: logSubject,
       rotateLogFile: jest.fn(),
       addToLog: jest.fn(),
       getTimestamp: jest.fn(() => Date.now()),
@@ -115,7 +112,6 @@ describe('Npkill', () => {
     const mockOptions: ScanOptions = {
       targets: ['node_modules'],
       exclude: ['node_modules/.cache'],
-      sortBy: 'size',
       performRiskAnalysis: true,
     };
 
@@ -185,7 +181,7 @@ describe('Npkill', () => {
       });
     });
 
-    it('should handle errors in listDir', (done) => {
+    it('should pass on errors from listDir', (done) => {
       fileServiceMock.listDir.mockReturnValue(
         throwError(() => new Error('Permission denied')),
       );
@@ -194,7 +190,7 @@ describe('Npkill', () => {
         next: () => {},
         error: (error) => {
           expect(error).toBeInstanceOf(Error);
-          expect(error.message).toBe('Error while listing directories');
+          expect(error.message).toBe('Permission denied');
           done();
         },
       });
@@ -222,10 +218,7 @@ describe('Npkill', () => {
       fileServiceMock.getSize.mockReturnValue(of(mockSize));
 
       npkill.getSize$(mockPath).subscribe((result: GetSizeResult) => {
-        expect(result).toEqual({
-          size: mockSize,
-          unit: 'bytes',
-        });
+        expect(result).toEqual({ size: mockSize });
         expect(loggerMock.info).toHaveBeenCalledWith(
           `Calculating size for ${mockPath}`,
         );
@@ -323,9 +316,10 @@ describe('Npkill', () => {
         expect(result).toEqual({
           path: mockPath,
           success: false,
+          error: { message: `Could not delete ${mockPath}` },
         });
         expect(loggerMock.error).toHaveBeenCalledWith(
-          `Failed to delete ${mockPath}`,
+          expect.stringContaining(`Failed to delete ${mockPath}`),
         );
         done();
       });
@@ -333,14 +327,12 @@ describe('Npkill', () => {
 
     it('should perform dry run when specified', (done) => {
       const options: DeleteOptions = { dryRun: true };
-      fileServiceMock.fakeDelete.mockResolvedValue(true);
 
       npkill.delete$(mockPath, options).subscribe((result: DeleteResult) => {
         expect(result).toEqual({
           path: mockPath,
           success: true,
         });
-        expect(fileServiceMock.fakeDelete).toHaveBeenCalled();
         expect(fileServiceMock.delete).not.toHaveBeenCalled();
         expect(loggerMock.info).toHaveBeenCalledWith(
           `Deleting ${mockPath} (dry run)...`,
@@ -352,15 +344,17 @@ describe('Npkill', () => {
 
   describe('getLogs$', () => {
     it('should return log stream from logger service', (done) => {
-      const mockLogs: LogEntry[] = [
-        { type: 'info', timestamp: Date.now(), message: 'Test log' },
-      ];
-      logSubject.next(mockLogs);
+      const mockEntry: LogEntry = {
+        type: 'info',
+        timestamp: Date.now(),
+        message: 'Test log',
+      };
 
-      npkill.getLogs$().subscribe((logs) => {
-        expect(logs).toEqual(mockLogs);
+      npkill.getLogs$().subscribe((entry) => {
+        expect(entry).toEqual(mockEntry);
         done();
       });
+      logEntries$.next(mockEntry);
     });
   });
 
@@ -407,12 +401,6 @@ describe('Npkill', () => {
       const version = npkill.getVersion();
       expect(typeof version).toBe('string');
       expect(version.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('logger getter', () => {
-    it('should return the logger service', () => {
-      expect(npkill.logger).toBe(loggerMock);
     });
   });
 
@@ -467,14 +455,16 @@ describe('Npkill', () => {
       });
     });
 
-    it('should handle deletion errors', (done) => {
+    it('should report deletion errors as a failed result', (done) => {
       fileServiceMock.delete.mockRejectedValue(new Error('Permission denied'));
 
-      npkill.delete$('/test').subscribe({
-        error: (error) => {
-          expect(error).toBeInstanceOf(Error);
-          done();
-        },
+      npkill.delete$('/test').subscribe((result) => {
+        expect(result).toEqual({
+          path: '/test',
+          success: false,
+          error: { message: 'Permission denied' },
+        });
+        done();
       });
     });
   });
@@ -507,9 +497,7 @@ describe('Npkill', () => {
 
       observable.subscribe((result) => {
         expect(result).toHaveProperty('size');
-        expect(result).toHaveProperty('unit');
         expect(typeof result.size).toBe('number');
-        expect(result.unit).toBe('bytes');
       });
     });
 

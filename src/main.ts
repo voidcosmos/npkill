@@ -20,7 +20,7 @@ export default (): void => {
   const resultsService = new ResultsService();
   const configService = new ConfigService();
 
-  const npkill = new Npkill({ logger, searchStatus, resultsService });
+  const npkill = new Npkill({ logger, searchStatus });
 
   const stdOut = process.stdout;
   const jsonOutputService = new JsonOutputService(stdOut, process.stderr);

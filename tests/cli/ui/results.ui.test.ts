@@ -73,14 +73,14 @@ describe('ResultsUi', () => {
     });
 
     it('should render age in days with the day suffix', () => {
-      const now = Math.floor(Date.now() / 1000);
+      const now = Date.now();
 
       const cellText = resultsUi['getAgeCellText'](
         {
           path: 'path/folder/1',
           size: 1,
           status: 'live',
-          modificationTime: now - 12 * 86400,
+          modificationTime: now - 12 * 86400 * 1000,
         } as CliScanFoundTarget,
         false,
       );

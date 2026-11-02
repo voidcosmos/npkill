@@ -20,7 +20,8 @@ export interface IFileService {
   getSize: (path: string) => Observable<number>;
 
   /**
-   * Lists directories matching scan criteria.
+   * Lists directories matching scan criteria. The scan starts on subscribe and
+   * stops on unsubscribe.
    * @param path Root path to start listing from.
    * @param params Scan options for filtering and configuration.
    * @returns Observable emitting found directory paths.
@@ -33,13 +34,6 @@ export interface IFileService {
    * @returns Promise resolving to true if deletion was successful.
    */
   delete: (path: string) => Promise<boolean>;
-
-  /**
-   * Simulates directory deletion without actually removing files.
-   * @param _path Path to the directory that would be deleted.
-   * @returns Promise resolving to true (always succeeds for dry run).
-   */
-  fakeDelete: (_path: string) => Promise<boolean>;
 
   /**
    * Validates whether a path is suitable as a scan root directory.
@@ -84,6 +78,6 @@ export interface IFileService {
 export interface IFileStat {
   /** Full path to the file. */
   path: string;
-  /** Unix timestamp of the file's last modification. */
+  /** Last modification of the file, in milliseconds since the Unix epoch. */
   modificationTime: number;
 }

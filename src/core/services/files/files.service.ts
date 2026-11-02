@@ -23,9 +23,20 @@ export abstract class FileService implements IFileService {
   abstract delete(path: string): Promise<boolean>;
 
   listDir(path: string, params: ScanOptions): Observable<string> {
-    const stream$ = new Subject<string>();
-    this.fileWorkerService.startScan(stream$, { ...params, rootPath: path });
-    return stream$;
+    return new Observable<string>((subscriber) => {
+      const stream$ = new Subject<string>();
+      const subscription = stream$.subscribe(subscriber);
+      this.fileWorkerService.startScan(stream$, {
+        rootPath: path,
+        targets: params.targets,
+        exclude: params.exclude,
+      });
+
+      return () => {
+        subscription.unsubscribe();
+        this.fileWorkerService.cancelScan(stream$);
+      };
+    });
   }
 
   getSize(path: string): Observable<number> {
@@ -36,13 +47,6 @@ export abstract class FileService implements IFileService {
 
   stopScan(): void {
     this.fileWorkerService.stopScan();
-  }
-
-  /** Used for dry-run or testing. */
-  async fakeDelete(): Promise<boolean> {
-    const randomDelay = Math.floor(Math.random() * 4000 + 200);
-    await new Promise((resolve) => setTimeout(resolve, randomDelay));
-    return true;
   }
 
   isValidRootFolder(path: string): IsValidRootFolderResult {
@@ -240,7 +244,7 @@ export abstract class FileService implements IFileService {
             const path = `${dirname}/${item.name}`;
             const fileStat = await stat(path);
 
-            files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
+            files.push({ path, modificationTime: fileStat.mtime.getTime() });
           } catch {
             // Skip files that can't be accessed (e.g., permission denied, broken symlinks)
             continue;
