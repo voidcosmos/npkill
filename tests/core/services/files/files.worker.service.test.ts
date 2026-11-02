@@ -7,7 +7,7 @@ import {
   WorkerScanOptions,
 } from '../../../../src/core/services/files/index.js';
 import { LoggerService } from '../../../../src/core/services/logger.service.js';
-import { ScanStatus } from '../../../../src/core/index.js';
+import { ScanStatus } from '../../../../src/core/interfaces/search-status.model.js';
 
 const workerEmitter: EventEmitter = new EventEmitter();
 const port1Emitter: EventEmitter = new EventEmitter();
@@ -23,13 +23,15 @@ jest.unstable_mockModule('os', () => ({
   default: { cpus: jest.fn().mockReturnValue([0, 0]) },
 }));
 
-jest.unstable_mockModule('node:worker_threads', () => ({
+jest.unstable_mockModule('worker_threads', () => ({
   Worker: jest.fn(() => ({
     postMessage: workerPostMessageMock,
     on: (eventName: string, listener: (...args: unknown[]) => void) =>
       workerEmitter.on(eventName, listener),
     terminate: workerTerminateMock,
     removeAllListeners: jest.fn(),
+    ref: jest.fn(),
+    unref: jest.fn(),
   })),
 
   MessageChannel: jest.fn(() => ({
@@ -38,6 +40,9 @@ jest.unstable_mockModule('node:worker_threads', () => ({
       on: (eventName: string, listener: (...args: unknown[]) => void) =>
         port1Emitter.on(eventName, listener),
       removeAllListeners: jest.fn(),
+      ref: jest.fn(),
+      unref: jest.fn(),
+      close: jest.fn(),
     },
     port2: {
       postMessage: messageChannelPort2Mock,
@@ -221,6 +226,35 @@ xdescribe('FileWorkerService', () => {
       workerEmitter.emit('exit');
       expect(logger.info).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('FileWorkerService idle workers', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    workerTerminateMock.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    workerEmitter.removeAllListeners();
+    port1Emitter.removeAllListeners();
+  });
+
+  it('should terminate the workers once there is no work left', () => {
+    const fileWorkerService = new FileWorkerService(logger, new ScanStatus());
+    fileWorkerService.startScan(new Subject<string>(), {
+      rootPath: '/sample/path',
+      targets: ['node_modules'],
+    });
+
+    port1Emitter.emit('message', {
+      type: EVENTS.scanResult,
+      value: { workerId: 0, scanId: 1, results: [] },
+    });
+    jest.runOnlyPendingTimers();
+
+    expect(workerTerminateMock).toHaveBeenCalledTimes(1);
   });
 });
 

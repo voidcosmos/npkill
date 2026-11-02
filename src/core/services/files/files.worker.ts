@@ -1,26 +1,36 @@
-import { Dir, Dirent } from 'fs';
-import { lstat, opendir, readdir } from 'fs/promises';
+import { Dir, Dirent, Stats } from 'fs';
+import { lstat, opendir, readdir, stat } from 'fs/promises';
 import EventEmitter from 'events';
-import { WorkerMessage, WorkerScanOptions } from './files.worker.service.js';
+import {
+  WorkerMessage,
+  WorkerScanOptions,
+  WorkerSizeResult,
+} from './files.worker.service.js';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
 
 enum ETaskOperation {
-  'explore',
-  'getFolderSize',
-  'getFolderSizeChild',
+  explore,
+  getFolderSize,
+  getFolderSizeChild,
+}
+
+interface SizeCollector {
+  rootPath: string;
+  total: number;
+  pending: number;
+  error?: string;
+  onComplete: (total: number, error?: string) => void;
 }
 
 interface Task {
   operation: ETaskOperation;
   path: string;
-  sizeCollector?: {
-    total: number;
-    pending: number;
-    onComplete: (total: number) => void;
-  };
+  scanId?: number;
+  sizeRequestId?: number;
+  sizeCollector?: SizeCollector;
 }
 
 (() => {
@@ -57,13 +67,20 @@ interface Task {
       }
 
       if (message?.type === EVENTS.explore) {
-        fileWalker.enqueueTask(message.value.path, ETaskOperation.explore);
+        fileWalker.enqueueTask({
+          operation: ETaskOperation.explore,
+          path: message.value.path,
+          scanId: message.value.scanId,
+        });
       }
 
       if (message?.type === EVENTS.getFolderSize) {
         fileWalker.enqueueTask(
-          message.value.path,
-          ETaskOperation.getFolderSize,
+          {
+            operation: ETaskOperation.getFolderSize,
+            path: message.value.path,
+            sizeRequestId: message.value.id,
+          },
           true,
         );
       }
@@ -75,26 +92,22 @@ interface Task {
   }
 
   function initFileWalkerListeners(): void {
-    fileWalker.events.on('newResult', ({ results }) => {
+    fileWalker.events.on('newResult', ({ results, scanId }) => {
       tunnel.postMessage({
         type: EVENTS.scanResult,
-        value: { results, workerId: id, pending: fileWalker.pendingJobs },
+        value: { results, workerId: id, scanId },
       });
     });
 
-    fileWalker.events.on(
-      'folderSizeResult',
-      (result: { path: string; size: number }) => {
-        tunnel.postMessage({
-          type: EVENTS.GetSizeResult,
-          value: {
-            results: result,
-            workerId: id,
-            pending: fileWalker.pendingJobs,
-          },
-        });
-      },
-    );
+    fileWalker.events.on('folderSizeResult', (result: WorkerSizeResult) => {
+      tunnel.postMessage({
+        type: EVENTS.GetSizeResult,
+        value: {
+          results: result,
+          workerId: id,
+        },
+      });
+    });
   }
 })();
 
@@ -106,34 +119,21 @@ class FileWalker {
     exclude: [],
   };
 
-  private readonly taskQueue: Task[] = [];
+  private taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
-  private shouldStop = false;
 
   setSearchConfig(params: WorkerScanOptions): void {
     this.searchConfig = params;
   }
 
   stop(): void {
-    this.shouldStop = true;
+    this.taskQueue = this.taskQueue.filter(
+      (task) => task.operation !== ETaskOperation.explore,
+    );
   }
 
-  enqueueTask(
-    path: string,
-    operation: ETaskOperation,
-    priorize: boolean = false,
-    sizeCollector?: Task['sizeCollector'],
-  ): void {
-    if (this.shouldStop) {
-      return;
-    }
-
-    const task: Task = { path, operation };
-    if (sizeCollector) {
-      task.sizeCollector = sizeCollector;
-    }
-
+  enqueueTask(task: Task, priorize: boolean = false): void {
     if (priorize) {
       this.taskQueue.unshift(task);
     } else {
@@ -143,18 +143,23 @@ class FileWalker {
     this.processQueue();
   }
 
-  private async run(path: string): Promise<void> {
+  private async run(path: string, scanId?: number): Promise<void> {
     this.updateProcs(1);
 
     try {
       const dir = await opendir(path);
-      await this.analizeDir(path, dir);
+      await this.analizeDir(path, dir, scanId);
     } catch {
       this.completeTask();
+      this.events.emit('newResult', { results: [], scanId });
     }
   }
 
-  private async analizeDir(path: string, dir: Dir): Promise<void> {
+  private async analizeDir(
+    path: string,
+    dir: Dir,
+    scanId?: number,
+  ): Promise<void> {
     const results = [];
     let entry: Dirent | null = null;
 
@@ -164,36 +169,48 @@ class FileWalker {
 
     await dir.close();
     this.completeTask();
-    this.events.emit('newResult', { results });
+    this.events.emit('newResult', { results, scanId });
 
     if (this.taskQueue.length === 0 && this.procs === 0) {
       this.completeAll();
     }
   }
 
-  private async runGetFolderSize(path: string): Promise<void> {
+  private async runGetFolderSize(
+    path: string,
+    sizeRequestId?: number,
+  ): Promise<void> {
     this.updateProcs(1);
+    const emitResult = (size: number, error?: string): void => {
+      this.events.emit('folderSizeResult', {
+        id: sizeRequestId,
+        path,
+        size,
+        error,
+      });
+    };
 
     try {
-      const collector = {
-        total: 0,
-        pending: 1,
-        onComplete: (finalSize: number) => {
-          this.events.emit('folderSizeResult', { path, size: finalSize });
-        },
-      };
+      const stats = await stat(path);
+      if (!stats.isDirectory()) {
+        emitResult(this.getDiskUsage(stats));
+        return;
+      }
 
-      this.enqueueTask(
+      this.enqueueTask({
+        operation: ETaskOperation.getFolderSizeChild,
         path,
-        ETaskOperation.getFolderSizeChild,
-        false,
-        collector,
-      );
+        sizeCollector: {
+          rootPath: path,
+          total: 0,
+          pending: 1,
+          onComplete: emitResult,
+        },
+      });
+    } catch (error) {
+      emitResult(0, (error as Error).message);
+    } finally {
       this.completeTask();
-    } catch {
-      // If anything fails during setup, emit size 0 and complete
-      this.completeTask();
-      this.events.emit('folderSizeResult', { path, size: 0 });
     }
   }
 
@@ -228,13 +245,7 @@ class FileWalker {
                 currentLevelSize += 4096; // General directory size
                 directoriesToProcess.push(fullPath);
               } else {
-                const stats = await lstat(fullPath);
-                const size =
-                  typeof stats.blocks === 'number'
-                    ? stats.blocks * 512
-                    : stats.size;
-
-                currentLevelSize += size;
+                currentLevelSize += this.getDiskUsage(await lstat(fullPath));
               }
             } catch {
               // Ignore permissions errors.
@@ -247,23 +258,28 @@ class FileWalker {
       collector.pending += directoriesToProcess.length;
 
       for (const dirPath of directoriesToProcess) {
-        this.enqueueTask(
-          dirPath,
-          ETaskOperation.getFolderSizeChild,
-          false,
-          collector,
-        );
+        this.enqueueTask({
+          operation: ETaskOperation.getFolderSizeChild,
+          path: dirPath,
+          sizeCollector: collector,
+        });
       }
-    } catch {
-      // Ignore permissions errors.
+    } catch (error) {
+      if (path === collector.rootPath) {
+        collector.error = (error as Error).message;
+      }
     } finally {
       collector.pending -= 1;
       this.completeTask();
 
       if (collector.pending === 0) {
-        collector.onComplete(collector.total);
+        collector.onComplete(collector.total, collector.error);
       }
     }
+  }
+
+  private getDiskUsage(stats: Stats): number {
+    return typeof stats.blocks === 'number' ? stats.blocks * 512 : stats.size;
   }
 
   private newDirEntry(
@@ -315,11 +331,7 @@ class FileWalker {
   }
 
   private processQueue(): void {
-    while (
-      this.procs < MAX_PROCS &&
-      this.taskQueue.length > 0 &&
-      !this.shouldStop
-    ) {
+    while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
       const task = this.taskQueue.shift();
       if (!task?.path) {
         continue;
@@ -327,15 +339,19 @@ class FileWalker {
 
       switch (task.operation) {
         case ETaskOperation.explore:
-          this.run(task.path).catch(() => {
+          this.run(task.path, task.scanId).catch(() => {
             this.completeTask();
           });
           break;
         case ETaskOperation.getFolderSize:
-          this.runGetFolderSize(task.path).catch(() => {
+          this.runGetFolderSize(task.path, task.sizeRequestId).catch(() => {
             // If runGetFolderSize fails, we need to emit a size of 0
             // Otherwise the stream will hang forever
-            this.events.emit('folderSizeResult', { path: task.path, size: 0 });
+            this.events.emit('folderSizeResult', {
+              id: task.sizeRequestId,
+              path: task.path,
+              size: 0,
+            });
           });
           break;
         case ETaskOperation.getFolderSizeChild:
@@ -372,8 +388,4 @@ class FileWalker {
       procs: this.procs,
     };
   } */
-
-  get pendingJobs(): number {
-    return this.taskQueue.length + this.procs;
-  }
 }

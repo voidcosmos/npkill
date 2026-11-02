@@ -6,16 +6,20 @@ import { Subject } from 'rxjs';
 import { LoggerService } from '../logger.service.js';
 import { ScanStatus } from '../../interfaces/search-status.model.js';
 import { EVENTS, MAX_WORKERS } from '../../../constants/workers.constants.js';
-import { ScanOptions } from '../../index.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
-type WorkerJob = {
-  job: EVENTS.explore | EVENTS.getFolderSize;
-  value: { path: string };
-};
 
-export interface WorkerScanOptions extends ScanOptions {
+export interface WorkerScanOptions {
   rootPath: string;
+  targets: string[];
+  exclude?: string[];
+}
+
+export interface WorkerSizeResult {
+  id: number;
+  path: string;
+  size: number;
+  error?: string;
 }
 
 export type WorkerMessage =
@@ -24,18 +28,15 @@ export type WorkerMessage =
       value: {
         results: Array<{ path: string; isTarget: boolean }>;
         workerId: number;
-        pending: number;
+        scanId: number;
       };
     }
   | {
       type: EVENTS.GetSizeResult;
-      value: {
-        results: { path: string; size: number };
-        workerId: number;
-        pending: number;
-      };
+      value: { results: WorkerSizeResult; workerId: number };
     }
-  | { type: EVENTS.explore | EVENTS.getFolderSize; value: { path: string } }
+  | { type: EVENTS.explore; value: { path: string; scanId: number } }
+  | { type: EVENTS.getFolderSize; value: { path: string; id: number } }
   | { type: EVENTS.exploreConfig; value: WorkerScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined }
@@ -48,248 +49,264 @@ export interface WorkerStats {
   procs: number;
 }
 
-export class FileWorkerService {
-  private index = 0;
-  private workers: Worker[] = [];
-  private workersPendingJobs: number[] = [];
-  private getSizePendings: Array<{
-    path: string;
-    stream$: Subject<number>;
-    timeoutId?: NodeJS.Timeout;
-  }> = [];
+interface ActiveScan {
+  id: number;
+  stream$: Subject<string>;
+  pendingJobs: number;
+}
 
-  private pendingJobs = 0;
-  private totalJobs = 0;
+interface SizeRequest {
+  id: number;
+  path: string;
+  stream$: Subject<number>;
+  timeoutId: NodeJS.Timeout;
+}
+
+export class FileWorkerService {
+  private workers: Worker[] = [];
   private tunnels: MessagePort[] = [];
-  private shouldStop = false;
+  private workersPendingJobs: number[] = [];
+  private nextWorker = 0;
+  private lastScanId = 0;
+  private lastSizeRequestId = 0;
+  private activeScan: ActiveScan | null = null;
+  private sizeRequests: SizeRequest[] = [];
+  private totalJobs = 0;
+  private idleWorkersTimeout?: NodeJS.Timeout;
   private readonly SIZE_TIMEOUT_MS = 60000; // 1 minute timeout per folder
+  private readonly IDLE_WORKERS_TIMEOUT_MS = 5000;
 
   constructor(
     private readonly logger: LoggerService,
     private readonly searchStatus: ScanStatus,
   ) {}
 
-  async startScan(
-    stream$: Subject<string>,
-    params: WorkerScanOptions,
-  ): Promise<void> {
-    await this.killWorkers();
+  startScan(stream$: Subject<string>, params: WorkerScanOptions): void {
+    if (this.activeScan !== null) {
+      stream$.error(
+        new Error(
+          'A scan is already running on this Npkill instance. Stop it or use another instance.',
+        ),
+      );
+      return;
+    }
 
+    this.ensureWorkers();
+    this.activeScan = { id: ++this.lastScanId, stream$, pendingJobs: 0 };
     this.totalJobs = 0;
-    this.pendingJobs = 0;
-    this.index = 0;
-    this.workersPendingJobs = [];
-
-    this.shouldStop = false;
-    this.instantiateWorkers(this.getOptimalNumberOfWorkers());
-    this.listenEvents(stream$);
-    this.setWorkerConfig(params);
-
-    // Manually add the first job.
-    this.addJob({ job: EVENTS.explore, value: { path: params.rootPath } });
+    this.searchStatus.workerStatus = 'scanning';
+    this.broadcast({ type: EVENTS.exploreConfig, value: params });
+    this.dispatchExplore(params.rootPath);
+    this.updateWorkersLifecycle();
   }
 
   getFolderSize(stream$: Subject<number>, path: string): void {
-    if (this.workers.length === 0) {
-      this.instantiateWorkers(this.getOptimalNumberOfWorkers());
-      this.listenEvents(new Subject<string>());
-      this.setWorkerConfig({ rootPath: path } as WorkerScanOptions);
-    }
-
+    this.ensureWorkers();
+    const id = ++this.lastSizeRequestId;
     const timeoutId = setTimeout(() => {
-      const index = this.getSizePendings.findIndex((p) => p.path === path);
-      if (index !== -1) {
-        this.logger.error(
-          `Timeout calculating size for: ${path} (${this.SIZE_TIMEOUT_MS}ms)`,
-        );
-        const pending = this.getSizePendings[index];
-        pending.stream$.error(
-          new Error(`Timeout calculating size for ${path}`),
-        );
-        this.getSizePendings.splice(index, 1);
-      }
+      this.logger.error(
+        `Timeout calculating size for: ${path} (${this.SIZE_TIMEOUT_MS}ms)`,
+      );
+      this.settleSizeRequest(id, {
+        error: `Timeout calculating size for ${path}`,
+      });
     }, this.SIZE_TIMEOUT_MS);
 
-    this.getSizePendings = [
-      ...this.getSizePendings,
-      { path, stream$, timeoutId },
-    ];
-    this.addJob({ job: EVENTS.getFolderSize, value: { path } });
+    this.sizeRequests.push({ id, path, stream$, timeoutId });
+    this.dispatch({ type: EVENTS.getFolderSize, value: { path, id } });
+    this.updateWorkersLifecycle();
   }
 
   stopScan(): void {
     this.logger.info('Stopping scan...');
-    this.shouldStop = true;
-    this.searchStatus.workerStatus = 'stopped';
-
-    this.tunnels.forEach((tunnel) => {
-      tunnel.postMessage({
-        type: EVENTS.stop,
-        value: undefined,
-      });
-    });
-
-    void this.killWorkers();
+    this.endActiveScan('stopped');
   }
 
-  private listenEvents(stream$: Subject<string>): void {
-    this.tunnels.forEach((tunnel) => {
-      tunnel.on('message', (data: WorkerMessage) => {
-        this.newWorkerMessage(data, stream$);
-      });
-
-      this.workers.forEach((worker, index) => {
-        worker.on('exit', () => {
-          this.logger.info(`Worker ${index} exited.`);
-        });
-
-        worker.on('error', (error) => {
-          // Respawn worker.
-          throw error;
-        });
-      });
-    });
-  }
-
-  private newWorkerMessage(
-    message: WorkerMessage,
-    stream$: Subject<string>,
-  ): void {
-    const { type, value } = message;
-
-    if (type === EVENTS.scanResult) {
-      const results: Array<{ path: string; isTarget: boolean }> = value.results;
-      const workerId: number = value.workerId;
-      this.workersPendingJobs[workerId] = value.pending;
-
-      results.forEach((result) => {
-        const { path, isTarget } = result;
-        if (isTarget) {
-          stream$.next(path);
-        } else if (!this.shouldStop) {
-          this.addJob({
-            job: EVENTS.explore,
-            value: { path },
-          });
-        }
-      });
-
-      this.pendingJobs = this.getPendingJobs();
-      this.checkJobComplete(stream$);
-    }
-
-    if (type === EVENTS.GetSizeResult) {
-      const result: { path: string; size: number } = value.results;
-      const workerId: number = value.workerId;
-      this.workersPendingJobs[workerId] = value.pending;
-
-      const index = this.getSizePendings.findIndex(
-        (pending) => pending.path === result.path,
-      );
-
-      if (index !== -1) {
-        const pending = this.getSizePendings[index];
-
-        if (pending.timeoutId) {
-          clearTimeout(pending.timeoutId);
-        }
-
-        pending.stream$.next(result.size);
-        pending.stream$.complete();
-        this.getSizePendings.splice(index, 1);
-      }
-
-      this.pendingJobs = this.getPendingJobs();
-      this.checkJobComplete(stream$);
-    }
-
-    if (type === EVENTS.alive) {
-      this.searchStatus.workerStatus = 'scanning';
-    }
-
-    if (type === EVENTS.error) {
-      this.logger.error(`Worker error: ${value.error.message}`);
+  cancelScan(stream$: Subject<string>): void {
+    if (this.activeScan?.stream$ === stream$) {
+      this.endActiveScan('stopped');
     }
   }
 
-  /** Jobs are distributed following the round-robin algorithm. */
-  private addJob(job: WorkerJob): void {
-    if (this.shouldStop) {
+  private endActiveScan(status: WorkerStatus): void {
+    const scan = this.activeScan;
+    if (scan === null) {
       return;
     }
 
-    const tunnel = this.tunnels[this.index];
-    const message: WorkerMessage = { type: job.job, value: job.value };
-    tunnel.postMessage(message);
-    this.workersPendingJobs[this.index]++;
-    this.totalJobs++;
-    this.pendingJobs++;
-    this.index = this.index >= this.workers.length - 1 ? 0 : this.index + 1;
+    this.activeScan = null;
+    this.searchStatus.workerStatus = status;
+    if (status === 'stopped') {
+      this.broadcast({ type: EVENTS.stop });
+    }
+    this.updateWorkersLifecycle();
+    scan.stream$.complete();
   }
 
-  private checkJobComplete(stream$: Subject<string>): void {
+  private onWorkerMessage(message: WorkerMessage): void {
+    if (message.type === EVENTS.scanResult) {
+      this.workersPendingJobs[message.value.workerId]--;
+      this.onScanResult(message.value.scanId, message.value.results);
+    }
+
+    if (message.type === EVENTS.GetSizeResult) {
+      this.workersPendingJobs[message.value.workerId]--;
+      this.settleSizeRequest(message.value.results.id, message.value.results);
+    }
+
+    if (message.type === EVENTS.error) {
+      this.logger.error(`Worker error: ${message.value.error.message}`);
+    }
+
     this.updateStats();
-    const isCompleted = this.getPendingJobs() === 0;
-    if (isCompleted) {
-      this.searchStatus.workerStatus = 'finished';
-      stream$.complete();
+  }
+
+  private onScanResult(
+    scanId: number,
+    results: Array<{ path: string; isTarget: boolean }>,
+  ): void {
+    const scan = this.activeScan;
+    if (scan === null || scan.id !== scanId) {
+      return;
+    }
+
+    scan.pendingJobs--;
+    for (const { path, isTarget } of results) {
+      if (this.activeScan !== scan) {
+        return;
+      }
+
+      if (isTarget) {
+        scan.stream$.next(path);
+      } else {
+        this.dispatchExplore(path);
+      }
+    }
+
+    if (this.activeScan === scan && scan.pendingJobs === 0) {
+      this.endActiveScan('finished');
     }
   }
 
-  private instantiateWorkers(amount: number): void {
+  private settleSizeRequest(
+    id: number,
+    result: { size?: number; error?: string },
+  ): void {
+    const index = this.sizeRequests.findIndex((request) => request.id === id);
+    if (index === -1) {
+      return;
+    }
+
+    const [request] = this.sizeRequests.splice(index, 1);
+    clearTimeout(request.timeoutId);
+    this.updateWorkersLifecycle();
+
+    if (result.error !== undefined) {
+      request.stream$.error(new Error(result.error));
+      return;
+    }
+
+    request.stream$.next(result.size ?? 0);
+    request.stream$.complete();
+  }
+
+  private onWorkerError(error: Error): void {
+    this.logger.error(`Worker error: ${error.message}`);
+    const scan = this.activeScan;
+    const sizeRequests = this.sizeRequests;
+    this.activeScan = null;
+    this.sizeRequests = [];
+    this.searchStatus.workerStatus = 'dead';
+    void this.terminateWorkers();
+
+    scan?.stream$.error(error);
+    sizeRequests.forEach((request) => {
+      clearTimeout(request.timeoutId);
+      request.stream$.error(error);
+    });
+  }
+
+  private dispatchExplore(path: string): void {
+    const scan = this.activeScan;
+    if (scan === null) {
+      return;
+    }
+
+    scan.pendingJobs++;
+    this.totalJobs++;
+    this.dispatch({ type: EVENTS.explore, value: { path, scanId: scan.id } });
+  }
+
+  /** Jobs are distributed following the round-robin algorithm. */
+  private dispatch(message: WorkerMessage): void {
+    const workerIndex = this.nextWorker;
+    this.nextWorker = (this.nextWorker + 1) % this.tunnels.length;
+    this.workersPendingJobs[workerIndex]++;
+    this.tunnels[workerIndex].postMessage(message);
+  }
+
+  private broadcast(message: WorkerMessage): void {
+    this.tunnels.forEach((tunnel) => tunnel.postMessage(message));
+  }
+
+  private ensureWorkers(): void {
+    if (this.workers.length > 0) {
+      return;
+    }
+
+    const amount = this.getOptimalNumberOfWorkers();
     this.logger.info(`Instantiating ${amount} workers..`);
     for (let i = 0; i < amount; i++) {
       const { port1, port2 } = new MessageChannel();
       const worker = new Worker(this.getWorkerPath());
-      this.tunnels.push(port1);
+      port1.on('message', (message: WorkerMessage) =>
+        this.onWorkerMessage(message),
+      );
+      worker.on('error', (error) => this.onWorkerError(error));
+      worker.on('exit', () => this.logger.info(`Worker ${i} exited.`));
       worker.postMessage(
         { type: EVENTS.startup, value: { channel: port2, id: i } },
         [port2], // Prevent clone the object and pass the original.
       );
       this.workers.push(worker);
+      this.tunnels.push(port1);
+      this.workersPendingJobs.push(0);
       this.logger.info(`Worker ${i} instantiated.`);
+    }
+    this.nextWorker = 0;
+  }
+
+  /** Idle workers do not keep the host process alive and end after a while. */
+  private updateWorkersLifecycle(): void {
+    clearTimeout(this.idleWorkersTimeout);
+    const isBusy = this.activeScan !== null || this.sizeRequests.length > 0;
+    this.workers.forEach((worker) => (isBusy ? worker.ref() : worker.unref()));
+    this.tunnels.forEach((tunnel) => (isBusy ? tunnel.ref() : tunnel.unref()));
+
+    if (!isBusy && this.workers.length > 0) {
+      this.idleWorkersTimeout = setTimeout(
+        () => void this.terminateWorkers(),
+        this.IDLE_WORKERS_TIMEOUT_MS,
+      ).unref();
     }
   }
 
-  private setWorkerConfig(params: WorkerScanOptions): void {
-    this.tunnels.forEach((tunnel) =>
-      tunnel.postMessage({
-        type: EVENTS.exploreConfig,
-        value: params,
-      }),
+  private async terminateWorkers(): Promise<void> {
+    const workers = this.workers;
+    this.tunnels.forEach((tunnel) => tunnel.close());
+    this.workers = [];
+    this.tunnels = [];
+    this.workersPendingJobs = [];
+
+    await Promise.all(
+      workers.map((worker) =>
+        worker.terminate().catch((error) => this.logger.error(error)),
+      ),
     );
   }
 
-  private async killWorkers(): Promise<void> {
-    this.getSizePendings.forEach((pending) => {
-      if (pending.timeoutId) {
-        clearTimeout(pending.timeoutId);
-      }
-      if (!pending.stream$.closed) {
-        pending.stream$.error(
-          new Error('Workers terminated before completion'),
-        );
-      }
-    });
-    this.getSizePendings = [];
-
-    for (let i = 0; i < this.workers.length; i++) {
-      this.workers[i].removeAllListeners();
-      this.tunnels[i].removeAllListeners();
-      await this.workers[i]
-        .terminate()
-        .catch((error) => this.logger.error(error));
-    }
-    this.workers = [];
-    this.tunnels = [];
-  }
-
-  private getPendingJobs(): number {
-    return this.workersPendingJobs.reduce((acc, x) => x + acc, 0);
-  }
-
   private updateStats(): void {
-    this.searchStatus.pendingSearchTasks = this.pendingJobs;
+    this.searchStatus.pendingSearchTasks = this.activeScan?.pendingJobs ?? 0;
     this.searchStatus.completedSearchTasks = this.totalJobs;
     this.searchStatus.workersJobs = this.workersPendingJobs;
   }

@@ -20,7 +20,8 @@ export interface IFileService {
   getFolderSize: (path: string) => Observable<number>;
 
   /**
-   * Lists directories matching scan criteria.
+   * Lists directories matching scan criteria. The scan starts on subscribe and
+   * stops on unsubscribe.
    * @param path Root path to start listing from.
    * @param params Scan options for filtering and configuration.
    * @returns Observable emitting found directory paths.

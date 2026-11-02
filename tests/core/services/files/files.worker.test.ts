@@ -63,6 +63,7 @@ jest.unstable_mockModule('fs/promises', () => ({
       isSymbolicLink: () => false,
     }),
   readdir: () => Promise.resolve([]),
+  stat: () => Promise.resolve({ isDirectory: () => true }),
 }));
 
 jest.unstable_mockModule('node:worker_threads', () => ({
