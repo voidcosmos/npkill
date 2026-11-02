@@ -8,7 +8,7 @@ import {
   RiskAnalysis,
 } from '../../index.js';
 import fs, { accessSync, Stats, statSync } from 'fs';
-import { readdir, stat } from 'fs/promises';
+import { lstat, readdir } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
 import { IsValidRootFolderResult } from '../../interfaces/npkill.interface.js';
@@ -228,6 +228,10 @@ export abstract class FileService implements IFileService {
       const items = await readdir(dirname, { withFileTypes: true });
 
       for (const item of items) {
+        if (item.isSymbolicLink()) {
+          continue;
+        }
+
         if (item.isDirectory()) {
           const itemNameLowerCase = item.name.toLowerCase();
           if (ignoredFolders.includes(itemNameLowerCase)) {
@@ -242,11 +246,11 @@ export abstract class FileService implements IFileService {
         } else {
           try {
             const path = `${dirname}/${item.name}`;
-            const fileStat = await stat(path);
+            const fileStat = await lstat(path);
 
             files.push({ path, modificationTime: fileStat.mtime.getTime() });
           } catch {
-            // Skip files that can't be accessed (e.g., permission denied, broken symlinks)
+            // Skip files that can't be accessed (e.g., permission denied)
             continue;
           }
         }

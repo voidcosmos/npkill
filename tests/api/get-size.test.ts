@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
+import { symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ScanOptions } from '../../src/index.js';
 import {
@@ -7,6 +8,7 @@ import {
 } from './support/npkill-package.js';
 import {
   createTempDir,
+  itOnUnix,
   observe,
   removeTempDirs,
   writeRandomFile,
@@ -54,6 +56,22 @@ describe('getSize$', () => {
 
     expect(sizes(outcome.values)).toEqual([FILE_SIZE]);
   });
+
+  itOnUnix(
+    'measures a symlink instead of the folder it points to',
+    async () => {
+      const link = join(createTempDir(), 'link');
+      symlinkSync(createFolderWithFile(), link, 'dir');
+
+      const outcome = await observe(
+        createNpkill().getSize$(link),
+        SIZE_TIMEOUT_MS,
+      );
+
+      expect(sizes(outcome.values)).toEqual([expect.any(Number)]);
+      expect(sizes(outcome.values)[0]).toBeLessThan(FILE_SIZE);
+    },
+  );
 
   it('still answers after stopScan()', async () => {
     const folder = createFolderWithFile();

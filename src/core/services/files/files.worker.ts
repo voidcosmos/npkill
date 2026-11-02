@@ -1,5 +1,5 @@
 import { Dir, Dirent, Stats } from 'fs';
-import { lstat, opendir, readdir, stat } from 'fs/promises';
+import { lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import {
   WorkerMessage,
@@ -191,7 +191,7 @@ class FileWalker {
     };
 
     try {
-      const stats = await stat(path);
+      const stats = await lstat(path);
       if (!stats.isDirectory()) {
         emitResult(this.getDiskUsage(stats));
         return;

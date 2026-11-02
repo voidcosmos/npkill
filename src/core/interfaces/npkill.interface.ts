@@ -56,7 +56,7 @@ export interface NpkillInterface {
 
   /**
    * Returns the space used on disk by a directory and all its contents, or by
-   * a single file.
+   * a single file. Symlinks are measured themselves and never followed.
    * @param path Path to the directory or file.
    * @returns Observable that outputs the size in bytes. Errors if the path
    * does not exist or cannot be read.
@@ -67,7 +67,7 @@ export interface NpkillInterface {
    * Retrieves the most recently modified file (the one with the latest
    * modification timestamp) within a given directory and its subdirectories,
    * recursively. Folders named `node_modules`, `.git`, `coverage` and `dist`
-   * are not inspected.
+   * are not inspected, and symlinks are ignored.
    * @param path Path to the directory.
    * @returns Observable that outputs a value with the result of the
    * operation. May return null if no files exist or the most recent file
