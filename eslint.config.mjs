@@ -16,7 +16,7 @@ export default tseslint.config(
       'build/**',
       '**/*.min.js',
       '.stryker-tmp/**',
-      'src/index.ts',
+      'src/cli.ts',
     ],
   },
   eslint.configs.recommended,

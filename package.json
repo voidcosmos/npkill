@@ -11,7 +11,7 @@
     "access": "public"
   },
   "bin": {
-    "npkill": "lib/index.js"
+    "npkill": "lib/cli.js"
   },
   "author": "Nya Garcia & Juan Torres",
   "repository": {
@@ -36,13 +36,13 @@
   ],
   "scripts": {
     "build": "tsc",
-    "start": "node -r tsconfig-paths/register --loader ts-node/esm --no-warnings ./src/index.ts",
+    "start": "node --loader ts-node/esm --no-warnings ./src/cli.ts",
     "test": "node --experimental-vm-modules --disable-warning=ExperimentalWarning node_modules/jest/bin/jest.js",
     "test:watch": "npm run test -- --watch",
     "typecheck": "tsc -p tests/tsconfig.json",
     "test:mutant": "stryker run",
     "release": "npm run build && np",
-    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/index.ts",
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/cli.ts",
     "prepare": "husky install",
     "format": "prettier --write .",
     "lint": "eslint"

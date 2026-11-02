@@ -1,42 +1,27 @@
 import { jest } from '@jest/globals';
 
 const mainMock = jest.fn();
-const fileURLToPathMock = jest.fn();
-
-jest.unstable_mockModule('url', () => ({
-  fileURLToPath: fileURLToPathMock,
-}));
 
 jest.unstable_mockModule('../src/main.js', () => ({
   default: mainMock,
 }));
 
-describe('index.ts', () => {
+describe('package entry points', () => {
   beforeEach(() => {
     jest.resetModules();
     mainMock.mockClear();
-    fileURLToPathMock.mockClear();
   });
 
-  it('should call main when npkill is called directly from the command line', async () => {
-    fileURLToPathMock.mockReturnValue('/path/to/index.ts');
-    process.argv[1] = '/path/to/index.ts';
+  it('should not start the cli when the library is imported', async () => {
+    const library = await import('../src/index.js');
 
-    await importIndex();
-
-    expect(mainMock).toHaveBeenCalled();
-  });
-
-  it('should not call main when npkill is imported as a module', async () => {
-    fileURLToPathMock.mockReturnValue('/path/to/index.ts');
-    process.argv[1] = '/path/to/anotherModule.ts';
-
-    await importIndex();
-
+    expect(library.Npkill).toBeDefined();
     expect(mainMock).not.toHaveBeenCalled();
   });
-});
 
-function importIndex() {
-  return import('../src/index.js');
-}
+  it('should start the cli when the bin is executed', async () => {
+    await import('../src/cli.js');
+
+    expect(mainMock).toHaveBeenCalledTimes(1);
+  });
+});
