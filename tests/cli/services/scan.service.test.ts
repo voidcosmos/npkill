@@ -38,6 +38,7 @@ describe('ScanService', () => {
     disableSize: false,
     disableAge: false,
     disableStats: false,
+    olderThan: 0,
   };
 
   const mockScanFoundTarget: ScanFoundTarget = {

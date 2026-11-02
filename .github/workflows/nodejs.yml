@@ -28,6 +28,8 @@ jobs:
       - name: Install Dependencies
         run: npm ci --ignore-scripts
 
+      - run: npm run typecheck
+
       - run: npm test
         env:
           CI: true
