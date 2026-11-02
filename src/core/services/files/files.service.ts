@@ -6,12 +6,12 @@ import {
   IFileStat,
   GetNewestFileResult,
   RiskAnalysis,
-} from '@core/index.js';
+} from '../../index.js';
 import fs, { accessSync, Stats, statSync } from 'fs';
 import { readdir, stat } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
-import { IsValidRootFolderResult } from '@core/interfaces/npkill.interface.js';
+import { IsValidRootFolderResult } from '../../interfaces/npkill.interface.js';
 
 export abstract class FileService implements IFileService {
   public fileWorkerService: FileWorkerService;

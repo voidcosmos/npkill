@@ -6,7 +6,7 @@ import { Observable, Subject } from 'rxjs';
 import {
   ILoggerService,
   LogEntry,
-} from '@core/interfaces/logger-service.interface.js';
+} from '../interfaces/logger-service.interface.js';
 
 const LATEST_TAG = 'latest';
 const OLD_TAG = 'old';

@@ -1,10 +1,10 @@
-import { Npkill } from '@core/npkill';
+import { Npkill } from '../../core/npkill.js';
 import {
   CliScanFoundTarget,
   IConfig,
   ScanFoundTarget,
   ScanOptions,
-} from '../interfaces';
+} from '../interfaces/index.js';
 import {
   Observable,
   filter,

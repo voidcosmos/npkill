@@ -17,11 +17,7 @@
     "strictPropertyInitialization": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "skipLibCheck": true,
-    "paths": {
-      "@core/*": ["src/core/*"]
-    },
     "ignoreDeprecations": "6.0",
     "types": ["node"]
   },

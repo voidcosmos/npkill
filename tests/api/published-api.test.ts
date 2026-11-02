@@ -13,11 +13,10 @@ function createProgram(file: string): ts.Program {
   return ts.createProgram([file], {
     strict: true,
     noEmit: true,
-    skipLibCheck: true,
+    skipLibCheck: false,
     types: ['node'],
     module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
-    paths: { '@core/*': [join(PACKAGE_DIR, 'lib', 'core', '*')] },
   });
 }
 

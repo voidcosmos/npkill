@@ -2,8 +2,15 @@
   "name": "npkill",
   "version": "0.12.2",
   "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
-  "exports": "./lib/index.js",
   "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
   "engines": {
     "node": ">=20.19.0"
   },

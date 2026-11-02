@@ -1,4 +1,4 @@
-import { FormattedSize } from 'src/utils/unit-conversions.js';
+import { FormattedSize } from '../../utils/unit-conversions.js';
 import { ScanFoundTarget } from '../../core/interfaces/index.js';
 
 export interface CliScanFoundTarget extends ScanFoundTarget {
