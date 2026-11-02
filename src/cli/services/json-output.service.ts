@@ -6,6 +6,7 @@ import {
   JsonCliScanFoundTarget,
 } from '../interfaces/json-output.interface.js';
 import { convertGbToBytes } from '../../utils/unit-conversions.js';
+import { isModificationTimeKnown } from '../../utils/is-modification-time-known.js';
 
 export class JsonOutputService {
   private readonly OUTPUT_VERSION = 1;
@@ -33,7 +34,7 @@ export class JsonOutputService {
   }
 
   completeScan(): void {
-    if (!this.isStreamMode && this.results.length > 0) {
+    if (!this.isStreamMode) {
       this.writeSimpleResults();
     }
   }
@@ -87,7 +88,7 @@ export class JsonOutputService {
       version: this.OUTPUT_VERSION,
       error: true,
       message: errorMessage,
-      timestamp: new Date().getDate(),
+      timestamp: Date.now(),
     };
 
     this.stderr.write(JSON.stringify(errorOutput) + '\n');
@@ -98,7 +99,7 @@ export class JsonOutputService {
   }
 
   handleShutdown(): void {
-    if (!this.isStreamMode && this.results.length > 0) {
+    if (!this.isStreamMode) {
       this.writeSimpleResults();
     }
   }
@@ -109,7 +110,9 @@ export class JsonOutputService {
     return {
       path: result.path,
       size: convertGbToBytes(result.size),
-      modificationTime: result.modificationTime,
+      modificationTime: isModificationTimeKnown(result.modificationTime)
+        ? result.modificationTime
+        : null,
       riskAnalysis: result.riskAnalysis
         ? {
             isSensitive: result.riskAnalysis.isSensitive,

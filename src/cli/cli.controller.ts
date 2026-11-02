@@ -53,6 +53,7 @@ export class CliController {
 
   private searchStart: number;
   private searchDuration: number;
+  private isScreenPrepared = false;
 
   private uiHeader: HeaderUi;
   private uiGeneral: GeneralUi;
@@ -435,7 +436,6 @@ export class CliController {
     const exclude = options.getString('exclude');
 
     if (exclude !== undefined && exclude !== '') {
-      console.log('EXCLUDE', exclude);
       const userExcludeList = this.consoleService
         .splitData(this.consoleService.replaceString(exclude, '"', ''), ',')
         .map((path) => path.trim())
@@ -556,21 +556,19 @@ export class CliController {
     if (options.isTrue('older-than')) {
       const olderThan = options.getString('older-than');
       if (!/^\d+$/.test(olderThan) || Number(olderThan) <= 0) {
-        this.uiService.print(ERROR_MSG.INVALID_OLDER_THAN);
-        this.logger.error(ERROR_MSG.INVALID_OLDER_THAN);
+        this.printError(ERROR_MSG.INVALID_OLDER_THAN);
         this.exitWithError();
       }
       this.config.olderThan = Number(olderThan);
     }
 
     if (this.config.olderThan > 0 && this.config.disableAge) {
-      this.uiService.print(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
-      this.logger.error(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
+      this.printError(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
       this.exitWithError();
     }
 
     if (this.config.jsonStream && this.config.jsonSimple) {
-      this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
+      this.printError(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
       this.exitWithError();
     }
 
@@ -595,8 +593,7 @@ export class CliController {
   }
 
   private invalidSortParam(): void {
-    this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
-    this.logger.error(INFO_MSGS.NO_VALID_SORT_NAME);
+    this.printError(INFO_MSGS.NO_VALID_SORT_NAME);
     this.exitWithError();
   }
 
@@ -605,7 +602,7 @@ export class CliController {
   }
 
   private showProgramVersion(): void {
-    this.uiService.print('v' + this.getVersion());
+    this.uiService.print('v' + this.getVersion() + '\n');
   }
 
   private isValidColor(color: string): boolean {
@@ -621,8 +618,7 @@ export class CliController {
   }
 
   private invalidSizeUnitParam(): void {
-    this.uiService.print(INFO_MSGS.NO_VALID_SIZE_UNIT);
-    this.logger.error(INFO_MSGS.NO_VALID_SIZE_UNIT);
+    this.printError(INFO_MSGS.NO_VALID_SIZE_UNIT);
     this.exitWithError();
   }
 
@@ -634,6 +630,7 @@ export class CliController {
   }
 
   private prepareScreen(): void {
+    this.isScreenPrepared = true;
     this.uiService.setRawMode();
     // this.uiService.prepareUi();
     this.uiService.setCursorVisible(false);
@@ -648,8 +645,7 @@ export class CliController {
 
   private checkScreenRequirements(): void {
     if (this.isTerminalTooSmall()) {
-      this.uiService.print(INFO_MSGS.MIN_CLI_CLOMUNS);
-      this.logger.error(INFO_MSGS.MIN_CLI_CLOMUNS);
+      this.printError(INFO_MSGS.MIN_CLI_CLOMUNS);
       this.exitWithError();
     }
   }
@@ -659,8 +655,7 @@ export class CliController {
     if (!result.isValid) {
       const errorMessage =
         result.invalidReason || 'Root folder is not valid. Unknown reason';
-      this.uiService.print(errorMessage);
-      this.logger.error(errorMessage);
+      this.printError(errorMessage);
       this.exitWithError();
     }
   }
@@ -772,7 +767,10 @@ export class CliController {
         tap((result) => this.jsonOutputService.processResult(result)),
       )
       .subscribe({
-        error: (error) => this.jsonOutputService.writeError(error),
+        error: (error) => {
+          this.jsonOutputService.writeError(error);
+          this.exitWithError();
+        },
         complete: () => {
           this.jsonOutputService.completeScan();
           this.exitGracefully();
@@ -933,9 +931,19 @@ export class CliController {
   }
 
   private resetConsoleState(): void {
+    if (!this.isScreenPrepared) {
+      return;
+    }
+
+    this.isScreenPrepared = false;
     this.uiService.print('\n');
     this.uiService.setRawMode(false);
     this.uiService.setCursorVisible(true);
+  }
+
+  private printError(message: string): void {
+    this.uiService.print(message + '\n');
+    this.logger.error(message);
   }
 
   private async printExitMessage(): Promise<void> {

@@ -70,14 +70,14 @@ Each line in streaming mode contains a single result:
 
 ### Error Output
 
-Errors are output to stderr in JSON format:
+Errors are output to stderr in JSON format. If the scan cannot run, npkill exits with code 1 after writing the error.
 
 ```json
 {
   "version": 1,
   "error": true,
   "message": "Permission denied accessing /restricted/path",
-  "timestamp": "1640995300000"
+  "timestamp": 1640995300000
 }
 ```
 
@@ -86,12 +86,13 @@ Errors are output to stderr in JSON format:
 - **`version`**: Schema version.
 - **`path`**: Absolute path to the found directory.
 - **`size`**: Directory size in bytes.
-- **`modificationTime`**: Unix timestamp (milliseconds) of the most recently modified file.
+- **`modificationTime`**: Unix timestamp (milliseconds) of the most recently modified file, or `null` when it could not be calculated (for example, when the project has no other files).
 - **`riskAnalysis`**: Optional risk assessment for deletion
   - **`isSensitive`**: Whether the directory might be important for system functionality.
   - **`reason`**: Human-readable explanation of the risk assessment.
 - **`resultsCount`**: Total number of results found.
 - **`runDuration`**: Total scan time in milliseconds.
+- **`timestamp`**: Unix timestamp (milliseconds) of the error.
 
 ## Examples
 
@@ -140,7 +141,7 @@ npkill --json-stream 2>/dev/null | jq -r '.result.path'
 
 ```bash
 # Find and delete directories older than 30 days
-npkill --json | jq -r '.results[] | select(.modificationTime < (now - 2592000) * 1000) | .path' | while read dir; do
+npkill --json | jq -r '.results[] | select(.modificationTime != null and .modificationTime < (now - 2592000) * 1000) | .path' | while read dir; do
   echo "Deleting old directory: $dir"
   rm -rf "$dir"
 done
@@ -161,11 +162,11 @@ npkill --json-stream | while read line; do
 done
 
 # Create a CSV report
-echo "Path,Size(MB),LastModified,Status" > report.csv
-npkill --json | jq -r '.results[] | "\(.path),\(.size/1048576|floor),\(.modificationTime),\(.status)"' >> report.csv
+echo "Path,Size(MB),LastModified" > report.csv
+npkill --json | jq -r '.results[] | "\(.path),\(.size/1048576|floor),\(.modificationTime)"' >> report.csv
 
 # Filter and format for human reading
-npkill --json | jq -r '.results[] | select(.size > 52428800) | "📁 \(.path)\n   💾 Size: \(.size/1048576|floor)MB\n   📅 Modified: \(.modificationTime | strftime("%Y-%m-%d %H:%M:%S"))\n"'
+npkill --json | jq -r '.results[] | select(.size > 52428800) | "📁 \(.path)\n   💾 Size: \(.size/1048576|floor)MB\n   📅 Modified: \(if .modificationTime then (.modificationTime / 1000 | strftime("%Y-%m-%d %H:%M:%S")) else "unknown" end)\n"'
 ```
 
 ## Interfaces
@@ -190,13 +191,13 @@ interface JsonSimpleOutput extends JsonOutputBase {
 interface JsonErrorOutput extends JsonOutputBase {
   error: true;
   message: string;
-  timestamp: string;
+  timestamp: number; // Unix timestamp in milliseconds
 }
 
 interface CliScanFoundTarget {
   path: string;
   size: number; // bytes
-  modificationTime: number; // Unix timestamp
+  modificationTime: number | null; // Unix timestamp in milliseconds
   riskAnalysis?: {
     isSensitive: boolean;
     reason?: string;

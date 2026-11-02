@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import {
   ConfigService,
   DeleteResult,
@@ -136,6 +136,8 @@ describe('CliController test', () => {
     initializeSession: jest.fn(),
     writeStreamResult: jest.fn(),
     getResultsCount: jest.fn(() => 0),
+    writeError: jest.fn(),
+    completeScan: jest.fn(),
   };
 
   const npkillDeleteMock = jest.fn();
@@ -427,6 +429,45 @@ describe('CliController test', () => {
         expect(loggerServiceMock.error).toHaveBeenCalledWith(
           ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS,
         );
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('exiting', () => {
+      it('Should not write terminal escape codes when the interactive ui never started', () => {
+        expect(() => cliController.exitGracefully()).toThrow('process.exit: 0');
+
+        expect(uiServiceMock.print).not.toHaveBeenCalled();
+        expect(uiServiceMock.setCursorVisible).not.toHaveBeenCalled();
+      });
+
+      it('Should restore the terminal when leaving the interactive ui', () => {
+        cliController.init();
+        jest.clearAllMocks();
+
+        expect(() => cliController.exitGracefully()).toThrow('process.exit: 0');
+
+        expect(uiServiceMock.setRawMode).toHaveBeenCalledWith(false);
+        expect(uiServiceMock.setCursorVisible).toHaveBeenCalledWith(true);
+      });
+
+      it('Should print the version on its own line', () => {
+        spyMethod('getVersion', () => '1.0.0');
+
+        cliController.showProgramVersion();
+
+        expect(uiServiceMock.print).toHaveBeenCalledWith('v1.0.0\n');
+      });
+
+      it('Should exit with an error when a JSON scan fails', () => {
+        scanServiceMock.scan.mockReturnValue(
+          throwError(() => new Error('Cannot scan /missing')),
+        );
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.scanInJson();
+
+        expect(jsonOutputServiceMock.writeError).toHaveBeenCalled();
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
     });

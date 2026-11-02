@@ -110,6 +110,35 @@ describe('JsonOutputService', () => {
       });
     });
 
+    it('should output an empty result list when nothing was found', () => {
+      jsonOutputService.initializeSession(false);
+      jsonOutputService.completeScan();
+
+      expect(mockStdout.write).toHaveBeenCalledTimes(1);
+      const parsedData = JSON.parse(mockStdout.write.mock.calls[0][0]);
+      expect(parsedData).toMatchObject({
+        version: 1,
+        results: [],
+        meta: { resultsCount: 0 },
+      });
+    });
+
+    it.each([-1, 1])(
+      'should output an unknown modification time (%p) as null',
+      (unknownModificationTime) => {
+        jsonOutputService.initializeSession(true);
+        jsonOutputService.processResult({
+          path: '/test/node_modules',
+          size: 1,
+          modificationTime: unknownModificationTime,
+          status: 'live',
+        });
+
+        const parsedData = JSON.parse(mockStdout.write.mock.calls[0][0]);
+        expect(parsedData.result.modificationTime).toBeNull();
+      },
+    );
+
     it('should not output anything on completeScan in stream mode', () => {
       const mockResult: CliScanFoundTarget = {
         path: '/test/node_modules',
@@ -143,6 +172,16 @@ describe('JsonOutputService', () => {
         message: 'Test error message',
         timestamp: expect.any(Number),
       });
+    });
+
+    it('should use the current time in milliseconds as timestamp', () => {
+      const before = Date.now();
+      jsonOutputService.writeError('Some error');
+      const after = Date.now();
+
+      const { timestamp } = JSON.parse(mockStderr.write.mock.calls[0][0]);
+      expect(timestamp).toBeGreaterThanOrEqual(before);
+      expect(timestamp).toBeLessThanOrEqual(after);
     });
 
     it('should write error in correct format when given string', () => {
@@ -183,11 +222,13 @@ describe('JsonOutputService', () => {
       expect(parsedData.results[0].path).toBe('/test/node_modules');
     });
 
-    it('should not output anything when no results collected', () => {
+    it('should output an empty result list when no results collected', () => {
       jsonOutputService.initializeSession(false); // simple mode
       jsonOutputService.handleShutdown();
 
-      expect(mockStdout.write).not.toHaveBeenCalled();
+      expect(mockStdout.write).toHaveBeenCalledTimes(1);
+      const parsedData = JSON.parse(mockStdout.write.mock.calls[0][0]);
+      expect(parsedData.results).toEqual([]);
     });
 
     it('should not output anything in stream mode', () => {

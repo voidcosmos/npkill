@@ -4,8 +4,13 @@ export interface JsonOutputBase {
   version: number;
 }
 
-export interface JsonCliScanFoundTarget
-  extends Omit<CliScanFoundTarget, 'status'> {}
+export interface JsonCliScanFoundTarget extends Omit<
+  CliScanFoundTarget,
+  'status' | 'modificationTime'
+> {
+  /** Milliseconds since the Unix epoch, or null when the age is unknown. */
+  modificationTime: number | null;
+}
 
 /**
  * JSON output format for streaming mode (--json-stream).
