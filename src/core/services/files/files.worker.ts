@@ -245,7 +245,8 @@ class FileWalker {
                 currentLevelSize += 4096; // General directory size
                 directoriesToProcess.push(fullPath);
               } else {
-                currentLevelSize += this.getDiskUsage(await lstat(fullPath));
+                const stats = await lstat(fullPath);
+                currentLevelSize += this.getDiskUsage(stats);
               }
             } catch {
               // Ignore permissions errors.
