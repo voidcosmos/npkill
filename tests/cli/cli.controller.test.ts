@@ -488,6 +488,20 @@ describe('CliController test', () => {
         expect(jsonOutputServiceMock.writeError).toHaveBeenCalled();
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
+
+      it('Should log unexpected errors and exit with an error', () => {
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        cliController.exitWithFatalError(new Error('boom'));
+
+        expect(loggerServiceMock.error).toHaveBeenCalledWith(
+          expect.stringContaining('boom'),
+        );
+        expect(uiServiceMock.print).toHaveBeenCalledWith(
+          expect.stringContaining('boom'),
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe('--older-than', () => {

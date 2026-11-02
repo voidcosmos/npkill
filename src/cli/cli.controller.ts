@@ -710,7 +710,7 @@ export class CliController {
       if (key['name'] !== '') {
         this.keyPress(key);
       } else {
-        throw new Error('Invalid key: ' + JSON.stringify(key));
+        this.logger.error('Invalid key: ' + JSON.stringify(key));
       }
     });
 
@@ -719,13 +719,13 @@ export class CliController {
       this.uiService.renderAll();
     });
 
-    process.on('uncaughtException', (error: Error) => {
-      this.newError(error.message);
-    });
+    process.on('uncaughtException', (error: Error) =>
+      this.exitWithFatalError(error),
+    );
 
-    process.on('unhandledRejection', (error: Error) => {
-      this.newError(error.stack ?? error.message);
-    });
+    process.on('unhandledRejection', (error: Error) =>
+      this.exitWithFatalError(error),
+    );
   }
 
   private keyPress(key: IKeyPress): void {
@@ -940,6 +940,13 @@ export class CliController {
     this.logger.saveToFile(logPath);
     // eslint-disable-next-line n/no-process-exit
     process.exit(0);
+  }
+
+  private exitWithFatalError(error: Error): void {
+    this.logger.error(error.stack ?? error.message);
+    this.resetConsoleState();
+    this.uiService.print(`${ERROR_MSG.UNEXPECTED_ERROR} ${error.message}\n`);
+    this.exitWithError();
   }
 
   private resetConsoleState(): void {

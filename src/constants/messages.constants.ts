@@ -43,4 +43,5 @@ export const ERROR_MSG = {
     '--older-than needs the age of each result, so it cannot be used with --no-age or --no-stats.',
   UNKNOWN_OPTIONS: 'Unknown options:',
   SEE_HELP: 'Run npkill --help to see the available options.',
+  UNEXPECTED_ERROR: 'npkill stopped because of an unexpected error:',
 };

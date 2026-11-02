@@ -37,6 +37,8 @@ describe('Http Service', () => {
   describe('#get', () => {
     beforeEach(() => {
       statusCodeMock = 200;
+      eventEmitter.removeAllListeners();
+      eventEmitter2.removeAllListeners();
     });
 
     it('should reject if a error ocurr', (done) => {
@@ -85,6 +87,15 @@ describe('Http Service', () => {
 
       chunks.forEach((chunk) => eventEmitter2.emit('data', chunk));
       eventEmitter2.emit('end');
+    });
+
+    it('should reject if the body is not valid JSON', async () => {
+      const response = httpsService.getJson('http://sampleUrl');
+
+      eventEmitter2.emit('data', '<html>Rate limited</html>');
+      eventEmitter2.emit('end');
+
+      await expect(response).rejects.toThrow(SyntaxError);
     });
   });
 });
