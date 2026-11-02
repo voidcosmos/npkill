@@ -3,29 +3,18 @@ import type { JestConfigWithTsJest } from 'ts-jest';
 const config: JestConfigWithTsJest = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  roots: ['<rootDir>/src', '<rootDir>/tests'],
+  testMatch: ['<rootDir>/tests/**/*.test.ts'],
   extensionsToTreatAsEsm: ['.ts'],
-  testRegex: '(/tests/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  // moduleNameMapper: {
-  //   '^@core/(.*)$': '<rootDir>/src/$1',
-  //   '^@services/(.*)$': '<rootDir>/src/services/$1',
-  //   '^@interfaces/(.*)$': '<rootDir>/src/interfaces/$1',
-  //   '^@constants/(.*)$': '<rootDir>/src/constants/$1',
-  // },
-  // transform: {
-  //   '^.+\\.(t|j)sx?$': ['ts-jest', { useESM: true }],
-  // },
   transform: {
     '^.+\\.(t|j)sx?$': ['ts-jest', { useESM: true }],
   },
+  transformIgnorePatterns: ['/node_modules/', '<rootDir>/.test-build/'],
   globalSetup: '<rootDir>/tests/api/support/build-package.mjs',
-  testPathIgnorePatterns: [
-    '<rootDir>/.stryker*',
-    '<rootDir>/tests/api/support/',
-  ],
 };
 
 export default config;

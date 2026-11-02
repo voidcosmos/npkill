@@ -6,7 +6,7 @@ import type {
   Npkill,
   NpkillInterface,
   ScanOptions,
-} from '../../../node_modules/.cache/npkill-api/lib/index.js';
+} from '../../../.test-build/npkill-api/lib/index.js';
 
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2

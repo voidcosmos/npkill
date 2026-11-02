@@ -11,6 +11,7 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       'lib/**',
+      '.test-build/**',
       'dist/**',
       'build/**',
       '**/*.min.js',
