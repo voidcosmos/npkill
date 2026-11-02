@@ -1,5 +1,5 @@
 import { FileWorkerService } from './services/files/index.js';
-import { from, Observable } from 'rxjs';
+import { defer, from, Observable, of } from 'rxjs';
 import { catchError, filter, map, mergeMap, take, tap } from 'rxjs/operators';
 import { ScanStatus } from './interfaces/search-status.model.js';
 import _dirname from '../dirname.js';
@@ -14,7 +14,6 @@ import {
   ScanOptions,
   DeleteOptions,
   DeleteResult,
-  SizeUnit,
 } from './interfaces/folder.interface.js';
 import { OSServiceMap } from '../constants/os-service-map.constants.js';
 import {
@@ -51,57 +50,61 @@ export class Npkill implements NpkillInterface {
     options: ScanOptions,
   ): Observable<ScanFoundFolder> {
     const { fileService } = this.services;
-    this.logger.info(`Scan started in ${rootPath}`);
-    const startTime = Date.now();
 
-    return fileService.listDir(rootPath, options).pipe(
-      catchError(() => {
-        throw new Error('Error while listing directories');
-      }),
-      mergeMap((dataFolder) => from(splitData(dataFolder))),
-      filter((path) => path !== ''),
-      map((path) => {
-        if (
-          options.performRiskAnalysis !== undefined &&
-          !options.performRiskAnalysis
-        ) {
-          return { path };
-        }
-        const riskAnalysis = fileService.isDangerous(path);
-        return {
-          path,
-          riskAnalysis,
-        };
-      }),
-      tap((nodeFolder) =>
-        this.logger.info(`Folder found: ${String(nodeFolder.path)}`),
-      ),
-      tap({
-        complete: () => {
-          this.searchDuration = (Date.now() - startTime) / 1000;
-          this.logger.info(`Search completed after ${this.searchDuration}s`);
-        },
-      }),
-    );
+    return defer(() => {
+      assertValidScanOptions(options);
+      this.logger.info(`Scan started in ${rootPath}`);
+      const startTime = Date.now();
+
+      return fileService.listDir(rootPath, options).pipe(
+        mergeMap((dataFolder) => from(splitData(dataFolder))),
+        filter((path) => path !== ''),
+        map((path) => {
+          if (
+            options.performRiskAnalysis !== undefined &&
+            !options.performRiskAnalysis
+          ) {
+            return { path };
+          }
+          const riskAnalysis = fileService.isDangerous(path);
+          return {
+            path,
+            riskAnalysis,
+          };
+        }),
+        tap((nodeFolder) =>
+          this.logger.info(`Folder found: ${String(nodeFolder.path)}`),
+        ),
+        tap({
+          complete: () => {
+            this.searchDuration = (Date.now() - startTime) / 1000;
+            this.logger.info(`Search completed after ${this.searchDuration}s`);
+          },
+        }),
+      );
+    });
   }
 
   getSize$(path: string): Observable<GetSizeResult> {
     const { fileService } = this.services;
-    this.logger.info(`Calculating folder size for ${String(path)}`);
-    return fileService.getFolderSize(path).pipe(
+
+    return defer(() => {
+      this.logger.info(`Calculating folder size for ${String(path)}`);
+      return fileService.getFolderSize(path);
+    }).pipe(
       take(1),
-      map((size) => ({ size, unit: 'bytes' as SizeUnit })),
+      map((size) => ({ size })),
       tap(({ size }) => this.logger.info(`Size of ${path}: ${size} bytes`)),
     );
   }
 
-  getNewestFile$(
-    path: string,
-    // options?: GetNewestFileOptions,
-  ): Observable<GetNewestFileResult | null> {
+  getNewestFile$(path: string): Observable<GetNewestFileResult | null> {
     const { fileService } = this.services;
-    this.logger.info(`Calculating last mod. of ${path}`);
-    return from(fileService.getRecentModificationInDir(path)).pipe(
+
+    return defer(() => {
+      this.logger.info(`Calculating last mod. of ${path}`);
+      return from(fileService.getRecentModificationInDir(path));
+    }).pipe(
       tap((result) => {
         if (!result) {
           return;
@@ -113,30 +116,41 @@ export class Npkill implements NpkillInterface {
 
   delete$(path: string, options?: DeleteOptions): Observable<DeleteResult> {
     const { fileService } = this.services;
-    this.logger.info(
-      `Deleting ${String(path)} ${options?.dryRun ? '(dry run)' : ''}...`,
-    );
-    const deleteOperation = options?.dryRun
-      ? from(fileService.fakeDeleteDir())
-      : from(fileService.deleteDir(path));
 
-    return deleteOperation.pipe(
-      map((result) => {
-        if (!result) {
-          this.logger.error(`Failed to delete ${String(path)}`);
-          return { path, success: false };
+    return defer(() => {
+      if (typeof path !== 'string' || path === '') {
+        throw new Error('delete$ needs the path to delete.');
+      }
+
+      const dryRun = options?.dryRun === true;
+      this.logger.info(`Deleting ${path} ${dryRun ? '(dry run)' : ''}...`);
+      if (dryRun) {
+        return of({ path, success: true });
+      }
+
+      return from(fileService.deleteDir(path)).pipe(
+        map((deleted): DeleteResult =>
+          deleted
+            ? { path, success: true }
+            : toFailedDeleteResult(path, new Error(`Could not delete ${path}`)),
+        ),
+        catchError((error: unknown) => of(toFailedDeleteResult(path, error))),
+      );
+    }).pipe(
+      tap((result) => {
+        if (result.success) {
+          this.logger.info(`Deleted ${path}: true`);
+          return;
         }
-        this.logger.info(`Deleted ${String(path)}: ${result}`);
-        return {
-          path,
-          success: result,
-        };
+        this.logger.error(
+          `Failed to delete ${path}: ${String(result.error?.message)}`,
+        );
       }),
     );
   }
 
-  getLogs$(): Observable<LogEntry[]> {
-    return this.services.logger.getLog$();
+  getLogs$(): Observable<LogEntry> {
+    return this.services.logger.getEntries$();
   }
 
   stopScan(): void {
@@ -190,6 +204,36 @@ function createDefaultServices(
     streamService,
     resultsService,
     profilesService,
+  };
+}
+
+function assertValidScanOptions(options: ScanOptions): void {
+  const targets: unknown = options?.targets;
+  const isValid =
+    Array.isArray(targets) &&
+    targets.length > 0 &&
+    targets.every((target) => typeof target === 'string' && target !== '');
+
+  if (!isValid) {
+    throw new Error(
+      'ScanOptions.targets must be a non-empty array of directory names.',
+    );
+  }
+}
+
+function toFailedDeleteResult(path: string, error: unknown): DeleteResult {
+  const { message, code } = (error ?? {}) as {
+    message?: unknown;
+    code?: unknown;
+  };
+
+  return {
+    path,
+    success: false,
+    error: {
+      message: typeof message === 'string' ? message : String(error),
+      ...(typeof code === 'string' ? { code } : {}),
+    },
   };
 }
 

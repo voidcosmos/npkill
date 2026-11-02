@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { ScanService } from '../../../src/cli/services/scan.service.js';
-import { Npkill, ScanFoundFolder, SortBy } from '../../../src/core/index.js';
+import { Npkill, ScanFoundFolder } from '../../../src/core/index.js';
 import {
   CliScanFoundFolder,
   IConfig,
@@ -88,7 +88,6 @@ describe('ScanService', () => {
           targets: mockConfig.targets,
           exclude: mockConfig.exclude,
           performRiskAnalysis: true,
-          sortBy: mockConfig.sortBy as SortBy,
         },
       );
     });

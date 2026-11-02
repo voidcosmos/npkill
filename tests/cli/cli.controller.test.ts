@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import {
   ConfigService,
   DeleteResult,
@@ -97,16 +97,12 @@ describe('CliController test', () => {
   const filesServiceDeleteMock = jest
     .fn<() => Promise<boolean>>()
     .mockResolvedValue(true);
-  const filesServiceFakeDeleteMock = jest
-    .fn<() => Promise<boolean>>()
-    .mockResolvedValue(true);
 
   const linuxFilesServiceMock = {
     getFileContent: jest.fn().mockReturnValue('{}'),
     isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
     isSafeToDelete: jest.fn().mockReturnValue(true),
     deleteDir: filesServiceDeleteMock,
-    fakeDeleteDir: filesServiceFakeDeleteMock,
   };
   const spinnerServiceMock = jest.fn();
   const updateServiceMock = jest.fn();
@@ -338,6 +334,12 @@ describe('CliController test', () => {
           success: true,
         };
         jest.clearAllMocks();
+        jest.useFakeTimers();
+        npkillDeleteMock.mockReturnValueOnce(of(testFolder));
+      });
+
+      afterEach(() => {
+        jest.useRealTimers();
       });
 
       it('Should call normal deleteDir function when no --dry-run is included', () => {
@@ -369,6 +371,26 @@ describe('CliController test', () => {
         expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
           dryRun: true,
         });
+      });
+    });
+
+    describe('deleting a folder', () => {
+      it('Should mark the folder as failed when delete$ reports success: false', async () => {
+        const folder = { path: '/my/path/node_modules', status: 'live' };
+        npkillDeleteMock.mockReturnValueOnce(
+          of({
+            path: folder.path,
+            success: false,
+            error: { message: 'Permission denied' },
+          }),
+        );
+        mockParameters({ 'target-folders': 'node_modules' });
+        cliController.init();
+
+        resultsUiDeleteMock$.next(folder as unknown as DeleteResult);
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(folder.status).toBe('error-deleting');
       });
     });
 

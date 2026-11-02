@@ -49,13 +49,6 @@ export abstract class FileService implements IFileService {
     this.fileWorkerService.stopScan();
   }
 
-  /** Used for dry-run or testing. */
-  async fakeDeleteDir(): Promise<boolean> {
-    const randomDelay = Math.floor(Math.random() * 4000 + 200);
-    await new Promise((resolve) => setTimeout(resolve, randomDelay));
-    return true;
-  }
-
   isValidRootFolder(path: string): IsValidRootFolderResult {
     let stat: Stats;
     try {
@@ -251,7 +244,7 @@ export abstract class FileService implements IFileService {
             const path = `${dirname}/${item.name}`;
             const fileStat = await stat(path);
 
-            files.push({ path, modificationTime: fileStat.mtimeMs / 1000 });
+            files.push({ path, modificationTime: fileStat.mtime.getTime() });
           } catch {
             // Skip files that can't be accessed (e.g., permission denied, broken symlinks)
             continue;

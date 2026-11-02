@@ -67,6 +67,23 @@ describe('LoggerService', () => {
     });
   });
 
+  describe('getEntries$', () => {
+    it('should deliver in order the entries logged while replaying the previous ones', () => {
+      logger.info('first');
+      logger.info('second');
+      const messages: string[] = [];
+
+      logger.getEntries$().subscribe(({ message }) => {
+        messages.push(message);
+        if (message === 'first') {
+          logger.info('third');
+        }
+      });
+
+      expect(messages).toEqual(['first', 'second', 'third']);
+    });
+  });
+
   describe('get', () => {
     it('should get "all" logs (by default or explicit)', () => {
       expect(logger.get()).toEqual([]);

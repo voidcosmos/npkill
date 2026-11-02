@@ -13,7 +13,7 @@ import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import { IConfig, CliScanFoundFolder, IKeyPress } from './interfaces/index.js';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { delay, mergeMap, tap } from 'rxjs/operators';
 
 import { COLORS } from '../constants/cli.constants.js';
 import { FOLDER_SORT } from '../constants/sort.result.js';
@@ -913,10 +913,22 @@ export class CliController {
     this.uiStatus.render();
     this.printFoldersSection();
 
+    const deletion$ = this.npkill.delete$(String(folder.path), {
+      dryRun: this.config.dryRun,
+    });
+    const simulatedDeletionMs = Math.floor(Math.random() * 4000 + 200);
+
     firstValueFrom(
-      this.npkill.delete$(String(folder.path), { dryRun: this.config.dryRun }),
+      this.config.dryRun
+        ? deletion$.pipe(delay(simulatedDeletionMs))
+        : deletion$,
     )
-      .then(() => {
+      .then((result) => {
+        if (!result.success) {
+          throw new Error(
+            result.error?.message ?? `Could not delete ${folder.path}`,
+          );
+        }
         folder.status = 'deleted';
         this.searchStatus.pendingDeletions--;
         this.uiStats.render();

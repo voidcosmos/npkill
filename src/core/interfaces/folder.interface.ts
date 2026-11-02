@@ -1,8 +1,3 @@
-/** Unit for representing file/directory sizes. */
-export type SizeUnit = 'bytes'; // | 'kb' | 'mb' | 'gb'; // TODO implement
-
-/** Options soported for the sortBy scan option. */
-export type SortBy = 'path' | 'size' | 'age';
 /**
  * Analysis of potential risks associated with deleting a directory.
  */
@@ -27,40 +22,22 @@ export interface ScanFoundFolder {
  * Configuration options for scanning directories.
  */
 export interface ScanOptions {
-  /** Target directories to scan for matching folders. */
+  /** Names of the directories to find. Must contain at least one name. */
   targets: string[];
   /** Array of directory paths to exclude from the scan. */
   exclude?: string[];
-  /** Criteria for sorting scan results. */
-  sortBy?: SortBy;
   /** Whether to perform risk analysis on found directories. Default: true. */
   performRiskAnalysis?: boolean; // Default: true
   // maxConcurrentScans?: number; // Need to implement this.
 }
 
 /**
- * Options for calculating directory size.
- */
-export interface GetSizeOptions {
-  /** Unit to return the size in. Default: bytes. */
-  unit?: SizeUnit; // Default: bytes
-}
-
-/**
  * Result of a directory size calculation.
  */
 export interface GetSizeResult {
-  /** Size value in the specified unit. Default: bytes. */
-  size: number; // Default: bytes
-  /** Unit of the size measurement. */
-  unit: SizeUnit;
+  /** Space used on disk, in bytes. */
+  size: number;
 }
-
-/**
- * Options for finding the newest file in a directory.
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GetNewestFileOptions {}
 
 /**
  * Information about the most recently modified file in a directory.
@@ -70,8 +47,8 @@ export interface GetNewestFileResult {
   path: string;
   /** Name of the newest file. */
   name: string;
-  /** Unix timestamp of the file's last modification. */
-  timestamp: number; // epoch timestamp
+  /** Last modification of the file, in milliseconds since the Unix epoch. */
+  timestamp: number;
 }
 
 /**

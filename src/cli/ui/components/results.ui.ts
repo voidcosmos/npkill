@@ -498,7 +498,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       folder.modificationTime > 0
     ) {
       const days = Math.floor(
-        (new Date().getTime() / 1000 - folder.modificationTime) / 86400,
+        (new Date().getTime() - folder.modificationTime) / 86400000,
       );
       text = `${Math.min(days, 999)}d`;
     } else {
