@@ -163,7 +163,7 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.                                        |
 | --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                                                  |
 | -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                                                             |
-| -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`.                                                                                                                    |
+| -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`. Add `-y` and `--json` or `--json-stream` to delete without the interface.                                          |
 | -e, --hide-errors       | Hide errors if any                                                                                                                                                                                           |
 | -E, --exclude           | Exclude directories from search. Each directory separated by ','. By default, [some directories](https://github.com/voidcosmos/npkill/blob/main/src/core/constants/global-ignored.constants.ts) are ignored. |
 | -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                                                   |
@@ -249,6 +249,9 @@ npkill --json-stream | jq '.result.path'
 
 # Find directories larger than 100MB
 npkill --json | jq '.results[] | select(.size > 104857600)'
+
+# Delete the node_modules untouched for 30 days, without the interface
+npkill -t node_modules --older-than 30 -D -y --json
 ```
 
 <a name="setup-locally"></a>
