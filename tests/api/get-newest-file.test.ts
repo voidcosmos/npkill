@@ -9,6 +9,8 @@ import {
   createTempDir,
   createTree,
   itOnUnix,
+  itWithUnixPermissions,
+  lockPermissions,
   observe,
   removeTempDirs,
 } from './support/helpers.js';
@@ -115,6 +117,24 @@ describe('getNewestFile$', () => {
       expect.objectContaining({ message: expect.any(String) }),
     );
   });
+
+  itWithUnixPermissions(
+    'errors when the folder can be read but not entered',
+    async () => {
+      const folder = createTempDir();
+      writeFileModifiedAt(join(folder, 'index.js'), new Date('2026-01-01'));
+      lockPermissions(folder, 0o444);
+
+      const outcome = await observe(
+        createNpkill().getNewestFile$(folder),
+        2500,
+      );
+
+      expect(outcome.error).toEqual(
+        expect.objectContaining({ message: expect.any(String) }),
+      );
+    },
+  );
 
   it('emits null when the folder has no files', async () => {
     const folder = createTree(['empty/subfolder']);

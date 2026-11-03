@@ -8,7 +8,7 @@ import {
   RiskAnalysis,
 } from '../../index.js';
 import fs, { accessSync, Stats, statSync } from 'fs';
-import { lstat, opendir, readdir } from 'fs/promises';
+import { access, lstat, opendir, readdir } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
 import { IsValidRootFolderResult } from '../../interfaces/npkill.interface.js';
@@ -278,4 +278,5 @@ export abstract class FileService implements IFileService {
 async function assertReadableDirectory(path: string): Promise<void> {
   const dir = await opendir(path);
   await dir.close();
+  await access(path, fs.constants.R_OK | fs.constants.X_OK);
 }

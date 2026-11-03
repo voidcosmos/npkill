@@ -117,6 +117,21 @@ describe('getSize$', () => {
   });
 
   itWithUnixPermissions(
+    'errors when the folder can be read but not entered',
+    async () => {
+      const folder = createFolderWithFile();
+      lockPermissions(folder, 0o444);
+
+      const outcome = await observe(
+        createNpkill().getSize$(folder),
+        SIZE_TIMEOUT_MS,
+      );
+
+      expect(outcome.error).toBeInstanceOf(Error);
+    },
+  );
+
+  itWithUnixPermissions(
     'still answers when a subfolder cannot be read',
     async () => {
       const folder = createFolderWithFile();

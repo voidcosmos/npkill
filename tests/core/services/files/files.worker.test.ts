@@ -54,6 +54,7 @@ const mockDir = {
 } as unknown as Dir;
 
 jest.unstable_mockModule('fs/promises', () => ({
+  access: () => Promise.resolve(),
   opendir: () => new Promise((resolve) => resolve(mockDir)),
   lstat: () =>
     Promise.resolve({

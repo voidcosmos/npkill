@@ -1,5 +1,5 @@
-import { Dir, Dirent, Stats } from 'fs';
-import { lstat, opendir, readdir } from 'fs/promises';
+import { constants, Dir, Dirent, Stats } from 'fs';
+import { access, lstat, opendir, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import {
   WorkerMessage,
@@ -196,6 +196,7 @@ class FileWalker {
         emitResult(this.getDiskUsage(stats));
         return;
       }
+      await access(path, constants.R_OK | constants.X_OK);
 
       this.enqueueTask({
         operation: ETaskOperation.getSizeChild,
