@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
-import { existsSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import type { DeleteOptions } from '../../src/index.js';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -8,6 +9,7 @@ import {
 import {
   createTempDir,
   createTree,
+  itOnUnix,
   itWithUnixPermissions,
   lockPermissions,
   observe,
@@ -90,6 +92,76 @@ describe('delete$', () => {
 
     expect(performance.now() - startedAt).toBeLessThan(100);
     expect(outcome.values).toEqual([{ path: target, success: true }]);
+    expect(existsSync(target)).toBe(true);
+  });
+
+  it('deletes the folder and everything inside it', async () => {
+    const { target } = createProject();
+
+    const outcome = await observe(
+      createNpkill().delete$(target),
+      DELETE_TIMEOUT_MS,
+    );
+
+    expect(outcome.values).toEqual([{ path: target, success: true }]);
+    expect(existsSync(target)).toBe(false);
+  });
+
+  it('succeeds when the path does not exist', async () => {
+    const missing = join(createTempDir(), 'node_modules');
+
+    const outcome = await observe(
+      createNpkill().delete$(missing),
+      DELETE_TIMEOUT_MS,
+    );
+
+    expect(outcome.values).toEqual([{ path: missing, success: true }]);
+  });
+
+  it('answers with the absolute path of a relative one', async () => {
+    const { target } = createProject();
+
+    const outcome = await observe(
+      createNpkill().delete$(relative(process.cwd(), target)),
+      DELETE_TIMEOUT_MS,
+    );
+
+    expect(outcome.values).toEqual([{ path: target, success: true }]);
+    expect(existsSync(target)).toBe(false);
+  });
+
+  itOnUnix(
+    'deletes a symlink given with a trailing slash, not what it points to',
+    async () => {
+      const outside = createTree(['data']);
+      writeFileSync(join(outside, 'data', 'keep.txt'), '');
+      const link = join(createTempDir(), 'node_modules');
+      symlinkSync(join(outside, 'data'), link, 'dir');
+
+      const outcome = await observe(
+        createNpkill().delete$(`${link}/`),
+        DELETE_TIMEOUT_MS,
+      );
+
+      expect(outcome.values).toEqual([{ path: link, success: true }]);
+      expect(existsSync(link)).toBe(false);
+      expect(readdirSync(join(outside, 'data'))).toEqual(['keep.txt']);
+    },
+  );
+
+  it.each([
+    ['an unknown option', { trash: true }],
+    ['a dryRun that is not a boolean', { dryRun: 'yes' }],
+    ['null options', null],
+  ])('rejects %s and deletes nothing', async (_case, options) => {
+    const { target } = createProject();
+
+    const outcome = await observe(
+      createNpkill().delete$(target, options as unknown as DeleteOptions),
+      DELETE_TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toBeInstanceOf(Error);
     expect(existsSync(target)).toBe(true);
   });
 });

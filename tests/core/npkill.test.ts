@@ -242,7 +242,7 @@ describe('Npkill', () => {
   });
 
   describe('getSize$', () => {
-    const mockPath = '/test/folder';
+    const mockPath = resolve('/test/folder');
 
     it('should return folder size in bytes', (done) => {
       const mockSize = 1024;
@@ -273,7 +273,7 @@ describe('Npkill', () => {
   });
 
   describe('getNewestFile$', () => {
-    const mockPath = '/test/folder';
+    const mockPath = resolve('/test/folder');
 
     it('should return newest file information', (done) => {
       const mockResult: GetNewestFileResult = {
@@ -314,7 +314,7 @@ describe('Npkill', () => {
   });
 
   describe('delete$', () => {
-    const mockPath = '/test/folder/node_modules';
+    const mockPath = resolve('/test/folder/node_modules');
 
     it('should successfully delete folder', (done) => {
       fileServiceMock.delete.mockResolvedValue(true);
@@ -327,7 +327,7 @@ describe('Npkill', () => {
           });
           expect(fileServiceMock.delete).toHaveBeenCalledWith(mockPath);
           expect(loggerMock.info).toHaveBeenCalledWith(
-            `Deleting ${mockPath} ...`,
+            `Deleting ${mockPath}...`,
           );
           expect(loggerMock.info).toHaveBeenCalledWith(
             `Deleted ${mockPath}: true`,

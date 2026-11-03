@@ -45,6 +45,7 @@ describe('startScan$', () => {
     ['targets as a string', { targets: 'node_modules' }],
     ['targets set to null', { targets: null }],
     ['the old target key', { target: 'node_modules' }],
+    ['an empty targets list', { targets: [] }],
   ])('rejects %s through the error channel', async (_case, options) => {
     const root = createTree(['node/src', 'app/node_modules/pkg']);
 
@@ -54,6 +55,55 @@ describe('startScan$', () => {
     );
 
     expect(outcome.error).toBeInstanceOf(Error);
+  });
+
+  it.each(['*.log', 'pkg/dist', 'pkg\\dist', '{a,b}', '[ab]', 'cache?'])(
+    'rejects the target %s because it uses pattern characters',
+    async (target) => {
+      const outcome = await observe(
+        createNpkill().startScan$(createTempDir(), { targets: [target] }),
+        SCAN_TIMEOUT_MS,
+      );
+
+      expect(outcome.error).toEqual(
+        expect.objectContaining({
+          message: expect.stringContaining('reserved'),
+        }),
+      );
+    },
+  );
+
+  it('errors on an empty root instead of scanning the working directory', async () => {
+    const outcome = await observe(
+      createNpkill().startScan$('', NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toBeInstanceOf(Error);
+    expect(outcome.values).toEqual([]);
+  });
+
+  itWithUnixPermissions('errors when the root cannot be entered', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    lockPermissions(root, 0o644);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toBeInstanceOf(Error);
+  });
+
+  it('runs the scan again on each subscription', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const scan$ = createNpkill().startScan$(root, NODE_MODULES);
+
+    const first = await observe(scan$, SCAN_TIMEOUT_MS);
+    const second = await observe(scan$, SCAN_TIMEOUT_MS);
+
+    expect(relativePaths(first.values, root)).toEqual(['app/node_modules']);
+    expect(relativePaths(second.values, root)).toEqual(['app/node_modules']);
   });
 
   it('errors when the root folder does not exist', async () => {

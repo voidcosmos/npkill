@@ -25,6 +25,9 @@ import {
 import { LogEntry } from './interfaces/logger-service.interface.js';
 import { getFileContent } from '../utils/get-file-content.js';
 
+const PATTERN_CHARACTERS = /[*?[\]{}/\\]/;
+const DELETE_OPTIONS: Record<keyof DeleteOptions, true> = { dryRun: true };
+
 /**
  * Main npkill class that implements the core directory scanning and cleanup functionality.
  * Provides methods for recursive directory scanning, size calculation, file analysis,
@@ -55,7 +58,10 @@ export class Npkill implements NpkillInterface {
 
     return defer(() => {
       assertValidScanOptions(options);
-      const absoluteRootPath = resolve(rootPath);
+      const absoluteRootPath = resolveRequiredPath(
+        rootPath,
+        'startScan$ needs the root folder to scan.',
+      );
       assertValidRootFolder(
         absoluteRootPath,
         fileService.isValidRootFolder(absoluteRootPath),
@@ -94,57 +100,76 @@ export class Npkill implements NpkillInterface {
     const { fileService } = this.services;
 
     return defer(() => {
-      this.logger.info(`Calculating size for ${String(path)}`);
-      return fileService.getSize(path);
-    }).pipe(
-      take(1),
-      map((size) => ({ size })),
-      tap(({ size }) => this.logger.info(`Size of ${path}: ${size} bytes`)),
-    );
+      const absolutePath = resolveRequiredPath(
+        path,
+        'getSize$ needs the path to measure.',
+      );
+      this.logger.info(`Calculating size for ${absolutePath}`);
+      return fileService.getSize(absolutePath).pipe(
+        take(1),
+        map((size) => ({ size })),
+        tap(({ size }) =>
+          this.logger.info(`Size of ${absolutePath}: ${size} bytes`),
+        ),
+      );
+    });
   }
 
   getNewestFile$(path: string): Observable<GetNewestFileResult | null> {
     const { fileService } = this.services;
 
     return defer(() => {
-      this.logger.info(`Calculating last mod. of ${path}`);
-      return from(fileService.getRecentModificationInDir(path));
-    }).pipe(
-      tap((result) => {
-        if (!result) {
-          return;
-        }
-        this.logger.info(`Last mod. of ${path}: ${result.timestamp}`);
-      }),
-    );
+      const absolutePath = resolveRequiredPath(
+        path,
+        'getNewestFile$ needs the folder to inspect.',
+      );
+      this.logger.info(`Calculating last mod. of ${absolutePath}`);
+      return from(fileService.getRecentModificationInDir(absolutePath)).pipe(
+        tap((result) => {
+          if (!result) {
+            return;
+          }
+          this.logger.info(`Last mod. of ${absolutePath}: ${result.timestamp}`);
+        }),
+      );
+    });
   }
 
   delete$(path: string, options?: DeleteOptions): Observable<DeleteResult> {
     const { fileService } = this.services;
 
     return defer(() => {
-      if (typeof path !== 'string' || path === '') {
-        throw new Error('delete$ needs the path to delete.');
-      }
+      const absolutePath = resolveRequiredPath(
+        path,
+        'delete$ needs the path to delete.',
+      );
+      assertValidDeleteOptions(options);
 
       const dryRun = options?.dryRun === true;
-      this.logger.info(`Deleting ${path} ${dryRun ? '(dry run)' : ''}...`);
+      this.logger.info(
+        `Deleting ${absolutePath}${dryRun ? ' (dry run)' : ''}...`,
+      );
       if (dryRun) {
-        return of({ path, success: true });
+        return of<DeleteResult>({ path: absolutePath, success: true });
       }
 
-      return from(fileService.delete(path)).pipe(
+      return from(fileService.delete(absolutePath)).pipe(
         map((deleted): DeleteResult =>
           deleted
-            ? { path, success: true }
-            : toFailedDeleteResult(path, new Error(`Could not delete ${path}`)),
+            ? { path: absolutePath, success: true }
+            : toFailedDeleteResult(
+                absolutePath,
+                new Error(`Could not delete ${absolutePath}`),
+              ),
         ),
-        catchError((error: unknown) => of(toFailedDeleteResult(path, error))),
+        catchError((error: unknown) =>
+          of(toFailedDeleteResult(absolutePath, error)),
+        ),
       );
     }).pipe(
       tap((result) => {
         if (result.success) {
-          this.logger.info(`Deleted ${path}: true`);
+          this.logger.info(`Deleted ${result.path}: true`);
           return;
         }
         this.logger.error(
@@ -210,18 +235,67 @@ function createDefaultServices(
   };
 }
 
+function resolveRequiredPath(
+  path: unknown,
+  missingPathMessage: string,
+): string {
+  if (typeof path !== 'string' || path === '') {
+    throw new Error(missingPathMessage);
+  }
+
+  return resolve(path);
+}
+
 function assertValidScanOptions(options: ScanOptions): void {
   const targets: unknown = options?.targets;
-  const isValid =
-    Array.isArray(targets) &&
-    targets.length > 0 &&
-    targets.every((target) => typeof target === 'string' && target !== '');
-
-  if (!isValid) {
+  if (!isListOfNames(targets)) {
     throw new Error(
       'ScanOptions.targets must be a non-empty array of directory names.',
     );
   }
+
+  const targetWithPattern = targets.find((target) =>
+    PATTERN_CHARACTERS.test(target),
+  );
+  if (targetWithPattern !== undefined) {
+    throw new Error(
+      `The target "${targetWithPattern}" uses characters reserved for patterns: * ? [ ] { } / \\`,
+    );
+  }
+}
+
+function isListOfNames(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === 'string' && item !== '')
+  );
+}
+
+function assertValidDeleteOptions(options: unknown): void {
+  if (options === undefined) {
+    return;
+  }
+
+  if (!isValidDeleteOptions(options)) {
+    throw new Error(
+      'DeleteOptions only accepts dryRun, and it must be a boolean.',
+    );
+  }
+}
+
+function isValidDeleteOptions(options: unknown): boolean {
+  if (typeof options !== 'object' || options === null) {
+    return false;
+  }
+
+  const hasOnlyKnownOptions = Object.keys(options).every((name) =>
+    Object.hasOwn(DELETE_OPTIONS, name),
+  );
+  const { dryRun } = options as DeleteOptions;
+  return (
+    hasOnlyKnownOptions && (dryRun === undefined || typeof dryRun === 'boolean')
+  );
 }
 
 function assertValidRootFolder(

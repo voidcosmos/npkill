@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import { mkdirSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -80,6 +80,41 @@ describe('getNewestFile$', () => {
       ]);
     },
   );
+
+  it('answers with absolute paths for a relative folder', async () => {
+    const folder = createTempDir();
+    writeFileModifiedAt(join(folder, 'index.js'), new Date('2026-01-01'));
+
+    const outcome = await observe(
+      createNpkill().getNewestFile$(`${relative(process.cwd(), folder)}/`),
+      2500,
+    );
+
+    expect(outcome.values).toEqual([
+      expect.objectContaining({ path: join(folder, 'index.js') }),
+    ]);
+  });
+
+  it('errors when the folder does not exist', async () => {
+    const missing = join(createTempDir(), 'missing');
+
+    const outcome = await observe(createNpkill().getNewestFile$(missing), 2500);
+
+    expect(outcome.error).toEqual(
+      expect.objectContaining({ message: expect.any(String) }),
+    );
+  });
+
+  it('errors when the path is a file', async () => {
+    const file = join(createTempDir(), 'index.js');
+    writeFileModifiedAt(file, new Date('2026-01-01'));
+
+    const outcome = await observe(createNpkill().getNewestFile$(file), 2500);
+
+    expect(outcome.error).toEqual(
+      expect.objectContaining({ message: expect.any(String) }),
+    );
+  });
 
   it('emits null when the folder has no files', async () => {
     const folder = createTree(['empty/subfolder']);

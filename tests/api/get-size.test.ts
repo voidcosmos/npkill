@@ -135,6 +135,27 @@ describe('getSize$', () => {
     },
   );
 
+  it('errors at once when the path is empty', async () => {
+    const outcome = await observe(createNpkill().getSize$(''), 1000);
+
+    expect(outcome.error).toBeInstanceOf(Error);
+  });
+
+  itOnUnix(
+    'measures a symlink given with a trailing slash as the link itself',
+    async () => {
+      const link = join(createTempDir(), 'link');
+      symlinkSync(createFolderWithFile(), link, 'dir');
+
+      const outcome = await observe(
+        createNpkill().getSize$(`${link}/`),
+        SIZE_TIMEOUT_MS,
+      );
+
+      expect(sizes(outcome.values)[0]).toBeLessThan(FILE_SIZE);
+    },
+  );
+
   it('measures a file', async () => {
     const file = join(createTempDir(), 'model.gguf');
     writeRandomFile(file, FILE_SIZE);

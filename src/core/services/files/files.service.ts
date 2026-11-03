@@ -8,7 +8,7 @@ import {
   RiskAnalysis,
 } from '../../index.js';
 import fs, { accessSync, Stats, statSync } from 'fs';
-import { lstat, readdir } from 'fs/promises';
+import { lstat, opendir, readdir } from 'fs/promises';
 import { map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
 import { IsValidRootFolderResult } from '../../interfaces/npkill.interface.js';
@@ -65,7 +65,7 @@ export abstract class FileService implements IFileService {
     }
 
     try {
-      accessSync(path, fs.constants.R_OK);
+      accessSync(path, fs.constants.R_OK | fs.constants.X_OK);
     } catch {
       return {
         isValid: false,
@@ -203,6 +203,7 @@ export abstract class FileService implements IFileService {
   async getRecentModificationInDir(
     path: string,
   ): Promise<GetNewestFileResult | null> {
+    await assertReadableDirectory(path);
     const files = await this.getFileStatsInDir(path);
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
@@ -262,4 +263,9 @@ export abstract class FileService implements IFileService {
 
     return files;
   }
+}
+
+async function assertReadableDirectory(path: string): Promise<void> {
+  const dir = await opendir(path);
+  await dir.close();
 }
