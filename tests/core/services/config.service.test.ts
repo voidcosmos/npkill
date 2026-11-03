@@ -256,6 +256,9 @@ describe('ConfigService', () => {
       const configPath = join(tempDir, '.npkillrc');
       const validConfig: INpkillrcConfig = {
         defaultProfiles: ['node', 'python', 'webdev'],
+        profiles: {
+          webdev: { description: 'Web development', targets: ['node_modules'] },
+        },
       };
 
       writeFileSync(configPath, JSON.stringify(validConfig, null, 2));

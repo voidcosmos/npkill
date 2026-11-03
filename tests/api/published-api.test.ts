@@ -154,6 +154,12 @@ describe('npkill published API', () => {
       'RiskAnalysis',
       'ScanFoundTarget',
       'ScanOptions',
+      'TargetCheck',
+      'TargetDefinition',
+      'TargetEvidence',
+      'TargetMarker',
+      'TargetMatch',
+      'TargetRule',
     ]);
   });
 
