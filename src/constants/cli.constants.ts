@@ -100,7 +100,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['--no-size'],
     description:
-      'Skip size and age calculation. Useful for faster scanning and deletion when space info is not needed.',
+      'Skip size calculation. Useful for faster scanning and deletion when space info is not needed.',
     name: 'disable-size',
   },
   {
