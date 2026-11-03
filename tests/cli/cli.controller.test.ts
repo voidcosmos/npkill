@@ -489,6 +489,21 @@ describe('CliController test', () => {
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
 
+      it('Should exit with the reason when a scan in the interface fails', () => {
+        scanServiceMock.scan.mockReturnValue(
+          throwError(() => new Error('Cannot scan /missing')),
+        );
+        const exitWithErrorSpy = spyMethod('exitWithError');
+        cliController.uiStatus = { reset: jest.fn(), start: jest.fn() };
+
+        cliController.scanInUiMode();
+
+        expect(uiServiceMock.print).toHaveBeenCalledWith(
+          expect.stringContaining('Cannot scan /missing'),
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+
       it('Should log unexpected errors and exit with an error', () => {
         const exitWithErrorSpy = spyMethod('exitWithError');
 

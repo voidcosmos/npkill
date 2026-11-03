@@ -819,7 +819,7 @@ export class CliController {
       )
       .subscribe({
         next: () => this.printResultsSection(),
-        error: (error) => this.newError(error),
+        error: (error: Error) => this.exitWithScanError(error),
         complete: () => this.completeSearch(),
       });
   }
@@ -946,6 +946,13 @@ export class CliController {
     this.logger.error(error.stack ?? error.message);
     this.resetConsoleState();
     this.uiService.print(`${ERROR_MSG.UNEXPECTED_ERROR} ${error.message}\n`);
+    this.exitWithError();
+  }
+
+  private exitWithScanError(error: Error): void {
+    this.resetConsoleState();
+    this.uiService.clear();
+    this.printError(error.message);
     this.exitWithError();
   }
 
