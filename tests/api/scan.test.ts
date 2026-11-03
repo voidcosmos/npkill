@@ -287,24 +287,43 @@ describe('startScan$', () => {
   it('skips the always ignored folders unless they are targets', async () => {
     const root = createTree([
       '.git/node_modules/pkg',
-      'app/dist/node_modules/pkg',
+      'app/.venv/node_modules/pkg',
       'app/node_modules/pkg',
     ]);
 
-    const [withoutDist, withDist] = await Promise.all([
+    const [withoutVenv, withVenv] = await Promise.all([
       observe(createNpkill().startScan$(root, NODE_MODULES), SCAN_TIMEOUT_MS),
       observe(
-        createNpkill().startScan$(root, { targets: ['node_modules', 'dist'] }),
+        createNpkill().startScan$(root, { targets: ['node_modules', '.venv'] }),
         SCAN_TIMEOUT_MS,
       ),
     ]);
 
-    expect(relativePaths(withoutDist.values, root)).toEqual([
+    expect(relativePaths(withoutVenv.values, root)).toEqual([
       'app/node_modules',
     ]);
-    expect(relativePaths(withDist.values, root)).toEqual([
-      'app/dist',
+    expect(relativePaths(withVenv.values, root)).toEqual([
+      'app/.venv',
       'app/node_modules',
+    ]);
+  });
+
+  it('looks inside build outputs, where some tools keep dependencies', async () => {
+    const root = createTree([
+      'kotlin/build/js/node_modules/pkg',
+      'electron/dist/app/node_modules/pkg',
+      'scala/target/bundler/node_modules/pkg',
+    ]);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual([
+      'electron/dist/app/node_modules',
+      'kotlin/build/js/node_modules',
+      'scala/target/bundler/node_modules',
     ]);
   });
 
