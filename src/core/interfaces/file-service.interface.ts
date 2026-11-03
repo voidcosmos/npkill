@@ -13,24 +13,24 @@ export interface IFileService {
   fileWorkerService: FileWorkerService;
 
   /**
-   * Calculates the total size of a directory.
-   * @param path Path to the directory to measure.
+   * Calculates the total size of a directory or a file.
+   * @param path Path to measure.
    * @returns Observable emitting the size in bytes.
    */
   getSize: (path: string) => Observable<number>;
 
   /**
-   * Lists directories matching scan criteria. The scan starts on subscribe and
+   * Lists the targets matching the scan criteria. The scan starts on subscribe and
    * stops on unsubscribe.
    * @param path Root path to start listing from.
    * @param params Scan options for filtering and configuration.
-   * @returns Observable emitting found directory paths.
+   * @returns Observable emitting the paths of the found targets.
    */
   listDir: (path: string, params: ScanOptions) => Observable<string>;
 
   /**
-   * Permanently deletes a directory and its contents.
-   * @param path Path to the directory to delete.
+   * Permanently deletes a path and everything inside it.
+   * @param path Path to delete.
    * @returns Promise resolving to true if deletion was successful.
    */
   delete: (path: string) => Promise<boolean>;
@@ -43,7 +43,7 @@ export interface IFileService {
   isValidRootFolder(path: string): IsValidRootFolderResult;
 
   /**
-   * Analyzes a directory path for potential deletion risks.
+   * Analyzes a target path for potential deletion risks.
    * @param path Path to analyze for safety.
    * @returns Risk analysis indicating if the path is dangerous to delete.
    */
