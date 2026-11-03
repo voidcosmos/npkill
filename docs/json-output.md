@@ -37,6 +37,8 @@ Add `--delete-all` (`-D`) to delete every result before it is printed. It only w
 npkill -t node_modules --older-than 30 -D -y --json
 ```
 
+Each result waits for its size and age before it is deleted. Add `--no-size` or `--no-stats` to delete each one as soon as it is found.
+
 Each result then includes a `deletion` field. If any deletion fails, npkill exits with code 1 after printing all the results. With `--dry-run` nothing is deleted and every deletion is reported as successful.
 
 ## JSON Structure
@@ -96,7 +98,7 @@ Errors are output to stderr in JSON format. If the scan cannot run, npkill exits
 
 - **`version`**: Schema version.
 - **`path`**: Absolute path to the found directory.
-- **`size`**: Directory size in bytes.
+- **`size`**: Directory size in bytes, or `null` with `--no-size` or `--no-stats`.
 - **`modificationTime`**: Unix timestamp (milliseconds) of the most recently modified file, or `null` when it could not be calculated (for example, when the project has no other files).
 - **`riskAnalysis`**: Optional risk assessment for deletion
   - **`isSensitive`**: Whether the directory might be important for system functionality.
@@ -207,7 +209,7 @@ interface JsonErrorOutput extends JsonOutputBase {
 
 interface CliScanFoundTarget {
   path: string;
-  size: number; // bytes
+  size: number | null; // bytes
   modificationTime: number | null; // Unix timestamp in milliseconds
   riskAnalysis?: {
     isSensitive: boolean;

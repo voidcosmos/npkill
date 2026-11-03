@@ -772,7 +772,10 @@ export class CliController {
 
   private scanInJson(): void {
     const isStreamMode = this.config.jsonStream;
-    this.jsonOutputService.initializeSession(isStreamMode);
+    this.jsonOutputService.initializeSession(
+      isStreamMode,
+      !this.config.disableSize,
+    );
 
     this.scanService
       .scan(this.config)
@@ -780,6 +783,8 @@ export class CliController {
         mergeMap(
           (result) =>
             this.scanService.calculateResultStats(result, {
+              disableSize: this.config.disableSize,
+              disableAge: this.config.disableAge,
               getModificationTimeForSensitiveResults: true,
             }),
           10, // Limit to 10 concurrent stat calculations at a time

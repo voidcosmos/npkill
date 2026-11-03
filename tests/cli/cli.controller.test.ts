@@ -505,6 +505,23 @@ describe('CliController test', () => {
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
 
+      it('Should skip the stats that are disabled', async () => {
+        DEFAULT_CONFIG.disableSize = true;
+        DEFAULT_CONFIG.disableAge = true;
+        spyMethod('exitGracefully');
+
+        await scanInJson();
+
+        expect(jsonOutputServiceMock.initializeSession).toHaveBeenCalledWith(
+          false,
+          false,
+        );
+        expect(scanServiceMock.calculateResultStats).toHaveBeenCalledWith(
+          target,
+          expect.objectContaining({ disableSize: true, disableAge: true }),
+        );
+      });
+
       it('Should not delete anything without --delete-all', async () => {
         spyMethod('exitGracefully');
 

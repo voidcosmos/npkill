@@ -139,6 +139,19 @@ describe('JsonOutputService', () => {
       },
     );
 
+    it('should output the size as null when it is not calculated', () => {
+      jsonOutputService.initializeSession(true, false);
+      jsonOutputService.processResult({
+        path: '/test/node_modules',
+        size: 0,
+        modificationTime: 1640995200000,
+        status: 'live',
+      });
+
+      const parsedData = JSON.parse(mockStdout.write.mock.calls[0][0]);
+      expect(parsedData.result.size).toBeNull();
+    });
+
     it('should include the deletion when the result was deleted', () => {
       jsonOutputService.initializeSession(true);
       jsonOutputService.processResult(

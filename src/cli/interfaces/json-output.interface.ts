@@ -6,8 +6,10 @@ export interface JsonOutputBase {
 
 export interface JsonCliScanFoundTarget extends Omit<
   CliScanFoundTarget,
-  'status' | 'modificationTime'
+  'status' | 'size' | 'modificationTime'
 > {
+  /** Bytes, or null when the size is not calculated. */
+  size: number | null;
   /** Milliseconds since the Unix epoch, or null when the age is unknown. */
   modificationTime: number | null;
   /** Only present when --delete-all is used. */

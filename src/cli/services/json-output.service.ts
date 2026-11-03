@@ -15,16 +15,21 @@ export class JsonOutputService {
   private results: JsonCliScanFoundTarget[] = [];
   private scanStartTime: number = 0;
   private isStreamMode: boolean = false;
+  private measuresSize: boolean = true;
 
   constructor(
     private readonly stdout: NodeJS.WriteStream = process.stdout,
     private readonly stderr: NodeJS.WriteStream = process.stderr,
   ) {}
 
-  initializeSession(streamMode: boolean = false): void {
+  initializeSession(
+    streamMode: boolean = false,
+    measuresSize: boolean = true,
+  ): void {
     this.results = [];
     this.scanStartTime = Date.now();
     this.isStreamMode = streamMode;
+    this.measuresSize = measuresSize;
   }
 
   processResult(result: CliScanFoundTarget, deletion?: DeleteResult): void {
@@ -109,7 +114,7 @@ export class JsonOutputService {
   ): JsonCliScanFoundTarget {
     return {
       path: result.path,
-      size: convertGbToBytes(result.size),
+      size: this.measuresSize ? convertGbToBytes(result.size) : null,
       modificationTime: isModificationTimeKnown(result.modificationTime)
         ? result.modificationTime
         : null,
