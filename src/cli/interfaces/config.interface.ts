@@ -10,6 +10,7 @@ export interface IConfig {
   targets: string[];
   exclude: string[];
   excludeSensitiveResults: boolean;
+  disableDefaultIgnore: boolean;
   dryRun: boolean;
   yes: boolean;
   jsonStream: boolean;

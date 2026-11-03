@@ -26,6 +26,7 @@ describe('ScanService', () => {
     exclude: ['/test/root/excluded'],
     sortBy: 'size',
     excludeSensitiveResults: false,
+    disableDefaultIgnore: false,
     checkUpdates: false,
     deleteAll: false,
     sizeUnit: 'auto',
@@ -88,8 +89,20 @@ describe('ScanService', () => {
         {
           targets: mockConfig.targets,
           exclude: mockConfig.exclude,
+          useDefaultIgnore: true,
           performRiskAnalysis: true,
         },
+      );
+    });
+
+    it('should look inside the skipped folders with --no-ignore-default', () => {
+      mockNpkill.startScan$.mockReturnValue(of(mockScanFoundTarget));
+
+      scanService.scan({ ...mockConfig, disableDefaultIgnore: true });
+
+      expect(mockNpkill.startScan$).toHaveBeenCalledWith(
+        mockConfig.folderRoot,
+        expect.objectContaining({ useDefaultIgnore: false }),
       );
     });
 
