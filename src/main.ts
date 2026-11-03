@@ -16,6 +16,7 @@ import { ScanService } from './cli/services/scan.service.js';
 
 export default (): void => {
   const logger = new LoggerService();
+  logger.info(process.argv.join(' '));
   const searchStatus = new ScanStatus();
   const resultsService = new ResultsService();
   const configService = new ConfigService();

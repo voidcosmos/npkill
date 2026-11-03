@@ -44,7 +44,6 @@ export class Npkill implements NpkillInterface {
       customServices?.fileWorkerService,
     );
     this.services = { ...defaultServices, ...customServices };
-    this.logger.info(process.argv.join(' '));
     this.logger.info(`Npkill started! v${this.getVersion()}`);
   }
 

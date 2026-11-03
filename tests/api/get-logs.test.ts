@@ -54,6 +54,14 @@ describe('getLogs$', () => {
     );
   });
 
+  it('does not record the arguments of the host process', async () => {
+    const outcome = await observe(createNpkill().getLogs$(), 300);
+
+    expect(outcome.values.map(({ message }) => message)).not.toContain(
+      process.argv.join(' '),
+    );
+  });
+
   it('only emits the entries of its own instance', async () => {
     const npkill = createNpkill();
     const otherNpkill = createNpkill();
