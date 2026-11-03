@@ -31,7 +31,7 @@ const DELETE_OPTIONS: Record<keyof DeleteOptions, true> = { dryRun: true };
 /**
  * Main npkill class that implements the core directory scanning and cleanup functionality.
  * Provides methods for recursive directory scanning, size calculation, file analysis,
- * and safe deletion operations.
+ * and deletion operations.
  */
 export class Npkill implements NpkillInterface {
   private readonly services: Services;
