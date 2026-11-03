@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { basename, dirname, resolve } from 'path';
 import { FileWorkerService } from './services/files/index.js';
 import { defer, from, Observable, of } from 'rxjs';
 import { catchError, map, take, tap } from 'rxjs/operators';
@@ -142,6 +142,7 @@ export class Npkill implements NpkillInterface {
         path,
         'delete$ needs the path to delete.',
       );
+      assertDeletablePath(path, absolutePath);
       assertValidDeleteOptions(options);
 
       const dryRun = options?.dryRun === true;
@@ -269,6 +270,16 @@ function isListOfNames(value: unknown): value is string[] {
     value.length > 0 &&
     value.every((item) => typeof item === 'string' && item !== '')
   );
+}
+
+function assertDeletablePath(path: string, absolutePath: string): void {
+  const isDotOrDotDot = ['.', '..'].includes(basename(path));
+  const isFilesystemRoot = dirname(absolutePath) === absolutePath;
+  if (isDotOrDotDot || isFilesystemRoot) {
+    throw new Error(
+      'delete$ refuses to delete ".", ".." and filesystem roots.',
+    );
+  }
 }
 
 function assertValidDeleteOptions(options: unknown): void {

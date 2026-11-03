@@ -98,15 +98,16 @@ export interface NpkillInterface {
   getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
 
   /**
-   * Deletes the specified path and everything inside it, like `rm -rf`. It
-   * does not check that the path is a target found by a scan. A symlink is
+   * Deletes the specified path and everything inside it, like `rm -rf`. Like
+   * `rm`, it refuses `.`, `..` and filesystem roots. Apart from that, it does
+   * not check that the path is a target found by a scan. A symlink is
    * deleted itself, never what it points to. Deleting a path that does not
    * exist succeeds.
    * @param path Path to delete.
    * @param options Optional delete options. Unknown options are rejected.
    * @returns Observable emitting the delete result. A deletion that fails
-   * emits a result with `success: false` and the error. An empty path or
-   * invalid options error.
+   * emits a result with `success: false` and the error. An empty or refused
+   * path and invalid options error.
    */
   delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
 

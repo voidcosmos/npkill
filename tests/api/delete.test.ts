@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import { existsSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, parse, relative } from 'node:path';
 import type { DeleteOptions } from '../../src/index.js';
 import {
   createNpkill,
@@ -79,6 +79,19 @@ describe('delete$', () => {
       process.chdir(originalCwd);
     }
   });
+
+  it.each(['.', '..', 'project/..', parse(process.cwd()).root])(
+    'refuses to delete "%s"',
+    async (path) => {
+      // A dry run keeps a regression from deleting real folders.
+      const outcome = await observe(
+        createNpkill().delete$(path, { dryRun: true }),
+        DELETE_TIMEOUT_MS,
+      );
+
+      expect(outcome.error).toBeInstanceOf(Error);
+    },
+  );
 
   it('answers a dry run at once without deleting', async () => {
     const { target } = createProject();
