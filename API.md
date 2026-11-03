@@ -91,7 +91,7 @@ Searches `rootPath` recursively and emits a [`ScanFoundTarget`](#scanfoundtarget
 - A target is matched by its exact name, case included, and it is always a directory.
 - The scan does not look inside the targets it finds, so `node_modules/pkg/node_modules` is never reported.
 - Symlinks below the root are not followed. A symlink given as the root is.
-- Some folders that rarely hold projects are never entered unless their name is a target or `options.useDefaultIgnore` is `false`. Today they are `.git`, `.svn`, `.hg`, `.fossil`, `.Trash`, `.Trashes`, `System Volume Information`, `.Spotlight-V100`, `.fseventsd`, `.nvm`, `.rvm`, `.rustup`, `.pyenv`, `.rbenv`, `.asdf`, `.deno`, `.vscode`, `.idea`, `.vs`, `.settings`, `snap`, `.flatpak-info`, `node_modules`, `__pycache__`, `target`, `build`, `dist`, `.cache`, `.venv` and `venv`.
+- Some folders that rarely hold projects are never entered unless their name is a target or `options.useDefaultIgnore` is `false`. Today they are `.git`, `.svn`, `.hg`, `.fossil`, `.Trash`, `.Trashes`, `$RECYCLE.BIN`, `System Volume Information`, `.Spotlight-V100`, `.fseventsd`, `.nvm`, `.rvm`, `.rustup`, `.pyenv`, `.rbenv`, `.asdf`, `.deno`, `.volta`, `.bun`, `.vscode`, `.vscode-server`, `.idea`, `.vs`, `.settings`, `node_modules`, `__pycache__`, `.cache`, `.venv` and `venv`.
 - Folders that cannot be read are skipped and the scan goes on.
 
 Only one scan can run at a time on each instance. Subscribing to a second one while the first is running emits an error. Use another instance to scan in parallel. Unsubscribing stops the scan.
