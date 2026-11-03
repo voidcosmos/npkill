@@ -13,6 +13,7 @@ export interface WorkerScanOptions {
   rootPath: string;
   targets: readonly string[];
   exclude?: string[];
+  useDefaultIgnore?: boolean;
 }
 
 export interface WorkerSizeResult {

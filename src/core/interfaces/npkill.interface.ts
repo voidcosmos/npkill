@@ -45,10 +45,10 @@ export interface NpkillInterface {
    * to run scans in parallel. Unsubscribing stops the scan.
    *
    * The scan does not look inside the targets it finds, does not follow the
-   * symlinks below the root and skips some heavy folders that rarely hold
-   * projects, like
-   * `.git`, `build` or `dist`, unless their name is a target. Names are
-   * compared exactly, case included.
+   * symlinks below the root and skips some folders that rarely hold projects,
+   * like `.git` or `.nvm`, unless their name is a target or
+   * `options.useDefaultIgnore` is false. Names are compared exactly, case
+   * included.
    * @param rootPath Root directory to scan from.
    * @param options Scan options. `targets` must be a non-empty array of names.
    * Names with `* ? [ ] { } / \` are rejected because those characters are

@@ -26,6 +26,11 @@ export interface ScanOptions {
   targets: readonly string[];
   /** Array of directory paths to exclude from the scan. */
   exclude?: string[];
+  /**
+   * Whether to skip the folders that rarely hold projects, like `.git` or
+   * `.nvm`. Default: true. Set it to false to look inside them too.
+   */
+  useDefaultIgnore?: boolean;
   /** Whether to perform risk analysis on the found targets. Default: true. */
   performRiskAnalysis?: boolean; // Default: true
   // maxConcurrentScans?: number; // Need to implement this.
