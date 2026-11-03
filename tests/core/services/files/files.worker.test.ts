@@ -4,6 +4,7 @@ import { Dir } from 'node:fs';
 import { join, normalize } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
+import { GLOBAL_IGNORE } from '../../../../src/core/constants/global-ignored.constants.js';
 import { EVENTS } from '../../../../src/constants/workers.constants.js';
 import { ScanOptions } from '../../../../src/core/index.js';
 
@@ -62,6 +63,7 @@ jest.unstable_mockModule('fs/promises', () => ({
       isSymbolicLink: () => false,
     }),
   readdir: () => Promise.resolve([]),
+  stat: () => Promise.resolve({ isDirectory: () => true }),
 }));
 
 jest.unstable_mockModule('node:worker_threads', () => ({
@@ -192,7 +194,18 @@ describe('FileWorker', () => {
         dirEntriesMock = [...subDirectories];
 
         const expectedResult = subDirectories
-          .filter((subdir) => subdir.isDirectory())
+          .filter((subdir) => {
+            if (!subdir.isDirectory()) {
+              return false;
+            }
+
+            const isTarget = subdir.name === target;
+            if (GLOBAL_IGNORE.has(subdir.name) && !isTarget) {
+              return false;
+            }
+
+            return true;
+          })
           .map((subdir) => ({
             path: join(basePath, subdir.name),
             isTarget: subdir.name === target,

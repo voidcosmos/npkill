@@ -129,12 +129,12 @@ You can filter the results displayed by pressing **<kbd>/</kbd>**. What you type
 
 Press **<kbd>Enter</kbd>** to browse through the filtered results.
 
-To clear the filter, press **<kbd>/</kbd>** again and delete the term.
+To clear the filter, press **<kbd>/</kbd>** again and delete the term, or press **<kbd>Esc</kbd>** while typing.
 
 This feature can be especially useful for narrowing down results by path without restarting `npkill`.
 
 > [!NOTE]
-> The search supports regular expressions.
+> The search supports regular expressions. For example, `/work/.*/data` keeps the results inside a `work` directory that have `data` somewhere in their path.
 
 <a name="profiles"></a>
 
@@ -171,6 +171,7 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | -h, --help, ?           | Show help page                                                                                                                                                                                               |
 | -nu, --no-check-update  | Don't check for updates on startup                                                                                                                                                                           |
 | -s, --sort              | Sort results by: `size`, `path` or `age`                                                                                                                                                                     |
+| --older-than            | Only show results whose project has not been modified in more than the given number of days (see the `last_mod` column). Example: `--older-than 90`.                                                         |
 | -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.                                |
 | -x, --exclude-sensitive | Exclude sensitive directories.                                                                                                                                                                               |
 | -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                                                      |
@@ -212,6 +213,12 @@ npkill -t node_modules
 
 ```bash
 npkill -d 'projects' --exclude "progress, ignore-this"
+```
+
+- Automatically delete all node_modules from projects you have not touched in the last 90 days:
+
+```bash
+npkill -d ~/projects --older-than 90 --delete-all --targets node_modules
 ```
 
 - Automatically delete all node-related leftovers that have sneaked into your backups:

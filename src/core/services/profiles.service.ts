@@ -1,5 +1,5 @@
 import { DEFAULT_PROFILES } from '../constants/profiles.constants.js';
-import { PROFILE } from '../interfaces/profile.interface.js';
+import { Profile } from '../interfaces/profile.interface.js';
 
 export type ProfileFilterType = 'base' | 'user' | 'all';
 
@@ -8,13 +8,13 @@ export type ProfileFilterType = 'base' | 'user' | 'all';
  * Handles profile registration, retrieval, and target resolution.
  */
 export class ProfilesService {
-  private userDefinedProfiles: Record<string, PROFILE> = {};
+  private userDefinedProfiles: Record<string, Profile> = {};
 
   /**
    * Sets user-defined profiles loaded from .npkillrc configuration.
    * @param profiles Record of user-defined profile configurations
    */
-  setUserDefinedProfiles(profiles: Record<string, PROFILE>): void {
+  setUserDefinedProfiles(profiles: Record<string, Profile>): void {
     this.userDefinedProfiles = profiles;
   }
 
@@ -26,7 +26,7 @@ export class ProfilesService {
    *   - 'all': Both base and user-defined (user profiles override base)
    * @returns Record of profiles matching the filter
    */
-  getProfiles(filterType: ProfileFilterType = 'all'): Record<string, PROFILE> {
+  getProfiles(filterType: ProfileFilterType = 'all'): Record<string, Profile> {
     switch (filterType) {
       case 'base':
         return DEFAULT_PROFILES;
@@ -45,7 +45,7 @@ export class ProfilesService {
    * @param name Name of the profile to retrieve
    * @returns The profile if found, undefined otherwise
    */
-  getProfileByName(name: string): PROFILE | undefined {
+  getProfileByName(name: string): Profile | undefined {
     return this.userDefinedProfiles[name] || DEFAULT_PROFILES[name];
   }
 

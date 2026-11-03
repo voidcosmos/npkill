@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import {
   ConfigService,
   DeleteResult,
@@ -60,6 +60,7 @@ jest.unstable_mockModule('../../src/cli/ui/components/results.ui.js', () => ({
     openFolder$: { subscribe: jest.fn() },
     showDetails$: { subscribe: jest.fn() },
     endNpkill$: { subscribe: jest.fn() },
+    search$: { subscribe: jest.fn() },
     goOptions$: new Subject(),
     render: jest.fn(),
   })),
@@ -96,16 +97,12 @@ describe('CliController test', () => {
   const filesServiceDeleteMock = jest
     .fn<() => Promise<boolean>>()
     .mockResolvedValue(true);
-  const filesServiceFakeDeleteMock = jest
-    .fn<() => Promise<boolean>>()
-    .mockResolvedValue(true);
 
   const linuxFilesServiceMock = {
     getFileContent: jest.fn().mockReturnValue('{}'),
     isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
     isSafeToDelete: jest.fn().mockReturnValue(true),
-    deleteDir: filesServiceDeleteMock,
-    fakeDeleteDir: filesServiceFakeDeleteMock,
+    delete: filesServiceDeleteMock,
   };
   const spinnerServiceMock = jest.fn();
   const updateServiceMock = jest.fn();
@@ -127,7 +124,7 @@ describe('CliController test', () => {
   };
   const scanServiceMock = {
     scan: jest.fn(),
-    calculateFolderStats: jest.fn(),
+    calculateResultStats: jest.fn(),
   };
   const consoleServiceMock = {
     getParameters: () => new StartParameters(),
@@ -254,6 +251,9 @@ describe('CliController test', () => {
       DEFAULT_CONFIG.deleteAll = false;
       DEFAULT_CONFIG.dryRun = false;
       DEFAULT_CONFIG.sortBy = 'none';
+      DEFAULT_CONFIG.olderThan = 0;
+      DEFAULT_CONFIG.disableAge = false;
+      DEFAULT_CONFIG.disableSize = false;
     });
 
     it('#showHelp should called if --help flag is present and exit', () => {
@@ -300,10 +300,10 @@ describe('CliController test', () => {
         ).mockReturnValue(['node_modules']);
       });
 
-      it('Should show a warning before start scan with --target defined', () => {
+      it('Should show a warning before start scan with --targets defined', () => {
         mockParameters({
           'delete-all': true,
-          'target-folders': 'node_modules',
+          targets: 'node_modules',
         });
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
@@ -317,7 +317,7 @@ describe('CliController test', () => {
         mockParameters({
           'delete-all': true,
           yes: true,
-          'target-folders': 'node_modules',
+          targets: 'node_modules',
         });
         expect(setDeleteAllWarningVisibilityMock).toHaveBeenCalledTimes(0);
         expect(scanSpy).toHaveBeenCalledTimes(0);
@@ -329,45 +329,71 @@ describe('CliController test', () => {
     });
 
     describe('--dry-run', () => {
-      let testFolder: DeleteResult;
+      let testTarget: DeleteResult;
 
       beforeEach(() => {
-        testFolder = {
+        testTarget = {
           path: '/my/path/node_modules',
           success: true,
         };
         jest.clearAllMocks();
+        jest.useFakeTimers();
+        npkillDeleteMock.mockReturnValueOnce(of(testTarget));
       });
 
-      it('Should call normal deleteDir function when no --dry-run is included', () => {
+      afterEach(() => {
+        jest.useRealTimers();
+      });
+
+      it('Should call normal delete function when no --dry-run is included', () => {
         mockParameters({
-          'target-folders': 'node_modules',
+          targets: 'node_modules',
           'dry-run': 'false',
         });
         cliController.init();
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(0);
 
-        resultsUiDeleteMock$.next(testFolder);
+        resultsUiDeleteMock$.next(testTarget);
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(1);
-        expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
+        expect(npkillDeleteMock).toHaveBeenCalledWith(testTarget.path, {
           dryRun: false,
         });
       });
 
-      it('Should call fake deleteDir function instead of deleteDir', () => {
-        mockParameters({ 'target-folders': 'node_modules', 'dry-run': true });
+      it('Should call fake delete function instead of delete', () => {
+        mockParameters({ targets: 'node_modules', 'dry-run': true });
         cliController.init();
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(0);
 
-        resultsUiDeleteMock$.next(testFolder);
+        resultsUiDeleteMock$.next(testTarget);
 
         expect(npkillDeleteMock).toHaveBeenCalledTimes(1);
-        expect(npkillDeleteMock).toHaveBeenCalledWith(testFolder.path, {
+        expect(npkillDeleteMock).toHaveBeenCalledWith(testTarget.path, {
           dryRun: true,
         });
+      });
+    });
+
+    describe('deleting a target', () => {
+      it('Should mark the target as failed when delete$ reports success: false', async () => {
+        const target = { path: '/my/path/node_modules', status: 'live' };
+        npkillDeleteMock.mockReturnValueOnce(
+          of({
+            path: target.path,
+            success: false,
+            error: { message: 'Permission denied' },
+          }),
+        );
+        mockParameters({ targets: 'node_modules' });
+        cliController.init();
+
+        resultsUiDeleteMock$.next(target as unknown as DeleteResult);
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(target.status).toBe('error-deleting');
       });
     });
 
@@ -402,6 +428,123 @@ describe('CliController test', () => {
           ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS,
         );
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('--older-than', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('Should set olderThan in the config when a valid number is given', () => {
+        mockParameters({ 'older-than': '90' });
+        cliController.init();
+        expect(DEFAULT_CONFIG.olderThan).toBe(90);
+        expect(scanSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it.each(['abc', '0', '-5', '1.5', '90d'])(
+        'Should show error and exit when the value is %p',
+        (value) => {
+          mockParameters({ 'older-than': value });
+          const exitWithErrorSpy = spyMethod('exitWithError');
+          cliController.init();
+          expect(loggerServiceMock.error).toHaveBeenCalledWith(
+            ERROR_MSG.INVALID_OLDER_THAN,
+          );
+          expect(exitWithErrorSpy).toHaveBeenCalled();
+        },
+      );
+
+      it('Should show error and exit when no value is given', () => {
+        mockParameters({ 'older-than': true });
+        const exitWithErrorSpy = spyMethod('exitWithError');
+        cliController.init();
+        expect(loggerServiceMock.error).toHaveBeenCalledWith(
+          ERROR_MSG.INVALID_OLDER_THAN,
+        );
+        expect(exitWithErrorSpy).toHaveBeenCalled();
+      });
+
+      it.each(['disable-age', 'disable-stats'])(
+        'Should show error and exit when used with %p',
+        (option) => {
+          mockParameters({ 'older-than': '90', [option]: true });
+          const exitWithErrorSpy = spyMethod('exitWithError');
+          cliController.init();
+          expect(loggerServiceMock.error).toHaveBeenCalledWith(
+            ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE,
+          );
+          expect(exitWithErrorSpy).toHaveBeenCalled();
+        },
+      );
+    });
+
+    describe('age filtering', () => {
+      const daysAgo = (days: number) => Date.now() - days * 86400000;
+      const folder = (modificationTime: number) => ({
+        path: '/my/project/node_modules',
+        size: 1,
+        modificationTime,
+        status: 'live',
+      });
+
+      let addResultMock;
+      let deleteTargetSpy;
+
+      beforeEach(() => {
+        addResultMock = jest.fn();
+        cliController.resultsService = {
+          addResult: addResultMock,
+          sortResults: jest.fn(),
+        };
+        cliController.searchStatus = {
+          newResult: jest.fn(),
+          completeStatCalculation: jest.fn(),
+        };
+        cliController.uiResults = { render: jest.fn(), clear: jest.fn() };
+        spyMethod('finishResultStats');
+        deleteTargetSpy = spyMethod('deleteTarget');
+      });
+
+      it('Should add results as soon as they are found when not filtering', () => {
+        DEFAULT_CONFIG.olderThan = 0;
+        cliController.processResultForUi(folder(-1));
+        expect(addResultMock).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should wait for the stats before adding results when filtering', () => {
+        DEFAULT_CONFIG.olderThan = 90;
+        cliController.processResultForUi(folder(-1));
+        expect(addResultMock).not.toHaveBeenCalled();
+      });
+
+      it('Should only add and delete results older than the given days', () => {
+        DEFAULT_CONFIG.olderThan = 90;
+        DEFAULT_CONFIG.deleteAll = true;
+
+        const oldFolder = folder(daysAgo(120));
+        const recentFolder = folder(daysAgo(10));
+        const unknownAgeFolder = folder(1);
+
+        cliController.processResultStatsForUi(oldFolder);
+        cliController.processResultStatsForUi(recentFolder);
+        cliController.processResultStatsForUi(unknownAgeFolder);
+
+        expect(addResultMock).toHaveBeenCalledTimes(1);
+        expect(addResultMock).toHaveBeenCalledWith(oldFolder);
+        expect(deleteTargetSpy).toHaveBeenCalledTimes(1);
+        expect(deleteTargetSpy).toHaveBeenCalledWith(oldFolder);
+      });
+
+      it('Should not delete results before their age is known with --no-size', () => {
+        DEFAULT_CONFIG.olderThan = 90;
+        DEFAULT_CONFIG.deleteAll = true;
+        DEFAULT_CONFIG.disableSize = true;
+
+        cliController.processResultForUi(folder(-1));
+
+        expect(deleteTargetSpy).not.toHaveBeenCalled();
       });
     });
 

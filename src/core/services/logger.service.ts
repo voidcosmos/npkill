@@ -2,8 +2,7 @@ import { tmpdir } from 'os';
 import { existsSync, renameSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
 
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
 import {
   ILoggerService,
   LogEntry,
@@ -18,8 +17,8 @@ const OLD_TAG = 'old';
  * reactive streams for log observation and file output capabilities.
  */
 export class LoggerService implements ILoggerService {
-  private log: LogEntry[] = [];
-  private logSubject = new BehaviorSubject<LogEntry[]>([]);
+  private readonly log: LogEntry[] = [];
+  private readonly newEntry$ = new Subject<LogEntry>();
 
   info(message: string): void {
     this.addToLog({
@@ -53,22 +52,19 @@ export class LoggerService implements ILoggerService {
     return this.log.filter((entry) => entry.type === type);
   }
 
-  getLog$(): Observable<LogEntry[]> {
-    return this.logSubject.asObservable();
-  }
+  getEntries$(): Observable<LogEntry> {
+    return new Observable<LogEntry>((subscriber) => {
+      let nextIndex = 0;
+      const emitPendingEntries = (): void => {
+        while (nextIndex < this.log.length && !subscriber.closed) {
+          subscriber.next(this.log[nextIndex++]);
+        }
+      };
 
-  getLogByType$(
-    type: 'all' | 'info' | 'warn' | 'error' = 'all',
-  ): Observable<LogEntry[]> {
-    return this.logSubject
-      .asObservable()
-      .pipe(
-        map((entries) =>
-          type === 'all'
-            ? entries
-            : entries.filter((entry) => entry.type === type),
-        ),
-      );
+      const subscription = this.newEntry$.subscribe(emitPendingEntries);
+      emitPendingEntries();
+      return subscription;
+    });
   }
 
   saveToFile(path: string): void {
@@ -102,8 +98,8 @@ export class LoggerService implements ILoggerService {
   }
 
   private addToLog(entry: LogEntry): void {
-    this.log = [...this.log, entry];
-    this.logSubject.next(this.log);
+    this.log.push(entry);
+    this.newEntry$.next(entry);
   }
 
   private getTimestamp(): number {

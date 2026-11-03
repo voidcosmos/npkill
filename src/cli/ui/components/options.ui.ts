@@ -3,6 +3,8 @@ import { BaseUi, InteractiveUi } from '../base.ui.js';
 import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import pc from 'picocolors';
+import path from 'path';
+import { existsSync } from 'fs';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
 
@@ -55,18 +57,23 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
   private initializeOptions(): void {
     this.options = [
       {
-        label: 'Target folder',
-        type: 'input',
-        key: 'targets',
-        value: Array.isArray(this.config.targets)
-          ? this.config.targets.join(',')
-          : '',
+        label: 'Sensitive results',
+        type: 'checkbox',
+        key: 'excludeSensitiveResults',
+        value: !this.config.excludeSensitiveResults,
       },
       {
-        label: 'Cwd',
-        type: 'input',
-        key: 'folderRoot',
-        value: this.config.folderRoot,
+        label: 'Sort by',
+        type: 'dropdown',
+        key: 'sortBy',
+        value: this.config.sortBy,
+        options: ['path', 'size', 'age'],
+      },
+      {
+        label: 'Dry-run',
+        type: 'checkbox',
+        key: 'dryRun',
+        value: this.config.dryRun,
       },
       {
         label: 'Exclude',
@@ -77,30 +84,25 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           : '',
       },
       {
-        label: 'Sort by',
-        type: 'dropdown',
-        key: 'sortBy',
-        value: this.config.sortBy,
-        options: ['path', 'size', 'age'],
-      },
-      {
         label: 'Size unit',
         type: 'dropdown',
         key: 'sizeUnit',
         value: this.config.sizeUnit,
-        options: ['auto', 'mb', 'gb'],
+        options: ['auto', 'MB', 'GB'],
       },
       {
-        label: 'Exclude sensitive results',
-        type: 'checkbox',
-        key: 'excludeSensitiveResults',
-        value: this.config.excludeSensitiveResults,
+        label: 'Cwd',
+        type: 'input',
+        key: 'folderRoot',
+        value: path.resolve(this.config.folderRoot),
       },
       {
-        label: 'Dry-run mode',
-        type: 'checkbox',
-        key: 'dryRun',
-        value: this.config.dryRun,
+        label: 'Targets',
+        type: 'input',
+        key: 'targets',
+        value: Array.isArray(this.config.targets)
+          ? this.config.targets.join(',')
+          : '',
       },
     ];
   }
@@ -124,8 +126,12 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           [K in keyof IConfig]: IConfig[K] extends boolean ? K : never;
         }[keyof IConfig]
       >;
-      this.config[key] = !!opt.value;
-      this.emitConfigChange(opt.key, opt.value);
+
+      const valueToSave =
+        key === 'excludeSensitiveResults' ? !opt.value : opt.value;
+
+      this.config[key] = !!valueToSave;
+      this.emitConfigChange(opt.key, valueToSave);
       this.render();
     } else if (opt.type === 'dropdown') {
       const key = opt.key as keyof Pick<
@@ -181,9 +187,20 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         >;
         const newValue: IConfig[typeof opt.key] = this
           .editBuffer as IConfig[typeof opt.key];
-        this.config[key as any] = newValue as unknown as string;
-        opt.value = newValue;
-        this.emitConfigChange(opt.key, newValue);
+
+        if (key === 'folderRoot') {
+          const newPath = path.resolve(newValue as string);
+          if (existsSync(newPath)) {
+            this.config[key] = newPath;
+            opt.value = newPath;
+            this.emitConfigChange(opt.key, newPath);
+          }
+          // if not valid, revert visually to old value on render
+        } else {
+          this.config[key as any] = newValue as unknown as string;
+          opt.value = newValue;
+          this.emitConfigChange(opt.key, newValue);
+        }
       }
       this.isEditing = false;
       this.render();
@@ -243,10 +260,15 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
     });
     currentRow++;
 
+    let activeDropdown: {
+      options: string[];
+      yBase: number;
+    } | null = null;
+
     for (let i = 0; i < this.options.length; i++) {
       const opt = this.options[i];
       const isSelected = i === this.selectedIndex;
-      const label = `${opt.label.padEnd(16)}`;
+      const label = `${opt.label.padEnd(18)}`;
 
       let valueText = '';
       if (opt.type === 'checkbox') {
@@ -257,13 +279,15 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         valueText =
           this.isEditing && isSelected
             ? this.editBuffer + '_'
-            : String(opt.value);
+            : String(opt.value) === ''
+              ? 'none'
+              : String(opt.value);
       }
 
       // Move the options down to prevent the values from overlapping.
       const LEFT_MARGIN = 2;
       const terminalWidth = this.terminal.columns;
-      const PREFIX_LENGTH = 18; // Marker (1) + Space (1) + Label (16)
+      const PREFIX_LENGTH = 20; // Marker (1) + Space (1) + Label (18)
       const valueStartX = LEFT_MARGIN + PREFIX_LENGTH;
       const maxContentWidth = Math.max(10, terminalWidth - valueStartX);
 
@@ -278,11 +302,20 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
 
       chunks.forEach((chunk, index) => {
         let line = '';
+        let chunkText = chunk;
+        if (
+          opt.type === 'input' &&
+          String(opt.value) === '' &&
+          chunk === 'none'
+        ) {
+          chunkText = pc.gray(chunk);
+        }
+
         if (index === 0) {
-          line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${chunk}`;
+          line = `${isSelected ? pc.bgCyan(' ') : ' '} ${label}${chunkText}`;
         } else {
           const padding = ' '.repeat(PREFIX_LENGTH);
-          line = `${padding}${chunk}`;
+          line = `${padding}${chunkText}`;
         }
 
         this.printAt(isSelected ? pc.cyan(line) : line, {
@@ -291,26 +324,35 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         });
       });
 
-      // If selected and dropdown, show options
+      // If selected and dropdown, queue for rendering
       if (opt.type === 'dropdown' && isSelected) {
-        const dropdownOptions = opt.options || [];
-        const optionsNumber = dropdownOptions.length;
-        const maxLength =
-          dropdownOptions.length > 0
-            ? Math.max(...dropdownOptions.map((o) => o.length))
-            : 0;
-        for (let i = 0; i < optionsNumber; i++) {
-          const option = dropdownOptions[i];
-          const paddedOption = option.padEnd(maxLength, ' ');
-          const optionEntryText =
-            option === opt.value
-              ? pc.bgCyan(pc.black(` ${paddedOption} `))
-              : pc.bgBlack(pc.white(` ${paddedOption} `));
-          this.printAt(optionEntryText, {
-            x: 34,
-            y: currentRow - Math.round(optionsNumber / 2) + i,
-          });
-        }
+        activeDropdown = {
+          options: opt.options || [],
+          yBase: currentRow,
+        };
+      }
+    }
+
+    if (activeDropdown) {
+      const dropdownOptions = activeDropdown.options;
+      const optionsNumber = dropdownOptions.length;
+      const maxLength =
+        dropdownOptions.length > 0
+          ? Math.max(...dropdownOptions.map((o) => o.length))
+          : 0;
+      const activeOpt = this.options[this.selectedIndex];
+
+      for (let i = 0; i < optionsNumber; i++) {
+        const option = dropdownOptions[i];
+        const paddedOption = option.padEnd(maxLength, ' ');
+        const optionEntryText =
+          option === activeOpt.value
+            ? pc.bgCyan(pc.black(` ${paddedOption} `))
+            : pc.bgBlack(pc.white(` ${paddedOption} `));
+        this.printAt(optionEntryText, {
+          x: 28,
+          y: activeDropdown.yBase - Math.round(optionsNumber / 2) + i,
+        });
       }
     }
   }

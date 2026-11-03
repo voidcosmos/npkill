@@ -1,7 +1,7 @@
 import { ConsoleService } from '../../../src/cli/services/index.js';
 import { ResultsService } from '../../../src/cli/services/results.service.js';
 import { jest } from '@jest/globals';
-import { CliScanFoundFolder } from '../../../src/cli/interfaces/stats.interface.js';
+import { CliScanFoundTarget } from '../../../src/cli/interfaces/stats.interface.js';
 
 const stdoutWriteMock = jest.fn() as unknown;
 
@@ -26,6 +26,7 @@ class ResultsUi extends ResultsUiConstructor {}
 
 describe('ResultsUi', () => {
   let resultsUi: ResultsUi;
+  const ANSI_REGEX = /\u001b\[[0-9;]*m/g;
 
   const resultsServiceMock: ResultsService = {
     results: [],
@@ -58,7 +59,7 @@ describe('ResultsUi', () => {
           size: 1,
           status: 'live',
         },
-      ] as CliScanFoundFolder[];
+      ] as CliScanFoundTarget[];
 
       resultsUi.render();
 
@@ -71,6 +72,33 @@ describe('ResultsUi', () => {
       );
     });
 
+    it('should render age in days with the day suffix', () => {
+      const now = Date.now();
+
+      const cellText = resultsUi['getAgeCellText'](
+        {
+          path: 'path/folder/1',
+          size: 1,
+          status: 'live',
+          modificationTime: now - 12 * 86400 * 1000,
+        } as CliScanFoundTarget,
+        false,
+      );
+
+      expect(cellText.replace(ANSI_REGEX, '')).toBe(' 12d');
+    });
+
+    it('should reduce the visible gap before the size value', () => {
+      const cellText = resultsUi['getSizeCellText']({
+        path: 'path/folder/1',
+        size: 4.48,
+        status: 'live',
+        modificationTime: 1,
+      } as CliScanFoundTarget);
+
+      expect(cellText).toBe(' 4.48 GB ');
+    });
+
     // eslint-disable-next-line quotes
     it("should't render results if it is not visible", () => {
       const populateResults = () => {
@@ -81,7 +109,7 @@ describe('ResultsUi', () => {
             status: 'live',
             isDangerous: false,
             modificationTime: -1,
-          } as CliScanFoundFolder);
+          } as CliScanFoundTarget);
         }
       };
 
@@ -99,16 +127,16 @@ describe('ResultsUi', () => {
   });
 
   describe('selection mode', () => {
-    let folders: CliScanFoundFolder[];
+    let mockResults: CliScanFoundTarget[];
 
     beforeEach(() => {
-      folders = [
-        { path: 'folder/1', size: 1, status: 'live' } as CliScanFoundFolder,
-        { path: 'folder/2', size: 1, status: 'live' } as CliScanFoundFolder,
-        { path: 'folder/3', size: 1, status: 'live' } as CliScanFoundFolder,
+      mockResults = [
+        { path: 'folder/1', size: 1, status: 'live' } as CliScanFoundTarget,
+        { path: 'folder/2', size: 1, status: 'live' } as CliScanFoundTarget,
+        { path: 'folder/3', size: 1, status: 'live' } as CliScanFoundTarget,
       ];
 
-      resultsServiceMock.results = folders;
+      resultsServiceMock.results = mockResults;
       resultsUi = new ResultsUi(resultsServiceMock, consoleServiceMock);
     });
 
@@ -132,7 +160,7 @@ describe('ResultsUi', () => {
         sequence: 't',
       });
       expect(resultsUi['selectMode']).toBe(false);
-      expect(resultsUi['selectedFolders'].size).toBe(0);
+      expect(resultsUi['selectedResults'].size).toBe(0);
     });
 
     it('should select and unselect folder with space', () => {
@@ -151,7 +179,7 @@ describe('ResultsUi', () => {
         shift: false,
         sequence: ' ',
       });
-      expect(resultsUi['selectedFolders'].has('folder/1')).toBe(true);
+      expect(resultsUi['selectedResults'].has('folder/1')).toBe(true);
 
       resultsUi.onKeyInput({
         name: 'space',
@@ -160,7 +188,7 @@ describe('ResultsUi', () => {
         shift: false,
         sequence: ' ',
       });
-      expect(resultsUi['selectedFolders'].has('folder/1')).toBe(false);
+      expect(resultsUi['selectedResults'].has('folder/1')).toBe(false);
     });
 
     it('should start and end range selection with "v"', () => {
@@ -189,8 +217,8 @@ describe('ResultsUi', () => {
         shift: false,
         sequence: '\u001b[B',
       }); // move to folder/2
-      expect(resultsUi['selectedFolders'].has('folder/1')).toBe(true);
-      expect(resultsUi['selectedFolders'].has('folder/2')).toBe(true);
+      expect(resultsUi['selectedResults'].has('folder/1')).toBe(true);
+      expect(resultsUi['selectedResults'].has('folder/2')).toBe(true);
 
       resultsUi.onKeyInput({
         name: 'v',
@@ -203,7 +231,7 @@ describe('ResultsUi', () => {
       expect(resultsUi['rangeSelectionStart']).toBe(null);
     });
 
-    it('should delete all selected folders on enter', () => {
+    it('should delete all selected results on enter', () => {
       const spy = jest.spyOn(resultsUi['delete$'], 'next');
 
       resultsUi.onKeyInput({
@@ -244,10 +272,10 @@ describe('ResultsUi', () => {
       });
 
       expect(spy).toHaveBeenCalledTimes(2);
-      expect(spy).toHaveBeenCalledWith(folders[0]);
-      expect(spy).toHaveBeenCalledWith(folders[1]);
+      expect(spy).toHaveBeenCalledWith(mockResults[0]);
+      expect(spy).toHaveBeenCalledWith(mockResults[1]);
 
-      expect(resultsUi['selectedFolders'].size).toBe(0);
+      expect(resultsUi['selectedResults'].size).toBe(0);
     });
 
     it('should clear range selection when toggling mode off', () => {
@@ -273,7 +301,7 @@ describe('ResultsUi', () => {
         sequence: '\u001b[B',
       }); // move and apply range
 
-      expect(resultsUi['selectedFolders'].size).toBe(2);
+      expect(resultsUi['selectedResults'].size).toBe(2);
       expect(resultsUi['isRangeSelectionMode']).toBe(true);
 
       resultsUi.onKeyInput({
@@ -284,7 +312,7 @@ describe('ResultsUi', () => {
         sequence: 't',
       }); // toggle mode off
       expect(resultsUi['selectMode']).toBe(false);
-      expect(resultsUi['selectedFolders'].size).toBe(0);
+      expect(resultsUi['selectedResults'].size).toBe(0);
       expect(resultsUi['rangeSelectionStart']).toBe(null);
     });
   });

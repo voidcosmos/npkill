@@ -6,10 +6,9 @@ export const MENU_BAR = {
 };
 
 export const INFO_MSGS = {
-  DELETED_FOLDER: '[DELETED] ',
-  DELETING_FOLDER: '[..deleting..] ',
-  ERROR_DELETING_FOLDER: '[ ERROR ] ',
-  HEADER_COLUMNS: 'Age    Size', // Δ (delta) for last_mod/age?
+  DELETED: '[DELETED] ',
+  DELETING: '[..deleting..] ',
+  ERROR_DELETING: '[ ERROR ] ',
   HELP_TITLE: ' NPKILL HELP ',
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
@@ -34,9 +33,12 @@ export const INFO_MSGS = {
 };
 
 export const ERROR_MSG = {
-  CANT_DELETE_FOLDER:
-    'The directory cannot be deleted. Do you have permission?',
+  CANT_DELETE: 'The target cannot be deleted. Do you have permission?',
   CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
   CANT_USE_BOTH_JSON_OPTIONS:
     'Cannot use both --json and --json-stream options simultaneously.',
+  INVALID_OLDER_THAN:
+    'Invalid --older-than value. It must be a positive whole number of days (e.g. --older-than 90).',
+  CANT_USE_OLDER_THAN_WITHOUT_AGE:
+    '--older-than needs the age of each result, so it cannot be used with --no-age or --no-stats.',
 };

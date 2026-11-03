@@ -13,7 +13,7 @@ export class WindowsFilesService extends FileService {
     super(fileWorkerService);
   }
 
-  async deleteDir(path: string): Promise<boolean> {
+  async delete(path: string): Promise<boolean> {
     await rm(path, { recursive: true, force: true });
     return true;
   }

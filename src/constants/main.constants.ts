@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG: IConfig = {
   checkUpdates: true,
   deleteAll: false,
   dryRun: false,
-  exclude: ['.git'],
+  exclude: [],
   excludeSensitiveResults: false,
   sizeUnit: 'auto',
   maxSimultaneousSearch: 6,
@@ -24,12 +24,14 @@ export const DEFAULT_CONFIG: IConfig = {
   yes: false,
   jsonStream: false,
   jsonSimple: false,
+  disableSize: false,
+  disableAge: false,
+  disableStats: false,
+  olderThan: 0,
 };
 
 export const MARGINS = {
-  FOLDER_COLUMN_END: 16,
-  FOLDER_COLUMN_START: 1,
-  FOLDER_SIZE_COLUMN: 10,
+  PATH_COLUMN_START: 1,
   ROW_RESULTS_START: 8,
 };
 
@@ -41,7 +43,7 @@ export const UI_HELP = {
 };
 
 export const UI_POSITIONS = {
-  FOLDER_SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
+  SIZE_HEADER: { x: -1, y: 7 }, // x is calculated in controller
   INITIAL: { x: 0, y: 0 },
   VERSION: { x: 30, y: 5 },
   DRY_RUN_NOTICE: { x: 1, y: 6 },

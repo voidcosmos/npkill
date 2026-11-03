@@ -261,7 +261,7 @@ describe('File Service', () => {
     });
   });
 
-  xdescribe('Functional test for #deleteDir', () => {
+  xdescribe('Functional test for #delete', () => {
     let fileService: IFileService;
     const testFolder = 'test-files';
     const directories = [
@@ -323,17 +323,10 @@ describe('File Service', () => {
       for (const dirName of directories) {
         const path = `${testFolder}/${dirName}`;
         expect(existsSync(path)).toBeTruthy();
-        await fileService.deleteDir(path);
+        await fileService.delete(path);
         expect(existsSync(path)).toBeFalsy();
       }
       expect(isDirEmpty(testFolder)).toBeTruthy();
-    });
-  });
-
-  describe('fakeDeleteDir', () => {
-    it('Should return a Promise', () => {
-      const result = fileService.fakeDeleteDir();
-      expect(result).toBeInstanceOf(Promise);
     });
   });
 });

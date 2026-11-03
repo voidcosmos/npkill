@@ -22,7 +22,7 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-D', '--delete-all'],
-    description: 'Auto-delete all target folders that are found.',
+    description: 'Auto-delete all targets that are found.',
     name: 'delete-all',
   },
   {
@@ -73,7 +73,7 @@ export const OPTIONS: ICliOptions[] = [
     arg: ['-t', '--targets'],
     description:
       'Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.',
-    name: 'target-folders',
+    name: 'targets',
   },
   {
     arg: ['-x', '--exclude-sensitive'],
@@ -95,6 +95,29 @@ export const OPTIONS: ICliOptions[] = [
     arg: ['--json'],
     description: 'Output results in a JSON format.',
     name: 'jsonSimple',
+  },
+  {
+    arg: ['--no-size'],
+    description:
+      'Skip size and age calculation. Useful for faster scanning and deletion when space info is not needed.',
+    name: 'disable-size',
+  },
+  {
+    arg: ['--no-age'],
+    description: 'Skip age (last modification time) calculation.',
+    name: 'disable-age',
+  },
+  {
+    arg: ['--no-stats'],
+    description:
+      'Skip both size and age calculation. Shortcut for --no-size --no-age.',
+    name: 'disable-stats',
+  },
+  {
+    arg: ['--older-than'],
+    description:
+      'Only show results whose project has not been modified in more than the given number of days (based on age). Example: `--older-than 90`.',
+    name: 'older-than',
   },
   {
     arg: ['-v', '--version'],
@@ -121,6 +144,7 @@ ${getHeader('How to interact')}
  ${pc.green('PgDown / Ctrl+d / d / l')} Move one page down.
  ${pc.green('Home, End')}               Jump to first / last result.
  ${pc.green('o')}                       Open the parent directory.
+ ${pc.green('/')}                       Search (Regex supported).
  ${pc.green('e')}                       Show errors.
  ${pc.green('q')}                       Quit.`;
 

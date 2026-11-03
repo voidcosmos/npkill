@@ -21,7 +21,11 @@ const config: JestConfigWithTsJest = {
   transform: {
     '^.+\\.(t|j)sx?$': ['ts-jest', { useESM: true }],
   },
-  testPathIgnorePatterns: ['<rootDir>/.stryker*'],
+  globalSetup: '<rootDir>/tests/api/support/build-package.mjs',
+  testPathIgnorePatterns: [
+    '<rootDir>/.stryker*',
+    '<rootDir>/tests/api/support/',
+  ],
 };
 
 export default config;

@@ -19,7 +19,7 @@ For more details see the project interfaces.
     - [`getVersion()`](#getversion)
   - [Interfaces & Types](#interfaces-types)
     - [`ScanOptions`](#scanoptions)
-    - [`ScanFoundFolder`](#scanfoundfolder)
+    - [`ScanFoundTarget`](#scanfoundtarget)
     - [`RiskAnalysis`](#riskanalysis)
     - [`GetSizeOptions`](#getsizeoptions)
     - [`GetSizeResult`](#getsizeresult)
@@ -46,7 +46,7 @@ Starts a recursive scan from a given root folder.
   - `rootPath`: `string` — Folder to start scanning from.
   - `options`: [`ScanOptions`](#scanoptions) — Optional scan configuration.
 
-- **Returns**: `Observable<ScanFoundFolder>`
+- **Returns**: `Observable<ScanFoundTarget>`
 - **Description**: Emits each matching folder as it's found.
 
 ---
@@ -137,10 +137,10 @@ interface ScanOptions {
 
 ---
 
-### `ScanFoundFolder`
+### `ScanFoundTarget`
 
 ```ts
-interface ScanFoundFolder {
+interface ScanFoundTarget {
   path: string;
   riskAnalysis?: RiskAnalysis;
 }

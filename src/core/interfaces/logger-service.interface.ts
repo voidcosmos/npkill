@@ -40,19 +40,11 @@ export interface ILoggerService {
   get(type?: 'all' | 'info' | 'warn' | 'error'): LogEntry[];
 
   /**
-   * Gets an Observable that emits the full array of log entries whenever it changes.
-   * @returns An Observable of an array of log entries.
+   * Gets an Observable that emits the entries already logged and then each
+   * new entry as it is logged.
+   * @returns An Observable of log entries, one at a time.
    */
-  getLog$(): Observable<LogEntry[]>;
-
-  /**
-   * Gets an Observable that emits log entries filtered by type whenever they change.
-   * @param type The type of entries to retrieve ('all', 'info', 'warn', 'error'). Default is 'all'.
-   * @returns An Observable of an array of log entries.
-   */
-  getLogByType$(
-    type?: 'all' | 'info' | 'warn' | 'error',
-  ): Observable<LogEntry[]>;
+  getEntries$(): Observable<LogEntry>;
 
   /**
    * Saves the current log content to a specified file.

@@ -52,21 +52,23 @@ export class StatsUi extends BaseUi {
     const { totalSpace, spaceReleased, resultsTypesCount } =
       this.resultsService.getStats();
 
-    this.showStat({
-      description: INFO_MSGS.TOTAL_SPACE,
-      value: totalSpace,
-      lastValueKey: 'totalSpace',
-      position: UI_POSITIONS.TOTAL_SPACE,
-      updateColor: 'yellow',
-    });
+    if (!this.config.disableSize) {
+      this.showStat({
+        description: INFO_MSGS.TOTAL_SPACE,
+        value: totalSpace.text,
+        lastValueKey: 'totalSpace',
+        position: UI_POSITIONS.TOTAL_SPACE,
+        updateColor: 'yellow',
+      });
 
-    this.showStat({
-      description: INFO_MSGS.SPACE_RELEASED,
-      value: spaceReleased,
-      lastValueKey: 'spaceReleased',
-      position: UI_POSITIONS.SPACE_RELEASED,
-      updateColor: 'green',
-    });
+      this.showStat({
+        description: INFO_MSGS.SPACE_RELEASED,
+        value: spaceReleased.text,
+        lastValueKey: 'spaceReleased',
+        position: UI_POSITIONS.SPACE_RELEASED,
+        updateColor: 'green',
+      });
+    }
 
     if (this.config.showErrors) {
       this.showErrorsCount();
@@ -86,31 +88,31 @@ export class StatsUi extends BaseUi {
     position,
     updateColor,
   }: ShowStatProps): void {
-    if (value === this.lastValues[lastValueKey]) {
-      return;
-    }
-
     const statPosition = { ...position };
     statPosition.x += description.length;
 
-    // If is first render, initialize.
-    if (!this.lastValues[lastValueKey]) {
-      this.printAt(value, statPosition);
+    if (value !== this.lastValues[lastValueKey]) {
+      // If is first render, initialize.
+      if (!this.lastValues[lastValueKey]) {
+        this.printAt(value, statPosition);
+        this.lastValues[lastValueKey] = value;
+        return;
+      }
+
+      this.printAt(pc[updateColor](`${value} ▲`), statPosition);
+
+      if (this.timeouts[lastValueKey]) {
+        clearTimeout(this.timeouts[lastValueKey]);
+      }
+
+      this.timeouts[lastValueKey] = setTimeout(() => {
+        this.printAt(value + '  ', statPosition);
+      }, 700);
+
       this.lastValues[lastValueKey] = value;
-      return;
+    } else {
+      this.printAt(value, statPosition);
     }
-
-    this.printAt(pc[updateColor](`${value} ▲`), statPosition);
-
-    if (this.timeouts[lastValueKey]) {
-      clearTimeout(this.timeouts[lastValueKey]);
-    }
-
-    this.timeouts[lastValueKey] = setTimeout(() => {
-      this.printAt(value + '  ', statPosition);
-    }, 700);
-
-    this.lastValues[lastValueKey] = value;
   }
 
   private showErrorsCount(): void {

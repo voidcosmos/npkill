@@ -5,7 +5,7 @@ import {
   IConfigLoadResult,
   INpkillrcConfig,
 } from '../interfaces/npkillrc-config.interface.js';
-import { PROFILE } from '../interfaces/profile.interface.js';
+import { Profile } from '../interfaces/profile.interface.js';
 import { validateConfig, applyFileConfigProperties } from './config/index.js';
 
 const DEFAULT_CONFIG_FILENAME = '.npkillrc';
@@ -117,7 +117,7 @@ export class ConfigService {
    */
   getUserDefinedProfiles(
     config: INpkillrcConfig | null,
-  ): Record<string, PROFILE> {
+  ): Record<string, Profile> {
     if (!config || !config.profiles) {
       return {};
     }

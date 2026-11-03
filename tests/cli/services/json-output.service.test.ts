@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { JsonOutputService } from '../../../src/cli/services/json-output.service.js';
-import { CliScanFoundFolder } from '../../../src/cli/interfaces/stats.interface.js';
+import { CliScanFoundTarget } from '../../../src/cli/interfaces/stats.interface.js';
 
 describe('JsonOutputService', () => {
   let jsonOutputService: JsonOutputService;
@@ -30,7 +30,7 @@ describe('JsonOutputService', () => {
 
   describe('processResult in stream mode', () => {
     it('should write stream result in correct format', () => {
-      const mockFolder: CliScanFoundFolder = {
+      const mockResult: CliScanFoundTarget = {
         path: '/test/node_modules',
         size: 1024,
         modificationTime: 1640995200000,
@@ -41,7 +41,7 @@ describe('JsonOutputService', () => {
       };
 
       jsonOutputService.initializeSession(true); // stream mode
-      jsonOutputService.processResult(mockFolder);
+      jsonOutputService.processResult(mockResult);
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
       const writtenData = mockStdout.write.mock.calls[0][0];
@@ -63,14 +63,14 @@ describe('JsonOutputService', () => {
 
   describe('processResult and completeScan in simple mode', () => {
     it('should collect results and output them in simple format', () => {
-      const mockFolder1: CliScanFoundFolder = {
+      const mockResult1: CliScanFoundTarget = {
         path: '/test/node_modules',
         size: 1024,
         modificationTime: 1640995200000,
         status: 'live',
       };
 
-      const mockFolder2: CliScanFoundFolder = {
+      const mockResult2: CliScanFoundTarget = {
         path: '/test2/node_modules',
         size: 2048,
         modificationTime: 1640995300000,
@@ -78,8 +78,8 @@ describe('JsonOutputService', () => {
       };
 
       jsonOutputService.initializeSession(false); // simple mode
-      jsonOutputService.processResult(mockFolder1);
-      jsonOutputService.processResult(mockFolder2);
+      jsonOutputService.processResult(mockResult1);
+      jsonOutputService.processResult(mockResult2);
 
       expect(jsonOutputService.getResultsCount()).toBe(2);
 
@@ -111,7 +111,7 @@ describe('JsonOutputService', () => {
     });
 
     it('should not output anything on completeScan in stream mode', () => {
-      const mockFolder: CliScanFoundFolder = {
+      const mockResult: CliScanFoundTarget = {
         path: '/test/node_modules',
         size: 1024,
         modificationTime: 1640995200000,
@@ -119,7 +119,7 @@ describe('JsonOutputService', () => {
       };
 
       jsonOutputService.initializeSession(true); // stream mode
-      jsonOutputService.processResult(mockFolder);
+      jsonOutputService.processResult(mockResult);
       mockStdout.write.mockClear();
 
       jsonOutputService.completeScan();
@@ -164,7 +164,7 @@ describe('JsonOutputService', () => {
 
   describe('handleShutdown', () => {
     it('should output collected results when shutdown is called in simple mode', () => {
-      const mockFolder: CliScanFoundFolder = {
+      const mockResult: CliScanFoundTarget = {
         path: '/test/node_modules',
         size: 1024,
         modificationTime: 1640995200000,
@@ -172,7 +172,7 @@ describe('JsonOutputService', () => {
       };
 
       jsonOutputService.initializeSession(false); // simple mode
-      jsonOutputService.processResult(mockFolder);
+      jsonOutputService.processResult(mockResult);
       jsonOutputService.handleShutdown();
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
@@ -191,7 +191,7 @@ describe('JsonOutputService', () => {
     });
 
     it('should not output anything in stream mode', () => {
-      const mockFolder: CliScanFoundFolder = {
+      const mockResult: CliScanFoundTarget = {
         path: '/test/node_modules',
         size: 1024,
         modificationTime: 1640995200000,
@@ -199,7 +199,7 @@ describe('JsonOutputService', () => {
       };
 
       jsonOutputService.initializeSession(true); // stream mode
-      jsonOutputService.processResult(mockFolder); // This writes to stdout
+      jsonOutputService.processResult(mockResult); // This writes to stdout
       mockStdout.write.mockClear(); // Clear the call from processResult
 
       jsonOutputService.handleShutdown();

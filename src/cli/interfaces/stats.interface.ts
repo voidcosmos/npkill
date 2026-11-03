@@ -1,6 +1,7 @@
-import { ScanFoundFolder } from '../../core/interfaces/index.js';
+import { FormattedSize } from 'src/utils/unit-conversions.js';
+import { ScanFoundTarget } from '../../core/interfaces/index.js';
 
-export interface CliScanFoundFolder extends ScanFoundFolder {
+export interface CliScanFoundTarget extends ScanFoundTarget {
   size: number;
   modificationTime: number;
   status: 'live' | 'deleting' | 'error-deleting' | 'deleted';
@@ -12,7 +13,7 @@ export interface IResultTypeCount {
 }
 
 export interface IStats {
-  spaceReleased: string;
-  totalSpace: string;
+  spaceReleased: FormattedSize;
+  totalSpace: FormattedSize;
   resultsTypesCount: IResultTypeCount[];
 }
