@@ -663,7 +663,7 @@ describe('CliController test', () => {
       });
 
       let addResultMock;
-      let deleteTargetSpy;
+      let deleteResultSpy;
 
       beforeEach(() => {
         addResultMock = jest.fn();
@@ -677,7 +677,7 @@ describe('CliController test', () => {
         };
         cliController.uiResults = { render: jest.fn(), clear: jest.fn() };
         spyMethod('finishResultStats');
-        deleteTargetSpy = spyMethod('deleteTarget');
+        deleteResultSpy = spyMethod('deleteResult');
       });
 
       it('Should add results as soon as they are found when not filtering', () => {
@@ -706,8 +706,8 @@ describe('CliController test', () => {
 
         expect(addResultMock).toHaveBeenCalledTimes(1);
         expect(addResultMock).toHaveBeenCalledWith(oldFolder);
-        expect(deleteTargetSpy).toHaveBeenCalledTimes(1);
-        expect(deleteTargetSpy).toHaveBeenCalledWith(oldFolder);
+        expect(deleteResultSpy).toHaveBeenCalledTimes(1);
+        expect(deleteResultSpy).toHaveBeenCalledWith(oldFolder);
       });
 
       it('Should not delete results before their age is known with --no-size', () => {
@@ -717,7 +717,7 @@ describe('CliController test', () => {
 
         cliController.processResultForUi(folder(-1));
 
-        expect(deleteTargetSpy).not.toHaveBeenCalled();
+        expect(deleteResultSpy).not.toHaveBeenCalled();
       });
     });
 

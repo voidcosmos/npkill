@@ -58,7 +58,7 @@ export class ScanService {
   }
 
   calculateResultStats(
-    target: CliScanFoundTarget,
+    result: CliScanFoundTarget,
     options: CalculateResultStatsOptions = {
       /** Saves resources by not scanning a result that is probably not of interest. */
       getModificationTimeForSensitiveResults: false,
@@ -66,35 +66,35 @@ export class ScanService {
   ): Observable<CliScanFoundTarget> {
     const size$ = options.disableSize
       ? of({ size: 0 })
-      : this.npkill.getSize$(target.path).pipe(
+      : this.npkill.getSize$(result.path).pipe(
           timeout(30000), // 30 seconds timeout
           catchError(() => {
             // If size calculation fails or times out, keep size as 0 but mark as calculated
-            target.size = 0;
-            target.modificationTime = 1; // 1 = calculated, -1 = not calculated
+            result.size = 0;
+            result.modificationTime = 1; // 1 = calculated, -1 = not calculated
             return of({ size: 0 });
           }),
           tap(({ size }) => {
-            target.size = convertBytesToGb(size);
+            result.size = convertBytesToGb(size);
           }),
         );
 
     return size$.pipe(
       switchMap(async () => {
         if (options.disableAge) {
-          target.modificationTime = -1;
-          return target;
+          result.modificationTime = -1;
+          return result;
         }
 
         if (
-          target.riskAnalysis?.isSensitive &&
+          result.riskAnalysis?.isSensitive &&
           !options.getModificationTimeForSensitiveResults
         ) {
-          target.modificationTime = -1;
-          return target;
+          result.modificationTime = -1;
+          return result;
         }
 
-        const parentFolder = join(target.path, '../');
+        const parentFolder = join(result.path, '../');
         const normalizedParent = parentFolder.replace(/\\/g, '/').toLowerCase();
         const normalizedHome = os.homedir().replace(/\\/g, '/').toLowerCase();
 
@@ -103,33 +103,33 @@ export class ScanService {
 
         // If it's directly under HOME, skip modification time calculation
         if (isDirectChildOfHome) {
-          target.modificationTime = -1;
-          return target;
+          result.modificationTime = -1;
+          return result;
         }
 
         // For other folders, scan the parent folder for modification time
         try {
-          const result = await firstValueFrom(
+          const newestFile = await firstValueFrom(
             this.npkill.getNewestFile$(parentFolder).pipe(
               timeout(10000), // 10 seconds timeout for modification time
               catchError(() => of(null)),
             ),
           );
 
-          target.modificationTime = result ? result.timestamp : 1;
-          return target;
+          result.modificationTime = newestFile ? newestFile.timestamp : 1;
+          return result;
         } catch {
-          target.modificationTime = 1;
-          return target;
+          result.modificationTime = 1;
+          return result;
         }
       }),
       catchError(() => {
         // Final fallback: mark as calculated with default values
-        target.modificationTime = 1;
-        if (target.size === undefined || target.size === null) {
-          target.size = 0;
+        result.modificationTime = 1;
+        if (result.size === undefined || result.size === null) {
+          result.size = 0;
         }
-        return of(target);
+        return of(result);
       }),
     );
   }

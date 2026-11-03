@@ -164,7 +164,7 @@ export class CliController {
     this.uiService.add(this.uiWarning);
 
     // Set Events
-    this.uiResults.delete$.subscribe((result) => this.deleteTarget(result));
+    this.uiResults.delete$.subscribe((result) => this.deleteResult(result));
     this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
     this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
     this.uiResults.openFolder$.subscribe((path) => openExplorer(path));
@@ -811,16 +811,16 @@ export class CliController {
   }
 
   private async deleteForJsonOutput(
-    target: CliScanFoundTarget,
+    result: CliScanFoundTarget,
   ): Promise<DeleteResult> {
-    const deletion = isSafeToDelete(target.path, this.config.targets)
+    const deletion = isSafeToDelete(result.path, this.config.targets)
       ? await firstValueFrom(
-          this.npkill.delete$(target.path, { dryRun: this.config.dryRun }),
+          this.npkill.delete$(result.path, { dryRun: this.config.dryRun }),
         )
       : {
-          path: target.path,
+          path: result.path,
           success: false,
-          error: { message: `Target not safe to delete: ${target.path}` },
+          error: { message: `Target not safe to delete: ${result.path}` },
         };
 
     if (!deletion.success) {
@@ -888,7 +888,7 @@ export class CliController {
     this.addResultToUi(result);
 
     if (this.config.disableSize && this.config.deleteAll) {
-      this.deleteTarget(result);
+      this.deleteResult(result);
     }
 
     this.uiResults.render();
@@ -905,7 +905,7 @@ export class CliController {
     this.finishResultStats();
 
     if (this.config.deleteAll && passesAgeFilter) {
-      this.deleteTarget(result);
+      this.deleteResult(result);
     }
   }
 
@@ -1020,22 +1020,22 @@ export class CliController {
     await new GeneralUi().printExitMessage({ stats });
   }
 
-  private deleteTarget(target: CliScanFoundTarget): void {
-    if (target.status === 'deleted' || target.status === 'deleting') {
+  private deleteResult(result: CliScanFoundTarget): void {
+    if (result.status === 'deleted' || result.status === 'deleting') {
       return;
     }
 
-    if (!isSafeToDelete(target.path, this.config.targets)) {
-      this.newError(`Target not safe to delete: ${String(target.path)}`);
+    if (!isSafeToDelete(result.path, this.config.targets)) {
+      this.newError(`Target not safe to delete: ${String(result.path)}`);
       return;
     }
 
-    target.status = 'deleting';
+    result.status = 'deleting';
     this.searchStatus.pendingDeletions++;
     this.uiStatus.render();
     this.printResultsSection();
 
-    const deletion$ = this.npkill.delete$(String(target.path), {
+    const deletion$ = this.npkill.delete$(String(result.path), {
       dryRun: this.config.dryRun,
     });
     const simulatedDeletionMs = Math.floor(Math.random() * 4000 + 200);
@@ -1045,21 +1045,21 @@ export class CliController {
         ? deletion$.pipe(delay(simulatedDeletionMs))
         : deletion$,
     )
-      .then((result) => {
-        if (!result.success) {
+      .then((deletion) => {
+        if (!deletion.success) {
           throw new Error(
-            result.error?.message ?? `Could not delete ${target.path}`,
+            deletion.error?.message ?? `Could not delete ${result.path}`,
           );
         }
-        target.status = 'deleted';
+        result.status = 'deleted';
         this.searchStatus.pendingDeletions--;
         this.uiStats.render();
         this.uiStatus.render();
         this.printResultsSection();
-        return target;
+        return result;
       })
       .catch((e) => {
-        target.status = 'error-deleting';
+        result.status = 'error-deleting';
         this.searchStatus.pendingDeletions--;
         this.uiStatus.render();
         this.printResultsSection();
