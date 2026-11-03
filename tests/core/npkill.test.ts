@@ -487,11 +487,12 @@ describe('Npkill', () => {
     });
 
     it('should report deletion errors as a failed result', (done) => {
+      const mockPath = resolve('/test');
       fileServiceMock.delete.mockRejectedValue(new Error('Permission denied'));
 
-      npkill.delete$('/test').subscribe((result) => {
+      npkill.delete$(mockPath).subscribe((result) => {
         expect(result).toEqual({
-          path: '/test',
+          path: mockPath,
           success: false,
           error: { message: 'Permission denied' },
         });
