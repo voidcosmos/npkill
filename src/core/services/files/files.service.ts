@@ -103,6 +103,9 @@ export abstract class FileService implements IFileService {
       return normalized;
     };
 
+    const withoutTrailingSlashes = (p: string): string =>
+      p.replace(/(.)\/+$/, '$1');
+
     const normalizedPath = normalizePath(absolutePath);
     const normalizedOriginal = normalizePath(originalPath);
 
@@ -115,7 +118,7 @@ export abstract class FileService implements IFileService {
       // Normalize the home path. If it's already absolute, just normalize separators.
       // Only use path.resolve() if it's a relative path to avoid cross-platform issues.
       const homeAbsolute = path.isAbsolute(home) ? home : path.resolve(home);
-      normalizedHome = normalizePath(homeAbsolute);
+      normalizedHome = withoutTrailingSlashes(normalizePath(homeAbsolute));
       isInHome =
         normalizedPath === normalizedHome ||
         normalizedPath.startsWith(normalizedHome + '/');
@@ -137,6 +140,13 @@ export abstract class FileService implements IFileService {
         return {
           isSensitive: true,
           reason: 'User data folder (~/.local/share)',
+        };
+      }
+
+      if (rel === 'library' || rel.startsWith('library/')) {
+        return {
+          isSensitive: true,
+          reason: 'macOS user library (~/Library)',
         };
       }
 

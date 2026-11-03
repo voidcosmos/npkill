@@ -178,6 +178,28 @@ describe('File Service', () => {
         mockCwd('/home/user/project/projecta');
         expect(fileService.isDangerous('.hello').isSensitive).toBe(false);
       });
+
+      test('~/Library and everything inside it', () => {
+        expect(fileService.isDangerous('/home/user/Library').isSensitive).toBe(
+          true,
+        );
+        expect(
+          fileService.isDangerous('/home/user/Library/Caches/app/node_modules')
+            .isSensitive,
+        ).toBe(true);
+      });
+
+      test('HOME with a trailing slash', () => {
+        process.env.HOME = '/home/user/';
+        try {
+          expect(
+            fileService.isDangerous('/home/user/.config/app/node_modules')
+              .isSensitive,
+          ).toBe(true);
+        } finally {
+          process.env.HOME = '/home/user';
+        }
+      });
     });
 
     describe('Windows paths', () => {
