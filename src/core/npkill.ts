@@ -173,7 +173,7 @@ export class Npkill implements NpkillInterface {
           return;
         }
         this.logger.error(
-          `Failed to delete ${path}: ${String(result.error?.message)}`,
+          `Failed to delete ${result.path}: ${result.error.message}`,
         );
       }),
     );

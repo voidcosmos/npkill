@@ -23,7 +23,7 @@ export interface ScanFoundTarget {
  */
 export interface ScanOptions {
   /** Names of the directories to find. Must contain at least one name. */
-  targets: string[];
+  targets: readonly string[];
   /** Array of directory paths to exclude from the scan. */
   exclude?: string[];
   /** Whether to perform risk analysis on found directories. Default: true. */
@@ -60,18 +60,27 @@ export interface DeleteOptions {
 }
 
 /**
- * Result of a directory deletion operation.
+ * Why a deletion failed.
  */
-export interface DeleteResult {
-  /** Path that was attempted to be deleted. */
-  path: string;
-  /** Whether the deletion was successful. */
-  success: boolean;
-  /** Error information if deletion failed. */
-  error?: {
-    /** Human-readable error message. */
-    message: string;
-    /** Error code if available. */
-    code?: string;
-  };
+export interface DeleteError {
+  /** Human-readable error message. */
+  message: string;
+  /** Error code if available. */
+  code?: string;
 }
+
+/**
+ * Result of a directory deletion operation. Only failures carry an error.
+ */
+export type DeleteResult =
+  | {
+      /** Absolute path that was deleted. */
+      path: string;
+      success: true;
+    }
+  | {
+      /** Absolute path that could not be deleted. */
+      path: string;
+      success: false;
+      error: DeleteError;
+    };

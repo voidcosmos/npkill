@@ -150,11 +150,22 @@ const ALL_TARGETS = [
   ),
 ];
 
-export const DEFAULT_PROFILES: { [profileName: string]: Profile } = {
-  ...BASE_PROFILES,
-  all: {
-    targets: ALL_TARGETS,
-    description:
-      'Includes all targets listed above. Not recommended, as it mixes unrelated ecosystems and may remove context-specific data (a good recipe for chaos if used recklessly).',
-  },
-};
+export const DEFAULT_PROFILES: Readonly<Record<string, Profile>> =
+  freezeProfiles({
+    ...BASE_PROFILES,
+    all: {
+      targets: ALL_TARGETS,
+      description:
+        'Includes all targets listed above. Not recommended, as it mixes unrelated ecosystems and may remove context-specific data (a good recipe for chaos if used recklessly).',
+    },
+  });
+
+function freezeProfiles(
+  profiles: Record<string, Profile>,
+): Readonly<Record<string, Profile>> {
+  Object.values(profiles).forEach((profile) => {
+    Object.freeze(profile.targets);
+    Object.freeze(profile);
+  });
+  return Object.freeze(profiles);
+}

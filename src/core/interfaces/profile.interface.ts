@@ -3,7 +3,7 @@
  */
 export interface Profile {
   /** Array of directory names to search for */
-  targets: string[];
+  readonly targets: readonly string[];
   /** Description of what this profile is for */
-  description: string;
+  readonly description: string;
 }

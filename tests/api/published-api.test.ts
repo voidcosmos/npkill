@@ -141,6 +141,7 @@ describe('npkill published API', () => {
   it('exports only the 1.0 surface', () => {
     expect(exportedNames(createProgram(ENTRY))).toEqual([
       'DEFAULT_PROFILES',
+      'DeleteError',
       'DeleteOptions',
       'DeleteResult',
       'GetNewestFileResult',

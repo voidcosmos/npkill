@@ -12,21 +12,15 @@ exports[`npkill published API keeps the public declarations unchanged 1`] = `
     getVersion(): string;
 }
 
-export declare const DEFAULT_PROFILES: {
-    [profileName: string]: Profile;
-};
+export declare const DEFAULT_PROFILES: Readonly<Record<string, Profile>>;
+
+export interface DeleteError {
+    message: string;
+    code?: string;
+}
 
 export interface DeleteOptions {
     dryRun?: boolean;
-}
-
-export interface DeleteResult {
-    path: string;
-    success: boolean;
-    error?: {
-        message: string;
-        code?: string;
-    };
 }
 
 export interface GetNewestFileResult {
@@ -62,8 +56,8 @@ export interface NpkillInterface {
 }
 
 export interface Profile {
-    targets: string[];
-    description: string;
+    readonly targets: readonly string[];
+    readonly description: string;
 }
 
 export interface RiskAnalysis {
@@ -77,8 +71,17 @@ export interface ScanFoundTarget {
 }
 
 export interface ScanOptions {
-    targets: string[];
+    targets: readonly string[];
     exclude?: string[];
     performRiskAnalysis?: boolean;
-}"
+}
+
+export type DeleteResult = {
+    path: string;
+    success: true;
+} | {
+    path: string;
+    success: false;
+    error: DeleteError;
+};"
 `;

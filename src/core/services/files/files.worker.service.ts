@@ -11,7 +11,7 @@ export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 
 export interface WorkerScanOptions {
   rootPath: string;
-  targets: string[];
+  targets: readonly string[];
   exclude?: string[];
 }
 
