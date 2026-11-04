@@ -19,7 +19,6 @@ npkill is an ES module and needs Node.js 20.19 or later. Every operation returns
   - [`getLogs$()`](#getlogs)
   - [`isValidRootFolder(path)`](#isvalidrootfolderpath)
   - [`getVersion()`](#getversion)
-- [`DEFAULT_PROFILES`](#default_profiles)
 - [Types](#types)
 - [Stability](#stability)
 
@@ -86,20 +85,21 @@ npkill
 
 ### `startScan$(rootPath, options)`
 
-Searches `rootPath` recursively and emits a [`ScanFoundTarget`](#scanfoundtarget) for each folder whose name is one of `options.targets`, as soon as it is found. It completes when the whole tree has been explored.
+Searches `rootPath` recursively and emits a [`ScanFoundTarget`](#scanfoundtarget) for each folder that matches one of `options.targets`, as soon as it is found. It completes when the whole tree has been explored.
 
-- A target is matched by its exact name, case included, and it is always a directory.
+- A target is matched by its exact name, case included, and it is always a directory. A [rule](#targetdefinition) also needs the entries it lists.
 - The scan does not look inside the targets it finds, so `node_modules/pkg/node_modules` is never reported.
 - Symlinks below the root are not followed. A symlink given as the root is.
-- Some folders that rarely hold projects are never entered unless their name is a target or `options.useDefaultIgnore` is `false`. Today they are `.git`, `.svn`, `.hg`, `.fossil`, `.Trash`, `.Trashes`, `$RECYCLE.BIN`, `System Volume Information`, `.Spotlight-V100`, `.fseventsd`, `.nvm`, `.rvm`, `.rustup`, `.pyenv`, `.rbenv`, `.asdf`, `.deno`, `.volta`, `.bun`, `.vscode`, `.vscode-server`, `.idea`, `.vs`, `.settings`, `node_modules`, `__pycache__`, `.cache`, `.venv` and `venv`.
+- Some folders that rarely hold projects are never entered unless they match a target or `options.useDefaultIgnore` is `false`. Today they are `.git`, `.svn`, `.hg`, `.fossil`, `.Trash`, `.Trashes`, `$RECYCLE.BIN`, `System Volume Information`, `.Spotlight-V100`, `.fseventsd`, `.nvm`, `.rvm`, `.rustup`, `.pyenv`, `.rbenv`, `.asdf`, `.deno`, `.volta`, `.bun`, `.vscode`, `.vscode-server`, `.idea`, `.vs`, `.settings`, `node_modules`, `__pycache__`, `.cache`, `.venv` and `venv`.
 - Folders that cannot be read are skipped and the scan goes on.
 
 Only one scan can run at a time on each instance. Subscribing to a second one while the first is running emits an error. Use another instance to scan in parallel. Unsubscribing stops the scan.
 
 It errors when:
 
-- `options.targets` is not a non-empty array of names.
-- A target uses `*`, `?`, `[`, `]`, `{`, `}`, `/` or `\`. These characters are reserved for patterns.
+- `options.targets` is not a non-empty array of names and rules.
+- A rule has an unknown property, an empty list, or neither `nextTo` nor `contains`.
+- A name uses `*`, `?`, `[`, `]`, `{`, `}`, `/` or `\`. These characters are reserved for patterns.
 - The root is not a directory that can be read and entered. The message includes the reason that [`isValidRootFolder`](#isvalidrootfolderpath) gives.
 
 ### `stopScan()`
@@ -146,25 +146,13 @@ Tells whether a scan can start from `path`. Returns an [`IsValidRootFolderResult
 
 Returns the version of npkill, like `1.0.0`.
 
-## `DEFAULT_PROFILES`
-
-The built-in profiles of the CLI, indexed by name. Each one is a [`Profile`](#profile). They are frozen and their targets can be passed straight to a scan:
-
-```ts
-import { DEFAULT_PROFILES, Npkill } from 'npkill';
-
-new Npkill().startScan$('.', { targets: DEFAULT_PROFILES.python.targets });
-```
-
-Profiles and their targets can change in any version, so an unattended script that deletes what it finds should use its own list of targets.
-
 ## Types
 
 ### `ScanOptions`
 
 ```ts
 interface ScanOptions {
-  targets: readonly string[];
+  targets: readonly TargetDefinition[];
   exclude?: string[];
   useDefaultIgnore?: boolean; // Default: true
   performRiskAnalysis?: boolean; // Default: true
@@ -172,6 +160,20 @@ interface ScanOptions {
 ```
 
 `exclude` lists paths to leave out of the scan. `useDefaultIgnore: false` also looks inside the folders that are skipped by default.
+
+### `TargetDefinition`
+
+A folder name, or a rule that also needs other entries around the folder. Every entry listed must exist, and rules with the same target are alternatives. See [custom rules](./docs/profiles.md#custom-rules).
+
+```ts
+type TargetDefinition = string | TargetRule;
+
+interface TargetRule {
+  readonly target: string;
+  readonly nextTo?: readonly string[];
+  readonly contains?: readonly string[]; // Inside the folder
+}
+```
 
 ### `ScanFoundTarget`
 
@@ -251,15 +253,6 @@ interface IsValidRootFolderResult {
 }
 ```
 
-### `Profile`
-
-```ts
-interface Profile {
-  readonly targets: readonly string[];
-  readonly description: string;
-}
-```
-
 ## Stability
 
 The API is new. Until it matures, incompatible changes can arrive in minor versions, never in patches, and the release notes will list them.
@@ -268,6 +261,7 @@ These changes can happen in any version and are not considered incompatible:
 
 - New methods in `Npkill` and `NpkillInterface`. If you implement `NpkillInterface` yourself, expect it to grow.
 - New fields in results and new optional fields in options.
+- New forms of [`TargetDefinition`](#targetdefinition).
 - New log entry types, and `getLogs$()` keeping fewer old entries.
 - Changes to the profiles, the risk analysis rules and the lists of folders that are never entered or inspected.
 - Changes to error messages.

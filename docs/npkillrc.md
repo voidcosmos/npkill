@@ -46,21 +46,7 @@ npkill --config /path/to/your/config.json
   "excludeSensitiveResults": true,
   "dryRun": false,
   "checkUpdates": true,
-  "defaultProfiles": ["node", "database"],
-  "profiles": {
-    "webdev": {
-      "description": "Frontend web development artifacts and build outputs",
-      "targets": ["dist", ".next", ".nuxt", ".output", "build", ".svelte-kit"]
-    },
-    "mobile": {
-      "description": "Mobile platform build folders and caches",
-      "targets": ["Pods", "build", "DerivedData", ".gradle"]
-    },
-    "database": {
-      "description": "Database data folders (use with caution)",
-      "targets": ["data", "db", "mongodb", "postgres"]
-    }
-  }
+  "defaultProfiles": ["node", "rust"]
 }
 ```
 
@@ -157,36 +143,24 @@ Check for updates on startup.
 **Type:** `string[]`  
 **Default:** `["node"]`
 
-Define the profile names to be used by default. These can be either built-in or user-defined names.
+Define the profile names to be used by default. These can be either built-in or user-defined names. An empty list and unknown names are rejected.
 
 ```json
-"checkUpdates": true
+"defaultProfiles": ["node", "rust"]
 ```
 
 ### profiles
 
-**Type:** `{ [name: string]: { targets: string[] } }`  
+**Type:** `{ [name: string]: { description: string, targets: TargetDefinition[] } }`  
 **Default:** `{}`
 
-Define custom profiles with specific target directories. These can be used with the `-p` or `--profiles` flag.
-
-These will overwrite the base profiles.
-
-You can check the existing ones with `--profiles` and even copy the output of those you are interested in to combine them into one.
+Define custom profiles to use with `-p` or `--profiles`. Each target is a folder name or a [rule](./profiles.md#custom-rules). A custom profile replaces the built-in one with the same name. `all` is reserved.
 
 ```json
 "profiles": {
-  "webdev": {
-    "description": "Frontend web development artifacts and build outputs",
-    "targets": ["dist", ".next", ".nuxt", ".output"]
-  },
-  "mystack": {
-    "description": "Full-stack project artifacts (JS/Python/Java)",
-    "targets": ["venv", ".venv", "target", "__pycache__", ".gradle"]
-  },
-  "mobile": {
-    "description": "Mobile platform build folders and caches",
-    "targets": ["Pods", "build", "DerivedData", ".gradle"]
+  "zig": {
+    "description": "Zig build outputs",
+    "targets": ["zig-cache", { "target": "zig-out", "nextTo": ["build.zig"] }]
   }
 }
 ```
