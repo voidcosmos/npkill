@@ -237,9 +237,10 @@ describe('ProfilesService', () => {
       expect(result).toBeInstanceOf(Array);
       expect(result.length).toBeGreaterThan(0);
       expect(result).toContain('node_modules');
-      expect(result).toContainEqual(
-        expect.objectContaining({ id: 'node.next', name: '.next' }),
-      );
+      expect(result).toContainEqual({
+        target: '.next',
+        nextTo: ['package.json'],
+      });
     });
 
     it('should return targets for multiple profiles', () => {
@@ -251,12 +252,10 @@ describe('ProfilesService', () => {
       expect(result).toContain('node_modules');
 
       expect(result).toContain('__pycache__');
-      expect(result).toContainEqual(
-        expect.objectContaining({
-          id: 'python.pytest-cache',
-          name: '.pytest_cache',
-        }),
-      );
+      expect(result).toContainEqual({
+        target: '.pytest_cache',
+        contains: ['CACHEDIR.TAG'],
+      });
     });
 
     it('should remove duplicate targets from multiple profiles', () => {

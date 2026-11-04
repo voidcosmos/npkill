@@ -140,7 +140,6 @@ function typeErrors(program: ts.Program): string[] {
 describe('npkill published API', () => {
   it('exports only the 1.0 surface', () => {
     expect(exportedNames(createProgram(ENTRY))).toEqual([
-      'DEFAULT_PROFILES',
       'DeleteError',
       'DeleteOptions',
       'DeleteResult',
@@ -150,15 +149,10 @@ describe('npkill published API', () => {
       'LogEntry',
       'Npkill',
       'NpkillInterface',
-      'Profile',
       'RiskAnalysis',
       'ScanFoundTarget',
       'ScanOptions',
-      'TargetCheck',
       'TargetDefinition',
-      'TargetEvidence',
-      'TargetMarker',
-      'TargetMatch',
       'TargetRule',
     ]);
   });

@@ -176,7 +176,7 @@ describe('ConfigService', () => {
       const result = configService.loadConfig(configPath);
 
       expect(result.config).toBeNull();
-      expect(result.error).toContain('targets array cannot be empty');
+      expect(result.error).toContain('must be a non-empty array');
     });
 
     it('should validate rootDir as string', () => {
@@ -250,6 +250,16 @@ describe('ConfigService', () => {
       expect(result.error).toContain(
         'All defaultProfiles items must be strings',
       );
+    });
+
+    it('should reject empty defaultProfiles', () => {
+      const configPath = join(tempDir, '.npkillrc');
+      writeFileSync(configPath, JSON.stringify({ defaultProfiles: [] }));
+
+      const result = configService.loadConfig(configPath);
+
+      expect(result.config).toBeNull();
+      expect(result.error).toContain('defaultProfiles must not be empty');
     });
 
     it('should load valid defaultProfiles', () => {

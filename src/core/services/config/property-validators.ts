@@ -137,6 +137,13 @@ export function validateDefaultProfiles(value: unknown): ValidationResult {
     };
   }
 
+  if (value.length === 0) {
+    return {
+      isValid: false,
+      error: 'defaultProfiles must not be empty.',
+    };
+  }
+
   return { isValid: true };
 }
 

@@ -49,7 +49,8 @@ export interface NpkillInterface {
    * like `.git` or `.nvm`, unless their name is a target. Names are compared
    * exactly, case included.
    * @param rootPath Root directory to scan from.
-   * @param options Scan options. `targets` must be a non-empty array of names.
+   * @param options Scan options. `targets` must be a non-empty array of names
+   * or rules.
    * Names with `* ? [ ] { } / \` are rejected because those characters are
    * reserved for patterns.
    * @returns Observable that emits the results that are found in real time.

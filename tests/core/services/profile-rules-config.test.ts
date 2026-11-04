@@ -5,47 +5,82 @@ import { ConfigService } from '../../../src/core/services/config.service.js';
 import { createTempDir, removeTempDirs } from '../../api/support/helpers.js';
 import {
   cargoTarget,
-  file,
   pythonEnvironment,
 } from '../../api/support/recognition-contract.js';
 
 afterEach(removeTempDirs);
 
-function loadTargets(targets: unknown[], extra: Record<string, unknown> = {}) {
+function load(config: object) {
   const path = join(createTempDir(), '.npkillrc');
-  const config = {
-    ...extra,
-    profiles: { custom: { description: 'Artifacts', targets } },
-  };
   writeFileSync(path, JSON.stringify(config));
-  return { config, result: new ConfigService().loadConfig(path) };
+  return new ConfigService().loadConfig(path);
 }
 
-describe('.npkillrc recognition contract', () => {
-  it('loads legacy names and contextual rules without losing conditions', () => {
-    const { config, result } = loadTargets(
-      ['node_modules', cargoTarget, pythonEnvironment],
-      { schemaVersion: 1 },
-    );
+function loadTargets(targets: unknown[]) {
+  const config = {
+    profiles: { custom: { description: 'Artifacts', targets } },
+  };
+  return { config, result: load(config) };
+}
+
+describe('.npkillrc rules', () => {
+  it('loads names and rules without losing conditions', () => {
+    const { config, result } = loadTargets([
+      'node_modules',
+      cargoTarget,
+      pythonEnvironment,
+    ]);
     expect(result.error).toBeUndefined();
     expect(result.config).toEqual(config);
   });
 
   it.each([
-    ['unknown version', cargoTarget, { schemaVersion: 2 }],
-    ['unknown check', { ...cargoTarget, checks: [{ kind: 'unknown' }] }, {}],
-    ['empty check', { ...cargoTarget, checks: [] }, {}],
     [
-      'escaping path',
-      {
-        ...cargoTarget,
-        checks: [{ kind: 'siblings', allOf: [file('../outside')] }],
-      },
-      {},
+      'an unknown property',
+      { ...cargoTarget, type: 'file' },
+      'unknown property',
     ],
-  ])('rejects %s instead of weakening the rule', (_name, target, extra) => {
-    const { result } = loadTargets(['node_modules', target], extra);
+    [
+      'a rule without conditions',
+      { target: 'target' },
+      'needs nextTo or contains',
+    ],
+    ['an empty list', { target: 'target', nextTo: [] }, 'non-empty array'],
+    ['a path', { target: 'target', nextTo: ['../Cargo.toml'] }, 'reserved'],
+    ['a pattern', { target: 'obj', nextTo: ['*.csproj'] }, 'reserved'],
+  ])('rejects %s instead of weakening the rule', (_name, target, reason) => {
+    const { result } = loadTargets(['node_modules', target]);
     expect(result.config).toBeNull();
-    expect(result.error).toBeDefined();
+    expect(result.error).toContain(reason);
+  });
+
+  it.each([
+    [
+      'an unknown profile property',
+      {
+        profiles: {
+          custom: {
+            description: 'Artifacts',
+            targets: ['dist'],
+            extends: 'node',
+          },
+        },
+      },
+      'profiles.custom.extends: unknown property',
+    ],
+    [
+      'a profile called all',
+      { profiles: { all: { description: 'Everything', targets: ['dist'] } } },
+      'profiles.all is reserved',
+    ],
+    [
+      'an unknown default profile',
+      { defaultProfiles: ['node', 'missing'] },
+      'unknown profile "missing"',
+    ],
+  ])('rejects %s', (_name, config, reason) => {
+    const result = load(config);
+    expect(result.config).toBeNull();
+    expect(result.error).toContain(reason);
   });
 });

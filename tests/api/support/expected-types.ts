@@ -1,22 +1,14 @@
 /* eslint-disable n/no-missing-import */
 import type { Observable } from 'rxjs';
 import type {
-  DEFAULT_PROFILES,
   DeleteError,
   DeleteResult,
-  DeleteOptions,
-  ScanFoundTarget,
-  TargetCheck,
   TargetDefinition,
-  TargetEvidence,
-  TargetMarker,
-  TargetMatch,
   TargetRule,
   GetSizeResult,
   LogEntry,
   Npkill,
   NpkillInterface,
-  Profile,
   ScanOptions,
 } from '../../../.test-build/npkill-api/lib/index.js';
 
@@ -53,43 +45,22 @@ export type LogsArriveOneByOne = Expect<
 export type TargetsAcceptReadonlyLists = Expect<
   Equal<ScanOptions['targets'], readonly TargetDefinition[]>
 >;
-export type BuiltInProfilesAreReadonly = Expect<
-  Equal<typeof DEFAULT_PROFILES, Readonly<Record<string, Profile>>>
->;
-export type ProfileTargetsAreReadonly = Expect<
-  Equal<Profile['targets'], readonly TargetDefinition[]>
->;
 export type FailedDeletionsAlwaysCarryAnError = Expect<
   Equal<Extract<DeleteResult, { success: false }>['error'], DeleteError>
 >;
 export type SuccessfulDeletionsCarryNoError = Expect<
   Equal<Extract<keyof Extract<DeleteResult, { success: true }>, 'error'>, never>
 >;
-export type DefinitionsRetainLegacyStrings = Expect<
+export type TargetsAreNamesOrRules = Expect<
   Equal<TargetDefinition, string | TargetRule>
 >;
-export type FirstReleaseOnlyTargetsDirectories = Expect<
-  Equal<TargetRule['type'], 'directory'>
->;
-export type RuleIdentifiersArePublic = Expect<Equal<TargetRule['id'], string>>;
-export type RuleChecksAreTyped = Expect<
-  Equal<TargetRule['checks'], TargetCheck[]>
->;
-export type FirstReleaseCheckKindsAreClosed = Expect<
-  Equal<TargetCheck['kind'], 'siblings' | 'contains'>
->;
-export type MarkersDistinguishFilesAndDirectories = Expect<
-  Equal<TargetMarker['type'], 'file' | 'directory'>
->;
-export type ScanResultsExplainMatches = Expect<
-  Equal<ScanFoundTarget['matches'], TargetMatch[] | undefined>
->;
-export type MatchesRetainTheCompleteRule = Expect<
-  Equal<TargetMatch['rule'], TargetRule>
->;
-export type MatchesRetainTypedEvidence = Expect<
-  Equal<TargetMatch['evidence'], TargetEvidence[]>
->;
-export type VerificationIsOptInAndContextual = Expect<
-  Equal<DeleteOptions['verify'], TargetRule[] | undefined>
+export type RulesOnlyListNames = Expect<
+  Equal<
+    TargetRule,
+    {
+      readonly target: string;
+      readonly nextTo?: readonly string[];
+      readonly contains?: readonly string[];
+    }
+  >
 >;

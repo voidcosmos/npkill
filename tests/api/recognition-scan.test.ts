@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { TargetDefinition, TargetRule } from '../../src/index.js';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -13,10 +14,8 @@ import {
 } from './support/helpers.js';
 import {
   cargoTarget,
-  file,
   mavenTarget,
   pythonEnvironment,
-  scanOptions,
 } from './support/recognition-contract.js';
 
 const TIMEOUT_MS = 5000;
@@ -26,18 +25,18 @@ afterEach(() => {
   removeTempDirs();
 });
 
-async function scan(root: string, targets: unknown[]) {
+async function scan(root: string, targets: TargetDefinition[]) {
   const outcome = await observe(
-    createNpkill().startScan$(root, scanOptions(targets)),
+    createNpkill().startScan$(root, { targets }),
     TIMEOUT_MS,
   );
   expect(outcome.error).toBeUndefined();
   expect(outcome.completed).toBe(true);
-  return outcome.values;
+  return relativePaths(outcome.values, root);
 }
 
-describe('contextual scanning API', () => {
-  it('recognizes sibling and internal markers and returns the evidence', async () => {
+describe('scanning with rules', () => {
+  it('finds a directory only when its siblings and contents match', async () => {
     const root = createTree([
       'rust/target',
       'python/.venv',
@@ -46,30 +45,14 @@ describe('contextual scanning API', () => {
     ]);
     writeFileSync(join(root, 'rust/Cargo.toml'), '');
     writeFileSync(join(root, 'python/.venv/pyvenv.cfg'), '');
-    const results = await scan(root, [cargoTarget, pythonEnvironment]);
-    expect(relativePaths(results, root)).toEqual([
+
+    expect(await scan(root, [cargoTarget, pythonEnvironment])).toEqual([
       'python/.venv',
       'rust/target',
     ]);
-    expect(
-      results.find(({ path }) => path === join(root, 'rust/target')),
-    ).toMatchObject({
-      matches: [
-        {
-          rule: cargoTarget,
-          evidence: [
-            {
-              kind: 'siblings',
-              path: join(root, 'rust/Cargo.toml'),
-              type: 'file',
-            },
-          ],
-        },
-      ],
-    });
   });
 
-  it('combines checks with AND and alternative rules with OR', async () => {
+  it('requires every listed name and accepts any rule with the same name', async () => {
     const root = createTree([
       'cargo/target',
       'maven/target',
@@ -79,43 +62,59 @@ describe('contextual scanning API', () => {
     writeFileSync(join(root, 'cargo/Cargo.lock'), '');
     writeFileSync(join(root, 'maven/pom.xml'), '');
     writeFileSync(join(root, 'incomplete/Cargo.toml'), '');
-    const cargoWithLock = {
-      ...cargoTarget,
-      checks: [
-        { kind: 'siblings', allOf: [file('Cargo.toml'), file('Cargo.lock')] },
-      ],
+    const cargoWithLock: TargetRule = {
+      target: 'target',
+      nextTo: ['Cargo.toml', 'Cargo.lock'],
     };
-    expect(
-      relativePaths(await scan(root, [cargoWithLock, mavenTarget]), root),
-    ).toEqual(['cargo/target', 'maven/target']);
+
+    expect(await scan(root, [cargoWithLock, mavenTarget])).toEqual([
+      'cargo/target',
+      'maven/target',
+    ]);
   });
 
-  it('explores rejected candidates but prunes accepted ones', async () => {
+  it('finds every directory with a name that is also listed alone', async () => {
+    const root = createTree(['rust/target', 'unrelated/target']);
+    writeFileSync(join(root, 'rust/Cargo.toml'), '');
+
+    expect(await scan(root, ['target', cargoTarget])).toEqual([
+      'rust/target',
+      'unrelated/target',
+    ]);
+  });
+
+  it('explores rejected directories but not the ones it finds', async () => {
     const root = createTree([
       'rejected/target/node_modules',
       'accepted/target/node_modules',
     ]);
     writeFileSync(join(root, 'accepted/Cargo.toml'), '');
-    expect(
-      relativePaths(await scan(root, [cargoTarget, 'node_modules']), root),
-    ).toEqual(['accepted/target', 'rejected/target/node_modules']);
+
+    expect(await scan(root, [cargoTarget, 'node_modules'])).toEqual([
+      'accepted/target',
+      'rejected/target/node_modules',
+    ]);
   });
 
-  it('rejects unknown checks before emitting any results', async () => {
+  it('does not explore rejected directories that are always skipped', async () => {
+    const root = createTree(['app/.venv/lib/__pycache__']);
+
+    expect(await scan(root, [pythonEnvironment, '__pycache__'])).toEqual([]);
+  });
+
+  it('rejects an invalid rule before emitting any results', async () => {
     const root = createTree(['app/node_modules']);
-    const invalid = { ...cargoTarget, checks: [{ kind: 'unknown' }] };
+    const invalid = { ...cargoTarget, type: 'file' } as TargetRule;
     const outcome = await observe(
-      createNpkill().startScan$(root, scanOptions(['node_modules', invalid])),
+      createNpkill().startScan$(root, { targets: ['node_modules', invalid] }),
       TIMEOUT_MS,
     );
-    expect(outcome.values).toEqual([]);
-    expect(outcome.error).toBeInstanceOf(Error);
-  });
 
-  it('preserves name-only scans for existing callers', async () => {
-    const root = createTree(['app/node_modules']);
-    expect(relativePaths(await scan(root, ['node_modules']), root)).toEqual([
-      'app/node_modules',
-    ]);
+    expect(outcome.values).toEqual([]);
+    expect(outcome.error).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining('unknown property'),
+      }),
+    );
   });
 });

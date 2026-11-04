@@ -22,12 +22,13 @@ const MODULE_SETTINGS = [
   { module: 'commonjs', moduleResolution: 'node10' },
 ];
 
-const CONSUMER_SOURCE = `import { DEFAULT_PROFILES, Npkill } from 'npkill';
-import type { ScanFoundTarget } from 'npkill';
+const CONSUMER_SOURCE = `import { Npkill } from 'npkill';
+import type { ScanFoundTarget, TargetRule } from 'npkill';
 
+const rust: TargetRule = { target: 'target', nextTo: ['Cargo.toml'] };
 const paths: string[] = [];
 new Npkill()
-  .startScan$('.', { targets: DEFAULT_PROFILES.node.targets })
+  .startScan$('.', { targets: ['node_modules', rust] })
   .subscribe((target: ScanFoundTarget) => paths.push(target.path));
 `;
 

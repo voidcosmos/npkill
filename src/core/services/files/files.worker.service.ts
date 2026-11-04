@@ -6,12 +6,13 @@ import { Subject } from 'rxjs';
 import { LoggerService } from '../logger.service.js';
 import { ScanStatus } from '../../interfaces/search-status.model.js';
 import { EVENTS, MAX_WORKERS } from '../../../constants/workers.constants.js';
+import { TargetDefinition } from '../../interfaces/target.interface.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 
 export interface WorkerScanOptions {
   rootPath: string;
-  targets: readonly string[];
+  targets: readonly TargetDefinition[];
   exclude?: string[];
 }
 

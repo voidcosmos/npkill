@@ -1,4 +1,5 @@
 import { ValidationResult } from './property-validators.js';
+import { validateTargets } from '../targets/index.js';
 
 export function validateProfile(
   profileName: string,
@@ -11,7 +12,20 @@ export function validateProfile(
     };
   }
 
+  if (profileName === 'all') {
+    return { isValid: false, error: 'profiles.all is reserved.' };
+  }
+
   const profileObj = profile as Record<string, unknown>;
+  const unknownProperty = Object.keys(profileObj).find(
+    (key) => !['description', 'targets'].includes(key),
+  );
+  if (unknownProperty !== undefined) {
+    return {
+      isValid: false,
+      error: `profiles.${profileName}.${unknownProperty}: unknown property.`,
+    };
+  }
 
   // Validate description
   if (!profileObj.description || typeof profileObj.description !== 'string') {
@@ -29,31 +43,7 @@ export function validateProfile(
     };
   }
 
-  // Validate targets is an array
-  if (!Array.isArray(profileObj.targets)) {
-    return {
-      isValid: false,
-      error: `Profile "${profileName}" targets must be an array of strings.`,
-    };
-  }
-
-  // Validate all targets are strings
-  if (!profileObj.targets.every((t) => typeof t === 'string')) {
-    return {
-      isValid: false,
-      error: `All targets in profile "${profileName}" must be strings.`,
-    };
-  }
-
-  // Validate targets array is not empty
-  if (profileObj.targets.length === 0) {
-    return {
-      isValid: false,
-      error: `Profile "${profileName}" targets array cannot be empty.`,
-    };
-  }
-
-  return { isValid: true };
+  return validateTargets(profileObj.targets, `profiles.${profileName}.targets`);
 }
 
 /**
