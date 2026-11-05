@@ -295,7 +295,7 @@ class FileWalker {
 
     const isTarget = this.isTarget(entry.name);
 
-    if (GLOBAL_IGNORE.has(entry.name) && !isTarget) {
+    if (this.isIgnored(entry.name) && !isTarget) {
       return;
     }
 
@@ -309,6 +309,12 @@ class FileWalker {
       path: subpath,
       isTarget,
     });
+  }
+
+  private isIgnored(name: string): boolean {
+    return (
+      this.searchConfig.useDefaultIgnore !== false && GLOBAL_IGNORE.has(name)
+    );
   }
 
   private isExcluded(path: string): boolean {

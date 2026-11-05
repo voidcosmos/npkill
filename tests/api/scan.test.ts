@@ -327,6 +327,23 @@ describe('startScan$', () => {
     ]);
   });
 
+  it('looks inside the skipped folders when useDefaultIgnore is false', async () => {
+    const root = createTree(['.git/node_modules/pkg', 'app/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, {
+        ...NODE_MODULES,
+        useDefaultIgnore: false,
+      }),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual([
+      '.git/node_modules',
+      'app/node_modules',
+    ]);
+  });
+
   itOnUnix('does not follow symlinks', async () => {
     const root = createTree(['app/node_modules/pkg']);
     const outside = createTree(['project/node_modules/pkg']);

@@ -16,6 +16,7 @@ export const DEFAULT_CONFIG: IConfig = {
   dryRun: false,
   exclude: [],
   excludeSensitiveResults: false,
+  disableDefaultIgnore: false,
   sizeUnit: 'auto',
   maxSimultaneousSearch: 6,
   showErrors: true,

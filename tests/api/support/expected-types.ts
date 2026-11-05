@@ -39,6 +39,9 @@ export type GetSizeResultIsOnlyBytes = Expect<
 export type ScanOptionsHasNoSortBy = Expect<
   Equal<Extract<keyof ScanOptions, 'sortBy'>, never>
 >;
+export type UseDefaultIgnoreIsAnOptionalSwitch = Expect<
+  Equal<ScanOptions['useDefaultIgnore'], boolean | undefined>
+>;
 export type LogsArriveOneByOne = Expect<
   Equal<ReturnType<Npkill['getLogs$']>, Observable<LogEntry>>
 >;

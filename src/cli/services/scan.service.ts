@@ -30,11 +30,12 @@ export class ScanService {
   constructor(private readonly npkill: Npkill) {}
 
   scan(config: IConfig): Observable<CliScanFoundTarget> {
-    const { targets, exclude } = config;
+    const { targets, exclude, disableDefaultIgnore } = config;
 
     const params: ScanOptions = {
       targets,
       exclude,
+      useDefaultIgnore: !disableDefaultIgnore,
       performRiskAnalysis: true,
     };
 
