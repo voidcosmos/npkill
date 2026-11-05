@@ -7,6 +7,7 @@ import { LoggerService } from '../logger.service.js';
 import { ScanStatus } from '../../interfaces/search-status.model.js';
 import { EVENTS, MAX_WORKERS } from '../../../constants/workers.constants.js';
 import { TargetDefinition } from '../../interfaces/target.interface.js';
+import { SharedScan } from './shared-scan.js';
 
 export type WorkerStatus = 'stopped' | 'scanning' | 'dead' | 'finished';
 
@@ -17,6 +18,12 @@ export interface WorkerScanOptions {
   useDefaultIgnore?: boolean;
 }
 
+export interface WorkerScanRequest {
+  scanId: number;
+  buffer: SharedArrayBuffer;
+  options: WorkerScanOptions;
+}
+
 export interface WorkerSizeResult {
   id: number;
   path: string;
@@ -25,24 +32,16 @@ export interface WorkerSizeResult {
 }
 
 export type WorkerMessage =
-  | {
-      type: EVENTS.scanResult;
-      value: {
-        results: Array<{ path: string; isTarget: boolean }>;
-        workerId: number;
-        scanId: number;
-      };
-    }
+  | { type: EVENTS.scanResult; value: { results: string[]; scanId: number } }
+  | { type: EVENTS.scanFinished; value: { scanId: number } }
   | {
       type: EVENTS.GetSizeResult;
       value: { results: WorkerSizeResult; workerId: number };
     }
-  | { type: EVENTS.explore; value: { path: string; scanId: number } }
+  | { type: EVENTS.explore; value: WorkerScanRequest }
   | { type: EVENTS.getSize; value: { path: string; id: number } }
-  | { type: EVENTS.exploreConfig; value: WorkerScanOptions }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined }
-  | { type: EVENTS.stop; value?: undefined }
   | { type: EVENTS.error; value: { error: Error } };
 
 export interface WorkerStats {
@@ -54,7 +53,8 @@ export interface WorkerStats {
 interface ActiveScan {
   id: number;
   stream$: Subject<string>;
-  pendingJobs: number;
+  shared: SharedScan;
+  finishedWorkers: number;
 }
 
 interface SizeRequest {
@@ -73,10 +73,10 @@ export class FileWorkerService {
   private lastSizeRequestId = 0;
   private activeScan: ActiveScan | null = null;
   private sizeRequests: SizeRequest[] = [];
-  private totalJobs = 0;
   private idleWorkersTimeout?: NodeJS.Timeout;
   private readonly SIZE_TIMEOUT_MS = 60000; // 1 minute timeout per folder
   private readonly IDLE_WORKERS_TIMEOUT_MS = 5000;
+  private readonly SHARED_PATHS_BYTES = 1024 * 1024;
 
   constructor(
     private readonly logger: LoggerService,
@@ -94,11 +94,14 @@ export class FileWorkerService {
     }
 
     this.ensureWorkers();
-    this.activeScan = { id: ++this.lastScanId, stream$, pendingJobs: 0 };
-    this.totalJobs = 0;
+    const shared = SharedScan.create(params.rootPath, this.SHARED_PATHS_BYTES);
+    const scan = { id: ++this.lastScanId, stream$, shared, finishedWorkers: 0 };
+    this.activeScan = scan;
     this.searchStatus.workerStatus = 'scanning';
-    this.broadcast({ type: EVENTS.exploreConfig, value: params });
-    this.dispatchExplore(params.rootPath);
+    this.broadcast({
+      type: EVENTS.explore,
+      value: { scanId: scan.id, buffer: shared.buffer, options: params },
+    });
     this.updateWorkersLifecycle();
   }
 
@@ -139,7 +142,7 @@ export class FileWorkerService {
     this.activeScan = null;
     this.searchStatus.workerStatus = status;
     if (status === 'stopped') {
-      this.broadcast({ type: EVENTS.stop });
+      scan.shared.stop();
     }
     this.updateWorkersLifecycle();
     scan.stream$.complete();
@@ -147,8 +150,11 @@ export class FileWorkerService {
 
   private onWorkerMessage(message: WorkerMessage): void {
     if (message.type === EVENTS.scanResult) {
-      this.workersPendingJobs[message.value.workerId]--;
       this.onScanResult(message.value.scanId, message.value.results);
+    }
+
+    if (message.type === EVENTS.scanFinished) {
+      this.onScanFinished(message.value.scanId);
     }
 
     if (message.type === EVENTS.GetSizeResult) {
@@ -163,29 +169,28 @@ export class FileWorkerService {
     this.updateStats();
   }
 
-  private onScanResult(
-    scanId: number,
-    results: Array<{ path: string; isTarget: boolean }>,
-  ): void {
+  private onScanResult(scanId: number, results: string[]): void {
     const scan = this.activeScan;
     if (scan === null || scan.id !== scanId) {
       return;
     }
 
-    scan.pendingJobs--;
-    for (const { path, isTarget } of results) {
+    for (const path of results) {
       if (this.activeScan !== scan) {
         return;
       }
+      scan.stream$.next(path);
+    }
+  }
 
-      if (isTarget) {
-        scan.stream$.next(path);
-      } else {
-        this.dispatchExplore(path);
-      }
+  private onScanFinished(scanId: number): void {
+    const scan = this.activeScan;
+    if (scan === null || scan.id !== scanId) {
+      return;
     }
 
-    if (this.activeScan === scan && scan.pendingJobs === 0) {
+    scan.finishedWorkers++;
+    if (scan.finishedWorkers === this.workers.length) {
       this.endActiveScan('finished');
     }
   }
@@ -226,17 +231,6 @@ export class FileWorkerService {
       clearTimeout(request.timeoutId);
       request.stream$.error(error);
     });
-  }
-
-  private dispatchExplore(path: string): void {
-    const scan = this.activeScan;
-    if (scan === null) {
-      return;
-    }
-
-    scan.pendingJobs++;
-    this.totalJobs++;
-    this.dispatch({ type: EVENTS.explore, value: { path, scanId: scan.id } });
   }
 
   /** Jobs are distributed following the round-robin algorithm. */
@@ -308,8 +302,11 @@ export class FileWorkerService {
   }
 
   private updateStats(): void {
-    this.searchStatus.pendingSearchTasks = this.activeScan?.pendingJobs ?? 0;
-    this.searchStatus.completedSearchTasks = this.totalJobs;
+    const scan = this.activeScan;
+    if (scan !== null) {
+      this.searchStatus.pendingSearchTasks = scan.shared.pending;
+      this.searchStatus.completedSearchTasks = scan.shared.explored;
+    }
     this.searchStatus.workersJobs = this.workersPendingJobs;
   }
 

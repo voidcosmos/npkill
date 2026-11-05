@@ -1,19 +1,18 @@
-import { constants, Dir, Dirent, Stats } from 'fs';
-import { access, lstat, opendir, readdir } from 'fs/promises';
+import { constants, Stats } from 'fs';
+import { access, lstat, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import {
   WorkerMessage,
-  WorkerScanOptions,
+  WorkerScanRequest,
   WorkerSizeResult,
 } from './files.worker.service.js';
-import { basename, join } from 'path';
+import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
-import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
-import { TargetMatcher } from '../targets/index.js';
+import { ScanWalker } from './scan-walker.js';
+import { SharedScan } from './shared-scan.js';
 
 enum ETaskOperation {
-  explore,
   getSize,
   getSizeChild,
 }
@@ -26,15 +25,9 @@ interface SizeCollector {
   onComplete: (total: number, error?: string) => void;
 }
 
-interface ScanEntry {
-  path: string;
-  isTarget: boolean;
-}
-
 interface Task {
   operation: ETaskOperation;
   path: string;
-  scanId?: number;
   sizeRequestId?: number;
   sizeCollector?: SizeCollector;
 }
@@ -68,16 +61,8 @@ interface Task {
 
   function initTunnelListeners(): void {
     tunnel.on('message', (message: WorkerMessage) => {
-      if (message?.type === EVENTS.exploreConfig) {
-        fileWalker.setSearchConfig(message.value);
-      }
-
       if (message?.type === EVENTS.explore) {
-        fileWalker.enqueueTask({
-          operation: ETaskOperation.explore,
-          path: message.value.path,
-          scanId: message.value.scanId,
-        });
+        void startScan(message.value);
       }
 
       if (message?.type === EVENTS.getSize) {
@@ -90,21 +75,28 @@ interface Task {
           true,
         );
       }
-
-      if (message?.type === EVENTS.stop) {
-        fileWalker.stop();
-      }
     });
   }
 
-  function initFileWalkerListeners(): void {
-    fileWalker.events.on('newResult', ({ results, scanId }) => {
+  async function startScan({
+    scanId,
+    buffer,
+    options,
+  }: WorkerScanRequest): Promise<void> {
+    const shared = new SharedScan(buffer);
+    const walker = new ScanWalker(shared, options, (results) =>
       tunnel.postMessage({
         type: EVENTS.scanResult,
-        value: { results, workerId: id, scanId },
-      });
-    });
+        value: { results, scanId },
+      }),
+    );
+    await walker.run();
+    if (shared.isFinished()) {
+      tunnel.postMessage({ type: EVENTS.scanFinished, value: { scanId } });
+    }
+  }
 
+  function initFileWalkerListeners(): void {
     fileWalker.events.on('sizeResult', (result: WorkerSizeResult) => {
       tunnel.postMessage({
         type: EVENTS.GetSizeResult,
@@ -119,27 +111,9 @@ interface Task {
 
 class FileWalker {
   readonly events = new EventEmitter();
-  private searchConfig: WorkerScanOptions = {
-    rootPath: '',
-    targets: [''],
-    exclude: [],
-  };
-
-  private matcher = new TargetMatcher([]);
   private taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
-
-  setSearchConfig(params: WorkerScanOptions): void {
-    this.searchConfig = params;
-    this.matcher = new TargetMatcher(params.targets);
-  }
-
-  stop(): void {
-    this.taskQueue = this.taskQueue.filter(
-      (task) => task.operation !== ETaskOperation.explore,
-    );
-  }
 
   enqueueTask(task: Task, priorize: boolean = false): void {
     if (priorize) {
@@ -149,45 +123,6 @@ class FileWalker {
     }
 
     this.processQueue();
-  }
-
-  private async run(path: string, scanId?: number): Promise<void> {
-    this.updateProcs(1);
-
-    try {
-      const dir = await opendir(path);
-      await this.analizeDir(path, dir, scanId);
-    } catch {
-      this.completeTask();
-      this.events.emit('newResult', { results: [], scanId });
-    }
-  }
-
-  private async analizeDir(
-    path: string,
-    dir: Dir,
-    scanId?: number,
-  ): Promise<void> {
-    const entries: ScanEntry[] = [];
-    const names: string[] = [];
-    let entry: Dirent | null = null;
-
-    while ((entry = await dir.read().catch(() => null)) != null) {
-      names.push(entry.name);
-      this.newDirEntry(path, entry, entries);
-    }
-
-    await dir.close();
-    const hasCandidates = entries.some((candidate) => candidate.isTarget);
-    const results = hasCandidates
-      ? await this.recognizeTargets(entries, new Set(names))
-      : entries;
-    this.completeTask();
-    this.events.emit('newResult', { results, scanId });
-
-    if (this.taskQueue.length === 0 && this.procs === 0) {
-      this.completeAll();
-    }
   }
 
   private async runGetSize(
@@ -298,61 +233,6 @@ class FileWalker {
     return typeof stats.blocks === 'number' ? stats.blocks * 512 : stats.size;
   }
 
-  private newDirEntry(path: string, entry: Dirent, results: ScanEntry[]): void {
-    if (entry.isSymbolicLink() || !entry.isDirectory()) {
-      return;
-    }
-
-    const isTarget = this.isTarget(entry.name);
-
-    if (this.isIgnored(entry.name) && !isTarget) {
-      return;
-    }
-
-    const subpath = join(path, entry.name);
-
-    if (this.isExcluded(subpath)) {
-      return;
-    }
-
-    results.push({
-      path: subpath,
-      isTarget,
-    });
-  }
-
-  private isIgnored(name: string): boolean {
-    return (
-      this.searchConfig.useDefaultIgnore !== false && GLOBAL_IGNORE.has(name)
-    );
-  }
-
-  private isExcluded(path: string): boolean {
-    if (this.searchConfig.exclude == null) {
-      return false;
-    }
-    return this.searchConfig.exclude.some((ex) => path.includes(ex));
-  }
-
-  private isTarget(path: string): boolean {
-    return this.matcher.isCandidate(path);
-  }
-
-  private async recognizeTargets(
-    entries: ScanEntry[],
-    siblings: ReadonlySet<string>,
-  ): Promise<ScanEntry[]> {
-    const results: ScanEntry[] = [];
-    for (const { path, isTarget } of entries) {
-      const isRecognized =
-        isTarget && (await this.matcher.matches(path, siblings));
-      if (isRecognized || !this.isIgnored(basename(path))) {
-        results.push({ path, isTarget: isRecognized });
-      }
-    }
-    return results;
-  }
-
   private completeTask(): void {
     this.updateProcs(-1);
     this.processQueue();
@@ -371,11 +251,6 @@ class FileWalker {
       }
 
       switch (task.operation) {
-        case ETaskOperation.explore:
-          this.run(task.path, task.scanId).catch(() => {
-            this.completeTask();
-          });
-          break;
         case ETaskOperation.getSize:
           this.runGetSize(task.path, task.sizeRequestId).catch(() => {
             // If runGetSize fails, we need to emit a size of 0
@@ -406,10 +281,6 @@ class FileWalker {
           break;
       }
     }
-  }
-
-  private completeAll(): void {
-    // Any future action.
   }
 
   /*  get stats(): WorkerStats {
