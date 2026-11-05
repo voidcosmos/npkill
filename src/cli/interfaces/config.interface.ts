@@ -1,3 +1,5 @@
+import { TargetDefinition } from '../../core/interfaces/target.interface.js';
+
 export interface IConfig {
   profiles: string[];
   folderRoot: string;
@@ -7,7 +9,7 @@ export interface IConfig {
   maxSimultaneousSearch: number;
   showErrors: boolean;
   sortBy: string;
-  targets: string[];
+  targets: TargetDefinition[];
   exclude: string[];
   excludeSensitiveResults: boolean;
   disableDefaultIgnore: boolean;

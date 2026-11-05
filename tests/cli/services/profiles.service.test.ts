@@ -237,7 +237,10 @@ describe('ProfilesService', () => {
       expect(result).toBeInstanceOf(Array);
       expect(result.length).toBeGreaterThan(0);
       expect(result).toContain('node_modules');
-      expect(result).toContain('.npm');
+      expect(result).toContainEqual({
+        target: '.next',
+        nextTo: ['package.json'],
+      });
     });
 
     it('should return targets for multiple profiles', () => {
@@ -249,7 +252,10 @@ describe('ProfilesService', () => {
       expect(result).toContain('node_modules');
 
       expect(result).toContain('__pycache__');
-      expect(result).toContain('.pytest_cache');
+      expect(result).toContainEqual({
+        target: '.pytest_cache',
+        contains: ['CACHEDIR.TAG'],
+      });
     });
 
     it('should remove duplicate targets from multiple profiles', () => {
@@ -259,12 +265,10 @@ describe('ProfilesService', () => {
       expect(result.length).toBe(uniqueTargets.length);
     });
 
-    it('should return empty array for invalid profile names', () => {
-      const result = profilesService.getTargetsFromProfiles([
-        'invalid-profile',
-      ]);
-
-      expect(result).toEqual([]);
+    it('should reject invalid profile names', () => {
+      expect(() =>
+        profilesService.getTargetsFromProfiles(['invalid-profile']),
+      ).toThrow('invalid-profile');
     });
 
     it('should return empty array for empty input', () => {
@@ -273,16 +277,14 @@ describe('ProfilesService', () => {
       expect(result).toEqual([]);
     });
 
-    it('should skip invalid profiles and return targets from valid ones', () => {
-      const result = profilesService.getTargetsFromProfiles([
-        'node',
-        'invalid-profile',
-        'python',
-      ]);
-
-      expect(result.length).toBeGreaterThan(0);
-      expect(result).toContain('node_modules');
-      expect(result).toContain('__pycache__');
+    it('should reject mixed selections instead of returning partial targets', () => {
+      expect(() =>
+        profilesService.getTargetsFromProfiles([
+          'node',
+          'invalid-profile',
+          'python',
+        ]),
+      ).toThrow('invalid-profile');
     });
 
     it('should handle the "all" profile correctly', () => {
@@ -331,7 +333,9 @@ describe('ProfilesService', () => {
         'node',
       ]);
 
-      expect(result1.sort()).toEqual(result2.sort());
+      expect(result1.map((target) => JSON.stringify(target)).sort()).toEqual(
+        result2.map((target) => JSON.stringify(target)).sort(),
+      );
     });
 
     it('should handle all available profiles', () => {

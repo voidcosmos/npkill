@@ -6,10 +6,11 @@ import {
   WorkerScanOptions,
   WorkerSizeResult,
 } from './files.worker.service.js';
-import { join } from 'path';
+import { basename, join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
 import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
 import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
+import { TargetMatcher } from '../targets/index.js';
 
 enum ETaskOperation {
   explore,
@@ -23,6 +24,11 @@ interface SizeCollector {
   pending: number;
   error?: string;
   onComplete: (total: number, error?: string) => void;
+}
+
+interface ScanEntry {
+  path: string;
+  isTarget: boolean;
 }
 
 interface Task {
@@ -119,12 +125,14 @@ class FileWalker {
     exclude: [],
   };
 
+  private matcher = new TargetMatcher([]);
   private taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
 
   setSearchConfig(params: WorkerScanOptions): void {
     this.searchConfig = params;
+    this.matcher = new TargetMatcher(params.targets);
   }
 
   stop(): void {
@@ -160,14 +168,20 @@ class FileWalker {
     dir: Dir,
     scanId?: number,
   ): Promise<void> {
-    const results = [];
+    const entries: ScanEntry[] = [];
+    const names: string[] = [];
     let entry: Dirent | null = null;
 
     while ((entry = await dir.read().catch(() => null)) != null) {
-      this.newDirEntry(path, entry, results);
+      names.push(entry.name);
+      this.newDirEntry(path, entry, entries);
     }
 
     await dir.close();
+    const hasCandidates = entries.some((candidate) => candidate.isTarget);
+    const results = hasCandidates
+      ? await this.recognizeTargets(entries, new Set(names))
+      : entries;
     this.completeTask();
     this.events.emit('newResult', { results, scanId });
 
@@ -284,11 +298,7 @@ class FileWalker {
     return typeof stats.blocks === 'number' ? stats.blocks * 512 : stats.size;
   }
 
-  private newDirEntry(
-    path: string,
-    entry: Dirent,
-    results: { path: string; isTarget: boolean }[],
-  ): void {
+  private newDirEntry(path: string, entry: Dirent, results: ScanEntry[]): void {
     if (entry.isSymbolicLink() || !entry.isDirectory()) {
       return;
     }
@@ -325,7 +335,22 @@ class FileWalker {
   }
 
   private isTarget(path: string): boolean {
-    return this.searchConfig.targets.includes(path);
+    return this.matcher.isCandidate(path);
+  }
+
+  private async recognizeTargets(
+    entries: ScanEntry[],
+    siblings: ReadonlySet<string>,
+  ): Promise<ScanEntry[]> {
+    const results: ScanEntry[] = [];
+    for (const { path, isTarget } of entries) {
+      const isRecognized =
+        isTarget && (await this.matcher.matches(path, siblings));
+      if (isRecognized || !this.isIgnored(basename(path))) {
+        results.push({ path, isTarget: isRecognized });
+      }
+    }
+    return results;
   }
 
   private completeTask(): void {

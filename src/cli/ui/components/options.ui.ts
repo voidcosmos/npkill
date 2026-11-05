@@ -7,6 +7,10 @@ import path from 'path';
 import { existsSync } from 'fs';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
+import {
+  targetName,
+  targetNames,
+} from '../../../core/services/targets/index.js';
 
 type OptionType = 'checkbox' | 'dropdown' | 'input';
 
@@ -101,7 +105,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         type: 'input',
         key: 'targets',
         value: Array.isArray(this.config.targets)
-          ? this.config.targets.join(',')
+          ? targetNames(this.config.targets).join(',')
           : '',
       },
     ];
@@ -175,8 +179,19 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean);
-        this.config[opt.key] = arrValue;
-        this.emitConfigChange(opt.key, arrValue);
+        if (opt.key === 'targets') {
+          const targets = arrValue.flatMap((name) => {
+            const existing = this.config.targets.filter(
+              (target) => targetName(target) === name,
+            );
+            return existing.length ? existing : [name];
+          });
+          this.config.targets = targets;
+          this.emitConfigChange('targets', targets);
+        } else {
+          this.config.exclude = arrValue;
+          this.emitConfigChange('exclude', arrValue);
+        }
         opt.value = this.editBuffer;
       } else {
         const key = opt.key as keyof Pick<

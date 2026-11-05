@@ -24,8 +24,8 @@ import {
 
 import { LogEntry } from './interfaces/logger-service.interface.js';
 import { getFileContent } from '../utils/get-file-content.js';
+import { validateTargets } from './services/targets/index.js';
 
-const PATTERN_CHARACTERS = /[*?[\]{}/\\]/;
 const DELETE_OPTIONS: Record<keyof DeleteOptions, true> = { dryRun: true };
 
 /**
@@ -247,29 +247,10 @@ function resolveRequiredPath(
 }
 
 function assertValidScanOptions(options: ScanOptions): void {
-  const targets: unknown = options?.targets;
-  if (!isListOfNames(targets)) {
-    throw new Error(
-      'ScanOptions.targets must be a non-empty array of directory names.',
-    );
+  const result = validateTargets(options?.targets, 'ScanOptions.targets');
+  if (!result.isValid) {
+    throw new Error(result.error);
   }
-
-  const targetWithPattern = targets.find((target) =>
-    PATTERN_CHARACTERS.test(target),
-  );
-  if (targetWithPattern !== undefined) {
-    throw new Error(
-      `The target "${targetWithPattern}" uses characters reserved for patterns: * ? [ ] { } / \\`,
-    );
-  }
-}
-
-function isListOfNames(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every((item) => typeof item === 'string' && item !== '')
-  );
 }
 
 function assertDeletablePath(path: string, absolutePath: string): void {

@@ -1,4 +1,22 @@
 /**
+ * A directory to find, by name alone or with a rule.
+ */
+export type TargetDefinition = string | TargetRule;
+
+/**
+ * Finds a directory only when the listed entries exist around it. Rules with
+ * the same target are alternatives.
+ */
+export interface TargetRule {
+  /** Name of the target. */
+  readonly target: string;
+  /** Names that must all exist next to the directory. */
+  readonly nextTo?: readonly string[];
+  /** Names that must all exist inside the directory. */
+  readonly contains?: readonly string[];
+}
+
+/**
  * Analysis of the risk of deleting a target.
  */
 export interface RiskAnalysis {
@@ -22,8 +40,8 @@ export interface ScanFoundTarget {
  * Configuration options for a scan.
  */
 export interface ScanOptions {
-  /** Names of the directories to find. Must contain at least one name. */
-  targets: readonly string[];
+  /** Directory names or rules. Must contain at least one target. */
+  targets: readonly TargetDefinition[];
   /** Array of directory paths to exclude from the scan. */
   exclude?: string[];
   /**

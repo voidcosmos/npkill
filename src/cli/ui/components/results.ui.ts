@@ -18,6 +18,7 @@ import pc from 'picocolors';
 import { resolve } from 'node:path';
 import { CliScanFoundTarget } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
+import { targetNames } from '../../../core/services/targets/index.js';
 import {
   ResultColumnId,
   ResultColumnLayout,
@@ -409,7 +410,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private noResults(): void {
     const targetColored: string = pc.yellowBright(
-      this.config.targets.join(', '),
+      targetNames(this.config.targets).join(', '),
     );
     const message = `No ${targetColored} found!`;
     this.printAt(message, {

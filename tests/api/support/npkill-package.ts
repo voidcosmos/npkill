@@ -6,11 +6,9 @@ export const PACKAGE_DIR = fileURLToPath(
   new URL('../../../.test-build/npkill-api/', import.meta.url),
 );
 
-const { Npkill, DEFAULT_PROFILES } = (await import(
+const { Npkill } = (await import(
   join(PACKAGE_DIR, 'lib', 'index.js')
 )) as typeof NpkillApi;
-
-export { DEFAULT_PROFILES };
 
 type NpkillInstance = InstanceType<typeof Npkill>;
 

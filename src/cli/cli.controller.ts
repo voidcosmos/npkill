@@ -47,6 +47,7 @@ import { Npkill, ConfigService, ProfilesService } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
+import { targetNames } from '../core/services/targets/index.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { isOlderThan } from '../utils/is-older-than.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
@@ -403,7 +404,9 @@ export class CliController {
             const isDefault = defaultProfiles.includes(name);
             const entry =
               ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} ${pc.cyan('(user-defined)')} - ${profile.description}\n` +
-              pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+              pc.gray(
+                ` ${targetNames(profile.targets).join(pc.italic(','))}\n\n`,
+              );
             return acc + entry;
           },
           '',
@@ -415,7 +418,9 @@ export class CliController {
           const isDefault = defaultProfiles.includes(name);
           const entry =
             ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} - ${profile.description}\n` +
-            pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+            pc.gray(
+              ` ${targetNames(profile.targets).join(pc.italic(','))}\n\n`,
+            );
           return acc + entry;
         },
         '',
@@ -430,7 +435,7 @@ export class CliController {
         // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
         console.log('--delete-all only can be used with --targets.');
         console.log(
-          'You can copy all targets from a profile with `npkill --profiles`.',
+          'To use profiles, run npkill without --delete-all and pick the results.',
         );
         this.exitWithError();
       }
@@ -520,7 +525,7 @@ export class CliController {
         const targets =
           this.profilesService.getTargetsFromProfiles(selectedProfiles);
         this.logger.info(
-          `Using profiles ${selectedProfiles.join(', ')} | With targets ${targets.join(', ')}`,
+          `Using profiles ${selectedProfiles.join(', ')} | With targets ${targetNames(targets).join(', ')}`,
         );
         this.config.profiles = selectedProfiles;
         this.config.targets = targets;
