@@ -1,156 +1,62 @@
 # Profiles
 
-This document defines built-in profiles for npkill. A profile is a named preset of "safe-to-delete" directories for a given ecosystem.
+A profile groups the folders npkill looks for in one ecosystem. Some folders are found by name alone. Others only count when the files that identify their project are around them. For example, `target` is only shown next to a `Cargo.toml`, `pom.xml` or `build.sbt`.
 
-While these directories are **generally safe to delete**, it all depends on their context. Therefore, it is important to verify the result shown before deleting it. However, we have tried to maintain a conservative list.
+Review the results before deleting them, and close any tool that may still be writing to them.
 
-- Profiles are opt-in via `--profiles` (comma-separated). Example: `--profiles node,python`.
-- Only directory base names are matched (the last path segment) (more advanced heuristics will be implemented in the future).
-- All targets below are rebuildable caches, dependencies, or compiled outputs. So doesnt should have any problem deleting it. But before delete, peek if is secure to remove for your case.
+```bash
+npkill --profiles node,python
+npkill --profiles
+```
 
-Default behavior
+The second command lists every profile. `node` is the default. `all` combines every built-in profile, including your overrides of them.
 
-- By default (no `--profiles`), npkill use the `node` profile.
+## Built-in targets
 
-Special profile: all
+A sibling is an entry next to the folder. Contents are entries inside it.
 
-- `all` includes every target listed in all profiles below. Use with care if you want a full clean sweep.
+| Profile   | Targets                                          | Found when                                                                             |
+| --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `node`    | `node_modules`                                   | Always                                                                                 |
+| `node`    | `.next`, `.nuxt`, `.svelte-kit`, `.parcel-cache` | Next to `package.json`                                                                 |
+| `node`    | `.vite`                                          | Contains `deps`                                                                        |
+| `node`    | `.turbo`                                         | Next to `turbo.json` or `turbo.jsonc`                                                  |
+| `node`    | `storybook-static`                               | Next to `package.json` and `.storybook`, contains `index.html` and `iframe.html`       |
+| `node`    | `.docusaurus`                                    | Next to `package.json` and `docusaurus.config.js`, `.ts` or `.mjs`                     |
+| `python`  | `__pycache__`                                    | Always                                                                                 |
+| `python`  | `.pytest_cache`, `.mypy_cache`, `.ruff_cache`    | Contains `CACHEDIR.TAG`                                                                |
+| `python`  | `.tox`                                           | Next to `tox.ini` or `pyproject.toml`                                                  |
+| `python`  | `.nox`                                           | Next to `noxfile.py`                                                                   |
+| `python`  | `.venv`, `venv`                                  | Contains `pyvenv.cfg`                                                                  |
+| `java`    | `target`                                         | Next to `pom.xml`                                                                      |
+| `java`    | `.gradle`                                        | Next to `settings.gradle`, `settings.gradle.kts`, `build.gradle` or `build.gradle.kts` |
+| `android` | `.cxx`                                           | Next to `build.gradle` or `build.gradle.kts`                                           |
+| `dotnet`  | `obj`                                            | Contains `project.assets.json`                                                         |
+| `rust`    | `target`                                         | Next to `Cargo.toml`                                                                   |
+| `elixir`  | `_build`, `deps`                                 | Next to `mix.exs`                                                                      |
+| `haskell` | `dist-newstyle`                                  | Next to `cabal.project`                                                                |
+| `haskell` | `.stack-work`                                    | Next to `stack.yaml`                                                                   |
+| `scala`   | `target`                                         | Next to `build.sbt`                                                                    |
+| `cpp`     | `CMakeFiles`                                     | Next to `CMakeCache.txt`                                                               |
+| `unity`   | `Library`                                        | Next to `Assets` and `ProjectSettings`. Unity reimports every asset afterwards         |
+| `godot`   | `.import`, `.godot`                              | Next to `project.godot`. May include local editor state                                |
+| `clojure` | `.cpcache`                                       | Next to `deps.edn`                                                                     |
+| `elm`     | `elm-stuff`                                      | Next to `elm.json`                                                                     |
 
-## node (default)
+## Custom rules
 
-- `node_modules`: Node.js project dependencies. Deleting forces a full reinstallation. Regenerated by running `npm install`, `yarn`, or `pnpm install`.
-- `.npm`: npm's package cache. Deleting may slow down the next install. Regenerated automatically by npm on subsequent installs.
-- `.pnpm-store`: pnpm's global content-addressable store. Deleting removes all shared packages. Regenerated by pnpm on subsequent installs.
-- `.yarn/cache`: Yarn v2+ local project cache. Deleting requires re-downloading packages. Regenerated by `yarn install`.
-- `.next`: Next.js build and cache directory. Deleting clears build artifacts and cache. Regenerated on the next `next dev` or `next build`.
-- `.nuxt`: Nuxt.js build output directory. Deleting removes the generated application. Regenerated by running `nuxt build`.
-- `.angular`: Angular CLI cache and metadata. Deleting is safe and may resolve caching issues. Regenerated by the Angular CLI during the next build or serve command.
-- `.svelte-kit`: SvelteKit build and cache directory. Deleting removes the generated application and cache. Regenerated on the next build or dev server run.
-- `.vite`: Vite's pre-bundled dependency cache. Deleting forces Vite to re-bundle dependencies on next startup. Regenerated automatically by Vite.
-- `.nx`: Nx workspace computation cache. Deleting results in a slower, non-cached build next time. Regenerated by Nx on subsequent task executions.
-- `.turbo`: Turborepo's local cache. Deleting forces a full execution of all tasks on the next run. Regenerated by Turborepo on subsequent `turbo run` commands.
-- `.parcel-cache`: Parcel bundler's cache. Deleting may slow down the next build. Regenerated automatically by Parcel.
-- `.rpt2_cache`: Cache for `rollup-plugin-typescript2`. Deleting forces a full TypeScript re-compilation. Regenerated on the next Rollup build.
-- `.eslintcache`: ESLint's cache for changed files. Deleting forces a full linting process. Regenerated by ESLint when run with the `--cache` flag.
-- `.esbuild`: esbuild's build cache. Deleting may slow down builds that use esbuild. Regenerated automatically by esbuild.
-- `.cache`: Generic cache directory for various tools. Deleting is generally safe but may slow down the tools that use it. Regenerated automatically by the respective tools.
-- `.rollup.cache`: Rollup's build cache. Deleting may slow down the next build. Regenerated on the next Rollup build if caching is enabled.
-- `storybook-static`: Static build output for a Storybook. Deleting removes the deployed Storybook. Regenerated by running `build-storybook`.
-- `coverage`: Code coverage reports. Deleting removes historical coverage data. Regenerated by running tests with coverage enabled.
-- `.nyc_output`: Raw coverage output from `nyc`. Deleting removes raw coverage data. Regenerated on the next run of `nyc`.
-- `.jest`: Jest's test cache and artifacts. Deleting may slow down the next test run. Regenerated automatically by Jest.
-- `gatsby_cache`: Gatsby's internal cache. Deleting may slow down the next build. Regenerated automatically by Gatsby.
-- `.docusaurus`: Docusaurus build cache and data. Deleting removes generated site files. Regenerated by Docusaurus on the next build.
-- `.swc`: SWC (Speedy Web Compiler) cache. Deleting may slow down the next compilation. Regenerated automatically by SWC.
-- `.stylelintcache`: Stylelint's cache for linted files. Deleting forces a full re-lint. Regenerated by Stylelint when run with the `--cache` flag.
-- `deno_cache`: Deno's cache for modules. Deleting is safe. Regenerated when Deno modules are next fetched.
+Profiles in [`.npkillrc`](./npkillrc.md#profiles) take folder names and rules in the same list:
 
-## python
+```json
+"targets": [
+  "zig-cache",
+  { "target": "zig-out", "nextTo": ["build.zig"] },
+  { "target": "zig-out", "nextTo": ["build.zig.zon"] }
+]
+```
 
-- `__pycache__`: Python bytecode files. Deleting is safe as they are regenerated by Python automatically.
-- `.pytest_cache`: pytest's cache for test results and metadata. Deleting may slow down the next test run. Regenerated automatically by pytest.
-- `.mypy_cache`: mypy's cache for type-checking results. Deleting forces a full re-check. Regenerated automatically by mypy.
-- `.ruff_cache`: Ruff linter's cache. Deleting forces a full re-lint. Regenerated automatically by Ruff.
-- `.tox`: tox's virtual environments and test artifacts. Deleting removes isolated testing environments. Regenerated by running `tox`.
-- `.nox`: nox's virtual environments and session data. Deleting removes isolated session environments. Regenerated by running `nox`.
-- `.pytype`: pytype's cache for static analysis. Deleting forces a full re-analysis. Regenerated automatically by pytype.
-- `.pyre`: Pyre type checker's cache. Deleting forces a full re-check. Regenerated automatically by Pyre.
-- `htmlcov`: HTML code coverage reports. Deleting removes historical coverage data. Regenerated by running coverage tools (e.g., `coverage html`).
-- `.venv`: Python virtual environment. Deleting removes all installed packages and the isolated environment. Regenerated by creating a new virtual environment (e.g., `python -m venv .venv`).
-- `venv`: Same as `.venv`. Deleting removes the virtual environment. Regenerated similarly.
-
-## data-science
-
-- `.ipynb_checkpoints`: Jupyter Notebook's auto-save checkpoints. Deleting removes recovery points for notebooks. Regenerated automatically by Jupyter.
-- `__pycache__`: Python bytecode files. Deleting is safe. Regenerated automatically by Python.
-- `.venv` / `venv`: Python virtual environment. Deleting removes the isolated environment and its packages. Regenerated by creating a new virtual environment.
-- `outputs/`: A common directory for auto-generated files, such as models or plots. Verify contents before deleting. Regeneration depends on the specific script or tool that created it.
-- `.dvc`: Data Version Control (DVC) cache and metadata. Deleting can lead to data loss if not properly managed. Regenerated by DVC commands like `dvc repro`.
-- `.mlruns`: MLflow experiment tracking logs. Deleting removes experiment history. Regenerated when you run new MLflow experiments.
-
-## java
-
-- `target`: Maven's build output directory. Deleting removes all compiled code, packages, and artifacts. Regenerated by running `mvn package` or other Maven build commands.
-- `.gradle`: Gradle's cache and wrapper files within a project. Deleting may slow down the next build. Regenerated automatically by Gradle.
-- `out`: Default output directory for some IDEs like IntelliJ IDEA. Deleting removes compiled classes. Regenerated on the next build.
-  - Warning: `out` is a generic folder name in various ecosystems.
-
-## android
-
-- `.cxx`: Android NDK build cache. Deleting may slow down native builds. Regenerated by the Android Gradle plugin during the next build.
-- `externalNativeBuild`: External NDK build artifacts. Deleting removes intermediate native build files. Regenerated on the next native build.
-
-## swift
-
-- `DerivedData`: Xcode's build artifacts, indexes, and cache. Deleting is a common troubleshooting step and clears the build cache. Regenerated by Xcode on the next build.
-- `.swiftpm`: Swift Package Manager's cache and build data. Deleting removes local package caches and build artifacts. Regenerated on the next `swift build` or resolve.
-
-## dotnet
-
-- `obj`: Intermediate object files from the build process. Deleting forces a full recompile. Regenerated by the .NET compiler (e.g., `dotnet build`).
-- `TestResults`: Test output and reports. Deleting removes historical test data. Regenerated by running tests (e.g., `dotnet test`).
-- `.vs`: Visual Studio's local workspace data, including user-specific settings and cache. Deleting is generally safe. Regenerated when you open the solution in Visual Studio.
-
-## rust
-
-- `target`: Cargo's build output directory. Deleting removes all compiled artifacts. Regenerated by running `cargo build`.
-
-## ruby
-
-- `.bundle`: Bundler's settings and cache for the project. Deleting is safe. Regenerated by `bundle install`.
-
-## elixir
-
-- `_build`: Mix's build output directory. Deleting removes compiled artifacts. Regenerated by `mix compile`.
-- `deps`: Project dependencies. Deleting requires re-fetching all dependencies. Regenerated by `mix deps.get`.
-  - Warning: `deps/` is a generic name that may appear in non-Elixir projects too.
-- `cover`: Test coverage reports. Deleting removes historical coverage data. Regenerated by running tests with coverage enabled.
-
-## haskell
-
-- `dist-newstyle`: Cabal's build output and cache. Deleting removes compiled files. Regenerated by `cabal build`.
-- `.stack-work`: Stack's build cache and artifacts. Deleting removes compiled files and intermediate data. Regenerated by `stack build`.
-
-## scala
-
-- `.bloop`: Bloop build server's metadata and configuration. Deleting may require re-importing the project in your IDE. Regenerated by Bloop.
-- `.metals`: Metals IDE's cache and build data. Deleting forces a re-index of the project. Regenerated when you open the project in a Metals-enabled editor.
-- `target`: sbt's build output directory. Deleting removes compiled code and artifacts. Regenerated by sbt build commands.
-
-## cpp
-
-- `CMakeFiles`: CMake's intermediate build files. Deleting forces CMake to regenerate the build environment. Regenerated by running `cmake`.
-- `cmake-build-debug`: CLion or CMake's debug build output. Deleting removes debug binaries. Regenerated on the next debug build.
-- `cmake-build-release`: CLion or CMake's release build output. Deleting removes release binaries. Regenerated on the next release build.
-
-## unity
-
-- `Library`: Unity's cache of imported assets and metadata. Deleting is safe but forces a full re-import of all project assets, which can be time-consuming. Regenerated when Unity opens the project.
-  - Warning: On macOS, this can match the critical `~/Library` system folder.
-- `Temp`: Temporary build files. Deleting is safe when the Unity editor is closed. Regenerated during the next build process.
-- `Obj`: Intermediate object files from the build process. Deleting forces a full recompile. Regenerated on the next build.
-  - Warning: Generic name; may appear in unrelated toolchains.
-
-## unreal
-
-- `Intermediate`: Intermediate build files. Deleting is safe and forces a regeneration of these files. Regenerated by the Unreal Engine build system.
-  - Warning: Generic name; ensure it’s an Unreal project context.
-- `DerivedDataCache`: Cache for derived asset data. Deleting forces assets to be re-cooked. Regenerated on demand by the engine.
-- `Binaries`: Compiled binaries and libraries. Deleting removes executable files. Regenerated by the build system.
-
-## godot
-
-- `.import`: Godot's cache of imported assets. Deleting forces a re-import of all assets. Regenerated when the Godot editor is opened.
-- `.godot`: Godot's project cache and metadata. Deleting is generally safe. Regenerated by the Godot editor.
-
-## infra
-
-- `.serverless`: Serverless Framework's deployment artifacts. Deleting removes the packaged service. Regenerated on the next `serverless package` or `deploy`.
-- `.vercel`: Vercel's local project data and deployment cache. Deleting is safe for local development. Regenerated by the Vercel CLI.
-- `.netlify`: Netlify's local cache and configuration data. Deleting is safe for local development. Regenerated by the Netlify CLI.
-- `.terraform`: Terraform's working directory for providers and modules. Deleting requires re-initialization. Regenerated by running `terraform init`.
-- `.sass-cache`: Legacy cache for the Sass compiler. Deleting is safe. Regenerated by the Sass compiler if still in use.
-- `.cpcache`: Clojure CLI's compilation cache. Deleting forces a re-compilation of Clojure sources. Regenerated on the next execution.
-- `elm_stuff`: Elm's dependency cache and build artifacts. Deleting requires re-downloading dependencies. Regenerated by `elm make` or `elm reactor`.
-- `nimcache`: Nim compiler's cache. Deleting may slow down the next compilation. Regenerated automatically by the Nim compiler.
-- `deno_cache`: Deno's cache for modules. Deleting is safe. Regenerated when Deno modules are next fetched.
+- A name finds every folder called that way. `--targets` works the same.
+- A rule needs `nextTo`, `contains` or both. Every entry listed must exist.
+- Rules with the same target are alternatives. Any of them is enough.
+- Entries are plain names compared exactly, case included. Paths and the characters `* ? [ ] { } / \` are rejected.
+- Unknown properties are rejected.

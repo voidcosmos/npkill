@@ -1,152 +1,192 @@
-# NPKill API
+# npkill API
 
-This document does not include all project documentation at this stage. It brings together the basic concepts.
-For more details see the project interfaces.
+npkill can be used from Node.js to build your own tools and automations. It is the same engine the CLI uses.
 
-- [NPKill API](#npkill-api)
-  - [Interface: `Npkill`](#interface-npkill)
-    - [`startScan$(rootPath, options?)`](#startscanrootpath-options)
-    - [`stopScan()`](#stopscan)
-    - [`getSize$(path, options?)`](#getsizepath-options)
-    - [`getNewestFile$(path)`](#getnewestfilepath)
-    - [`delete$(path, options?)`](#deletepath-options)
-    - [`getLogs$()`](#getlogs)
-    - [`isValidRootFolder(path)`](#isvalidrootfolderpath)
-    - [`getVersion()`](#getversion)
-  - [Interfaces & Types](#interfaces-types)
-    - [`ScanOptions`](#scanoptions)
-    - [`ScanFoundTarget`](#scanfoundtarget)
-    - [`RiskAnalysis`](#riskanalysis)
-    - [`GetSizeOptions`](#getsizeoptions)
-    - [`GetSizeResult`](#getsizeresult)
-    - [`GetNewestFileResult`](#getnewestfileresult)
-    - [`DeleteOptions`](#deleteoptions)
-  - [Usage Example](#usage-example)
+```bash
+npm install npkill rxjs
+```
 
----
+npkill is an ES module and needs Node.js 20.19 or later. Every operation returns an [RxJS](https://rxjs.dev) `Observable`, so `rxjs` 7 is a peer dependency.
 
-## Interface: `Npkill`
+- [Example](#example)
+- [How it behaves](#how-it-behaves)
+- [Methods](#methods)
+  - [`startScan$(rootPath, options)`](#startscanrootpath-options)
+  - [`stopScan()`](#stopscan)
+  - [`getSize$(path)`](#getsizepath)
+  - [`getNewestFile$(path)`](#getnewestfilepath)
+  - [`delete$(path, options?)`](#deletepath-options)
+  - [`getLogs$()`](#getlogs)
+  - [`isValidRootFolder(path)`](#isvalidrootfolderpath)
+  - [`getVersion()`](#getversion)
+- [Types](#types)
+- [Stability](#stability)
 
-The core of the system is the `NpkillInterface`. It offers methods to:
+## Example
 
-- Scan folders recursively.
-- Get metadata about folders (size, last modified).
-- Perform safe deletions.
-- Stream logs and validate folders.
+Find the `node_modules` and `.next` folders of a directory and add up their size:
 
-### `startScan$(rootPath, options?)`
+```ts
+import { Npkill } from 'npkill';
+import { map, mergeMap, toArray } from 'rxjs';
 
-Starts a recursive scan from a given root folder.
+const npkill = new Npkill();
 
-- **Parameters**:
-  - `rootPath`: `string` — Folder to start scanning from.
-  - `options`: [`ScanOptions`](#scanoptions) — Optional scan configuration.
+npkill
+  .startScan$('/home/user/projects', { targets: ['node_modules', '.next'] })
+  .pipe(
+    mergeMap((target) =>
+      npkill
+        .getSize$(target.path)
+        .pipe(map(({ size }) => ({ path: target.path, size }))),
+    ),
+    toArray(),
+  )
+  .subscribe((results) => {
+    const totalBytes = results.reduce((total, { size }) => total + size, 0);
+    console.table(results);
+    console.log(`${(totalBytes / 1024 ** 2).toFixed(1)} MB can be freed`);
+  });
+```
 
-- **Returns**: `Observable<ScanFoundTarget>`
-- **Description**: Emits each matching folder as it's found.
+Delete the `node_modules` of the projects that nobody has touched in 90 days. Remove `dryRun` when you trust the output:
 
----
+```ts
+import { Npkill } from 'npkill';
+import { dirname } from 'node:path';
+import { filter, mergeMap } from 'rxjs';
+
+const npkill = new Npkill();
+const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+
+npkill
+  .startScan$('/home/user/projects', { targets: ['node_modules'] })
+  .pipe(
+    filter(({ riskAnalysis }) => !riskAnalysis?.isSensitive),
+    mergeMap((target) =>
+      npkill.getNewestFile$(dirname(target.path)).pipe(
+        filter((newest) => newest !== null && newest.timestamp < ninetyDaysAgo),
+        mergeMap(() => npkill.delete$(target.path, { dryRun: true })),
+      ),
+    ),
+  )
+  .subscribe((result) => console.log(result));
+```
+
+## How it behaves
+
+- Nothing happens until you subscribe, and each subscription runs the operation again.
+- Relative paths are resolved against the current working directory. Every path that npkill returns is absolute.
+- The methods that return an observable report errors through its error channel, never as exceptions. Error messages are meant for people and can change in any version.
+- Each instance starts its own worker threads the first time it needs them and releases them when it has been idle for a while, so your process can exit on its own. Reuse one instance instead of creating one per operation.
+- npkill reads its own `package.json` and starts its workers from its own files, so bundling it into a single file is not supported.
+
+## Methods
+
+### `startScan$(rootPath, options)`
+
+Searches `rootPath` recursively and emits a [`ScanFoundTarget`](#scanfoundtarget) for each folder that matches one of `options.targets`, as soon as it is found. It completes when the whole tree has been explored.
+
+- A target is matched by its exact name, case included, and it is always a directory. A [rule](#targetdefinition) also needs the entries it lists.
+- The scan does not look inside the targets it finds, so `node_modules/pkg/node_modules` is never reported.
+- Symlinks below the root are not followed. A symlink given as the root is.
+- Some folders that rarely hold projects are never entered unless they match a target or `options.useDefaultIgnore` is `false`. Today they are `.git`, `.svn`, `.hg`, `.fossil`, `.Trash`, `.Trashes`, `$RECYCLE.BIN`, `System Volume Information`, `.Spotlight-V100`, `.fseventsd`, `.nvm`, `.rvm`, `.rustup`, `.pyenv`, `.rbenv`, `.asdf`, `.deno`, `.volta`, `.bun`, `.vscode`, `.vscode-server`, `.idea`, `.vs`, `.settings`, `node_modules`, `__pycache__`, `.cache`, `.venv` and `venv`.
+- Folders that cannot be read are skipped and the scan goes on.
+
+Only one scan can run at a time on each instance. Subscribing to a second one while the first is running emits an error. Use another instance to scan in parallel. Unsubscribing stops the scan.
+
+It errors when:
+
+- `options.targets` is not a non-empty array of names and rules.
+- A rule has an unknown property, an empty list, or neither `nextTo` nor `contains`.
+- A name uses `*`, `?`, `[`, `]`, `{`, `}`, `/` or `\`. These characters are reserved for patterns.
+- The root is not a directory that can be read and entered. The message includes the reason that [`isValidRootFolder`](#isvalidrootfolderpath) gives.
 
 ### `stopScan()`
 
-Stops any ongoing scan and releases resources.
+Stops the scan in progress, if there is one, and completes its observable. Size calculations in progress are not affected.
 
----
+### `getSize$(path)`
 
-### `getSize$(path, options?)`
+Emits a [`GetSizeResult`](#getsizeresult) with the space that a directory and everything inside it, or a single file, uses on disk. Then it completes.
 
-Returns the total size of a directory.
+The size is an estimate. Each file counts the blocks it has allocated, each subfolder counts 4096 bytes, and a file with several hard links is counted once for each link. A symlink given as the path is measured itself, the same way `delete$` deletes the link and not what it points to. Symlinks inside a directory are not counted.
 
-- **Parameters**:
-  - `path`: `string` — Path to folder.
-  - `options`: [`GetSizeOptions`](#getsizeoptions)
-
-- **Returns**: `Observable<GetSizeResult>`
-
----
+It errors when the path does not exist or cannot be read, and when the calculation takes too long.
 
 ### `getNewestFile$(path)`
 
-Gets the most recently modified file inside a directory (recursively).
+Emits a [`GetNewestFileResult`](#getnewestfileresult) with the most recently modified file inside a directory and all its subdirectories, or `null` if the directory has no files. Then it completes.
 
-- **Parameters**:
-  - `path`: `string`
+Folders named `node_modules`, `.git`, `coverage` and `dist`, in any case, are not inspected. Symlinks inside the directory are ignored, but a symlink given as the path is followed.
 
-- **Returns**: `Observable<GetNewestFileResult | null>`
-
----
+It errors when the path does not exist, is not a directory or cannot be read.
 
 ### `delete$(path, options?)`
 
-Deletes a folder, optionally as a dry-run. Only allowed if the folder is within the `target` of the initial scan.
+Deletes the path and everything inside it, like `rm -rf`, and emits a [`DeleteResult`](#deleteresult). Then it completes.
 
-- **Parameters**:
-  - `path`: `string`
-  - `options`: [`DeleteOptions`](#deleteoptions)
+- It does not check that the path is a target found by a scan. That is up to you.
+- Like `rm`, it refuses `.`, `..` and filesystem roots.
+- A symlink is deleted itself, never what it points to.
+- Deleting a path that does not exist succeeds.
+- With `{ dryRun: true }` nothing is deleted and the result is a success.
 
-- **Returns**: `Observable<DeleteResult>`
-- **Throws**: If the path is outside the original target.
-
----
+A deletion that fails emits a result with `success: false` and the error. An empty or refused path, an unknown option or a `dryRun` that is not a boolean errors instead.
 
 ### `getLogs$()`
 
-Streams internal log entries.
-
-- **Returns**: `Observable<LogEntry[]>`
-
----
+Emits the recent log entries of the instance, one [`LogEntry`](#logentry) at a time, and then each new one as it is written. It never completes, so unsubscribe when you are done.
 
 ### `isValidRootFolder(path)`
 
-Validates whether a folder is suitable for scanning.
-
-- **Parameters**:
-  - `path`: `string`
-
-- **Returns**: [`IsValidRootFolderResult`](#isvalidrootfolderresult)
-
----
+Tells whether a scan can start from `path`. Returns an [`IsValidRootFolderResult`](#isvalidrootfolderresult). The path must be an existing directory that npkill can read and enter.
 
 ### `getVersion()`
 
-Returns the current version of npkill from `package.json`.
+Returns the version of npkill, like `1.0.0`.
 
-- **Returns**: `string`
-
----
-
-## Interfaces & Types
-
----
+## Types
 
 ### `ScanOptions`
 
 ```ts
 interface ScanOptions {
-  targets: string[];
+  targets: readonly TargetDefinition[];
   exclude?: string[];
-  sortBy?: 'path' | 'size' | 'age';
+  useDefaultIgnore?: boolean; // Default: true
   performRiskAnalysis?: boolean; // Default: true
 }
 ```
 
----
+`exclude` lists paths to leave out of the scan. `useDefaultIgnore: false` also looks inside the folders that are skipped by default.
+
+### `TargetDefinition`
+
+A folder name, or a rule that also needs other entries around the folder. Every entry listed must exist, and rules with the same target are alternatives. See [custom rules](./docs/profiles.md#custom-rules).
+
+```ts
+type TargetDefinition = string | TargetRule;
+
+interface TargetRule {
+  readonly target: string;
+  readonly nextTo?: readonly string[];
+  readonly contains?: readonly string[]; // Inside the folder
+}
+```
 
 ### `ScanFoundTarget`
 
 ```ts
 interface ScanFoundTarget {
   path: string;
-  riskAnalysis?: RiskAnalysis;
+  riskAnalysis?: RiskAnalysis; // Missing when performRiskAnalysis is false
 }
 ```
 
----
-
 ### `RiskAnalysis`
 
-Determines whether a result is safe to delete. That is, if it is likely to belong to some application and deleting it could break it.
+Whether deleting a result could break something, for example because it belongs to an installed application, and why.
 
 ```ts
 interface RiskAnalysis {
@@ -155,28 +195,13 @@ interface RiskAnalysis {
 }
 ```
 
----
-
-### `GetSizeOptions`
-
-```ts
-interface GetSizeOptions {
-  unit?: 'bytes'; // Default: 'bytes'
-}
-```
-
----
-
 ### `GetSizeResult`
 
 ```ts
 interface GetSizeResult {
-  size: number;
-  unit: 'bytes';
+  size: number; // Bytes
 }
 ```
-
----
 
 ### `GetNewestFileResult`
 
@@ -184,11 +209,9 @@ interface GetSizeResult {
 interface GetNewestFileResult {
   path: string;
   name: string;
-  timestamp: number;
+  timestamp: number; // Milliseconds since the Unix epoch
 }
 ```
-
----
 
 ### `DeleteOptions`
 
@@ -198,87 +221,47 @@ interface DeleteOptions {
 }
 ```
 
----
-
-## Usage Example
-
-This is a minimal example where:
-
-1. it will start a search for `.nx` folders.
-2. Get the most recent file
-3. Get the total size of the directory
+### `DeleteResult`
 
 ```ts
-import { Npkill } from 'npkill';
-import { mergeMap, filter, map } from 'rxjs';
+type DeleteResult =
+  | { path: string; success: true }
+  | { path: string; success: false; error: DeleteError };
 
-const npkill = new Npkill();
-
-let files: {
-  path: string;
-  size: number;
-  newestFile: string;
-}[] = [];
-
-npkill
-  .startScan$('/home/user/projects/', { target: '.nx' })
-  .pipe(
-    // Step 1: For each scan result, get the newest file
-    mergeMap((scanResult) =>
-      npkill.getNewestFile$(scanResult.path).pipe(
-        // Step 2: If no newest file, skip this result
-        filter((newestFile) => newestFile !== null),
-        // Step 3: Combine scanResult and newestFile
-        map((newestFile) => ({
-          path: scanResult.path,
-          newestFile: newestFile.path,
-        })),
-      ),
-    ),
-    // Step 4: For each result, get the folder size
-    mergeMap((result) =>
-      npkill.getSize$(result.path).pipe(
-        map(({ size }) => ({
-          ...result,
-          size,
-        })),
-      ),
-    ),
-  )
-  .subscribe({
-    next: (result) => {
-      files.push(result);
-    },
-    complete: () => {
-      console.log('✅ Scan complete. Found folders:', files.length);
-      console.table(files);
-      console.log(JSON.stringify(files));
-    },
-  });
+interface DeleteError {
+  message: string;
+  code?: string;
+}
 ```
 
-Output:
+### `LogEntry`
 
-```bash
-✅ Scan complete. Found folders: 3
-┌─────────┬───────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────┬─────────┐
-│ (index) │ path                                      │ newestFile                                                               │ size    │
-├─────────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────┼─────────┤
-│ 0       │ '/home/user/projects/hello-world/.nx'     │ '/home/user/projects/hello-world/.nx/cache/18.3.4-nx.linux-x64-gnu.node' │ 9388032 │
-│ 1       │ '/home/user/projects/another-project/.nx' │ '/home/user/projects/another-project/.nx/workspace-data/d/daemon.log'    │ 3182592 │
-│ 2       │ '/home/user/projects/ARCHIVED/demo/.nx'   │ '/home/user/projects/ARCHIVED/demo/.nx/cache/d/daemon.log'               │ 2375680 │
-└─────────┴───────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────┴─────────┘
-[
-  {
-    "path": "/home/user/projects/hello-world/.nx",
-    "newestFile": "/home/user/projects/hello-world/.nx/cache/18.3.4-nx.linux-x64-gnu.node",
-    "size": 9388032
-  },
-  {
-    "path": "/home/user/projects/another-project/.nx",
-    "newestFile": "/home/user/projects/another-project/.nx/workspace-data/d/daemon.log",
-    "size": 3182592
-  },
-  ........
-]
+```ts
+interface LogEntry {
+  type: 'info' | 'warn' | 'error';
+  timestamp: number;
+  message: string;
+}
 ```
+
+### `IsValidRootFolderResult`
+
+```ts
+interface IsValidRootFolderResult {
+  isValid: boolean;
+  invalidReason?: string;
+}
+```
+
+## Stability
+
+The API is new. Until it matures, incompatible changes can arrive in minor versions, never in patches, and the release notes will list them.
+
+These changes can happen in any version and are not considered incompatible:
+
+- New methods in `Npkill` and `NpkillInterface`. If you implement `NpkillInterface` yourself, expect it to grow.
+- New fields in results and new optional fields in options.
+- New forms of [`TargetDefinition`](#targetdefinition).
+- New log entry types, and `getLogs$()` keeping fewer old entries.
+- Changes to the profiles, the risk analysis rules and the lists of folders that are never entered or inspected.
+- Changes to error messages.

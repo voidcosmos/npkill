@@ -3,19 +3,11 @@
 ### 1. Ensure the latest changes are available
 
 ```bash
-git checkout develop
-git pull
 git checkout main
 git pull
 ```
 
-### 2. Merge develop into main
-
-```bash
-git merge develop --no-ff
-```
-
-### 3. Run the release script...
+### 2. Run the release script...
 
 ```bash
 # Ensure that the dependencies match those in package.json
@@ -29,6 +21,6 @@ The release script takes care of 2 things:
 
 - Start the interactive release process itself.
 
-### 4. Pick version type (major, minor, path)
+### 3. Pick version type (major, minor, patch)
 
-### 5. Test the new release.
+### 4. Test the new release.

@@ -8,161 +8,187 @@
 <img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
 </p>
 
-### Easily find and **remove** old and heavy <font color="red">**node_modules**</font> folders :sparkles:
+### Easily find and **remove** old and heavy **node_modules**. And everything else you don’t need.
 
 <p align="center">
   <img src="/docs/npkill-demo-0.10.0.gif" alt="npkill demo GIF" />
 </p>
 
-This tool allows you to list any _node_modules_ directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space. Yay!
-
-## i18n
-
-We're making an effort to internationalize the Npkill docs. Here's a list of the available translations:
-
-- [Español](./README.es.md)
-- [Indonesian](./README.id.md)
-- [Português](./README.pt.md)
-- [Turkish](./README.tr.md)
+**Your system remembers everything. npkill helps you forget.**
+This tool scans your system for heavy and unnecessary development directories.
+It shows you what is taking up space, when you stopped using it, why it’s there, and lets you remove it in seconds.
 
 ## Table of Contents
 
 - [Features](#features)
-- [Installation](#installation)
 - [Usage](#usage)
   - [Multi-Select Mode](#multi-select-mode)
+  - [Search](#search)
+  - [Profiles](#profiles)
+  - [.npkillrc](#npkillrc)
   - [Options](#options)
   - [Examples](#examples)
   - [JSON Output](#json-output)
 - [Set Up Locally](#setup-locally)
-- [API](#API)
-- [Roadmap](#roadmap)
-- [Known bugs](#known-bugs)
+- [API](#api)
 - [Contributing](#contributing)
 - [Buy us a coffee](#donations)
 - [License](#license)
 
 <a name="features"></a>
 
-# :heavy_check_mark: Features
+# ✨ Features
 
-- **Clear space:** Get rid of old and dusty _node_modules_ cluttering up your machine.
+- **Beyond node_modules**  
+  Started with `node_modules`, extended to entire development environments.
+  Remove build artifacts, caches, temp files, and other heavy leftovers using built-in or custom profiles.
 
-- **Last Workspace Usage**: Check when was the last time you modified a file in the workspace (indicated in the **last_mod** column).
+- **Profiles-first scanning**  
+  Scan your system using predefined profiles for Node.js, Python, Rust, game engines, and more. Or create your own to match your workflow.
 
-- **Very fast:** NPKILL is written in TypeScript, but searches are performed at a low level, improving performance greatly.
+- **Effortless by default**  
+  A clean and responsive TUI designed to stay out of your way.
+  See everything clearly, make decisions fast, and clean with confidence.
 
-- **Easy to use:** Say goodbye to lengthy commands. Using npkill is as simple as reading a list of your node_modules, and pressing Del to get rid of them. Could it be any easier? ;)
+- **Workspace awareness**  
+  See at a glance when you last worked in that workspace and find out if it's an active project or a long-forgotten one.
 
-- **Minified:** It barely has any dependencies.
+- **Built for speed**  
+  npkill is written in TypeScript, but searches are performed at a low level, delivering blazing-fast performance and near-instant responsiveness.
 
-<a name="installation"></a>
+<a name="usage"></a>
 
-# :cloud: Installation
+# :clipboard: Usage
 
-You don't really need to install it to use it!
 Simply use the following command:
 
 ```bash
 $ npx npkill
 ```
 
-Or if for some reason you really want to install it:
+By default, npkill will start searching for node-related development directories from the directory where you ran it, using the built-in **node** profile.
 
-```bash
-$ npm i -g npkill
-# Unix users may need to run the command with sudo. Go carefully
-```
+As the target directories are found, they will be listed for you.
 
-> NPKILL does not support node<v14. If this affects you you can use `npkill@0.8.3`
+> [!NOTE]
+> **TL;DR:** You can learn everything as you go because the TUI explains itself.
 
-<a name="usage"></a>
+You can navigate between them with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> or <kbd>Del</kbd> to delete the selected folder.
 
-# :clipboard: Usage
+You can view more information about the result by pressing <kbd>→</kbd> and go back by pressing <kbd>←</kbd>.
 
-```bash
-$ npx npkill
-# or just npkill if installed globally
-```
+If necessary, you can open the parent directory with <kbd>o</kbd>.
 
-By default, npkill will scan for node_modules starting at the path where `npkill` command is executed.
+You can see more navigation keys in the built-in **quick reference panel**.
 
-Move between the listed folders with <kbd>↓</kbd> <kbd>↑</kbd>, and use <kbd>Space</kbd> or <kbd>Del</kbd> to delete the selected folder.
-You can also use <kbd>j</kbd> and <kbd>k</kbd> to move between the results.
+> [!WARNING]
+> Some applications installed on the system need their node_modules directory to work and deleting them may break them. npkill will try to identify them and highlight them by displaying a :warning: to be careful.
 
-You can open the directory where the selected result is placed by pressing <kbd>o</kbd>.
+> [!IMPORTANT]
+> npkill **find** candidates for deletion but does not decide what is safe for you.
+>
+> - Results are based on common conventions.
+> - Whether a folder is safe to delete always depends on the scope.
+>
+> Always review results before deleting anything.
 
-To exit, <kbd>Q</kbd> or <kbd>Ctrl</kbd> + <kbd>c</kbd> if you're brave.
+<a name="multi-select-mode"></a>
 
-**Important!** Some applications installed on the system need their node_modules directory to work and deleting them may break them. NPKILL will highlight them by displaying a :warning: to be careful.
-
-## Search Mode
-
-Search mode allows you to filter results. This can be particularly useful for limiting the view to a specific route or ensuring that only those results that meet the specified condition are “selected all.”
-
-For example, you can use this expression to limit the results to those that are in the `work` directory and that include `data` somewhere in the path: `/work/.*/data`.
-
-Press <kbd>/</kbd> to enter search mode. You can type a regex pattern to filter results.
-
-Press <kbd>Enter</kbd> to confirm the search and navigate the filtered results, or <kbd>Esc</kbd> to clear and exit.
-
-To exit from this mode, leave empty.
-
-## Multi-Select Mode
+## :ballot_box_with_check: Multi-Select mode
 
 This mode allows you to select and delete multiple folders at once, making it more efficient when cleaning up many directories.
 
-### Entering Multi-Select Mode
+### Entering Multi-Select mode
 
-Press <kbd>T</kbd> to toggle multi-select mode. When active, you'll see a selection counter and additional instructions at the top of the results.
+Press **<kbd>t</kbd>** to toggle multi-select mode. When active, you'll see a selection counter and additional instructions at the top of the results.
 
 ### Controls
 
 - **<kbd>Space</kbd>**: Toggle selection of the current folder.
-- **<kbd>V</kbd>**: Start/end range selection mode.
-- **<kbd>A</kbd>**: Toggle select/unselect all folders.
-- **<kbd>Enter</kbd>**: Delete all selected folders.
-- **<kbd>T</kbd>**: Unselect all and back to normal mode.
+- **<kbd>v</kbd>**: Start/end range selection mode.
+- **<kbd>a</kbd>**: Toggle select/unselect all folders.
+- **<kbd>Enter</kbd>**: Delete all selected folders at once.
+- **<kbd>t</kbd>**: Unselect all and back to normal mode.
 
 ### Range Selection
 
-After pressing <kbd>V</kbd> to enter range selection mode:
+After pressing **<kbd>v</kbd>** to enter range selection mode:
 
-- Move the cursor with arrow keys, <kbd>j</kbd>/<kbd>k</kbd>, <kbd>Home</kbd>/<kbd>End</kbd>, or page up/down
+- Move the cursor with arrow keys, **<kbd>j</kbd>**/**<kbd>k</kbd>**, **<kbd>Home</kbd>**/**<kbd>End</kbd>**, or **<kbd>PgUp</kbd>**/**<kbd>PgDn</kbd>**.
 - All folders between the starting position and current cursor position will be selected/deselected
-- Press <kbd>V</kbd> again to exit range selection mode
+- Press **<kbd>Enter</kbd>** to delete all selected folders together.
+- Press **<kbd>v</kbd>** again to exit range selection mode.
+
+<a name="search"></a>
+
+## :mag: Search
+
+> _Divide and conquer._
+
+You can filter the results displayed by pressing **<kbd>/</kbd>**. What you type will then appear in the yellow bar at the top.
+
+Press **<kbd>Enter</kbd>** to browse through the filtered results.
+
+To clear the filter, press **<kbd>/</kbd>** again and delete the term, or press **<kbd>Esc</kbd>** while typing.
+
+This feature can be especially useful for narrowing down results by path without restarting `npkill`.
+
+> [!NOTE]
+> The search supports regular expressions. For example, `/work/.*/data` keeps the results inside a `work` directory that have `data` somewhere in their path.
+
+<a name="profiles"></a>
+
+## :card_index: Profiles
+
+**Profiles** are a set of _targets_ that represent a **development ecosystem**.
+
+You can list the available profiles with `npkill --profiles` and use them as follows: `npkill --profiles node,python`.
+
+Profiles and their targets may change between versions of npkill. So if this is important to you, I recommend creating your own with `.npkillrc`.
+
+<a name="npkillrc"></a>
+
+## :gear: .npkillrc
+
+The `.npkillrc` file allows you to define the default behavior of npkill without having to pass parameters every time. It is also where you can define your own custom profiles.
+
+You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.md).
 
 <a name="options"></a>
 
-## Options
+## :wrench: Options
 
-| ARGUMENT                | DESCRIPTION                                                                                                                                                                   |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.         |
-| --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                   |
-| -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                              |
-| -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`.                                                                                     |
-| -e, --hide-errors       | Hide errors if any                                                                                                                                                            |
-| -E, --exclude           | Exclude directories from search (directory list must be inside double quotes "", each directory separated by ',' ) Example: "ignore1, ignore2"                                |
-| -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                    |
-| --size-unit             | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).           |
-| -h, --help, ?           | Show help page                                                                                                                                                                |
-| -nu, --no-check-update  | Don't check for updates on startup                                                                                                                                            |
-| -s, --sort              | Sort results by: `size`, `path` or `age`                                                                                                                                      |
-| --older-than            | Only show results whose project has not been modified in more than the given number of days (see the `last_mod` column). Example: `--older-than 90`.                          |
-| -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`. |
-| -x, --exclude-sensitive | Exclude sensitive directories.                                                                                                                                                |
-| -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                       |
-| --dry-run               | It does not delete anything (will simulate it with a random delay).                                                                                                           |
-| --json                  | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                    |
-| --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                     |
-| -v, --version           | Show npkill version                                                                                                                                                           |
+| ARGUMENT                | DESCRIPTION                                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.                                        |
+| --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                                                  |
+| -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                                                             |
+| -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`. Add `-y` and `--json` or `--json-stream` to delete without the interface.                                          |
+| -e, --hide-errors       | Hide errors if any                                                                                                                                                                                           |
+| -E, --exclude           | Exclude directories from search. Each directory separated by ','. By default, [some directories](https://github.com/voidcosmos/npkill/blob/main/src/core/constants/global-ignored.constants.ts) are ignored. |
+| -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                                                   |
+| --size-unit             | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).                                          |
+| -h, --help, ?           | Show help page                                                                                                                                                                                               |
+| -nu, --no-check-update  | Don't check for updates on startup                                                                                                                                                                           |
+| -s, --sort              | Sort results by: `size`, `path` or `age`                                                                                                                                                                     |
+| --older-than            | Only show results whose project has not been modified in more than the given number of days (see the `last_mod` column). Example: `--older-than 90`.                                                         |
+| -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.                                |
+| -x, --exclude-sensitive | Exclude sensitive directories.                                                                                                                                                                               |
+| --no-ignore-default     | Also look inside the folders skipped by default, like `.git` or `.nvm`.                                                                                                                                      |
+| -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                                                      |
+| --dry-run               | It does not delete anything (will simulate it with a random delay).                                                                                                                                          |
+| --json                  | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                                                   |
+| --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                                                    |
+| --no-size               | Skip size calculation. Useful for faster scanning and deletion when space info is not needed.                                                                                                                |
+| --no-age                | Skip age (last modification time) calculation.                                                                                                                                                               |
+| --no-stats              | Skip both size and age calculation. Shortcut for `--no-size --no-age`.                                                                                                                                       |
+| -v, --version           | Show npkill version                                                                                                                                                                                          |
 
 <a name="examples"></a>
 
-## Examples
+## :bulb: Examples
 
-- Search **node_modules** directories in your _projects_ directory:
+- Search in your _projects_ directory:
 
 ```bash
 npkill -d ~/projects
@@ -170,6 +196,18 @@ npkill -d ~/projects
 # other alternative:
 cd ~/projects
 npkill
+```
+
+- Clean Node.js and Python development leftovers (`node_modules`, `__pycache__`, `.cache`, `.venv`, etc.):
+
+```bash
+npkill --profiles node,python
+```
+
+- I only want clean `node_modules` like in the old times:
+
+```bash
+npkill -t node_modules
 ```
 
 - List **node_modules** in your _projects_ directory, excluding the ones in _progress_ and _ignore-this_ directories:
@@ -184,42 +222,24 @@ npkill -d 'projects' --exclude "progress, ignore-this"
 npkill -d ~/projects --older-than 90 --delete-all --targets node_modules
 ```
 
-- Automatically delete all node_modules that have sneaked into your backups:
+- Automatically delete all node-related leftovers that have sneaked into your backups:
 
 ```bash
 npkill -d ~/backups/ --delete-all
 ```
 
-- Get results in JSON format for automation or further processing:
-
-```bash
-npkill --json > results.json
-```
-
-- Stream results in real-time as JSON (useful for monitoring or piping to other tools):
-
-```bash
-npkill --json-stream | jq '.'
-```
-
-- Save only successful results to a file, ignoring errors:
-
-```bash
-npkill --json-stream 2>/dev/null | jq -s '.' > clean-results.json
-```
-
 <a name="json-output"></a>
 
-## JSON Output
+## :floppy_disk: JSON Output
 
-Npkill supports JSON output formats for automation and integration with other tools:
+npkill supports JSON output formats for automation and integration with other tools:
 
 - **`--json`**: Output all results as a single JSON object at the end of the scan
 - **`--json-stream`**: Output each result as a separate JSON object in real-time
 
 For detailed documentation, examples, and TypeScript interfaces, see [JSON Output Documentation](./docs/json-output.md).
 
-**Quick Examples:**
+### Quick Examples
 
 ```bash
 # Get all results as JSON
@@ -230,6 +250,9 @@ npkill --json-stream | jq '.result.path'
 
 # Find directories larger than 100MB
 npkill --json | jq '.results[] | select(.size > 104857600)'
+
+# Delete the node_modules untouched for 30 days, without the interface
+npkill -t node_modules --older-than 30 -D -y --json
 ```
 
 <a name="setup-locally"></a>
@@ -244,7 +267,7 @@ git clone https://github.com/voidcosmos/npkill.git
 cd npkill
 
 # -- Install dependencies
-npm install
+npm ci
 
 # -- And run!
 npm run start
@@ -254,43 +277,13 @@ npm run start
 npm run start -- -f -e
 ```
 
-<a name="API"></a>
+<a name="api"></a>
 
 # :bookmark_tabs: API
 
 The api allows you to interact with npkill from node to create your own implementations in your scripts (automations, for example).
 
-You can check the basic API [here](./API.md) or on the web (comming soon).
-
-<a name="roadmap"></a>
-
-# :crystal_ball: Roadmap
-
-- [x] Release 0.1.0 !
-- [x] Improve code
-  - [x] Improve performance
-  - [ ] Improve performance even more!
-- [x] Sort results by size and path
-- [x] Allow the search for other types of directories (targets)
-- [ ] Reduce dependencies to be a more minimalist module
-- [ ] Allow to filter by directories that have not been used in a period of time
-- [ ] Create option for displaying directories in tree format
-- [x] Add some menus
-- [x] Add log service
-- [ ] Periodic and automatic cleaning (?)
-
-<a name="known-bugs"></a>
-
-# :bug: Known bugs :bug:
-
-- Sometimes, CLI is blocked while folder is deleting.
-- Sorting, especially by routes, can slow down the terminal when there are many results at the same time.
-- Sometimes, size calculations are higher than they should be.
-- (SOLVED) Performance issues when searching from high level directories (like / in linux).
-- (SOLVED) Sometimes text collapses when updating the cli.
-- (SOLVED) Analyzing the size of the directories takes longer than it should.
-
-> If you find any bugs, don't hesitate and open an issue :)
+You can check the basic API [here](./API.md) or on the web.
 
 <a name="contributing"></a>
 
@@ -310,15 +303,9 @@ We will continue to do things anyway, but donations are one of the many ways to 
 
 <span class="badge-opencollective"><a href="https://opencollective.com/npkill/contribute" title="Donate to this project using Open Collective"><img src="https://img.shields.io/badge/open%20collective-donate-green.svg" alt="Open Collective donate button" /></a></span>
 
-### Thanks!!
-
-## A huge thank you to our backers :heart:
-
-<a href="https://opencollective.com/npkill#backers" target="_blank"><img width="535" src="https://opencollective.com/npkill/tiers/backer.svg?width=535"></a>
-
 ---
 
-### Crypto alternative
+## Crypto alternative
 
 - btc: 1ML2DihUoFTqhoQnrWy4WLxKbVYkUXpMAX
 - bch: 1HVpaicQL5jWKkbChgPf6cvkH8nyktVnVk
