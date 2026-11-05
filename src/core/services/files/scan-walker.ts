@@ -7,7 +7,7 @@ import { WorkerScanOptions } from './files.worker.service.js';
 import { SharedScan } from './shared-scan.js';
 
 const SLICE_MS = 10;
-const KEPT_SUBDIRECTORIES = 1;
+const KEPT_FOLDERS = 1;
 
 interface ScanEntry {
   path: string;
@@ -20,23 +20,23 @@ interface ScanEntry {
  */
 export class ScanWalker {
   private readonly matcher: TargetMatcher;
-  private readonly pending: string[] = [];
+  private readonly localFolders: string[] = [];
   private found: string[] = [];
 
   constructor(
-    private readonly shared: SharedScan,
+    private readonly scan: SharedScan,
     private readonly options: WorkerScanOptions,
-    private readonly onSlice: (found: string[]) => void,
+    private readonly onProgress: (found: string[]) => void,
   ) {
     this.matcher = new TargetMatcher(options.targets);
   }
 
   async run(): Promise<void> {
-    while (this.shared.isRunning()) {
+    while (this.scan.isRunning()) {
       if (this.exploreSlice()) {
         await yieldToEventLoop();
       } else {
-        await this.shared.waitForWork();
+        await this.scan.waitForWork();
       }
     }
   }
@@ -44,8 +44,8 @@ export class ScanWalker {
   private exploreSlice(): boolean {
     const deadline = performance.now() + SLICE_MS;
     let explored = 0;
-    while (this.shared.isRunning() && performance.now() < deadline) {
-      const path = this.pending.pop() ?? this.shared.take();
+    while (this.scan.isRunning() && performance.now() < deadline) {
+      const path = this.localFolders.pop() ?? this.scan.take();
       if (path === undefined) {
         break;
       }
@@ -54,32 +54,32 @@ export class ScanWalker {
     }
 
     if (explored > 0) {
-      this.onSlice(this.found);
+      this.onProgress(this.found);
       this.found = [];
     }
     return explored > 0;
   }
 
   private explore(path: string): void {
-    let subdirectories = 0;
+    let subfolders = 0;
     for (const entry of this.readEntries(path)) {
       if (entry.isTarget) {
         this.found.push(entry.path);
       } else {
-        this.pending.push(entry.path);
-        subdirectories++;
+        this.localFolders.push(entry.path);
+        subfolders++;
       }
     }
-    this.shared.completeDirectory(subdirectories);
+    this.scan.completeFolder(subfolders);
     this.share();
   }
 
   private share(): void {
-    const surplus = this.pending.length - KEPT_SUBDIRECTORIES;
-    const isWanted = this.shared.hasIdleWorkers() || this.shared.isEmpty();
+    const surplus = this.localFolders.length - KEPT_FOLDERS;
+    const isWanted = this.scan.hasIdleWorkers() || this.scan.isEmpty();
     if (surplus > 0 && isWanted) {
-      const given = this.shared.give(this.pending.slice(0, surplus));
-      this.pending.splice(0, given);
+      const given = this.scan.give(this.localFolders.slice(0, surplus));
+      this.localFolders.splice(0, given);
     }
   }
 
@@ -87,7 +87,7 @@ export class ScanWalker {
     const dirents = readDirents(path);
     const entries: ScanEntry[] = [];
     for (const dirent of dirents) {
-      this.newDirEntry(path, dirent, entries);
+      this.collectEntry(path, dirent, entries);
     }
 
     const hasCandidates = entries.some((candidate) => candidate.isTarget);
@@ -98,7 +98,11 @@ export class ScanWalker {
     return this.recognizeTargets(entries, names);
   }
 
-  private newDirEntry(path: string, entry: Dirent, results: ScanEntry[]): void {
+  private collectEntry(
+    path: string,
+    entry: Dirent,
+    results: ScanEntry[],
+  ): void {
     if (entry.isSymbolicLink() || !entry.isDirectory()) {
       return;
     }

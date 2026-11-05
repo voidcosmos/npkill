@@ -42,7 +42,7 @@ export type WorkerMessage =
       type: EVENTS.GetSizeResult;
       value: { results: WorkerSizeResult; workerId: number };
     }
-  | { type: EVENTS.explore; value: WorkerScanRequest }
+  | { type: EVENTS.startScan; value: WorkerScanRequest }
   | { type: EVENTS.getSize; value: { path: string; id: number } }
   | { type: EVENTS.startup; value: { channel: MessagePort; id: number } }
   | { type: EVENTS.alive; value?: undefined }
@@ -57,7 +57,7 @@ export interface WorkerStats {
 interface ActiveScan {
   id: number;
   stream$: Subject<string>;
-  shared: SharedScan;
+  sharedScan: SharedScan;
   finishedWorkers: number;
 }
 
@@ -80,7 +80,7 @@ export class FileWorkerService {
   private idleWorkersTimeout?: NodeJS.Timeout;
   private readonly SIZE_TIMEOUT_MS = 60000; // 1 minute timeout per folder
   private readonly IDLE_WORKERS_TIMEOUT_MS = 5000;
-  private readonly SHARED_PATHS_BYTES = 1024 * 1024;
+  private readonly SHARED_SCAN_BYTES = 1024 * 1024;
 
   constructor(
     private readonly logger: LoggerService,
@@ -98,13 +98,21 @@ export class FileWorkerService {
     }
 
     this.ensureWorkers();
-    const shared = SharedScan.create(params.rootPath, this.SHARED_PATHS_BYTES);
-    const scan = { id: ++this.lastScanId, stream$, shared, finishedWorkers: 0 };
+    const sharedScan = SharedScan.create(
+      params.rootPath,
+      this.SHARED_SCAN_BYTES,
+    );
+    const scan = {
+      id: ++this.lastScanId,
+      stream$,
+      sharedScan,
+      finishedWorkers: 0,
+    };
     this.activeScan = scan;
     this.searchStatus.workerStatus = 'scanning';
     this.broadcast({
-      type: EVENTS.explore,
-      value: { scanId: scan.id, buffer: shared.buffer, options: params },
+      type: EVENTS.startScan,
+      value: { scanId: scan.id, buffer: sharedScan.buffer, options: params },
     });
     this.updateWorkersLifecycle();
   }
@@ -146,7 +154,7 @@ export class FileWorkerService {
     this.activeScan = null;
     this.searchStatus.workerStatus = status;
     if (status === 'stopped') {
-      scan.shared.stop();
+      scan.sharedScan.stop();
     }
     this.updateWorkersLifecycle();
     scan.stream$.complete();
@@ -308,8 +316,8 @@ export class FileWorkerService {
   private updateStats(): void {
     const scan = this.activeScan;
     if (scan !== null) {
-      this.searchStatus.pendingSearchTasks = scan.shared.pending;
-      this.searchStatus.completedSearchTasks = scan.shared.explored;
+      this.searchStatus.pendingSearchTasks = scan.sharedScan.unexplored;
+      this.searchStatus.completedSearchTasks = scan.sharedScan.explored;
     }
     this.searchStatus.workersJobs = this.workersPendingJobs;
   }

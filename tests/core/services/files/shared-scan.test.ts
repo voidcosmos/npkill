@@ -10,10 +10,10 @@ function startedScan(): SharedScan {
 }
 
 describe('SharedScan', () => {
-  it('starts with the root as the only pending folder', () => {
+  it('starts with the root as the only unexplored folder', () => {
     const scan = SharedScan.create('/root', 64);
 
-    expect(scan.pending).toBe(1);
+    expect(scan.unexplored).toBe(1);
     expect(scan.take()).toBe('/root');
     expect(scan.take()).toBeUndefined();
   });
@@ -43,15 +43,15 @@ describe('SharedScan', () => {
     expect(scan.take()).toBe('/root/bbbb');
   });
 
-  it('finishes when the last pending folder is explored', () => {
+  it('finishes when the last unexplored folder is explored', () => {
     const scan = startedScan();
 
-    scan.completeDirectory(2);
+    scan.completeFolder(2);
     expect(scan.isRunning()).toBe(true);
-    expect(scan.pending).toBe(2);
+    expect(scan.unexplored).toBe(2);
 
-    scan.completeDirectory(0);
-    scan.completeDirectory(0);
+    scan.completeFolder(0);
+    scan.completeFolder(0);
     expect(scan.isFinished()).toBe(true);
     expect(scan.explored).toBe(3);
   });
@@ -60,7 +60,7 @@ describe('SharedScan', () => {
     const scan = startedScan();
 
     scan.stop();
-    scan.completeDirectory(0);
+    scan.completeFolder(0);
 
     expect(scan.isRunning()).toBe(false);
     expect(scan.isFinished()).toBe(false);
@@ -93,7 +93,7 @@ describe('SharedScan', () => {
     const scan = startedScan();
     const waiting = scan.waitForWork();
 
-    scan.completeDirectory(0);
+    scan.completeFolder(0);
     await waiting;
 
     expect(scan.isFinished()).toBe(true);

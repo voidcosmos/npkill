@@ -8,7 +8,10 @@ import {
 } from './files.worker.service.js';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
-import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
+import {
+  EVENTS,
+  MAX_SIZE_PROCS,
+} from '../../../constants/workers.constants.js';
 import { ScanWalker } from './scan-walker.js';
 import { SharedScan } from './shared-scan.js';
 
@@ -34,7 +37,7 @@ interface Task {
 
 (() => {
   let id = 0;
-  let fileWalker: FileWalker;
+  let sizeCalculator: SizeCalculator;
   let tunnel: MessagePort;
 
   if (parentPort === null) {
@@ -45,9 +48,9 @@ interface Task {
     if (message?.type === EVENTS.startup) {
       id = message.value.id;
       tunnel = message.value.channel;
-      fileWalker = new FileWalker();
+      sizeCalculator = new SizeCalculator();
       initTunnelListeners();
-      initFileWalkerListeners();
+      initSizeCalculatorListeners();
       notifyWorkerReady();
     }
   });
@@ -61,12 +64,12 @@ interface Task {
 
   function initTunnelListeners(): void {
     tunnel.on('message', (message: WorkerMessage) => {
-      if (message?.type === EVENTS.explore) {
+      if (message?.type === EVENTS.startScan) {
         void startScan(message.value);
       }
 
       if (message?.type === EVENTS.getSize) {
-        fileWalker.enqueueTask(
+        sizeCalculator.enqueueTask(
           {
             operation: ETaskOperation.getSize,
             path: message.value.path,
@@ -83,21 +86,21 @@ interface Task {
     buffer,
     options,
   }: WorkerScanRequest): Promise<void> {
-    const shared = new SharedScan(buffer);
-    const walker = new ScanWalker(shared, options, (results) =>
+    const scan = new SharedScan(buffer);
+    const walker = new ScanWalker(scan, options, (results) =>
       tunnel.postMessage({
         type: EVENTS.scanResult,
         value: { results, scanId },
       }),
     );
     await walker.run();
-    if (shared.isFinished()) {
+    if (scan.isFinished()) {
       tunnel.postMessage({ type: EVENTS.scanFinished, value: { scanId } });
     }
   }
 
-  function initFileWalkerListeners(): void {
-    fileWalker.events.on('sizeResult', (result: WorkerSizeResult) => {
+  function initSizeCalculatorListeners(): void {
+    sizeCalculator.events.on('sizeResult', (result: WorkerSizeResult) => {
       tunnel.postMessage({
         type: EVENTS.GetSizeResult,
         value: {
@@ -109,7 +112,7 @@ interface Task {
   }
 })();
 
-class FileWalker {
+class SizeCalculator {
   readonly events = new EventEmitter();
   private taskQueue: Task[] = [];
   private completedTasks = 0;
@@ -244,7 +247,7 @@ class FileWalker {
   }
 
   private processQueue(): void {
-    while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
+    while (this.procs < MAX_SIZE_PROCS && this.taskQueue.length > 0) {
       const task = this.taskQueue.shift();
       if (!task?.path) {
         continue;

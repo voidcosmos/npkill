@@ -70,7 +70,7 @@ describe('FileWorker', () => {
     options: Omit<WorkerScanOptions, 'rootPath'>,
     capacity = 1024 * 1024,
   ): Promise<string[]> {
-    const shared = SharedScan.create(root, capacity);
+    const sharedScan = SharedScan.create(root, capacity);
     const found: string[] = [];
 
     return new Promise((resolve) => {
@@ -84,10 +84,10 @@ describe('FileWorker', () => {
       });
 
       tunnel.postMessage({
-        type: EVENTS.explore,
+        type: EVENTS.startScan,
         value: {
           scanId: 1,
-          buffer: shared.buffer,
+          buffer: sharedScan.buffer,
           options: { rootPath: root, ...options },
         },
       });

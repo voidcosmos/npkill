@@ -89,7 +89,7 @@ function finishScan(scanId = 1): void {
 function sentScanRequest(): WorkerScanRequest {
   const [message] = messageChannelPort1Mock.mock.calls
     .map(([sent]) => sent as WorkerMessage)
-    .filter((sent) => sent.type === EVENTS.explore);
+    .filter((sent) => sent.type === EVENTS.startScan);
   return message.value as WorkerScanRequest;
 }
 
@@ -160,9 +160,9 @@ describe('FileWorkerService', () => {
 
     it('should report the progress of the shared scan', () => {
       fileWorkerService.startScan(stream$, SCAN_OPTIONS);
-      const shared = new SharedScan(sentScanRequest().buffer);
-      shared.take();
-      shared.completeDirectory(2);
+      const sharedScan = new SharedScan(sentScanRequest().buffer);
+      sharedScan.take();
+      sharedScan.completeFolder(2);
 
       answerScan([]);
 
