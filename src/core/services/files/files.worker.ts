@@ -322,7 +322,9 @@ class FileWalker {
   }
 
   private isIgnored(name: string): boolean {
-    return GLOBAL_IGNORE.has(name);
+    return (
+      this.searchConfig.useDefaultIgnore !== false && GLOBAL_IGNORE.has(name)
+    );
   }
 
   private isExcluded(path: string): boolean {

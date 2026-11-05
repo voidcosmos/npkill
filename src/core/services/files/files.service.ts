@@ -30,6 +30,7 @@ export abstract class FileService implements IFileService {
         rootPath: path,
         targets: params.targets,
         exclude: params.exclude,
+        useDefaultIgnore: params.useDefaultIgnore,
       });
 
       return () => {

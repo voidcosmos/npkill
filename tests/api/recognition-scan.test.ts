@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { TargetDefinition, TargetRule } from '../../src/index.js';
+import type {
+  ScanOptions,
+  TargetDefinition,
+  TargetRule,
+} from '../../src/index.js';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -25,9 +29,13 @@ afterEach(() => {
   removeTempDirs();
 });
 
-async function scan(root: string, targets: TargetDefinition[]) {
+async function scan(
+  root: string,
+  targets: TargetDefinition[],
+  options: Omit<ScanOptions, 'targets'> = {},
+) {
   const outcome = await observe(
-    createNpkill().startScan$(root, { targets }),
+    createNpkill().startScan$(root, { ...options, targets }),
     TIMEOUT_MS,
   );
   expect(outcome.error).toBeUndefined();
@@ -96,10 +104,19 @@ describe('scanning with rules', () => {
     ]);
   });
 
-  it('does not explore rejected directories that are always skipped', async () => {
+  it('does not explore rejected directories that are skipped by default', async () => {
     const root = createTree(['app/.venv/lib/__pycache__']);
 
     expect(await scan(root, [pythonEnvironment, '__pycache__'])).toEqual([]);
+  });
+
+  it('explores rejected directories when useDefaultIgnore is false', async () => {
+    const root = createTree(['app/.venv/lib/__pycache__']);
+    const targets = [pythonEnvironment, '__pycache__'];
+
+    expect(await scan(root, targets, { useDefaultIgnore: false })).toEqual([
+      'app/.venv/lib/__pycache__',
+    ]);
   });
 
   it('rejects an invalid rule before emitting any results', async () => {

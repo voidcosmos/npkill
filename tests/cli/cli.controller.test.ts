@@ -257,6 +257,7 @@ describe('CliController test', () => {
       DEFAULT_CONFIG.olderThan = 0;
       DEFAULT_CONFIG.disableAge = false;
       DEFAULT_CONFIG.disableSize = false;
+      DEFAULT_CONFIG.disableDefaultIgnore = false;
       DEFAULT_CONFIG.yes = false;
     });
 
@@ -618,6 +619,14 @@ describe('CliController test', () => {
           expect.stringContaining('boom'),
         );
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('--no-ignore-default', () => {
+      it('Should look inside the folders skipped by default', () => {
+        mockParameters({ 'disable-default-ignore': true });
+        cliController.init();
+        expect(DEFAULT_CONFIG.disableDefaultIgnore).toBe(true);
       });
     });
 

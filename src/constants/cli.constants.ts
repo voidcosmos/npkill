@@ -82,6 +82,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'exclude-sensitive',
   },
   {
+    arg: ['--no-ignore-default'],
+    description:
+      'Also look inside the folders skipped by default, like .git or .nvm.',
+    name: 'disable-default-ignore',
+  },
+  {
     arg: ['--dry-run'],
     description:
       'It does not delete anything (will simulate it with a random delay).',

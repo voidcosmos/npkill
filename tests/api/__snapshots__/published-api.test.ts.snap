@@ -66,6 +66,7 @@ export interface ScanFoundTarget {
 export interface ScanOptions {
     targets: readonly TargetDefinition[];
     exclude?: string[];
+    useDefaultIgnore?: boolean;
     performRiskAnalysis?: boolean;
 }
 

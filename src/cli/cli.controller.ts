@@ -540,6 +540,10 @@ export class CliController {
       this.config.excludeSensitiveResults = true;
     }
 
+    if (options.isTrue('disable-default-ignore')) {
+      this.config.disableDefaultIgnore = true;
+    }
+
     if (options.isTrue('dry-run')) {
       this.config.dryRun = true;
     }

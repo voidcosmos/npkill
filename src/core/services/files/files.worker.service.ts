@@ -14,6 +14,7 @@ export interface WorkerScanOptions {
   rootPath: string;
   targets: readonly TargetDefinition[];
   exclude?: string[];
+  useDefaultIgnore?: boolean;
 }
 
 export interface WorkerSizeResult {
