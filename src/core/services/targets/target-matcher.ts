@@ -1,4 +1,4 @@
-import { readdir } from 'node:fs/promises';
+import { readdirSync } from 'node:fs';
 import { basename } from 'node:path';
 import {
   TargetDefinition,
@@ -36,7 +36,7 @@ export class TargetMatcher {
     return this.names.has(name) || this.rules.has(name);
   }
 
-  async matches(path: string, siblings: ReadonlySet<string>): Promise<boolean> {
+  matches(path: string, siblings: ReadonlySet<string>): boolean {
     const name = basename(path);
     if (this.names.has(name)) {
       return true;
@@ -50,7 +50,7 @@ export class TargetMatcher {
     if (rules.length === 0) {
       return false;
     }
-    const children = await readNames(path);
+    const children = readNames(path);
     return rules.some((rule) => hasAll(children, rule.contains));
   }
 }
@@ -62,9 +62,9 @@ function hasAll(
   return required.every((name) => names.has(name));
 }
 
-async function readNames(path: string): Promise<Set<string>> {
+function readNames(path: string): Set<string> {
   try {
-    return new Set(await readdir(path));
+    return new Set(readdirSync(path));
   } catch {
     return new Set();
   }

@@ -1,531 +1,178 @@
-import { jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import EventEmitter from 'node:events';
-import { Dir } from 'node:fs';
-import { join, normalize } from 'node:path';
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, join, relative } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
 
-import { GLOBAL_IGNORE } from '../../../../src/core/constants/global-ignored.constants.js';
 import { EVENTS } from '../../../../src/constants/workers.constants.js';
-import { ScanOptions } from '../../../../src/core/index.js';
+import {
+  WorkerMessage,
+  WorkerScanOptions,
+} from '../../../../src/core/services/files/index.js';
+import { SharedScan } from '../../../../src/core/services/files/shared-scan.js';
 
 const parentEmitter: EventEmitter = new EventEmitter();
-let tunnelEmitter: MessagePort;
-const tunnelPostMock = jest.fn();
-
-let dirEntriesMock: {
-  name: string;
-  isDirectory: () => void;
-  isSymbolicLink: () => void;
-}[] = [];
-const basePath = '/home/user/';
-const target = 'node_modules';
-
-// const opendirPathMock = jest.fn();
-// const opendirDirMock = jest.fn();
-// class MockDir extends EventEmitter {
-//   private entries: Dirent[];
-
-//   constructor(entries: Dirent[]) {
-//     super();
-//     this.entries = entries;
-//   }
-
-//   read(): Promise<Dirent> {
-//     return new Promise((resolve, reject) => {
-//       if (this.entries.length === 0) {
-//         this.emit('close');
-//         resolve(null);
-//       } else {
-//         resolve(this.entries.shift());
-//       }
-//     });
-//   }
-// }
-
-const mockDir = {
-  read: () => {
-    if (dirEntriesMock.length > 0) {
-      return Promise.resolve(dirEntriesMock.shift());
-    } else {
-      return Promise.resolve(null);
-    }
-  },
-  close: () => {},
-} as unknown as Dir;
-
-jest.unstable_mockModule('fs/promises', () => ({
-  access: () => Promise.resolve(),
-  opendir: () => new Promise((resolve) => resolve(mockDir)),
-  lstat: () =>
-    Promise.resolve({
-      blocks: 1,
-      size: 100,
-      isDirectory: () => false,
-      isSymbolicLink: () => false,
-    }),
-  readdir: () => Promise.resolve([]),
-  stat: () => Promise.resolve({ isDirectory: () => true }),
-}));
 
 jest.unstable_mockModule('node:worker_threads', () => ({
   parentPort: {
-    postMessage: tunnelPostMock,
+    postMessage: jest.fn(),
     on: (eventName: string, listener: (...args: unknown[]) => void) =>
       parentEmitter.on(eventName, listener),
   },
 }));
 
 describe('FileWorker', () => {
-  const setExploreConfig = (params: ScanOptions) => {
-    tunnelEmitter.postMessage({
-      type: EVENTS.exploreConfig,
-      value: params,
-    });
-  };
+  let root: string;
+  let tunnel: MessagePort;
 
   beforeEach(async () => {
     await import('../../../../src/core/services/files/files.worker.js');
 
     const { port1, port2 } = new MessageChannel();
-    tunnelEmitter = port1;
-
+    tunnel = port1;
     parentEmitter.emit('message', {
       type: EVENTS.startup,
-      value: { channel: port2 },
+      value: { channel: port2, id: 0 },
     });
+    root = mkdtempSync(join(tmpdir(), 'npkill-worker-'));
   });
 
   afterEach(() => {
     jest.resetModules();
-    jest.restoreAllMocks();
     parentEmitter.removeAllListeners();
-    if (tunnelEmitter && typeof tunnelEmitter.close === 'function') {
-      tunnelEmitter.close();
-    }
+    tunnel.close();
+    rmSync(root, { recursive: true, force: true });
   });
 
-  // it('should plant a listener over the passed MessagePort',()=>{})
+  function createTree(paths: string[]): void {
+    paths.forEach((path) => mkdirSync(join(root, path), { recursive: true }));
+  }
 
-  it('should return only sub-directories from given parent', (done) => {
-    setExploreConfig({ targets: [target] });
-    const subDirectories = [
-      {
-        name: 'file1.txt',
-        isDirectory: () => false,
-        isSymbolicLink: () => false,
-      },
-      {
-        name: 'file2.txt',
-        isDirectory: () => false,
-        isSymbolicLink: () => false,
-      },
-      { name: 'dir1', isDirectory: () => true, isSymbolicLink: () => false },
-      {
-        name: 'file3.txt',
-        isDirectory: () => false,
-        isSymbolicLink: () => false,
-      },
-      { name: 'dir2', isDirectory: () => true, isSymbolicLink: () => false },
-    ];
+  function linkDirectory(target: string, path: string): void {
+    symlinkSync(join(root, target), join(root, path), 'junction');
+  }
 
-    const expectedResult = subDirectories
-      .filter((subdir) => subdir.isDirectory())
-      .map((subdir) => ({
-        path: join(basePath, subdir.name),
-        isTarget: false,
-      }));
+  function scan(
+    options: Omit<WorkerScanOptions, 'rootPath'>,
+    capacity = 1024 * 1024,
+  ): Promise<string[]> {
+    const sharedScan = SharedScan.create(root, capacity);
+    const found: string[] = [];
 
-    dirEntriesMock = [...subDirectories];
+    return new Promise((resolve) => {
+      tunnel.on('message', (message: WorkerMessage) => {
+        if (message.type === EVENTS.scanResult) {
+          found.push(...message.value.results);
+        }
+        if (message.type === EVENTS.scanFinished) {
+          resolve(found.map((path) => relative(root, path)).sort());
+        }
+      });
 
-    let results: unknown[];
-
-    tunnelEmitter.on('message', (message) => {
-      if (message.type === EVENTS.scanResult) {
-        results = message.value.results;
-
-        done();
-        expect(results).toEqual(expectedResult);
-      }
-    });
-
-    tunnelEmitter.postMessage({
-      type: EVENTS.explore,
-      value: { path: '/home/user/' },
-    });
-  });
-
-  describe('should mark "isTarget" correctly', () => {
-    const sampleTargets = ['node_modules', 'dist'];
-
-    sampleTargets.forEach((target) => {
-      it('when target is ' + target, (done) => {
-        setExploreConfig({ targets: [target] });
-        const subDirectories = [
-          {
-            name: 'file1.cs',
-            isDirectory: () => false,
-            isSymbolicLink: () => false,
-          },
-          {
-            name: '.gitignore',
-            isDirectory: () => false,
-            isSymbolicLink: () => false,
-          },
-          {
-            name: 'dir1',
-            isDirectory: () => true,
-            isSymbolicLink: () => false,
-          },
-          {
-            name: 'node_modules',
-            isDirectory: () => true,
-            isSymbolicLink: () => false,
-          },
-          {
-            name: 'file3.txt',
-            isDirectory: () => false,
-            isSymbolicLink: () => false,
-          },
-          {
-            name: 'dir2',
-            isDirectory: () => true,
-            isSymbolicLink: () => false,
-          },
-        ];
-        dirEntriesMock = [...subDirectories];
-
-        const expectedResult = subDirectories
-          .filter((subdir) => {
-            if (!subdir.isDirectory()) {
-              return false;
-            }
-
-            const isTarget = subdir.name === target;
-            if (GLOBAL_IGNORE.has(subdir.name) && !isTarget) {
-              return false;
-            }
-
-            return true;
-          })
-          .map((subdir) => ({
-            path: join(basePath, subdir.name),
-            isTarget: subdir.name === target,
-          }));
-
-        let results: unknown[];
-
-        tunnelEmitter.on('message', (message) => {
-          if (message.type === EVENTS.scanResult) {
-            results = message.value.results;
-
-            expect(results).toEqual(expectedResult);
-            done();
-          }
-        });
-
-        tunnelEmitter.postMessage({
-          type: EVENTS.explore,
-          value: { path: '/home/user/' },
-        });
+      tunnel.postMessage({
+        type: EVENTS.startScan,
+        value: {
+          scanId: 1,
+          buffer: sharedScan.buffer,
+          options: { rootPath: root, ...options },
+        },
       });
     });
+  }
+
+  it('reports only target directories', async () => {
+    createTree(['app/node_modules', 'lib/src']);
+    writeFileSync(join(root, 'lib/node_modules'), '');
+
+    expect(await scan({ targets: ['node_modules'] })).toEqual([
+      join('app', 'node_modules'),
+    ]);
+  });
+
+  it('finds every target name at any depth', async () => {
+    createTree(['a/node_modules', 'b/c/dist', 'd/build']);
+
+    expect(await scan({ targets: ['node_modules', 'dist'] })).toEqual([
+      join('a', 'node_modules'),
+      join('b', 'c', 'dist'),
+    ]);
+  });
+
+  it('does not look inside the targets it finds', async () => {
+    createTree(['app/node_modules/pkg/node_modules']);
+
+    expect(await scan({ targets: ['node_modules'] })).toEqual([
+      join('app', 'node_modules'),
+    ]);
+  });
+
+  it('keeps the folders that do not fit in the shared memory', async () => {
+    const projects = ['a', 'b', 'c', 'd'];
+    createTree(projects.map((project) => join(project, 'node_modules')));
+    const roomForOneFolder = 2 * Buffer.byteLength(join(root, 'a'), 'utf16le');
+
+    const found = await scan({ targets: ['node_modules'] }, roomForOneFolder);
+
+    expect(found).toEqual(
+      projects.map((project) => join(project, 'node_modules')),
+    );
   });
 
   describe('should exclude dir', () => {
-    it('when a simple patterns is gived', (done) => {
-      const excluded = ['ignorethis', 'andignorethis'];
-      setExploreConfig({
+    it('when a simple pattern is given', async () => {
+      createTree(['ignorethis/node_modules', 'keep/node_modules']);
+
+      const found = await scan({
         targets: ['node_modules'],
-        exclude: excluded,
-      });
-      const subDirectories = [
-        {
-          name: 'file1.cs',
-          isDirectory: () => false,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: '.gitignore',
-          isDirectory: () => false,
-          isSymbolicLink: () => false,
-        },
-        { name: 'dir1', isDirectory: () => true, isSymbolicLink: () => false },
-        {
-          name: 'node_modules',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'ignorethis',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'andignorethis',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        { name: 'dir2', isDirectory: () => true, isSymbolicLink: () => false },
-      ];
-      dirEntriesMock = [...subDirectories];
-
-      const expectedResult = subDirectories
-        .filter(
-          (subdir) => subdir.isDirectory() && !excluded.includes(subdir.name),
-        )
-        .map((subdir) => ({
-          path: join(basePath, subdir.name),
-          isTarget: subdir.name === 'node_modules',
-        }));
-
-      let results: unknown[];
-      tunnelEmitter.on('message', (message) => {
-        if (message.type === EVENTS.scanResult) {
-          results = message.value.results;
-
-          done();
-          expect(results).toEqual(expectedResult);
-        }
+        exclude: ['ignorethis'],
       });
 
-      tunnelEmitter.postMessage({
-        type: EVENTS.explore,
-        value: { path: '/home/user/' },
-      });
+      expect(found).toEqual([join('keep', 'node_modules')]);
     });
 
-    it('when a part of path is gived', (done) => {
-      const excluded = ['user/ignorethis'];
-      setExploreConfig({
+    it('when a part of the path is given', async () => {
+      createTree(['ignorethis/node_modules', 'other/ignorethis/node_modules']);
+
+      const found = await scan({
         targets: ['node_modules'],
-        exclude: excluded.map(normalize),
-      });
-      const subDirectories = [
-        {
-          name: 'file1.cs',
-          isDirectory: () => false,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: '.gitignore',
-          isDirectory: () => false,
-          isSymbolicLink: () => false,
-        },
-        { name: 'dir1', isDirectory: () => true, isSymbolicLink: () => false },
-        {
-          name: 'node_modules',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'ignorethis',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'andNOTignorethis',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        { name: 'dir2', isDirectory: () => true, isSymbolicLink: () => false },
-      ];
-      dirEntriesMock = [...subDirectories];
-
-      const expectedResult = subDirectories
-        .filter(
-          (subdir) => subdir.isDirectory() && subdir.name !== 'ignorethis',
-        )
-        .map((subdir) => ({
-          path: join(basePath, subdir.name),
-          isTarget: subdir.name === 'node_modules',
-        }));
-
-      let results: unknown[];
-      tunnelEmitter.on('message', (message) => {
-        if (message.type === EVENTS.scanResult) {
-          results = message.value.results;
-
-          done();
-          expect(results).toEqual(expectedResult);
-        }
+        exclude: [join(basename(root), 'ignorethis')],
       });
 
-      tunnelEmitter.postMessage({
-        type: EVENTS.explore,
-        value: { path: '/home/user/' },
-      });
+      expect(found).toEqual([join('other', 'ignorethis', 'node_modules')]);
     });
   });
 
   describe('should skip symbolic links', () => {
-    it('should not return symlinked directories', (done) => {
-      setExploreConfig({ targets: ['node_modules'] });
-      const subDirectories = [
-        {
-          name: 'regular-dir',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'symlinked-dir',
-          isDirectory: () => true,
-          isSymbolicLink: () => true, // This should be skipped
-        },
-        {
-          name: 'node_modules',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'another-symlink',
-          isDirectory: () => true,
-          isSymbolicLink: () => true, // This should be skipped
-        },
-        {
-          name: 'another-regular-dir',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-      ];
+    it('does not follow symlinked directories', async () => {
+      createTree(['real/node_modules']);
+      linkDirectory('real', 'linked');
 
-      // Only non-symlinked directories should be in results
-      const expectedResult = subDirectories
-        .filter((subdir) => subdir.isDirectory() && !subdir.isSymbolicLink())
-        .map((subdir) => ({
-          path: join(basePath, subdir.name),
-          isTarget: subdir.name === 'node_modules',
-        }));
-
-      dirEntriesMock = [...subDirectories];
-
-      let results: unknown[];
-
-      tunnelEmitter.on('message', (message) => {
-        if (message.type === EVENTS.scanResult) {
-          results = message.value.results;
-
-          expect(results).toEqual(expectedResult);
-          // Verify symlinks were filtered out
-          expect(results).toHaveLength(3);
-          const paths = (results as Array<{ path: string }>).map((r) => r.path);
-          expect(paths.some((p) => p.includes('symlink'))).toBe(false);
-          done();
-        }
-      });
-
-      tunnelEmitter.postMessage({
-        type: EVENTS.explore,
-        value: { path: '/home/user/' },
-      });
+      expect(await scan({ targets: ['node_modules'] })).toEqual([
+        join('real', 'node_modules'),
+      ]);
     });
 
-    it('should skip symlinked files', (done) => {
-      setExploreConfig({ targets: ['node_modules'] });
-      const subDirectories = [
-        {
-          name: 'regular-file.txt',
-          isDirectory: () => false,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: 'symlinked-file.txt',
-          isDirectory: () => false,
-          isSymbolicLink: () => true, // This should be skipped
-        },
-        {
-          name: 'regular-dir',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-      ];
+    it('does not report symlinked targets, like workspace packages', async () => {
+      createTree(['packages/a/node_modules', 'app']);
+      linkDirectory('packages/a/node_modules', 'app/node_modules');
 
-      // Only regular directories should be in results (files are not included anyway)
-      const expectedResult = [
-        {
-          path: join(basePath, 'regular-dir'),
-          isTarget: false,
-        },
-      ];
-
-      dirEntriesMock = [...subDirectories];
-
-      let results: unknown[];
-
-      tunnelEmitter.on('message', (message) => {
-        if (message.type === EVENTS.scanResult) {
-          results = message.value.results;
-
-          expect(results).toEqual(expectedResult);
-          expect(results).toHaveLength(1);
-          done();
-        }
-      });
-
-      tunnelEmitter.postMessage({
-        type: EVENTS.explore,
-        value: { path: '/home/user/' },
-      });
-    });
-
-    it('should handle yarn/pnpm workspace symlinks', (done) => {
-      setExploreConfig({ targets: ['node_modules'] });
-      const subDirectories = [
-        {
-          name: 'node_modules',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-        {
-          name: '@workspace-package', // Yarn workspace symlink
-          isDirectory: () => true,
-          isSymbolicLink: () => true,
-        },
-        {
-          name: 'package-a', // pnpm symlink
-          isDirectory: () => true,
-          isSymbolicLink: () => true,
-        },
-        {
-          name: 'src',
-          isDirectory: () => true,
-          isSymbolicLink: () => false,
-        },
-      ];
-
-      // Only non-symlinked directories
-      const expectedResult = [
-        {
-          path: join(basePath, 'node_modules'),
-          isTarget: true,
-        },
-        {
-          path: join(basePath, 'src'),
-          isTarget: false,
-        },
-      ];
-
-      dirEntriesMock = [...subDirectories];
-
-      let results: unknown[];
-
-      tunnelEmitter.on('message', (message) => {
-        if (message.type === EVENTS.scanResult) {
-          results = message.value.results;
-
-          expect(results).toEqual(expectedResult);
-          // Verify workspace symlinks were excluded
-          expect(results).toHaveLength(2);
-          const paths = (results as Array<{ path: string }>).map((r) => r.path);
-          expect(paths.some((p) => p.includes('@workspace'))).toBe(false);
-          expect(paths.some((p) => p.includes('package-a'))).toBe(false);
-          done();
-        }
-      });
-
-      tunnelEmitter.postMessage({
-        type: EVENTS.explore,
-        value: { path: '/home/user/' },
-      });
+      expect(await scan({ targets: ['node_modules'] })).toEqual([
+        join('packages', 'a', 'node_modules'),
+      ]);
     });
   });
 });
