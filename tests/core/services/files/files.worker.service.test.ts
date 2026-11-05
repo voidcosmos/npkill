@@ -22,7 +22,7 @@ const messageChannelPort1Mock = jest.fn();
 const messageChannelPort2Mock = jest.fn();
 
 jest.unstable_mockModule('os', () => ({
-  default: { cpus: jest.fn().mockReturnValue([0, 0]) },
+  default: { cpus: jest.fn().mockReturnValue([]) },
 }));
 
 jest.unstable_mockModule('worker_threads', () => ({

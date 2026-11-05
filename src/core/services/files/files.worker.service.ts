@@ -5,7 +5,11 @@ import { Worker, MessageChannel, MessagePort } from 'worker_threads';
 import { Subject } from 'rxjs';
 import { LoggerService } from '../logger.service.js';
 import { ScanStatus } from '../../interfaces/search-status.model.js';
-import { EVENTS, MAX_WORKERS } from '../../../constants/workers.constants.js';
+import {
+  EVENTS,
+  MAX_WORKERS,
+  WORKERS_PER_CORE,
+} from '../../../constants/workers.constants.js';
 import { TargetDefinition } from '../../interfaces/target.interface.js';
 import { SharedScan } from './shared-scan.js';
 
@@ -325,7 +329,7 @@ export class FileWorkerService {
     const cores = os.cpus().length;
     // TODO calculate amount of RAM available and take it
     // as part on the ecuation.
-    const numWorkers = cores > MAX_WORKERS ? MAX_WORKERS : cores - 1;
+    const numWorkers = Math.min(cores * WORKERS_PER_CORE, MAX_WORKERS);
     return numWorkers < 1 ? 1 : numWorkers;
   }
 }
