@@ -14,6 +14,7 @@ export const GLOBAL_IGNORE = new Set([
   // System folders
   '.Trash',
   '.Trashes',
+  '$RECYCLE.BIN',
   'System Volume Information',
   '.Spotlight-V100',
   '.fseventsd',
@@ -26,23 +27,19 @@ export const GLOBAL_IGNORE = new Set([
   '.rbenv',
   '.asdf',
   '.deno',
+  '.volta',
+  '.bun',
 
   // IDEs
   '.vscode',
+  '.vscode-server',
   '.idea',
   '.vs',
   '.settings',
 
-  // Other
-  'snap',
-  '.flatpak-info',
-
-  //Heavy
+  // Dependencies and environments
   'node_modules',
   '__pycache__',
-  'target',
-  'build',
-  'dist',
   '.cache',
   '.venv',
   'venv',
