@@ -12,7 +12,7 @@ export interface INpkillrcConfig {
   rootDir?: string;
 
   /**
-   * Array of directory names to exclude from search.
+   * Array of directory exclusion patterns, relative to the scan root.
    * These directories and their subdirectories will be skipped.
    * @example [".git", "important-project"]
    */

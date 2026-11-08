@@ -9,9 +9,10 @@ import {
 } from '../../index.js';
 import fs, { accessSync, Stats, statSync } from 'fs';
 import { access, lstat, opendir, readdir } from 'fs/promises';
-import { map, Observable, Subject } from 'rxjs';
+import { EMPTY, map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
 import { IsValidRootFolderResult } from '../../interfaces/npkill.interface.js';
+import { compileExclusions, isExcludedDirectory } from './exclude-patterns.js';
 
 export abstract class FileService implements IFileService {
   public fileWorkerService: FileWorkerService;
@@ -23,6 +24,11 @@ export abstract class FileService implements IFileService {
   abstract delete(path: string): Promise<boolean>;
 
   listDir(path: string, params: ScanOptions): Observable<string> {
+    const exclusions = compileExclusions(path, params.exclude);
+    if (isExcludedDirectory(path, exclusions)) {
+      return EMPTY;
+    }
+
     return new Observable<string>((subscriber) => {
       const stream$ = new Subject<string>();
       const subscription = stream$.subscribe(subscriber);

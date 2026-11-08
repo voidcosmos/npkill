@@ -42,7 +42,7 @@ export interface ScanFoundTarget {
 export interface ScanOptions {
   /** Directory names or rules. Must contain at least one target. */
   targets: readonly TargetDefinition[];
-  /** Array of directory paths to exclude from the scan. */
+  /** Array of directory patterns to exclude from the scan, relative to the scan root unless absolute. */
   exclude?: string[];
   /**
    * Whether to skip the folders that rarely hold projects, like `.git` or
