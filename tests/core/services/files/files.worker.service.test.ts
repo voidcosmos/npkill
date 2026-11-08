@@ -5,7 +5,9 @@ import { EVENTS } from '../../../../src/constants/workers.constants.js';
 import {
   WorkerMessage,
   WorkerScanOptions,
+  WorkerScanRequest,
 } from '../../../../src/core/services/files/index.js';
+import { SharedScan } from '../../../../src/core/services/files/shared-scan.js';
 import { LoggerService } from '../../../../src/core/services/logger.service.js';
 import { ScanStatus } from '../../../../src/core/interfaces/search-status.model.js';
 
@@ -20,7 +22,7 @@ const messageChannelPort1Mock = jest.fn();
 const messageChannelPort2Mock = jest.fn();
 
 jest.unstable_mockModule('os', () => ({
-  default: { cpus: jest.fn().mockReturnValue([0, 0]) },
+  default: { cpus: jest.fn().mockReturnValue([]) },
 }));
 
 jest.unstable_mockModule('worker_threads', () => ({
@@ -68,15 +70,27 @@ const SCAN_OPTIONS: WorkerScanOptions = {
   targets: ['node_modules'],
 };
 
-function answerExplore(
-  results: Array<{ path: string; isTarget: boolean }>,
-  scanId = 1,
-): void {
+function answerScan(results: string[], scanId = 1): void {
   const message: WorkerMessage = {
     type: EVENTS.scanResult,
-    value: { workerId: 0, scanId, results },
+    value: { scanId, results },
   };
   port1Emitter.emit('message', message);
+}
+
+function finishScan(scanId = 1): void {
+  const message: WorkerMessage = {
+    type: EVENTS.scanFinished,
+    value: { scanId },
+  };
+  port1Emitter.emit('message', message);
+}
+
+function sentScanRequest(): WorkerScanRequest {
+  const [message] = messageChannelPort1Mock.mock.calls
+    .map(([sent]) => sent as WorkerMessage)
+    .filter((sent) => sent.type === EVENTS.startScan);
+  return message.value as WorkerScanRequest;
 }
 
 function answerSize(id: number, size: number, error?: string): void {
@@ -129,40 +143,41 @@ describe('FileWorkerService', () => {
     it('should send the scan options and the root folder to the workers', () => {
       fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
-      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
-        type: EVENTS.exploreConfig,
-        value: SCAN_OPTIONS,
-      });
-      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
-        type: EVENTS.explore,
-        value: { path: SCAN_OPTIONS.rootPath, scanId: 1 },
-      });
+      const request = sentScanRequest();
+      expect(request.scanId).toBe(1);
+      expect(request.options).toEqual(SCAN_OPTIONS);
+      expect(new SharedScan(request.buffer).take()).toBe(SCAN_OPTIONS.rootPath);
     });
 
-    it('should emit the targets and explore the other folders', () => {
+    it('should emit the targets the workers find', () => {
       const outcome = record(stream$);
       fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
-      answerExplore([
-        { path: '/sample/path/app/node_modules', isTarget: true },
-        { path: '/sample/path/lib', isTarget: false },
-      ]);
+      answerScan(['/sample/path/app/node_modules']);
 
       expect(outcome.values).toEqual(['/sample/path/app/node_modules']);
-      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
-        type: EVENTS.explore,
-        value: { path: '/sample/path/lib', scanId: 1 },
-      });
     });
 
-    it('should complete only when every explored folder has answered', () => {
+    it('should report the progress of the shared scan', () => {
+      fileWorkerService.startScan(stream$, SCAN_OPTIONS);
+      const sharedScan = new SharedScan(sentScanRequest().buffer);
+      sharedScan.take();
+      sharedScan.completeFolder(2);
+
+      answerScan([]);
+
+      expect(searchStatus.pendingSearchTasks).toBe(2);
+      expect(searchStatus.completedSearchTasks).toBe(1);
+    });
+
+    it('should complete only when every worker has finished', () => {
       const outcome = record(stream$);
       fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
-      answerExplore([{ path: '/sample/path/lib', isTarget: false }]);
+      answerScan(['/sample/path/app/node_modules']);
       expect(outcome.completed).toBe(false);
 
-      answerExplore([]);
+      finishScan();
       expect(outcome.completed).toBe(true);
       expect(searchStatus.workerStatus).toBe('finished');
     });
@@ -171,22 +186,21 @@ describe('FileWorkerService', () => {
       const outcome = record(stream$);
       fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
-      answerExplore([{ path: '/old/node_modules', isTarget: true }], 99);
+      answerScan(['/old/node_modules'], 99);
+      finishScan(99);
 
       expect(outcome.values).toEqual([]);
       expect(outcome.completed).toBe(false);
     });
 
-    it('should complete the scan and tell the workers to stop on stopScan', () => {
+    it('should complete the scan and stop the workers on stopScan', () => {
       const outcome = record(stream$);
       fileWorkerService.startScan(stream$, SCAN_OPTIONS);
 
       fileWorkerService.stopScan();
 
       expect(outcome.completed).toBe(true);
-      expect(messageChannelPort1Mock).toHaveBeenCalledWith({
-        type: EVENTS.stop,
-      });
+      expect(new SharedScan(sentScanRequest().buffer).isRunning()).toBe(false);
     });
 
     it('should reject a second scan while the first is running', () => {
@@ -277,7 +291,7 @@ describe('FileWorkerService idle workers', () => {
     const fileWorkerService = new FileWorkerService(logger, new ScanStatus());
     fileWorkerService.startScan(new Subject<string>(), SCAN_OPTIONS);
 
-    answerExplore([]);
+    finishScan();
     jest.runOnlyPendingTimers();
 
     expect(workerTerminateMock).toHaveBeenCalledTimes(1);
