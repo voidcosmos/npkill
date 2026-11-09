@@ -212,6 +212,27 @@ describe('startScan$', () => {
     expect(first.completed).toBe(true);
   });
 
+  it('accepts a new scan after one that failed to start', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const npkill = createNpkill();
+    const targetsWorkersCannotReceive = new Proxy(['node_modules'], {});
+
+    const failed = await observe(
+      npkill.startScan$(root, { targets: targetsWorkersCannotReceive }),
+      SCAN_TIMEOUT_MS,
+    );
+    const outcome = await observe(
+      npkill.startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(failed.error).toEqual(
+      expect.objectContaining({ name: 'DataCloneError' }),
+    );
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+    expect(outcome.completed).toBe(true);
+  });
+
   it('accepts a new scan once the previous one is unsubscribed', async () => {
     const root = createTree(['app/node_modules/pkg']);
     const npkill = createNpkill();

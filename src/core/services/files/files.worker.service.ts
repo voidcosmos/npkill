@@ -108,12 +108,19 @@ export class FileWorkerService {
       sharedScan,
       finishedWorkers: 0,
     };
+    try {
+      this.broadcast({
+        type: EVENTS.startScan,
+        value: { scanId: scan.id, buffer: sharedScan.buffer, options: params },
+      });
+    } catch (error) {
+      this.updateWorkersLifecycle();
+      stream$.error(error);
+      return;
+    }
+
     this.activeScan = scan;
     this.searchStatus.workerStatus = 'scanning';
-    this.broadcast({
-      type: EVENTS.startScan,
-      value: { scanId: scan.id, buffer: sharedScan.buffer, options: params },
-    });
     this.updateWorkersLifecycle();
   }
 

@@ -30,16 +30,27 @@ await npkill
 console.log(JSON.stringify({ found: found.length, deleted }));
 `;
 
+const SCAN_THAT_FAILS_TO_START = `
+const root = process.argv[2];
+const targets = new Proxy(['node_modules'], {});
+let failedWith = null;
+await new Npkill()
+  .startScan$(root, { targets })
+  .forEach(() => {})
+  .catch((error) => (failedWith = error.name));
+console.log(JSON.stringify({ failedWith }));
+`;
+
 afterEach(() => {
   removeTempDirs();
 });
 
-function writeConsumerScript(): string {
+function writeConsumerScript(operations: string): string {
   const entry = pathToFileURL(join(PACKAGE_DIR, 'lib', 'index.js')).href;
   const script = join(createTempDir(), 'consumer.mjs');
   writeFileSync(
     script,
-    `import { Npkill } from ${JSON.stringify(entry)};\n${OPERATIONS_ON_THE_ROOT_ARGUMENT}`,
+    `import { Npkill } from ${JSON.stringify(entry)};\n${operations}`,
   );
   return script;
 }
@@ -52,11 +63,27 @@ describe('a script using the api', () => {
 
       const { stdout } = await runNode(
         process.execPath,
-        [writeConsumerScript(), root],
+        [writeConsumerScript(OPERATIONS_ON_THE_ROOT_ARGUMENT), root],
         { timeout: EXIT_TIMEOUT_MS },
       );
 
       expect(JSON.parse(stdout)).toEqual({ found: 2, deleted: true });
+    },
+    EXIT_TIMEOUT_MS + 2000,
+  );
+
+  it(
+    'exits on its own after a scan that failed to start',
+    async () => {
+      const root = createTree(['a/node_modules/pkg']);
+
+      const { stdout } = await runNode(
+        process.execPath,
+        [writeConsumerScript(SCAN_THAT_FAILS_TO_START), root],
+        { timeout: EXIT_TIMEOUT_MS },
+      );
+
+      expect(JSON.parse(stdout)).toEqual({ failedWith: 'DataCloneError' });
     },
     EXIT_TIMEOUT_MS + 2000,
   );
