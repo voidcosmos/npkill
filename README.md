@@ -3,10 +3,12 @@
 </p>
 
 <p align="center">
-  <img src="/docs/npkill-demo-1.0.0.gif" width="904" alt="npkill demo GIF" />
+  <strong>Easily find and remove old and heavy node_modules.</strong> And everything else you don’t need.
 </p>
 
-### Easily find and **remove** old and heavy **node_modules**. And everything else you don’t need.
+<p align="center">
+  <img src="/docs/npkill-demo-1.0.0.gif" width="904" alt="npkill demo GIF" />
+</p>
 
 **Your system remembers everything. npkill helps you forget.**
 This tool scans your system for heavy and unnecessary development directories.
