@@ -25,6 +25,10 @@ import {
 import { LogEntry } from './interfaces/logger-service.interface.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { validateTargets } from './services/targets/index.js';
+import {
+  validateBoolean,
+  validateExclude,
+} from './services/config/property-validators.js';
 
 const DELETE_OPTIONS: Record<keyof DeleteOptions, true> = { dryRun: true };
 
@@ -67,13 +71,11 @@ export class Npkill implements NpkillInterface {
       );
       this.logger.info(`Scan started in ${absoluteRootPath}`);
       const startTime = Date.now();
+      const performRiskAnalysis = options.performRiskAnalysis !== false;
 
       return fileService.listDir(absoluteRootPath, options).pipe(
         map((path) => {
-          if (
-            options.performRiskAnalysis !== undefined &&
-            !options.performRiskAnalysis
-          ) {
+          if (!performRiskAnalysis) {
             return { path };
           }
           const riskAnalysis = fileService.isDangerous(path);
@@ -247,9 +249,18 @@ function resolveRequiredPath(
 }
 
 function assertValidScanOptions(options: ScanOptions): void {
-  const result = validateTargets(options?.targets, 'ScanOptions.targets');
-  if (!result.isValid) {
-    throw new Error(result.error);
+  const invalid = [
+    validateTargets(options?.targets, 'ScanOptions.targets'),
+    validateExclude(options?.exclude),
+    validateBoolean(options?.useDefaultIgnore, 'ScanOptions.useDefaultIgnore'),
+    validateBoolean(
+      options?.performRiskAnalysis,
+      'ScanOptions.performRiskAnalysis',
+    ),
+  ].find((result) => !result.isValid);
+
+  if (invalid) {
+    throw new Error(invalid.error);
   }
 }
 

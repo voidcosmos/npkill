@@ -42,20 +42,68 @@ describe('startScan$', () => {
   });
 
   it.each([
-    ['targets as a string', { targets: 'node_modules' }],
-    ['targets set to null', { targets: null }],
-    ['the old target key', { target: 'node_modules' }],
-    ['an empty targets list', { targets: [] }],
-  ])('rejects %s through the error channel', async (_case, options) => {
-    const root = createTree(['node/src', 'app/node_modules/pkg']);
+    ['targets as a string', { targets: 'node_modules' }, 'targets'],
+    ['targets set to null', { targets: null }, 'targets'],
+    ['the old target key', { target: 'node_modules' }, 'targets'],
+    ['an empty targets list', { targets: [] }, 'targets'],
+    ['an empty target name', { targets: [''] }, 'targets'],
+    ['a number as a target', { targets: [42] }, 'targets'],
+    ['null as a target', { targets: [null] }, 'targets'],
+    ['a list as a target', { targets: [['node_modules']] }, 'targets'],
+    [
+      'a rule without a target',
+      { targets: [{ nextTo: ['Cargo.toml'] }] },
+      'targets',
+    ],
+    [
+      'a rule without nextTo or contains',
+      { targets: [{ target: 'target' }] },
+      'targets',
+    ],
+    [
+      'an empty nextTo',
+      { targets: [{ target: 'target', nextTo: [] }] },
+      'targets',
+    ],
+    [
+      'an empty contains',
+      { targets: [{ target: '.venv', contains: [] }] },
+      'targets',
+    ],
+    ['exclude as a string', { ...NODE_MODULES, exclude: 'app' }, 'exclude'],
+    [
+      'an exclude that is not a path',
+      { ...NODE_MODULES, exclude: [42] },
+      'exclude',
+    ],
+    [
+      'a useDefaultIgnore that is not a boolean',
+      { ...NODE_MODULES, useDefaultIgnore: 'false' },
+      'useDefaultIgnore',
+    ],
+    [
+      'a performRiskAnalysis that is not a boolean',
+      { ...NODE_MODULES, performRiskAnalysis: null },
+      'performRiskAnalysis',
+    ],
+  ])(
+    'rejects %s through the error channel',
+    async (_case, options, invalidOption) => {
+      const root = createTree(['node/src', 'app/node_modules/pkg']);
 
-    const outcome = await observe(
-      createNpkill().startScan$(root, options as unknown as ScanOptions),
-      SCAN_TIMEOUT_MS,
-    );
+      const outcome = await observe(
+        createNpkill().startScan$(root, options as unknown as ScanOptions),
+        SCAN_TIMEOUT_MS,
+      );
 
-    expect(outcome.error).toBeInstanceOf(Error);
-  });
+      expect(outcome.values).toEqual([]);
+      expect(outcome.error).toEqual(
+        expect.objectContaining({
+          message: expect.stringContaining(invalidOption),
+        }),
+      );
+    },
+  );
 
   it.each(['*.log', 'pkg/dist', 'pkg\\dist', '{a,b}', '[ab]', 'cache?'])(
     'rejects the target %s because it uses pattern characters',
@@ -173,6 +221,31 @@ describe('startScan$', () => {
     );
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+  });
+
+  it('reads the options once, when subscribing', async () => {
+    const root = createTree(['app1/node_modules/pkg', 'app2/node_modules/pkg']);
+    const options = { targets: ['node_modules'], performRiskAnalysis: true };
+
+    const outcome = await observe(
+      createNpkill()
+        .startScan$(root, options)
+        .pipe(
+          tap(() => {
+            options.targets = ['.git'];
+            options.performRiskAnalysis = false;
+          }),
+        ),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual([
+      'app1/node_modules',
+      'app2/node_modules',
+    ]);
+    outcome.values.forEach((result) =>
+      expect(result).toHaveProperty('riskAnalysis'),
+    );
   });
 
   it('completes when stopScan() is called', async () => {
