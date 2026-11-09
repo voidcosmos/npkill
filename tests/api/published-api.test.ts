@@ -157,6 +157,12 @@ describe('npkill published API', () => {
     ]);
   });
 
+  it('exports only Npkill at runtime', async () => {
+    const runtimeExports = await import(join(PACKAGE_DIR, 'lib', 'index.js'));
+
+    expect(Object.keys(runtimeExports)).toEqual(['Npkill']);
+  });
+
   it('declares the 1.0 signatures', () => {
     expect(typeErrors(createProgram(EXPECTED_TYPES))).toEqual([]);
   });

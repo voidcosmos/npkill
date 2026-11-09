@@ -1,9 +1,15 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   createNpkill,
   stopCreatedInstances,
 } from './support/npkill-package.js';
+import {
+  createTempDir,
+  inDirectory,
+  removeTempDirs,
+} from './support/helpers.js';
 
 const packageJson = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
@@ -11,10 +17,22 @@ const packageJson = JSON.parse(
 
 afterEach(() => {
   stopCreatedInstances();
+  removeTempDirs();
 });
 
 describe('getVersion', () => {
   it('returns the version of the package', () => {
     expect(createNpkill().getVersion()).toBe(packageJson.version);
+  });
+
+  it('reads its own package.json from any working directory', async () => {
+    const project = createTempDir();
+    writeFileSync(join(project, 'package.json'), '{"version":"9.9.9"}');
+
+    const version = await inDirectory(project, async () =>
+      createNpkill().getVersion(),
+    );
+
+    expect(version).toBe(packageJson.version);
   });
 });

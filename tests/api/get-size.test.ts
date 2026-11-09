@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
-import { mkdirSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
+import {
+  closeSync,
+  linkSync,
+  mkdirSync,
+  openSync,
+  statSync,
+  symlinkSync,
+  ftruncateSync,
+} from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import type { ScanOptions } from '../../src/index.js';
 import {
   createNpkill,
@@ -8,6 +16,7 @@ import {
 } from './support/npkill-package.js';
 import {
   createTempDir,
+  inDirectory,
   itOnUnix,
   itWithUnixPermissions,
   lockPermissions,
@@ -19,6 +28,7 @@ import {
 const NODE_MODULES: ScanOptions = { targets: ['node_modules'] };
 const SIZE_TIMEOUT_MS = 2500;
 const FILE_SIZE = 64 * 1024;
+const FOLDER_SIZE = 4096;
 
 afterEach(() => {
   stopCreatedInstances();
@@ -86,7 +96,67 @@ describe('getSize$', () => {
       SIZE_TIMEOUT_MS,
     );
 
-    expect(sizes(outcome.values)[0]).toBeGreaterThanOrEqual(2 * FILE_SIZE);
+    expect(sizes(outcome.values)).toEqual([2 * FILE_SIZE + 2 * FOLDER_SIZE]);
+  });
+
+  it('counts each subfolder as 4096 bytes', async () => {
+    const folder = createTempDir();
+    mkdirSync(join(folder, 'lib', 'deep'), { recursive: true });
+
+    const outcome = await observe(
+      createNpkill().getSize$(folder),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(sizes(outcome.values)).toEqual([2 * FOLDER_SIZE]);
+  });
+
+  it('counts a file with two hard links twice', async () => {
+    const folder = createFolderWithFile();
+    linkSync(join(folder, 'blob.bin'), join(folder, 'blob-link.bin'));
+
+    const outcome = await observe(
+      createNpkill().getSize$(folder),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(sizes(outcome.values)).toEqual([2 * FILE_SIZE]);
+  });
+
+  itOnUnix('counts the blocks a file uses on disk', async () => {
+    const file = join(createTempDir(), 'sparse.bin');
+    const descriptor = openSync(file, 'w');
+    ftruncateSync(descriptor, 8 * 1024 * 1024);
+    closeSync(descriptor);
+
+    const outcome = await observe(
+      createNpkill().getSize$(file),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(sizes(outcome.values)).toEqual([statSync(file).blocks * 512]);
+  });
+
+  it('measures a relative path', async () => {
+    const folder = createFolderWithFile();
+
+    const outcome = await inDirectory(dirname(folder), () =>
+      observe(createNpkill().getSize$(basename(folder)), SIZE_TIMEOUT_MS),
+    );
+
+    expect(sizes(outcome.values)).toEqual([FILE_SIZE]);
+  });
+
+  it('measures the folder again on each subscription', async () => {
+    const folder = createFolderWithFile();
+    const size$ = createNpkill().getSize$(folder);
+
+    const first = await observe(size$, SIZE_TIMEOUT_MS);
+    writeRandomFile(join(folder, 'other.bin'), FILE_SIZE);
+    const second = await observe(size$, SIZE_TIMEOUT_MS);
+
+    expect(sizes(first.values)).toEqual([FILE_SIZE]);
+    expect(sizes(second.values)).toEqual([2 * FILE_SIZE]);
   });
 
   it('answers each request with its own size', async () => {
@@ -171,6 +241,21 @@ describe('getSize$', () => {
     },
   );
 
+  itOnUnix('does not count the symlinks inside a folder', async () => {
+    const folder = createFolderWithFile();
+    const outside = createFolderWithFile();
+    symlinkSync(outside, join(folder, 'linked-folder'), 'dir');
+    symlinkSync(join(outside, 'blob.bin'), join(folder, 'linked-file.bin'));
+    symlinkSync('x'.repeat(300), join(folder, 'link-with-its-own-block'));
+
+    const outcome = await observe(
+      createNpkill().getSize$(folder),
+      SIZE_TIMEOUT_MS,
+    );
+
+    expect(sizes(outcome.values)).toEqual([FILE_SIZE]);
+  });
+
   it('measures a file', async () => {
     const file = join(createTempDir(), 'model.gguf');
     writeRandomFile(file, FILE_SIZE);
@@ -199,15 +284,15 @@ describe('getSize$', () => {
     },
   );
 
-  it('still answers after stopScan()', async () => {
+  it('is not cancelled by stopScan()', async () => {
     const folder = createFolderWithFile();
     const npkill = createNpkill();
     npkill.startScan$(createTempDir(), NODE_MODULES).subscribe();
+
+    const size = observe(npkill.getSize$(folder), SIZE_TIMEOUT_MS);
     npkill.stopScan();
 
-    const outcome = await observe(npkill.getSize$(folder), SIZE_TIMEOUT_MS);
-
-    expect(sizes(outcome.values)).toEqual([FILE_SIZE]);
+    expect(sizes((await size).values)).toEqual([FILE_SIZE]);
   });
 
   it('is not cancelled by starting a scan', async () => {

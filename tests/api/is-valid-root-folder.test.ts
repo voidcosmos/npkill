@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
-import { writeFileSync } from 'node:fs';
+import { symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   createNpkill,
@@ -7,6 +7,7 @@ import {
 } from './support/npkill-package.js';
 import {
   createTempDir,
+  itOnUnix,
   itWithUnixPermissions,
   lockPermissions,
   removeTempDirs,
@@ -44,6 +45,29 @@ describe('isValidRootFolder', () => {
     lockPermissions(folder, 0o000);
 
     expect(createNpkill().isValidRootFolder(folder)).toEqual(INVALID);
+  });
+
+  itWithUnixPermissions('rejects a directory it can enter but not read', () => {
+    const folder = createTempDir();
+    lockPermissions(folder, 0o311);
+
+    expect(createNpkill().isValidRootFolder(folder)).toEqual(INVALID);
+  });
+
+  itOnUnix('accepts a symlink to a directory', () => {
+    const link = join(createTempDir(), 'projects');
+    symlinkSync(createTempDir(), link, 'dir');
+
+    expect(createNpkill().isValidRootFolder(link)).toEqual({ isValid: true });
+  });
+
+  itOnUnix('rejects a symlink to a file', () => {
+    const file = join(createTempDir(), 'package.json');
+    writeFileSync(file, '{}');
+    const link = join(createTempDir(), 'projects');
+    symlinkSync(file, link);
+
+    expect(createNpkill().isValidRootFolder(link)).toEqual(INVALID);
   });
 
   itWithUnixPermissions('rejects a directory it cannot enter', () => {

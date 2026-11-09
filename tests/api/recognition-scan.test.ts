@@ -12,6 +12,8 @@ import {
 } from './support/npkill-package.js';
 import {
   createTree,
+  itWithUnixPermissions,
+  lockPermissions,
   observe,
   relativePaths,
   removeTempDirs,
@@ -81,6 +83,68 @@ describe('scanning with rules', () => {
     ]);
   });
 
+  it('needs the siblings and the contents of a rule that lists both', async () => {
+    const root = createTree([
+      'complete/storybook-static',
+      'half/storybook-static',
+      'empty/storybook-static',
+      'alone/storybook-static',
+    ]);
+    ['complete', 'half', 'empty'].forEach((project) =>
+      writeFileSync(join(root, project, 'package.json'), ''),
+    );
+    ['complete', 'alone'].forEach((project) => {
+      writeFileSync(join(root, project, 'storybook-static/index.html'), '');
+      writeFileSync(join(root, project, 'storybook-static/iframe.html'), '');
+    });
+    writeFileSync(join(root, 'half/storybook-static/index.html'), '');
+    const storybook: TargetRule = {
+      target: 'storybook-static',
+      nextTo: ['package.json'],
+      contains: ['index.html', 'iframe.html'],
+    };
+
+    expect(await scan(root, [storybook])).toEqual([
+      'complete/storybook-static',
+    ]);
+  });
+
+  it('compares listed entries exactly, case included', async () => {
+    const root = createTree(['rust/target']);
+    writeFileSync(join(root, 'rust/cargo.toml'), '');
+
+    expect(await scan(root, [cargoTarget])).toEqual([]);
+  });
+
+  it('accepts folders as listed entries', async () => {
+    const root = createTree([
+      'web/.storybook',
+      'web/storybook-static',
+      'web/.vite/deps',
+      'other/.vite',
+    ]);
+    const targets: TargetRule[] = [
+      { target: 'storybook-static', nextTo: ['.storybook'] },
+      { target: '.vite', contains: ['deps'] },
+    ];
+
+    expect(await scan(root, targets)).toEqual([
+      'web/.vite',
+      'web/storybook-static',
+    ]);
+  });
+
+  itWithUnixPermissions(
+    'does not find a directory whose contents it cannot read',
+    async () => {
+      const root = createTree(['app/.venv']);
+      writeFileSync(join(root, 'app/.venv/pyvenv.cfg'), '');
+      lockPermissions(join(root, 'app/.venv'), 0o000);
+
+      expect(await scan(root, [pythonEnvironment])).toEqual([]);
+    },
+  );
+
   it('finds every directory with a name that is also listed alone', async () => {
     const root = createTree(['rust/target', 'unrelated/target']);
     writeFileSync(join(root, 'rust/Cargo.toml'), '');
@@ -131,6 +195,23 @@ describe('scanning with rules', () => {
     expect(outcome.error).toEqual(
       expect.objectContaining({
         message: expect.stringContaining('unknown property'),
+      }),
+    );
+  });
+
+  it.each([
+    ['target', { target: 'target*', nextTo: ['Cargo.toml'] }],
+    ['nextTo', { target: 'target', nextTo: ['*.toml'] }],
+    ['contains', { target: '.venv', contains: ['*.cfg'] }],
+  ])('rejects pattern characters in %s', async (_list, rule) => {
+    const outcome = await observe(
+      createNpkill().startScan$(createTree(['app']), { targets: [rule] }),
+      TIMEOUT_MS,
+    );
+
+    expect(outcome.error).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining('reserved'),
       }),
     );
   });

@@ -4,6 +4,7 @@ import {
   chmodSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -26,7 +27,8 @@ const temporaryDirs: string[] = [];
 const lockedPaths: string[] = [];
 
 export function createTempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'npkill-api-'));
+  // On macOS tmpdir() is behind a symlink and process.cwd() returns the real path.
+  const dir = mkdtempSync(join(realpathSync.native(tmpdir()), 'npkill-api-'));
   temporaryDirs.push(dir);
   return dir;
 }
@@ -62,6 +64,19 @@ export function relativePaths(
   return results
     .map(({ path }) => relative(root, path).split(sep).join('/'))
     .sort();
+}
+
+export async function inDirectory<T>(
+  dir: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  const originalCwd = process.cwd();
+  process.chdir(dir);
+  try {
+    return await action();
+  } finally {
+    process.chdir(originalCwd);
+  }
 }
 
 export function sleep(ms: number): Promise<void> {

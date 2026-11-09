@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import { symlinkSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { tap } from 'rxjs';
-import type { ScanOptions } from '../../src/index.js';
+import type { ScanFoundTarget, ScanOptions } from '../../src/index.js';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -10,6 +10,7 @@ import {
 import {
   createTempDir,
   createTree,
+  inDirectory,
   itOnUnix,
   itWithUnixPermissions,
   lockPermissions,
@@ -21,6 +22,7 @@ import {
 
 const NODE_MODULES: ScanOptions = { targets: ['node_modules'] };
 const SCAN_TIMEOUT_MS = 2500;
+const IDLE_WORKERS_RELEASE_MS = 5500;
 
 afterEach(() => {
   stopCreatedInstances();
@@ -169,6 +171,36 @@ describe('startScan$', () => {
     );
   });
 
+  it.each([
+    ['does not exist', (dir: string) => join(dir, 'missing')],
+    [
+      'is a file',
+      (dir: string) => {
+        writeFileSync(join(dir, 'package.json'), '{}');
+        return join(dir, 'package.json');
+      },
+    ],
+  ])(
+    'gives the reason of isValidRootFolder when the root %s',
+    async (_case, createRoot) => {
+      const root = createRoot(createTempDir());
+      const npkill = createNpkill();
+      const { invalidReason } = npkill.isValidRootFolder(root);
+
+      const outcome = await observe(
+        npkill.startScan$(root, NODE_MODULES),
+        SCAN_TIMEOUT_MS,
+      );
+
+      expect(invalidReason).toEqual(expect.any(String));
+      expect(outcome.error).toEqual(
+        expect.objectContaining({
+          message: expect.stringContaining(invalidReason as string),
+        }),
+      );
+    },
+  );
+
   it('errors when the root is a file', async () => {
     const file = join(createTempDir(), 'package.json');
     writeFileSync(file, '{}');
@@ -188,9 +220,11 @@ describe('startScan$', () => {
   it('emits absolute paths when the root is relative', async () => {
     const root = createTree(['app/node_modules/pkg']);
 
-    const outcome = await observe(
-      createNpkill().startScan$(relative(process.cwd(), root), NODE_MODULES),
-      SCAN_TIMEOUT_MS,
+    const outcome = await inDirectory(dirname(root), () =>
+      observe(
+        createNpkill().startScan$(basename(root), NODE_MODULES),
+        SCAN_TIMEOUT_MS,
+      ),
     );
 
     expect(outcome.values.map(({ path }) => path)).toEqual([
@@ -223,6 +257,20 @@ describe('startScan$', () => {
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
   });
 
+  it('leaves out a target listed in exclude', async () => {
+    const root = createTree(['app1/node_modules/pkg', 'app2/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, {
+        ...NODE_MODULES,
+        exclude: [join(root, 'app2', 'node_modules')],
+      }),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['app1/node_modules']);
+  });
+
   it('reads the options once, when subscribing', async () => {
     const root = createTree(['app1/node_modules/pkg', 'app2/node_modules/pkg']);
     const options = { targets: ['node_modules'], performRiskAnalysis: true };
@@ -248,20 +296,55 @@ describe('startScan$', () => {
     );
   });
 
-  it('completes when stopScan() is called', async () => {
+  it('stops emitting and completes when stopScan() is called', async () => {
     const root = createTree([
       'app1/node_modules/pkg',
       'app2/node_modules/pkg',
+      'app3/node_modules/pkg',
       'deep/a/b/c/node_modules/pkg',
     ]);
     const npkill = createNpkill();
+    const values: ScanFoundTarget[] = [];
+
+    await new Promise<void>((resolve) => {
+      npkill.startScan$(root, NODE_MODULES).subscribe({
+        next: (result) => {
+          values.push(result);
+          npkill.stopScan();
+        },
+        complete: resolve,
+      });
+    });
+
+    expect(values).toHaveLength(1);
+  });
+
+  it('accepts a new scan after stopScan()', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const npkill = createNpkill();
+    npkill.startScan$(root, NODE_MODULES).subscribe();
+    npkill.stopScan();
 
     const outcome = await observe(
-      npkill.startScan$(root, NODE_MODULES).pipe(tap(() => npkill.stopScan())),
+      npkill.startScan$(root, NODE_MODULES),
       SCAN_TIMEOUT_MS,
     );
 
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
     expect(outcome.completed).toBe(true);
+  });
+
+  it('does not start until subscribed', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const npkill = createNpkill();
+    npkill.startScan$(createTempDir(), NODE_MODULES);
+
+    const outcome = await observe(
+      npkill.startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
   });
 
   it('rejects a second scan on the same instance and lets the first finish', async () => {
@@ -285,6 +368,20 @@ describe('startScan$', () => {
     expect(first.completed).toBe(true);
   });
 
+  it('accepts a new scan once the previous one is unsubscribed', async () => {
+    const root = createTree(['app/node_modules/pkg']);
+    const npkill = createNpkill();
+    npkill.startScan$(createTempDir(), NODE_MODULES).subscribe().unsubscribe();
+
+    const outcome = await observe(
+      npkill.startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+    expect(outcome.completed).toBe(true);
+  });
+
   it('accepts a new scan after one that failed to start', async () => {
     const root = createTree(['app/node_modules/pkg']);
     const npkill = createNpkill();
@@ -306,19 +403,24 @@ describe('startScan$', () => {
     expect(outcome.completed).toBe(true);
   });
 
-  it('accepts a new scan once the previous one is unsubscribed', async () => {
-    const root = createTree(['app/node_modules/pkg']);
-    const npkill = createNpkill();
-    npkill.startScan$(createTempDir(), NODE_MODULES).subscribe().unsubscribe();
+  it(
+    'scans again after its idle workers were released',
+    async () => {
+      const root = createTree(['app/node_modules/pkg']);
+      const npkill = createNpkill();
+      await observe(npkill.startScan$(root, NODE_MODULES), SCAN_TIMEOUT_MS);
+      await sleep(IDLE_WORKERS_RELEASE_MS);
 
-    const outcome = await observe(
-      npkill.startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
+      const outcome = await observe(
+        npkill.startScan$(root, NODE_MODULES),
+        SCAN_TIMEOUT_MS,
+      );
 
-    expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
-    expect(outcome.completed).toBe(true);
-  });
+      expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
+      expect(outcome.completed).toBe(true);
+    },
+    IDLE_WORKERS_RELEASE_MS + 3 * SCAN_TIMEOUT_MS,
+  );
 
   it('runs scans in parallel on different instances', async () => {
     const firstRoot = createTree(['a/node_modules/pkg']);
@@ -353,6 +455,17 @@ describe('startScan$', () => {
       'libs/a/b/c/node_modules',
       'web/.next',
     ]);
+  });
+
+  it('compares names exactly, case included', async () => {
+    const root = createTree(['a/Node_Modules/pkg', 'b/node_modules/pkg']);
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(relativePaths(outcome.values, root)).toEqual(['b/node_modules']);
   });
 
   it('does not look inside a target it found', async () => {
@@ -456,6 +569,21 @@ describe('startScan$', () => {
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
   });
 
+  itOnUnix('follows a symlink given as the root', async () => {
+    const projects = createTree(['app/node_modules/pkg']);
+    const root = join(createTempDir(), 'projects');
+    symlinkSync(projects, root, 'dir');
+
+    const outcome = await observe(
+      createNpkill().startScan$(root, NODE_MODULES),
+      SCAN_TIMEOUT_MS,
+    );
+
+    expect(outcome.values.map(({ path }) => path)).toEqual([
+      join(root, 'app', 'node_modules'),
+    ]);
+  });
+
   itWithUnixPermissions(
     'skips the folders it cannot read and completes',
     async () => {
@@ -505,7 +633,10 @@ describe('startScan$', () => {
 
     expect(outcome.values).toEqual([
       expect.objectContaining({
-        riskAnalysis: { isSensitive: true, reason: expect.any(String) },
+        riskAnalysis: {
+          isSensitive: true,
+          reason: expect.stringMatching(/\S/),
+        },
       }),
     ]);
   });
@@ -521,7 +652,7 @@ describe('startScan$', () => {
       SCAN_TIMEOUT_MS,
     );
 
-    expect(outcome.values).toEqual([
+    expect(outcome.values).toStrictEqual([
       { path: join(root, 'app', 'node_modules') },
     ]);
   });

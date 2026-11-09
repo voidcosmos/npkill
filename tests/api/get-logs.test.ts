@@ -30,6 +30,8 @@ describe('getLogs$', () => {
 
     const outcome = await observe(npkill.getLogs$(), 300);
 
+    expect(outcome.completed).toBe(false);
+    expect(outcome.error).toBeUndefined();
     expect(outcome.values.length).toBeGreaterThan(0);
     outcome.values.forEach((entry) =>
       expect(entry).toEqual({
@@ -67,10 +69,12 @@ describe('getLogs$', () => {
     const otherNpkill = createNpkill();
     const path = join(createTempDir(), 'node_modules');
     const logs = collectLogs(otherNpkill);
+    const entriesBefore = logs.entries.length;
 
     await firstValueFrom(npkill.delete$(path, { dryRun: true }));
     logs.stop();
 
+    expect(logs.entries).toHaveLength(entriesBefore);
     expect(logs.entries).not.toContainEqual(
       expect.objectContaining({ message: expect.stringContaining(path) }),
     );

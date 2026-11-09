@@ -13,6 +13,7 @@ import {
 
 const runNode = promisify(execFile);
 const EXIT_TIMEOUT_MS = 8000;
+const EXIT_BEFORE_IDLE_RELEASE_MS = 2500;
 
 const OPERATIONS_ON_THE_ROOT_ARGUMENT = `
 const root = process.argv[2];
@@ -27,7 +28,7 @@ let deleted = false;
 await npkill
   .delete$(found[0], { dryRun: true })
   .forEach((result) => (deleted = result.success));
-console.log(JSON.stringify({ found: found.length, deleted }));
+console.log(JSON.stringify({ found: found.length, deleted, doneAt: Date.now() }));
 `;
 
 const SCAN_THAT_FAILS_TO_START = `
@@ -66,8 +67,11 @@ describe('a script using the api', () => {
         [writeConsumerScript(OPERATIONS_ON_THE_ROOT_ARGUMENT), root],
         { timeout: EXIT_TIMEOUT_MS },
       );
+      const exitedAt = Date.now();
+      const { doneAt, ...result } = JSON.parse(stdout);
 
-      expect(JSON.parse(stdout)).toEqual({ found: 2, deleted: true });
+      expect(result).toEqual({ found: 2, deleted: true });
+      expect(exitedAt - doneAt).toBeLessThan(EXIT_BEFORE_IDLE_RELEASE_MS);
     },
     EXIT_TIMEOUT_MS + 2000,
   );

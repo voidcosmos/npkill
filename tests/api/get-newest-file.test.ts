@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import { mkdirSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -8,6 +8,7 @@ import {
 import {
   createTempDir,
   createTree,
+  inDirectory,
   itOnUnix,
   itWithUnixPermissions,
   lockPermissions,
@@ -60,7 +61,54 @@ describe('getNewestFile$', () => {
     });
   });
 
-  it.each(['node_modules', '.git', 'coverage', 'dist'])(
+  it('reads the folder again on each subscription', async () => {
+    const folder = createTempDir();
+    writeFileModifiedAt(join(folder, 'old.js'), new Date('2020-01-01'));
+    const newest$ = createNpkill().getNewestFile$(folder);
+
+    const first = await observe(newest$, 2500);
+    writeFileModifiedAt(join(folder, 'new.js'), new Date('2026-01-01'));
+    const second = await observe(newest$, 2500);
+
+    expect(first.values).toEqual([expect.objectContaining({ name: 'old.js' })]);
+    expect(second.values).toEqual([
+      expect.objectContaining({ name: 'new.js' }),
+    ]);
+  });
+
+  it('compares the modification times, not the creation order', async () => {
+    const folder = createTempDir();
+    const newestFile = join(folder, 'edited.js');
+    writeFileModifiedAt(newestFile, new Date('2026-01-01T00:00:00.000Z'));
+    writeFileModifiedAt(
+      join(folder, 'created-later.js'),
+      new Date('2020-01-01T00:00:00.000Z'),
+    );
+
+    const outcome = await observe(createNpkill().getNewestFile$(folder), 2500);
+
+    expect(outcome.values).toEqual([
+      expect.objectContaining({ path: newestFile }),
+    ]);
+  });
+
+  it('does not look inside ignored folders at any depth', async () => {
+    const folder = createTree(['src/dist']);
+    const ownFile = join(folder, 'src', 'index.js');
+    writeFileModifiedAt(ownFile, new Date('2020-01-01T00:00:00.000Z'));
+    writeFileModifiedAt(
+      join(folder, 'src', 'dist', 'bundle.js'),
+      new Date('2026-01-01T00:00:00.000Z'),
+    );
+
+    const outcome = await observe(createNpkill().getNewestFile$(folder), 2500);
+
+    expect(outcome.values).toEqual([
+      expect.objectContaining({ path: ownFile }),
+    ]);
+  });
+
+  it.each(['node_modules', '.git', 'coverage', 'dist', 'Node_Modules', 'DIST'])(
     'does not look inside %s',
     async (ignoredFolder) => {
       const folder = createTempDir();
@@ -87,9 +135,8 @@ describe('getNewestFile$', () => {
     const folder = createTempDir();
     writeFileModifiedAt(join(folder, 'index.js'), new Date('2026-01-01'));
 
-    const outcome = await observe(
-      createNpkill().getNewestFile$(`${relative(process.cwd(), folder)}/`),
-      2500,
+    const outcome = await inDirectory(dirname(folder), () =>
+      observe(createNpkill().getNewestFile$(`${basename(folder)}/`), 2500),
     );
 
     expect(outcome.values).toEqual([
@@ -146,6 +193,30 @@ describe('getNewestFile$', () => {
       completed: true,
       error: undefined,
     });
+  });
+
+  itOnUnix('follows a symlink given as the path', async () => {
+    const folder = createTempDir();
+    writeFileModifiedAt(join(folder, 'index.js'), new Date('2026-01-01'));
+    const link = join(createTempDir(), 'project');
+    symlinkSync(folder, link, 'dir');
+
+    const outcome = await observe(createNpkill().getNewestFile$(link), 2500);
+
+    expect(outcome.values).toEqual([
+      expect.objectContaining({ path: join(link, 'index.js') }),
+    ]);
+  });
+
+  itOnUnix('ignores folders reached through symlinks', async () => {
+    const outside = createTempDir();
+    writeFileModifiedAt(join(outside, 'index.js'), new Date('2026-01-01'));
+    const folder = createTempDir();
+    symlinkSync(outside, join(folder, 'linked'), 'dir');
+
+    const outcome = await observe(createNpkill().getNewestFile$(folder), 2500);
+
+    expect(outcome.values).toEqual([null]);
   });
 
   itOnUnix('ignores files reached through symlinks', async () => {

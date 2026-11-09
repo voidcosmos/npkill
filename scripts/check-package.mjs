@@ -14,6 +14,7 @@ const ROOT_DIR = fileURLToPath(new URL('..', import.meta.url));
 const TSC = join(ROOT_DIR, 'node_modules', 'typescript', 'bin', 'tsc');
 const TYPE_ROOTS = join(ROOT_DIR, 'node_modules', '@types');
 const IS_WINDOWS = process.platform === 'win32';
+const SCAN_EXIT_TIMEOUT_MS = 30000;
 
 const MODULE_SETTINGS = [
   { module: 'nodenext', moduleResolution: 'nodenext' },
@@ -32,12 +33,23 @@ new Npkill()
   .subscribe((target: ScanFoundTarget) => paths.push(target.path));
 `;
 
+const SCAN_SOURCE = `import { Npkill } from 'npkill';
+
+const found = [];
+await new Npkill()
+  .startScan$(process.argv[2], { targets: ['node_modules'] })
+  .forEach((result) => found.push(result.path));
+console.log(found.length);
+`;
+
 const workDir = mkdtempSync(join(tmpdir(), 'npkill-package-'));
 
 try {
   const tarball = packPackage();
   checkInstalledBin(tarball);
-  checkTypeScriptConsumer(tarball);
+  const consumerDir = installConsumer(tarball);
+  checkTypeScriptConsumer(consumerDir);
+  checkScanFromConsumer(consumerDir);
   console.log('The packed npkill works as a bin and as a library.');
 } finally {
   rmSync(workDir, { recursive: true, force: true });
@@ -70,15 +82,19 @@ function checkInstalledBin(tarball) {
   }
 }
 
-function checkTypeScriptConsumer(tarball) {
+function installConsumer(tarball) {
   const consumerDir = join(workDir, 'consumer');
   mkdirSync(consumerDir);
   writeFileSync(
     join(consumerDir, 'package.json'),
     JSON.stringify({ name: 'consumer', private: true, type: 'module' }),
   );
-  writeFileSync(join(consumerDir, 'index.ts'), CONSUMER_SOURCE);
   run('npm', ['install', '--ignore-scripts', tarball], consumerDir);
+  return consumerDir;
+}
+
+function checkTypeScriptConsumer(consumerDir) {
+  writeFileSync(join(consumerDir, 'index.ts'), CONSUMER_SOURCE);
 
   MODULE_SETTINGS.forEach(({ module, moduleResolution }) => {
     console.log(
@@ -109,18 +125,38 @@ function checkTypeScriptConsumer(tarball) {
   });
 }
 
+function checkScanFromConsumer(consumerDir) {
+  const root = join(workDir, 'projects');
+  mkdirSync(join(root, 'app', 'node_modules'), { recursive: true });
+  writeFileSync(join(consumerDir, 'scan.mjs'), SCAN_SOURCE);
+
+  const found = run(
+    process.execPath,
+    ['scan.mjs', root],
+    consumerDir,
+    SCAN_EXIT_TIMEOUT_MS,
+  ).trim();
+
+  if (found !== '1') {
+    throw new Error(
+      `A scan with the packed npkill found ${found} results instead of 1.`,
+    );
+  }
+}
+
 function readPackageVersion() {
   const packageJson = readFileSync(join(ROOT_DIR, 'package.json'), 'utf8');
   return JSON.parse(packageJson).version;
 }
 
-function run(command, args, cwd) {
+function run(command, args, cwd, timeout) {
   try {
     return execFileSync(command, args, {
       cwd,
       encoding: 'utf8',
       shell: IS_WINDOWS,
       stdio: ['ignore', 'pipe', 'inherit'],
+      timeout,
     });
   } catch (error) {
     process.stdout.write(error.stdout ?? '');
