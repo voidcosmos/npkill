@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
-import { of, Subject, throwError } from 'rxjs';
+import { NEVER, of, Subject, throwError } from 'rxjs';
 import {
   ConfigService,
   DeleteResult,
@@ -61,6 +61,7 @@ jest.unstable_mockModule('../../src/cli/ui/components/results.ui.js', () => ({
     search$: { subscribe: jest.fn() },
     goOptions$: new Subject(),
     render: jest.fn(),
+    startSearch: jest.fn(),
   })),
 }));
 jest.unstable_mockModule('../../src/cli/ui/components/logs.ui.js', () => ({
@@ -564,6 +565,7 @@ describe('CliController test', () => {
       );
       const exitWithErrorSpy = spyMethod('exitWithError');
       cliController.uiStatus = { reset: jest.fn(), start: jest.fn() };
+      cliController.uiResults = { startSearch: jest.fn() };
 
       cliController.scanInUiMode();
 
@@ -571,6 +573,16 @@ describe('CliController test', () => {
         expect.stringContaining('Cannot scan /missing'),
       );
       expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('Should forget the previous empty search when a scan in the interface starts', () => {
+      scanServiceMock.scan.mockReturnValue(NEVER);
+      cliController.uiStatus = { reset: jest.fn(), start: jest.fn() };
+      cliController.uiResults = { startSearch: jest.fn() };
+
+      cliController.scanInUiMode();
+
+      expect(cliController.uiResults.startSearch).toHaveBeenCalledTimes(1);
     });
 
     it('Should log unexpected errors and exit with an error', () => {

@@ -854,6 +854,7 @@ export class CliController {
 
     this.uiStatus.reset();
     this.uiStatus.start();
+    this.uiResults.startSearch();
     this.searchStart = Date.now();
 
     const scan$ = this.scanService
