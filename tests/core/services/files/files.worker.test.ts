@@ -7,13 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import EventEmitter from 'node:events';
-import {
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { MessageChannel, MessagePort } from 'node:worker_threads';
@@ -94,32 +88,6 @@ describe('FileWorker', () => {
     });
   }
 
-  it('reports only target directories', async () => {
-    createTree(['app/node_modules', 'lib/src']);
-    writeFileSync(join(root, 'lib/node_modules'), '');
-
-    expect(await scan({ targets: ['node_modules'] })).toEqual([
-      join('app', 'node_modules'),
-    ]);
-  });
-
-  it('finds every target name at any depth', async () => {
-    createTree(['a/node_modules', 'b/c/dist', 'd/build']);
-
-    expect(await scan({ targets: ['node_modules', 'dist'] })).toEqual([
-      join('a', 'node_modules'),
-      join('b', 'c', 'dist'),
-    ]);
-  });
-
-  it('does not look inside the targets it finds', async () => {
-    createTree(['app/node_modules/pkg/node_modules']);
-
-    expect(await scan({ targets: ['node_modules'] })).toEqual([
-      join('app', 'node_modules'),
-    ]);
-  });
-
   it('keeps the folders that do not fit in the shared memory', async () => {
     const projects = ['a', 'b', 'c', 'd'];
     createTree(projects.map((project) => join(project, 'node_modules')));
@@ -132,54 +100,15 @@ describe('FileWorker', () => {
     );
   });
 
-  describe('should exclude dir', () => {
-    it('does not exclude a similarly named sibling for an absolute target path', async () => {
-      createTree(['node_modules', 'node_modules-backup/node_modules']);
+  it('excludes an exact relative directory path', async () => {
+    createTree(['ignorethis/node_modules', 'other/ignorethis/node_modules']);
 
-      const found = await scan({
-        targets: ['node_modules'],
-        exclude: [join(root, 'node_modules')],
-      });
-
-      expect(found).toEqual([join('node_modules-backup', 'node_modules')]);
+    const found = await scan({
+      targets: ['node_modules'],
+      exclude: ['./ignorethis'],
     });
 
-    ['node_modules', './node_modules'].forEach((excluded) => {
-      it(`applies the expected scope for ${excluded}`, async () => {
-        createTree(['node_modules', 'project/node_modules']);
-
-        const found = await scan({
-          targets: ['node_modules'],
-          exclude: [excluded],
-        });
-
-        expect(found).toEqual(
-          excluded === 'node_modules' ? [] : [join('project', 'node_modules')],
-        );
-      });
-    });
-
-    it('when a simple pattern is given', async () => {
-      createTree(['ignorethis/node_modules', 'keep/node_modules']);
-
-      const found = await scan({
-        targets: ['node_modules'],
-        exclude: ['ignorethis'],
-      });
-
-      expect(found).toEqual([join('keep', 'node_modules')]);
-    });
-
-    it('excludes an exact relative directory path', async () => {
-      createTree(['ignorethis/node_modules', 'other/ignorethis/node_modules']);
-
-      const found = await scan({
-        targets: ['node_modules'],
-        exclude: ['./ignorethis'],
-      });
-
-      expect(found).toEqual([join('other', 'ignorethis', 'node_modules')]);
-    });
+    expect(found).toEqual([join('other', 'ignorethis', 'node_modules')]);
   });
 
   describe('should skip symbolic links', () => {

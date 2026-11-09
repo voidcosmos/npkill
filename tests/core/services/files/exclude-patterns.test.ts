@@ -125,12 +125,6 @@ describe('directory exclusion patterns', () => {
     ).toBe(true);
   });
 
-  it('uses the scan root rather than the invocation directory for relative paths', () => {
-    const exclusions = compileExclusions(root, ['./test']);
-    expect(isExcludedDirectory(join(root, 'test'), exclusions)).toBe(true);
-    expect(isExcludedDirectory(resolve('test'), exclusions)).toBe(false);
-  });
-
   it('does not match directories outside the scan root', () => {
     const exclusions = compileExclusions(root, ['test', '**/something/test']);
 

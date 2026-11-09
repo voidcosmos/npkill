@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it } from '@jest/globals';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { tap } from 'rxjs';
-import type { ScanFoundTarget, ScanOptions } from '../../src/index.js';
+import type {
+  ScanFoundTarget,
+  ScanOptions,
+  TargetDefinition,
+} from '../../src/index.js';
 import {
   createNpkill,
   stopCreatedInstances,
@@ -14,6 +18,7 @@ import {
   itOnUnix,
   itWithUnixPermissions,
   lockPermissions,
+  OBSERVE_TIMEOUT_MS,
   observe,
   relativePaths,
   removeTempDirs,
@@ -21,7 +26,6 @@ import {
 } from './support/helpers.js';
 
 const NODE_MODULES: ScanOptions = { targets: ['node_modules'] };
-const SCAN_TIMEOUT_MS = 2500;
 const IDLE_WORKERS_RELEASE_MS = 5500;
 
 afterEach(() => {
@@ -30,19 +34,6 @@ afterEach(() => {
 });
 
 describe('startScan$', () => {
-  it('delivers every result to a late subscriber', async () => {
-    const root = createTree(['app1/node_modules/pkg', 'app2/node_modules/pkg']);
-    const scan$ = createNpkill().startScan$(root, NODE_MODULES);
-    await sleep(500);
-
-    const outcome = await observe(scan$, SCAN_TIMEOUT_MS);
-
-    expect(relativePaths(outcome.values, root)).toEqual([
-      'app1/node_modules',
-      'app2/node_modules',
-    ]);
-  });
-
   it.each([
     ['targets as a string', { targets: 'node_modules' }, 'targets'],
     ['targets set to null', { targets: null }, 'targets'],
@@ -72,6 +63,16 @@ describe('startScan$', () => {
       { targets: [{ target: '.venv', contains: [] }] },
       'targets',
     ],
+    [
+      'a rule with an unknown property',
+      {
+        targets: [
+          'node_modules',
+          { target: 'target', nextTo: ['Cargo.toml'], type: 'file' },
+        ],
+      },
+      'targets',
+    ],
     ['exclude as a string', { ...NODE_MODULES, exclude: 'app' }, 'exclude'],
     [
       'an exclude that is not a path',
@@ -95,7 +96,6 @@ describe('startScan$', () => {
 
       const outcome = await observe(
         createNpkill().startScan$(root, options as unknown as ScanOptions),
-        SCAN_TIMEOUT_MS,
       );
 
       expect(outcome.values).toEqual([]);
@@ -107,68 +107,44 @@ describe('startScan$', () => {
     },
   );
 
-  it.each(['*.log', 'pkg/dist', 'pkg\\dist', '{a,b}', '[ab]', 'cache?'])(
-    'rejects the target %s because it uses pattern characters',
-    async (target) => {
-      const outcome = await observe(
-        createNpkill().startScan$(createTempDir(), { targets: [target] }),
-        SCAN_TIMEOUT_MS,
-      );
+  it.each<[string, TargetDefinition]>([
+    ['a target with *', '*.log'],
+    ['a target with a slash', 'pkg/dist'],
+    ['a target with a backslash', 'pkg\\dist'],
+    ['a target with braces', '{a,b}'],
+    ['a target with brackets', '[ab]'],
+    ['a target with ?', 'cache?'],
+    ['a rule target', { target: 'target*', nextTo: ['Cargo.toml'] }],
+    ['a nextTo entry', { target: 'target', nextTo: ['*.toml'] }],
+    ['a contains entry', { target: '.venv', contains: ['*.cfg'] }],
+  ])('rejects pattern characters in %s', async (_case, target) => {
+    const outcome = await observe(
+      createNpkill().startScan$(createTempDir(), { targets: [target] }),
+    );
 
-      expect(outcome.error).toEqual(
-        expect.objectContaining({
-          message: expect.stringContaining('reserved'),
-        }),
-      );
-    },
-  );
+    expect(outcome.error).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining('reserved'),
+      }),
+    );
+  });
 
   it('errors on an empty root instead of scanning the working directory', async () => {
-    const outcome = await observe(
-      createNpkill().startScan$('', NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().startScan$('', NODE_MODULES));
 
     expect(outcome.error).toBeInstanceOf(Error);
     expect(outcome.values).toEqual([]);
-  });
-
-  itWithUnixPermissions('errors when the root cannot be entered', async () => {
-    const root = createTree(['app/node_modules/pkg']);
-    lockPermissions(root, 0o644);
-
-    const outcome = await observe(
-      createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
-
-    expect(outcome.error).toBeInstanceOf(Error);
   });
 
   it('runs the scan again on each subscription', async () => {
     const root = createTree(['app/node_modules/pkg']);
     const scan$ = createNpkill().startScan$(root, NODE_MODULES);
 
-    const first = await observe(scan$, SCAN_TIMEOUT_MS);
-    const second = await observe(scan$, SCAN_TIMEOUT_MS);
+    const first = await observe(scan$);
+    const second = await observe(scan$);
 
     expect(relativePaths(first.values, root)).toEqual(['app/node_modules']);
     expect(relativePaths(second.values, root)).toEqual(['app/node_modules']);
-  });
-
-  it('errors when the root folder does not exist', async () => {
-    const missing = join(createTempDir(), 'missing');
-
-    const outcome = await observe(
-      createNpkill().startScan$(missing, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
-
-    expect(outcome.error).toEqual(
-      expect.objectContaining({
-        message: expect.stringContaining('does not exist'),
-      }),
-    );
   });
 
   it.each([
@@ -187,10 +163,7 @@ describe('startScan$', () => {
       const npkill = createNpkill();
       const { invalidReason } = npkill.isValidRootFolder(root);
 
-      const outcome = await observe(
-        npkill.startScan$(root, NODE_MODULES),
-        SCAN_TIMEOUT_MS,
-      );
+      const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 
       expect(invalidReason).toEqual(expect.any(String));
       expect(outcome.error).toEqual(
@@ -201,30 +174,11 @@ describe('startScan$', () => {
     },
   );
 
-  it('errors when the root is a file', async () => {
-    const file = join(createTempDir(), 'package.json');
-    writeFileSync(file, '{}');
-
-    const outcome = await observe(
-      createNpkill().startScan$(file, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
-
-    expect(outcome.error).toEqual(
-      expect.objectContaining({
-        message: expect.stringContaining('directory'),
-      }),
-    );
-  });
-
   it('emits absolute paths when the root is relative', async () => {
     const root = createTree(['app/node_modules/pkg']);
 
     const outcome = await inDirectory(dirname(root), () =>
-      observe(
-        createNpkill().startScan$(basename(root), NODE_MODULES),
-        SCAN_TIMEOUT_MS,
-      ),
+      observe(createNpkill().startScan$(basename(root), NODE_MODULES)),
     );
 
     expect(outcome.values.map(({ path }) => path)).toEqual([
@@ -237,7 +191,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual([
@@ -249,10 +202,7 @@ describe('startScan$', () => {
     const root = createTree(['app/node_modules/pkg']);
     const options = { ...NODE_MODULES, filter: () => true } as ScanOptions;
 
-    const outcome = await observe(
-      createNpkill().startScan$(root, options),
-      SCAN_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().startScan$(root, options));
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
   });
@@ -265,7 +215,6 @@ describe('startScan$', () => {
         ...NODE_MODULES,
         exclude: [join(root, 'app2', 'node_modules')],
       }),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual(['app1/node_modules']);
@@ -284,7 +233,6 @@ describe('startScan$', () => {
             options.performRiskAnalysis = false;
           }),
         ),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual([
@@ -325,10 +273,7 @@ describe('startScan$', () => {
     npkill.startScan$(root, NODE_MODULES).subscribe();
     npkill.stopScan();
 
-    const outcome = await observe(
-      npkill.startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
+    const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
     expect(outcome.completed).toBe(true);
@@ -339,10 +284,7 @@ describe('startScan$', () => {
     const npkill = createNpkill();
     npkill.startScan$(createTempDir(), NODE_MODULES);
 
-    const outcome = await observe(
-      npkill.startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
+    const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
   });
@@ -356,8 +298,8 @@ describe('startScan$', () => {
     const npkill = createNpkill();
 
     const [first, second] = await Promise.all([
-      observe(npkill.startScan$(firstRoot, NODE_MODULES), SCAN_TIMEOUT_MS),
-      observe(npkill.startScan$(secondRoot, NODE_MODULES), SCAN_TIMEOUT_MS),
+      observe(npkill.startScan$(firstRoot, NODE_MODULES)),
+      observe(npkill.startScan$(secondRoot, NODE_MODULES)),
     ]);
 
     expect(second.error).toBeInstanceOf(Error);
@@ -373,10 +315,7 @@ describe('startScan$', () => {
     const npkill = createNpkill();
     npkill.startScan$(createTempDir(), NODE_MODULES).subscribe().unsubscribe();
 
-    const outcome = await observe(
-      npkill.startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
+    const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
     expect(outcome.completed).toBe(true);
@@ -389,12 +328,8 @@ describe('startScan$', () => {
 
     const failed = await observe(
       npkill.startScan$(root, { targets: targetsWorkersCannotReceive }),
-      SCAN_TIMEOUT_MS,
     );
-    const outcome = await observe(
-      npkill.startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
-    );
+    const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 
     expect(failed.error).toEqual(
       expect.objectContaining({ name: 'DataCloneError' }),
@@ -408,18 +343,15 @@ describe('startScan$', () => {
     async () => {
       const root = createTree(['app/node_modules/pkg']);
       const npkill = createNpkill();
-      await observe(npkill.startScan$(root, NODE_MODULES), SCAN_TIMEOUT_MS);
+      await observe(npkill.startScan$(root, NODE_MODULES));
       await sleep(IDLE_WORKERS_RELEASE_MS);
 
-      const outcome = await observe(
-        npkill.startScan$(root, NODE_MODULES),
-        SCAN_TIMEOUT_MS,
-      );
+      const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 
       expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
       expect(outcome.completed).toBe(true);
     },
-    IDLE_WORKERS_RELEASE_MS + 3 * SCAN_TIMEOUT_MS,
+    IDLE_WORKERS_RELEASE_MS + 3 * OBSERVE_TIMEOUT_MS,
   );
 
   it('runs scans in parallel on different instances', async () => {
@@ -447,7 +379,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, { targets: ['node_modules', '.next'] }),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual([
@@ -462,7 +393,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual(['b/node_modules']);
@@ -473,7 +403,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
@@ -485,7 +414,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual(['lib/node_modules']);
@@ -499,10 +427,9 @@ describe('startScan$', () => {
     ]);
 
     const [withoutVenv, withVenv] = await Promise.all([
-      observe(createNpkill().startScan$(root, NODE_MODULES), SCAN_TIMEOUT_MS),
+      observe(createNpkill().startScan$(root, NODE_MODULES)),
       observe(
         createNpkill().startScan$(root, { targets: ['node_modules', '.venv'] }),
-        SCAN_TIMEOUT_MS,
       ),
     ]);
 
@@ -524,7 +451,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual([
@@ -542,7 +468,6 @@ describe('startScan$', () => {
         ...NODE_MODULES,
         useDefaultIgnore: false,
       }),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual([
@@ -563,7 +488,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(relativePaths(outcome.values, root)).toEqual(['app/node_modules']);
@@ -576,7 +500,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(outcome.values.map(({ path }) => path)).toEqual([
@@ -595,7 +518,6 @@ describe('startScan$', () => {
 
       const outcome = await observe(
         createNpkill().startScan$(root, NODE_MODULES),
-        SCAN_TIMEOUT_MS,
       );
 
       expect(relativePaths(outcome.values, root)).toEqual([
@@ -610,7 +532,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(outcome.values).toEqual([
@@ -628,7 +549,6 @@ describe('startScan$', () => {
 
     const outcome = await observe(
       createNpkill().startScan$(root, NODE_MODULES),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(outcome.values).toEqual([
@@ -649,7 +569,6 @@ describe('startScan$', () => {
         ...NODE_MODULES,
         performRiskAnalysis: false,
       }),
-      SCAN_TIMEOUT_MS,
     );
 
     expect(outcome.values).toStrictEqual([

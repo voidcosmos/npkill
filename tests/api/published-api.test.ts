@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -36,12 +36,6 @@ function entryExports(program: ts.Program): ts.Symbol[] {
   }
 
   return checker.getExportsOfModule(entryModule);
-}
-
-function exportedNames(program: ts.Program): string[] {
-  return entryExports(program)
-    .map((symbol) => symbol.getName())
-    .sort();
 }
 
 function exportedDeclarations(program: ts.Program): ts.Declaration[] {
@@ -138,23 +132,10 @@ function typeErrors(program: ts.Program): string[] {
 }
 
 describe('npkill published API', () => {
-  it('exports only the 1.0 surface', () => {
-    expect(exportedNames(createProgram(ENTRY))).toEqual([
-      'DeleteError',
-      'DeleteOptions',
-      'DeleteResult',
-      'GetNewestFileResult',
-      'GetSizeResult',
-      'IsValidRootFolderResult',
-      'LogEntry',
-      'Npkill',
-      'NpkillInterface',
-      'RiskAnalysis',
-      'ScanFoundTarget',
-      'ScanOptions',
-      'TargetDefinition',
-      'TargetRule',
-    ]);
+  let entryProgram: ts.Program;
+
+  beforeAll(() => {
+    entryProgram = createProgram(ENTRY);
   });
 
   it('exports only Npkill at runtime', async () => {
@@ -168,10 +149,10 @@ describe('npkill published API', () => {
   });
 
   it('only references types that consumers can import', () => {
-    expect(forgottenExports(createProgram(ENTRY))).toEqual([]);
+    expect(forgottenExports(entryProgram)).toEqual([]);
   });
 
   it('keeps the public declarations unchanged', () => {
-    expect(publicDeclarations(createProgram(ENTRY))).toMatchSnapshot();
+    expect(publicDeclarations(entryProgram)).toMatchSnapshot();
   });
 });

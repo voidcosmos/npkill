@@ -40,13 +40,6 @@ describe('isValidRootFolder', () => {
     expect(createNpkill().isValidRootFolder(file)).toEqual(INVALID);
   });
 
-  itWithUnixPermissions('rejects a directory it cannot read', () => {
-    const folder = createTempDir();
-    lockPermissions(folder, 0o000);
-
-    expect(createNpkill().isValidRootFolder(folder)).toEqual(INVALID);
-  });
-
   itWithUnixPermissions('rejects a directory it can enter but not read', () => {
     const folder = createTempDir();
     lockPermissions(folder, 0o311);

@@ -168,51 +168,22 @@ describe('scanning with rules', () => {
     ]);
   });
 
-  it('does not explore rejected directories that are skipped by default', async () => {
-    const root = createTree(['app/.venv/lib/__pycache__']);
-
-    expect(await scan(root, [pythonEnvironment, '__pycache__'])).toEqual([]);
-  });
-
-  it('explores rejected directories when useDefaultIgnore is false', async () => {
-    const root = createTree(['app/.venv/lib/__pycache__']);
-    const targets = [pythonEnvironment, '__pycache__'];
-
-    expect(await scan(root, targets, { useDefaultIgnore: false })).toEqual([
-      'app/.venv/lib/__pycache__',
-    ]);
-  });
-
-  it('rejects an invalid rule before emitting any results', async () => {
-    const root = createTree(['app/node_modules']);
-    const invalid = { ...cargoTarget, type: 'file' } as TargetRule;
-    const outcome = await observe(
-      createNpkill().startScan$(root, { targets: ['node_modules', invalid] }),
-      TIMEOUT_MS,
-    );
-
-    expect(outcome.values).toEqual([]);
-    expect(outcome.error).toEqual(
-      expect.objectContaining({
-        message: expect.stringContaining('unknown property'),
-      }),
-    );
-  });
-
   it.each([
-    ['target', { target: 'target*', nextTo: ['Cargo.toml'] }],
-    ['nextTo', { target: 'target', nextTo: ['*.toml'] }],
-    ['contains', { target: '.venv', contains: ['*.cfg'] }],
-  ])('rejects pattern characters in %s', async (_list, rule) => {
-    const outcome = await observe(
-      createNpkill().startScan$(createTree(['app']), { targets: [rule] }),
-      TIMEOUT_MS,
-    );
+    [
+      'does not explore rejected directories that are skipped by default',
+      {},
+      [],
+    ],
+    [
+      'explores rejected directories when useDefaultIgnore is false',
+      { useDefaultIgnore: false },
+      ['app/.venv/lib/__pycache__'],
+    ],
+  ])('%s', async (_title, options, expected) => {
+    const root = createTree(['app/.venv/lib/__pycache__']);
 
-    expect(outcome.error).toEqual(
-      expect.objectContaining({
-        message: expect.stringContaining('reserved'),
-      }),
-    );
+    expect(
+      await scan(root, [pythonEnvironment, '__pycache__'], options),
+    ).toEqual(expected);
   });
 });

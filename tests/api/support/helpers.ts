@@ -23,6 +23,7 @@ export const itWithUnixPermissions =
 
 export const itOnUnix = process.platform === 'win32' ? it.skip : it;
 
+export const OBSERVE_TIMEOUT_MS = 2500;
 const temporaryDirs: string[] = [];
 const lockedPaths: string[] = [];
 
@@ -85,7 +86,7 @@ export function sleep(ms: number): Promise<void> {
 
 export function observe<T>(
   source$: Observable<T>,
-  timeoutMs: number,
+  timeoutMs = OBSERVE_TIMEOUT_MS,
 ): Promise<Outcome<T>> {
   return new Promise((resolve) => {
     const outcome: Outcome<T> = {

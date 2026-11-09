@@ -21,11 +21,7 @@ afterEach(() => {
 });
 
 describe('getVersion', () => {
-  it('returns the version of the package', () => {
-    expect(createNpkill().getVersion()).toBe(packageJson.version);
-  });
-
-  it('reads its own package.json from any working directory', async () => {
+  it('returns the version of the package whatever the working directory', async () => {
     const project = createTempDir();
     writeFileSync(join(project, 'package.json'), '{"version":"9.9.9"}');
 

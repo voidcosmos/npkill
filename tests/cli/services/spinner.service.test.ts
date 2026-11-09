@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { SpinnerService } from '../../../src/cli/services/spinner.service.js';
 
 describe('Spinner Service', () => {
@@ -9,12 +8,14 @@ describe('Spinner Service', () => {
   });
 
   describe('#setSpinner', () => {
-    // it('should set spinner passed by argument', () => {});
+    it('should restart from the first frame of the new spinner', () => {
+      spinnerService.setSpinner(['1', '2', '3']);
+      spinnerService.nextFrame();
+      spinnerService.nextFrame();
 
-    it('should reset count', () => {
-      const resetFn = (spinnerService.reset = jest.fn());
-      spinnerService.setSpinner([]);
-      expect(resetFn).toHaveBeenCalled();
+      spinnerService.setSpinner(['a', 'b', 'c']);
+
+      expect(spinnerService.nextFrame()).toBe('a');
     });
   });
 

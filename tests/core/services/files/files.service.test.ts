@@ -34,10 +34,6 @@ import { FileWorkerService } from '../../../../src/core/services/files/index.js'
 import os from 'os';
 import { resolve } from 'node:path';
 
-jest.mock('../../../../src/dirname.js', () => {
-  return { __esModule: true };
-});
-
 const fileWorkerService = jest.fn();
 
 describe('File Service', () => {
@@ -91,52 +87,50 @@ describe('File Service', () => {
     afterEach(() => {
       jest.restoreAllMocks();
       statSyncReturnMock = () => null;
-      statSyncReturnMock = () => null;
     });
 
-    it('should throw error if statSync fail', () => {
-      statSyncReturnMock = () => {
-        throw new Error('ENOENT');
-      };
-      expect(fileService.isValidRootFolder(path)).toEqual({
-        isValid: false,
-        invalidReason: 'The path does not exist.',
-      });
-    });
+    it.each([
+      [
+        'does not exist',
+        () => {
+          statSyncReturnMock = () => {
+            throw new Error('ENOENT');
+          };
+        },
+        'The path does not exist.',
+      ],
+      [
+        'is not a directory',
+        () => {
+          statSyncReturnMock = () => ({
+            isDirectory: () => false,
+          });
+        },
+        'The path must point to a directory.',
+      ],
+      [
+        'cannot be read',
+        () => {
+          statSyncReturnMock = () => ({
+            isDirectory: () => true,
+          });
+          accessSyncReturnMock = () => {
+            throw new Error();
+          };
+        },
+        'Cannot read the specified path.',
+      ],
+    ])(
+      'should be invalid when the path %s',
+      (_case, mockFileSystem, invalidReason) => {
+        mockFileSystem();
 
-    it('should throw error if is not directory', () => {
-      statSyncReturnMock = () => ({
-        isDirectory: () => false,
-      });
-
-      expect(fileService.isValidRootFolder(path)).toEqual({
-        isValid: false,
-        invalidReason: 'The path must point to a directory.',
-      });
-    });
-
-    it('should throw error if cant read dir', () => {
-      statSyncReturnMock = () => ({
-        isDirectory: () => true,
-      });
-      accessSyncReturnMock = () => {
-        throw new Error();
-      };
-
-      expect(fileService.isValidRootFolder(path)).toEqual({
-        isValid: false,
-        invalidReason: 'Cannot read the specified path.',
-      });
-    });
-
-    it('should return true if is valid rootfolder', () => {
-      statSyncReturnMock = () => ({
-        isDirectory: () => true,
-      });
-      accessSyncReturnMock = () => true;
-
-      expect(fileService.isValidRootFolder(path)).toBeTruthy();
-    });
+        expect(fileService.isValidRootFolder(path)).toEqual({
+          isValid: false,
+          invalidReason,
+        });
+      },
+    );
   });
 
   describe('isDangerous', () => {

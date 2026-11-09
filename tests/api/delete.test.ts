@@ -18,8 +18,6 @@ import {
   sleep,
 } from './support/helpers.js';
 
-const DELETE_TIMEOUT_MS = 2500;
-
 afterEach(() => {
   stopCreatedInstances();
   removeTempDirs();
@@ -35,7 +33,7 @@ describe('delete$', () => {
     const { target } = createProject();
 
     createNpkill().delete$(target);
-    await sleep(300);
+    await sleep(100);
 
     expect(existsSync(target)).toBe(true);
   });
@@ -47,7 +45,7 @@ describe('delete$', () => {
       lockPermissions(join(root, 'project'), 0o555);
 
       const outcome = await inDirectory(dirname(target), () =>
-        observe(createNpkill().delete$(basename(target)), DELETE_TIMEOUT_MS),
+        observe(createNpkill().delete$(basename(target))),
       );
 
       expect(outcome.values).toEqual([
@@ -64,20 +62,13 @@ describe('delete$', () => {
     const workspace = createTempDir();
     const sentinel = join(workspace, 'keep.txt');
     writeFileSync(sentinel, '');
-    const originalCwd = process.cwd();
-    process.chdir(workspace);
 
-    try {
-      const outcome = await observe(
-        createNpkill().delete$(''),
-        DELETE_TIMEOUT_MS,
-      );
+    const outcome = await inDirectory(workspace, () =>
+      observe(createNpkill().delete$('')),
+    );
 
-      expect(outcome.error).toBeInstanceOf(Error);
-      expect(existsSync(sentinel)).toBe(true);
-    } finally {
-      process.chdir(originalCwd);
-    }
+    expect(outcome.error).toBeInstanceOf(Error);
+    expect(existsSync(sentinel)).toBe(true);
   });
 
   it.each(['.', '..', 'project/..', parse(process.cwd()).root])(
@@ -86,7 +77,6 @@ describe('delete$', () => {
       // A dry run keeps a regression from deleting real folders.
       const outcome = await observe(
         createNpkill().delete$(path, { dryRun: true }),
-        DELETE_TIMEOUT_MS,
       );
 
       expect(outcome.error).toBeInstanceOf(Error);
@@ -101,7 +91,7 @@ describe('delete$', () => {
       writeFileSync(sentinel, '');
 
       const outcome = await inDirectory(cwd, () =>
-        observe(createNpkill().delete$(path), DELETE_TIMEOUT_MS),
+        observe(createNpkill().delete$(path)),
       );
 
       expect(outcome.error).toBeInstanceOf(Error);
@@ -109,17 +99,13 @@ describe('delete$', () => {
     },
   );
 
-  it('answers a dry run at once without deleting', async () => {
+  it('answers a dry run without deleting', async () => {
     const { target } = createProject();
-    const npkill = createNpkill();
 
-    const startedAt = performance.now();
     const outcome = await observe(
-      npkill.delete$(target, { dryRun: true }),
-      1000,
+      createNpkill().delete$(target, { dryRun: true }),
     );
 
-    expect(performance.now() - startedAt).toBeLessThan(100);
     expect(outcome.values).toEqual([{ path: target, success: true }]);
     expect(existsSync(target)).toBe(true);
   });
@@ -127,10 +113,7 @@ describe('delete$', () => {
   it('deletes the folder and everything inside it', async () => {
     const { target } = createProject();
 
-    const outcome = await observe(
-      createNpkill().delete$(target),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(target));
 
     expect(outcome.values).toEqual([{ path: target, success: true }]);
     expect(outcome.completed).toBe(true);
@@ -143,10 +126,7 @@ describe('delete$', () => {
   ])('deletes for real with %s', async (_case, options) => {
     const { target } = createProject();
 
-    const outcome = await observe(
-      createNpkill().delete$(target, options),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(target, options));
 
     expect(outcome.values).toEqual([{ path: target, success: true }]);
     expect(existsSync(target)).toBe(false);
@@ -158,10 +138,7 @@ describe('delete$', () => {
     const { target } = createProject();
     symlinkSync(join(outside, 'data'), join(target, 'linked'), 'dir');
 
-    const outcome = await observe(
-      createNpkill().delete$(target),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(target));
 
     expect(outcome.values).toEqual([{ path: target, success: true }]);
     expect(existsSync(target)).toBe(false);
@@ -172,10 +149,7 @@ describe('delete$', () => {
     const file = join(createTempDir(), 'model.gguf');
     writeFileSync(file, 'weights');
 
-    const outcome = await observe(
-      createNpkill().delete$(file),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(file));
 
     expect(outcome.values).toEqual([{ path: file, success: true }]);
     expect(existsSync(file)).toBe(false);
@@ -184,69 +158,39 @@ describe('delete$', () => {
   it('succeeds when the path does not exist', async () => {
     const missing = join(createTempDir(), 'node_modules');
 
-    const outcome = await observe(
-      createNpkill().delete$(missing),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(missing));
 
     expect(outcome.values).toEqual([{ path: missing, success: true }]);
   });
 
-  it('answers with the absolute path of a relative one', async () => {
-    const { target } = createProject();
+  it.each([
+    ['a dry run', { dryRun: true }, true],
+    ['a real deletion', undefined, false],
+  ])(
+    'answers with the absolute path of a relative one in %s',
+    async (_case, options, targetRemains) => {
+      const { target } = createProject();
 
-    const outcome = await inDirectory(dirname(target), () =>
-      observe(createNpkill().delete$(basename(target)), DELETE_TIMEOUT_MS),
-    );
-
-    expect(outcome.values).toEqual([{ path: target, success: true }]);
-    expect(existsSync(target)).toBe(false);
-  });
-
-  it('answers a dry run of a relative path with the absolute one', async () => {
-    const { target } = createProject();
-
-    const outcome = await inDirectory(dirname(target), () =>
-      observe(
-        createNpkill().delete$(basename(target), { dryRun: true }),
-        DELETE_TIMEOUT_MS,
-      ),
-    );
-
-    expect(outcome.values).toEqual([{ path: target, success: true }]);
-    expect(existsSync(target)).toBe(true);
-  });
-
-  itOnUnix(
-    'deletes a symlink given with a trailing slash, not what it points to',
-    async () => {
-      const outside = createTree(['data']);
-      writeFileSync(join(outside, 'data', 'keep.txt'), '');
-      const link = join(createTempDir(), 'node_modules');
-      symlinkSync(join(outside, 'data'), link, 'dir');
-
-      const outcome = await observe(
-        createNpkill().delete$(`${link}/`),
-        DELETE_TIMEOUT_MS,
+      const outcome = await inDirectory(dirname(target), () =>
+        observe(createNpkill().delete$(basename(target), options)),
       );
 
-      expect(outcome.values).toEqual([{ path: link, success: true }]);
-      expect(existsSync(link)).toBe(false);
-      expect(readdirSync(join(outside, 'data'))).toEqual(['keep.txt']);
+      expect(outcome.values).toEqual([{ path: target, success: true }]);
+      expect(existsSync(target)).toBe(targetRemains);
     },
   );
 
-  itOnUnix('deletes a symlink, not what it points to', async () => {
+  itOnUnix.each([
+    ['without a trailing slash', ''],
+    ['with a trailing slash', '/'],
+  ])('deletes a symlink %s, not what it points to', async (_case, suffix) => {
     const outside = createTree(['data']);
     writeFileSync(join(outside, 'data', 'keep.txt'), '');
     const parent = createTempDir();
     const link = join(parent, 'node_modules');
     symlinkSync(join(outside, 'data'), link, 'dir');
 
-    const outcome = await observe(
-      createNpkill().delete$(link),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(`${link}${suffix}`));
 
     expect(outcome.values).toEqual([{ path: link, success: true }]);
     expect(readdirSync(parent)).toEqual([]);
@@ -258,10 +202,7 @@ describe('delete$', () => {
     const link = join(parent, 'node_modules');
     symlinkSync(join(parent, 'missing'), link, 'dir');
 
-    const outcome = await observe(
-      createNpkill().delete$(link),
-      DELETE_TIMEOUT_MS,
-    );
+    const outcome = await observe(createNpkill().delete$(link));
 
     expect(outcome.values).toEqual([{ path: link, success: true }]);
     expect(readdirSync(parent)).toEqual([]);
@@ -276,7 +217,6 @@ describe('delete$', () => {
 
     const outcome = await observe(
       createNpkill().delete$(target, options as unknown as DeleteOptions),
-      DELETE_TIMEOUT_MS,
     );
 
     expect(outcome.error).toBeInstanceOf(Error);

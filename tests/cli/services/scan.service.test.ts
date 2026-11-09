@@ -5,7 +5,7 @@ import {
   CliScanFoundTarget,
   IConfig,
 } from '../../../src/cli/interfaces/index.js';
-import { of, firstValueFrom, throwError } from 'rxjs';
+import { of, firstValueFrom, lastValueFrom, throwError, toArray } from 'rxjs';
 import { convertBytesToGb } from '../../../src/utils/unit-conversions.js';
 import path from 'node:path';
 import { DEFAULT_PROFILE } from '../../../src/core/constants/profiles.constants.js';
@@ -74,10 +74,6 @@ describe('ScanService', () => {
     scanService = new ScanService(mockNpkill as unknown as Npkill);
   });
 
-  it('should be created', () => {
-    expect(scanService).toBeTruthy();
-  });
-
   describe('scan', () => {
     it('should call npkill.startScan$ with the correct parameters', () => {
       mockNpkill.startScan$.mockReturnValue(of(mockScanFoundTarget));
@@ -121,42 +117,25 @@ describe('ScanService', () => {
       });
     });
 
-    it('should filter out sensitive directories if excludeSensitiveResults is true', (done) => {
-      const configWithExclusion: IConfig = {
-        ...mockConfig,
-        excludeSensitiveResults: true,
-      };
-      mockNpkill.startScan$.mockReturnValue(
-        of(mockScanFoundTarget, mockSensitiveScanFoundTarget),
-      );
+    it.each([
+      [true, [mockScanFoundTarget.path]],
+      [false, [mockScanFoundTarget.path, mockSensitiveScanFoundTarget.path]],
+    ])(
+      'should keep the right results when excludeSensitiveResults is %s',
+      async (excludeSensitiveResults, expectedPaths) => {
+        mockNpkill.startScan$.mockReturnValue(
+          of(mockScanFoundTarget, mockSensitiveScanFoundTarget),
+        );
 
-      const results: CliScanFoundTarget[] = [];
-      scanService.scan(configWithExclusion).subscribe({
-        next: (value) => results.push(value),
-        complete: () => {
-          expect(results.length).toBe(1);
-          expect(results[0].path).toBe(mockScanFoundTarget.path);
-          done();
-        },
-      });
-    });
+        const results = await lastValueFrom(
+          scanService
+            .scan({ ...mockConfig, excludeSensitiveResults })
+            .pipe(toArray()),
+        );
 
-    it('should NOT filter out sensitive directories if excludeSensitiveResults is false', (done) => {
-      mockNpkill.startScan$.mockReturnValue(
-        of(mockScanFoundTarget, mockSensitiveScanFoundTarget),
-      );
-
-      const results: CliScanFoundTarget[] = [];
-      scanService.scan(mockConfig).subscribe({
-        next: (value) => results.push(value),
-        complete: () => {
-          expect(results.length).toBe(2);
-          expect(results[0].path).toBe(mockScanFoundTarget.path);
-          expect(results[1].path).toBe(mockSensitiveScanFoundTarget.path);
-          done();
-        },
-      });
-    });
+        expect(results.map(({ path }) => path)).toEqual(expectedPaths);
+      },
+    );
   });
 
   describe('calculateResultStats', () => {
