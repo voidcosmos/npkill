@@ -1,30 +1,16 @@
 # npkill API
 
-npkill can be used from Node.js to build your own tools and automations. It is the same engine the CLI uses.
+Use npkill from Node.js to scan directories, measure disk usage and delete paths without the CLI.
 
 ```bash
 npm install npkill rxjs
 ```
 
-npkill is an ES module and needs Node.js 20.19 or later. Every operation returns an [RxJS](https://rxjs.dev) `Observable`, so `rxjs` 7 is a peer dependency.
-
-- [Example](#example)
-- [How it behaves](#how-it-behaves)
-- [Methods](#methods)
-  - [`startScan$(rootPath, options)`](#startscanrootpath-options)
-  - [`stopScan()`](#stopscan)
-  - [`getSize$(path)`](#getsizepath)
-  - [`getNewestFile$(path)`](#getnewestfilepath)
-  - [`delete$(path, options?)`](#deletepath-options)
-  - [`getLogs$()`](#getlogs)
-  - [`isValidRootFolder(path)`](#isvalidrootfolderpath)
-  - [`getVersion()`](#getversion)
-- [Types](#types)
-- [Stability](#stability)
+npkill is an ES module. It requires Node.js 20.19 or later and RxJS `^7.8.2` as a peer dependency. Import `Npkill` and the documented types from `npkill`, not internal package paths.
 
 ## Example
 
-Find the `node_modules` and `.next` folders of a directory and add up their size:
+Find matching directories and measure their disk usage in bytes:
 
 ```ts
 import { Npkill } from 'npkill';
@@ -33,197 +19,164 @@ import { map, mergeMap, toArray } from 'rxjs';
 const npkill = new Npkill();
 
 npkill
-  .startScan$('/home/user/projects', { targets: ['node_modules', '.next'] })
+  .startScan$('./projects', { targets: ['node_modules', '.next'] })
   .pipe(
-    mergeMap((target) =>
+    mergeMap((result) =>
       npkill
-        .getSize$(target.path)
-        .pipe(map(({ size }) => ({ path: target.path, size }))),
+        .getSize$(result.path)
+        .pipe(map(({ size }) => ({ path: result.path, size }))),
     ),
     toArray(),
   )
-  .subscribe((results) => {
-    const totalBytes = results.reduce((total, { size }) => total + size, 0);
-    console.table(results);
-    console.log(`${(totalBytes / 1024 ** 2).toFixed(1)} MB can be freed`);
+  .subscribe({
+    next: (results) => {
+      console.table(results);
+    },
+    error: (error) => {
+      console.error(error);
+      process.exitCode = 1;
+    },
   });
 ```
 
-Delete the `node_modules` of the projects that nobody has touched in 90 days. Remove `dryRun` when you trust the output:
+## Behavior
 
-```ts
-import { Npkill } from 'npkill';
-import { dirname } from 'node:path';
-import { filter, mergeMap } from 'rxjs';
+- Filesystem operations start when you subscribe. Each subscription runs the operation again, including deletions.
+- Relative paths are resolved against the current working directory at subscription time. Returned paths are absolute, but are not necessarily resolved through symlinks.
+- Observable methods report validation and operation errors through the error channel. Deletion failures are the exception described below.
+- `validateRoot()` and `getVersion()` are synchronous.
+- The API does not load `.npkillrc` or select CLI profiles. Pass scan options explicitly.
+- Reuse an instance. Workers start when needed and are released after being idle, allowing the process to exit. Bundling npkill into a single file is not supported.
 
-const npkill = new Npkill();
-const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
-
-npkill
-  .startScan$('/home/user/projects', { targets: ['node_modules'] })
-  .pipe(
-    filter(({ riskAnalysis }) => !riskAnalysis?.isSensitive),
-    mergeMap((target) =>
-      npkill.getNewestFile$(dirname(target.path)).pipe(
-        filter((newest) => newest !== null && newest.timestamp < ninetyDaysAgo),
-        mergeMap(() => npkill.delete$(target.path, { dryRun: true })),
-      ),
-    ),
-  )
-  .subscribe((result) => console.log(result));
-```
-
-## How it behaves
-
-- Nothing happens until you subscribe, and each subscription runs the operation again.
-- Relative paths are resolved against the current working directory. Every path that npkill returns is absolute.
-- The methods that return an observable report errors through its error channel, never as exceptions. Error messages are meant for people and can change in any version.
-- Each instance starts its own worker threads the first time it needs them and releases them when it has been idle for a while, so your process can exit on its own. Reuse one instance instead of creating one per operation.
-- npkill reads its own `package.json` and starts its workers from its own files, so bundling it into a single file is not supported.
+`Npkill` implements the exported `NpkillInterface`. Construct it with `new Npkill()`.
 
 ## Methods
 
 ### `startScan$(rootPath, options)`
 
-Searches `rootPath` recursively and emits a [`ScanFoundTarget`](#scanfoundtarget) for each folder that matches one of `options.targets`, as soon as it is found. It completes when the whole tree has been explored.
+Returns `Observable<ScanResult>`. Searches recursively and emits each matching directory, then completes. Both arguments are required.
 
-- A target is matched by its exact name, case included, and it is always a directory. A [rule](#targetdefinition) also needs the entries it lists.
-- The scan does not look inside the targets it finds, so `node_modules/pkg/node_modules` is never reported.
-- Symlinks below the root are not followed. A symlink given as the root is.
-- Some folders that rarely hold projects are never entered unless they match a target or `options.useDefaultIgnore` is `false`. Today they are `.git`, `.svn`, `.hg`, `.fossil`, `.Trash`, `.Trashes`, `$RECYCLE.BIN`, `System Volume Information`, `.Spotlight-V100`, `.fseventsd`, `.nvm`, `.rvm`, `.rustup`, `.pyenv`, `.rbenv`, `.asdf`, `.deno`, `.volta`, `.bun`, `.vscode`, `.vscode-server`, `.idea`, `.vs`, `.settings`, `node_modules`, `__pycache__`, `.cache`, `.venv` and `venv`.
-- Folders that cannot be read are skipped and the scan goes on.
+- Targets are exact, case-sensitive directory names or rules. Results have no guaranteed order.
+- The scan does not look inside a matched target, so nested targets are not reported.
+- Symlinks below the root are ignored. A symlink supplied as the root is followed.
+- Folders such as `.git` and `.nvm` are skipped by default unless they match a target. Set `useDefaultIgnore: false` to explore them too.
+- An unreadable root errors. Unreadable descendants are skipped.
 
-Only one scan can run at a time on each instance. Subscribing to a second one while the first is running emits an error. Use another instance to scan in parallel. Unsubscribing stops the scan.
-
-It errors when:
-
-- `options.targets` is not a non-empty array of names and rules.
-- A rule has an unknown property, an empty list, or neither `nextTo` nor `contains`.
-- A name uses `*`, `?`, `[`, `]`, `{`, `}`, `/` or `\`. These characters are reserved for patterns.
-- The root is not a directory that can be read and entered. The message includes the reason that [`isValidRootFolder`](#isvalidrootfolderpath) gives.
+Only one scan can run at a time per instance. A second subscription while a scan is running errors. Use separate instances for parallel scans. Unsubscribing stops that scan.
 
 ### `stopScan()`
 
-Stops the scan in progress, if there is one, and completes its observable. Size calculations in progress are not affected.
+Stops the current scan, if any, and completes its observable. It does not cancel size calculations in progress.
 
 ### `getSize$(path)`
 
-Emits a [`GetSizeResult`](#getsizeresult) with the space that a directory and everything inside it, or a single file, uses on disk. Then it completes.
+Returns `Observable<GetSizeResult>`. Emits the estimated disk usage of a file or directory in bytes, then completes. There is no unit option or `unit` field.
 
-The size is an estimate. Each file counts the blocks it has allocated, each subfolder counts 4096 bytes, and a file with several hard links is counted once for each link. A symlink given as the path is measured itself, the same way `delete$` deletes the link and not what it points to. Symlinks inside a directory are not counted.
+Files count their allocated blocks, subfolders count 4096 bytes each, and hard links are counted separately. Symlinks inside a directory are ignored. A symlink supplied as `path` is measured itself, not its destination.
 
-It errors when the path does not exist or cannot be read, and when the calculation takes too long.
+A missing or unreadable path, or a calculation timeout, errors. Unreadable descendants may be skipped, so the result is not a guarantee of recoverable space.
 
 ### `getNewestFile$(path)`
 
-Emits a [`GetNewestFileResult`](#getnewestfileresult) with the most recently modified file inside a directory and all its subdirectories, or `null` if the directory has no files. Then it completes.
+Returns `Observable<GetNewestFileResult | null>`. Emits the most recently modified file in the directory and its subdirectories, or `null` if there are no eligible files, then completes.
 
-Folders named `node_modules`, `.git`, `coverage` and `dist`, in any case, are not inspected. Symlinks inside the directory are ignored, but a symlink given as the path is followed.
+Folders named `node_modules`, `.git`, `coverage` and `dist` are skipped, case-insensitively. Symlinks inside the directory are ignored. A symlink supplied as `path` is followed. Unreadable descendants may be skipped.
 
-It errors when the path does not exist, is not a directory or cannot be read.
+A missing, unreadable or non-directory input path errors. To estimate project activity rather than target activity, pass the target's parent directory.
 
 ### `delete$(path, options?)`
 
-Deletes the path and everything inside it, like `rm -rf`, and emits a [`DeleteResult`](#deleteresult). Then it completes.
+Returns `Observable<DeleteResult>`. Permanently removes the path and everything inside it, then completes.
 
-- It does not check that the path is a target found by a scan. That is up to you.
-- Like `rm`, it refuses `.`, `..` and filesystem roots.
-- A symlink is deleted itself, never what it points to.
-- Deleting a path that does not exist succeeds.
-- With `{ dryRun: true }` nothing is deleted and the result is a success.
+**This does not check that the path was found by a scan or is safe to delete.**
 
-A deletion that fails emits a result with `success: false` and the error. An empty or refused path, an unknown option or a `dryRun` that is not a boolean errors instead.
+- Like `rm -rf`, it refuses `.`, `..` and filesystem roots.
+- Symlinks are deleted themselves, never their destinations.
+- A missing path succeeds.
+- `{ dryRun: true }` returns success without deleting anything. It does not verify whether a real deletion would succeed.
+
+An operation failure emits `{ path, success: false, error }`, not an observable error. An empty or refused path, an unknown option or a non-boolean `dryRun` uses the error channel instead.
 
 ### `getLogs$()`
 
-Emits the recent log entries of the instance, one [`LogEntry`](#logentry) at a time, and then each new one as it is written. It never completes, so unsubscribe when you are done.
+Returns `Observable<LogEntry>`. Replays recent entries for this instance, then emits new entries one at a time. It never completes, so unsubscribe when finished.
 
-### `isValidRootFolder(path)`
+### `validateRoot(path)`
 
-Tells whether a scan can start from `path`. Returns an [`IsValidRootFolderResult`](#isvalidrootfolderresult). The path must be an existing directory that npkill can read and enter.
+Returns `ValidateRootResult`. Checks synchronously whether the path exists, is a directory, and can be read and entered. An invalid path returns `isValid: false` with `invalidReason`.
 
 ### `getVersion()`
 
-Returns the version of npkill, like `1.0.0`.
+Returns the npkill package version as a string.
 
 ## Types
 
-### `ScanOptions`
+All types below, along with `NpkillInterface`, can be imported from `npkill`.
+
+### Scanning
+
+`targets` must be non-empty. Both boolean options default to `true`. Scanning only discovers targets, it does not calculate their size or modification time.
 
 ```ts
 interface ScanOptions {
   targets: readonly TargetDefinition[];
   exclude?: string[];
-  useDefaultIgnore?: boolean; // Default: true
-  performRiskAnalysis?: boolean; // Default: true
+  useDefaultIgnore?: boolean;
+  performRiskAnalysis?: boolean;
 }
-```
 
-`exclude` lists paths to leave out of the scan. `useDefaultIgnore: false` also looks inside the folders that are skipped by default.
-
-### `TargetDefinition`
-
-A folder name, or a rule that also needs other entries around the folder. Every entry listed must exist, and rules with the same target are alternatives. See [custom rules](./docs/profiles.md#custom-rules).
-
-```ts
 type TargetDefinition = string | TargetRule;
 
 interface TargetRule {
   readonly target: string;
   readonly nextTo?: readonly string[];
-  readonly contains?: readonly string[]; // Inside the folder
+  readonly contains?: readonly string[];
 }
-```
 
-### `ScanFoundTarget`
-
-```ts
-interface ScanFoundTarget {
+interface ScanResult {
   path: string;
-  riskAnalysis?: RiskAnalysis; // Missing when performRiskAnalysis is false
+  riskAnalysis?: RiskAnalysis;
 }
-```
 
-### `RiskAnalysis`
-
-Whether deleting a result could break something, for example because it belongs to an installed application, and why.
-
-```ts
 interface RiskAnalysis {
   isSensitive: boolean;
   reason?: string;
 }
 ```
 
-### `GetSizeResult`
+A rule with only `target` matches by name. `nextTo` requires entries beside the target, and `contains` requires entries inside it. Each supplied list must be non-empty, and all its names must exist. When both lists are present, both must match. Rules with the same target are alternatives. Entries can be files or directories, and rule properties other than these three are rejected.
+
+Target and condition names cannot be empty or contain `*`, `?`, `[`, `]`, `{`, `}`, `/` or `\`. They are names, not paths or patterns.
+
+`exclude` supports names at any depth (`archive`), paths relative to the scan root (`apps/old`), absolute paths, and path suffixes at any depth (`**/apps/old`). Excluded directories and their contents are skipped. Arbitrary glob patterns are not supported.
+
+`riskAnalysis` is absent when `performRiskAnalysis` is `false`. Risk analysis is advisory, not proof that a directory is safe to delete. See [custom rules](./docs/profiles.md#custom-rules) for more examples.
+
+### File metadata
+
+Sizes are in bytes. `modificationTime` is in milliseconds since the Unix epoch.
 
 ```ts
 interface GetSizeResult {
-  size: number; // Bytes
+  size: number;
 }
-```
 
-### `GetNewestFileResult`
-
-```ts
 interface GetNewestFileResult {
   path: string;
   name: string;
-  timestamp: number; // Milliseconds since the Unix epoch
+  modificationTime: number;
 }
 ```
 
-### `DeleteOptions`
+### Deletion
+
+`dryRun` defaults to `false`. A successful result has no `error` field. Failure messages are human-readable, and a system error code is included when available.
 
 ```ts
 interface DeleteOptions {
   dryRun?: boolean;
 }
-```
 
-### `DeleteResult`
-
-```ts
 type DeleteResult =
   | { path: string; success: true }
   | { path: string; success: false; error: DeleteError };
@@ -234,20 +187,18 @@ interface DeleteError {
 }
 ```
 
-### `LogEntry`
+### Logs and validation
+
+Log timestamps are milliseconds since the Unix epoch. `invalidReason` explains why a path cannot be used as a scan root.
 
 ```ts
 interface LogEntry {
-  type: 'info' | 'warn' | 'error';
+  level: 'info' | 'warn' | 'error';
   timestamp: number;
   message: string;
 }
-```
 
-### `IsValidRootFolderResult`
-
-```ts
-interface IsValidRootFolderResult {
+interface ValidateRootResult {
   isValid: boolean;
   invalidReason?: string;
 }
@@ -255,13 +206,4 @@ interface IsValidRootFolderResult {
 
 ## Stability
 
-The API is new. Until it matures, incompatible changes can arrive in minor versions, never in patches, and the release notes will list them.
-
-These changes can happen in any version and are not considered incompatible:
-
-- New methods in `Npkill` and `NpkillInterface`. If you implement `NpkillInterface` yourself, expect it to grow.
-- New fields in results and new optional fields in options.
-- New forms of [`TargetDefinition`](#targetdefinition).
-- New log entry types, and `getLogs$()` keeping fewer old entries.
-- Changes to the profiles, the risk analysis rules and the lists of folders that are never entered or inspected.
-- Changes to error messages.
+The API is still new. While it matures, incompatible API changes may arrive in minor releases. Risk heuristics, ignore lists, log retention and human-readable messages can change. Do not use message text as an identifier for automation.
