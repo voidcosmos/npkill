@@ -1,18 +1,12 @@
 <p align="center">
-  <img src="./docs/npkill-text-clean.svg" width="380" alt="npkill logo" />
+  <img src="./docs/npkill-1.0-banner.webp" width="960" alt="npkill 1.0. Because the problem is modern development." />
 </p>
-<p align="center">
-<img alt="npm" src="https://img.shields.io/npm/dy/npkill.svg">
-<a href="#donations"><img src="https://img.shields.io/badge/donate-<3-red" alt="Donations Badge"/></a>
-<img alt="npm version" src="https://img.shields.io/npm/v/npkill.svg">
-<img alt="NPM" src="https://img.shields.io/npm/l/npkill.svg">
-</p>
-
-### Easily find and **remove** old and heavy **node_modules**. And everything else you don’t need.
 
 <p align="center">
   <img src="/docs/npkill-demo-1.0.0.gif" width="904" alt="npkill demo GIF" />
 </p>
+
+### Easily find and **remove** old and heavy **node_modules**. And everything else you don’t need.
 
 **Your system remembers everything. npkill helps you forget.**
 This tool scans your system for heavy and unnecessary development directories.
