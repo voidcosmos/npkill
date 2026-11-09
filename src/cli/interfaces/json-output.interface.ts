@@ -10,8 +10,8 @@ export interface JsonCliScanFoundTarget extends Omit<
 > {
   /** Bytes, or null when the size is not calculated. */
   size: number | null;
-  /** Milliseconds since the Unix epoch, or null when the age is unknown. */
-  modificationTime: number | null;
+  /** Latest observed project file modification in milliseconds, or null when unknown. */
+  projectModificationTime: number | null;
   /** Only present when --delete-all is used. */
   deletion?: JsonDeletion;
 }

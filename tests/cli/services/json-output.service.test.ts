@@ -43,12 +43,12 @@ describe('JsonOutputService', () => {
       );
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
-      expect(firstWrittenJson(mockStdout)).toMatchObject({
+      expect(firstWrittenJson(mockStdout)).toEqual({
         version: 1,
         result: {
           path: '/test/node_modules',
           size: 1099511627776,
-          modificationTime: 1640995200000,
+          projectModificationTime: 1640995200000,
           riskAnalysis: {
             isSensitive: false,
           },
@@ -64,7 +64,9 @@ describe('JsonOutputService', () => {
           makeResult({ modificationTime: unknownModificationTime }),
         );
 
-        expect(firstWrittenJson(mockStdout).result.modificationTime).toBeNull();
+        expect(
+          firstWrittenJson(mockStdout).result.projectModificationTime,
+        ).toBeNull();
       },
     );
 
@@ -122,18 +124,18 @@ describe('JsonOutputService', () => {
       jsonOutputService[finishMethod]();
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
-      expect(firstWrittenJson(mockStdout)).toMatchObject({
+      expect(firstWrittenJson(mockStdout)).toEqual({
         version: 1,
         results: [
           {
             path: '/test/node_modules',
             size: 1099511627776,
-            modificationTime: 1640995200000,
+            projectModificationTime: 1640995200000,
           },
           {
             path: '/test2/node_modules',
             size: 2199023255552,
-            modificationTime: 1640995300000,
+            projectModificationTime: 1640995300000,
           },
         ],
         meta: {

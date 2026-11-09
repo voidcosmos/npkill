@@ -9,7 +9,6 @@ Npkill supports two JSON output modes that allow you to integrate it into automa
 - [JSON Structure](#json-structure)
 - [Examples](#examples)
 - [TypeScript Interfaces](#typescript-interfaces)
-- [Use Cases](#use-cases)
 
 ## Output Modes
 
@@ -23,11 +22,13 @@ npkill --json
 
 ### Streaming JSON (`--json-stream`)
 
-The `--json-stream` option outputs each result as a separate JSON object on its own line as soon as it's found. This is useful for real-time processing or when dealing with large scans where you want to start processing results immediately.
+The `--json-stream` option outputs one JSON object per line (JSONL). Each result is printed once its statistics and any requested deletion have finished.
 
 ```bash
 npkill --json-stream
 ```
+
+There is no final completion record or metadata line. Wait for the command to exit to know when output has finished. If nothing matches, stdout is empty.
 
 ## Deleting Without the Interface
 
@@ -54,7 +55,7 @@ The simple JSON format includes all results in a single object with metadata:
     {
       "path": "/home/user/project1/node_modules",
       "size": 157286400,
-      "modificationTime": 1640995200000,
+      "projectModificationTime": 1640995200000,
       "riskAnalysis": {
         "isSensitive": false
       }
@@ -62,7 +63,7 @@ The simple JSON format includes all results in a single object with metadata:
     {
       "path": "/home/user/project2/node_modules",
       "size": 89478400,
-      "modificationTime": 1640995300000
+      "projectModificationTime": 1640995300000
     }
   ],
   "meta": {
@@ -77,8 +78,8 @@ The simple JSON format includes all results in a single object with metadata:
 Each line in streaming mode contains a single result:
 
 ```json
-{"version":1,"result":{"path":"/home/user/project1/node_modules","size":157286400,"modificationTime":1640995200000,"riskAnalysis":{"isSensitive":false}}}
-{"version":1,"result":{"path":"/home/user/project2/node_modules","size":89478400,"modificationTime":1640995300000}}
+{"version":1,"result":{"path":"/home/user/project1/node_modules","size":157286400,"projectModificationTime":1640995200000,"riskAnalysis":{"isSensitive":false}}}
+{"version":1,"result":{"path":"/home/user/project2/node_modules","size":89478400,"projectModificationTime":1640995300000}}
 ```
 
 ### Error Output
@@ -96,19 +97,25 @@ Errors are output to stderr in JSON format. If the scan cannot run, npkill exits
 
 ### Field Descriptions
 
-- **`version`**: Schema version.
-- **`path`**: Absolute path to the found directory.
-- **`size`**: Directory size in bytes, or `null` with `--no-size` or `--no-stats`.
-- **`modificationTime`**: Unix timestamp (milliseconds) of the most recently modified file, or `null` when it could not be calculated (for example, when the project has no other files).
-- **`riskAnalysis`**: Optional risk assessment for deletion
+- **`version`**: Output schema version, independent of the npkill package version.
+- **`path`**: Absolute path to the found directory, using the platform's path syntax.
+- **`size`**: Estimated disk usage in bytes, or `null` with `--no-size` or `--no-stats`. It is not a guarantee of recoverable space.
+- **`projectModificationTime`**: Latest observed file modification in the target's parent directory and its subdirectories, in milliseconds since the Unix epoch. It is a heuristic for project activity, not the target directory's modification time. It is `null` when unknown or disabled with `--no-age` or `--no-stats`.
+- **`riskAnalysis`**: Optional risk assessment for deletion. Its absence does not mean the directory is safe.
   - **`isSensitive`**: Whether the directory might be important for system functionality.
-  - **`reason`**: Human-readable explanation of the risk assessment.
+  - **`reason`**: Optional human-readable explanation of the risk assessment.
 - **`deletion`**: Only present with `--delete-all`.
-  - **`success`**: Whether the directory was deleted.
-  - **`error`**: Why it could not be deleted, when `success` is false.
-- **`resultsCount`**: Total number of results found.
-- **`runDuration`**: Total scan time in milliseconds.
+  - **`success`**: Whether the real or simulated deletion succeeded. A successful dry run does not verify that a real deletion would succeed.
+  - **`error`**: Human-readable failure message, absent on success.
+- **`resultsCount`**: Number of results after filtering, including failed deletions. Only present in `meta` with `--json`.
+- **`runDuration`**: Session duration in milliseconds, including statistics and deletion. Only present in `meta` with `--json`.
 - **`timestamp`**: Unix timestamp (milliseconds) of the error.
+
+Project activity calculation skips folders named `node_modules`, `.git`, `coverage` and `dist`, case-insensitively. Other target folders can contribute to the timestamp. It can be `null`, for example, if there are no eligible files or the target is directly inside the user's home directory.
+
+Neither mode guarantees result order. `--sort-by` does not sort JSON output. Sort results in the consumer if needed.
+
+Consumers should ignore additional fields. Incompatible changes to field names, units or structure require a new schema version. Error messages are intended for people and can change without a schema version change.
 
 ## Examples
 
@@ -176,13 +183,15 @@ done
 
 # Create a CSV report
 echo "Path,Size(MB),LastModified" > report.csv
-npkill --json | jq -r '.results[] | "\(.path),\(.size/1048576|floor),\(.modificationTime)"' >> report.csv
+npkill --json | jq -r '.results[] | "\(.path),\(.size/1048576|floor),\(.projectModificationTime)"' >> report.csv
 
 # Filter and format for human reading
-npkill --json | jq -r '.results[] | select(.size > 52428800) | "📁 \(.path)\n   💾 Size: \(.size/1048576|floor)MB\n   📅 Modified: \(if .modificationTime then (.modificationTime / 1000 | strftime("%Y-%m-%d %H:%M:%S")) else "unknown" end)\n"'
+npkill --json | jq -r '.results[] | select(.size > 52428800) | "📁 \(.path)\n   💾 Size: \(.size/1048576|floor)MB\n   📅 Project modified: \(if .projectModificationTime then (.projectModificationTime / 1000 | strftime("%Y-%m-%d %H:%M:%S")) else "unknown" end)\n"'
 ```
 
-## Interfaces
+## TypeScript Interfaces
+
+These describe the JSON output. They are not exported from the `npkill` package.
 
 ```typescript
 interface JsonOutputBase {
@@ -190,27 +199,27 @@ interface JsonOutputBase {
 }
 
 interface JsonStreamOutput extends JsonOutputBase {
-  result: CliScanFoundTarget;
+  result: JsonCliScanFoundTarget;
 }
 
 interface JsonSimpleOutput extends JsonOutputBase {
-  results: CliScanFoundTarget[];
+  results: JsonCliScanFoundTarget[];
   meta: {
     resultsCount: number;
-    runDuration: number; // milliseconds
+    runDuration: number;
   };
 }
 
 interface JsonErrorOutput extends JsonOutputBase {
   error: true;
   message: string;
-  timestamp: number; // Unix timestamp in milliseconds
+  timestamp: number;
 }
 
-interface CliScanFoundTarget {
+interface JsonCliScanFoundTarget {
   path: string;
-  size: number | null; // bytes
-  modificationTime: number | null; // Unix timestamp in milliseconds
+  size: number | null;
+  projectModificationTime: number | null;
   riskAnalysis?: {
     isSensitive: boolean;
     reason?: string;

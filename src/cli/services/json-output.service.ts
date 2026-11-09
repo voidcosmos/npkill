@@ -115,7 +115,7 @@ export class JsonOutputService {
     return {
       path: result.path,
       size: this.measuresSize ? convertGbToBytes(result.size) : null,
-      modificationTime: isModificationTimeKnown(result.modificationTime)
+      projectModificationTime: isModificationTimeKnown(result.modificationTime)
         ? result.modificationTime
         : null,
       riskAnalysis: result.riskAnalysis
