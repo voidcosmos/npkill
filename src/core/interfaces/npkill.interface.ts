@@ -14,7 +14,7 @@ export type ProfileFilterType = 'base' | 'user' | 'all';
 /**
  * Result of validating a root folder path.
  */
-export interface IsValidRootFolderResult {
+export interface ValidateRootResult {
   /** Whether the folder is valid as a root. */
   isValid: boolean;
   /** Reason for invalidity, if not valid. */
@@ -56,7 +56,7 @@ export interface NpkillInterface {
    * reserved for patterns.
    * @returns Observable that emits the results that are found in real time.
    * Errors if the root is not a readable directory, with the same reason that
-   * `isValidRootFolder` gives.
+   * `validateRoot` gives.
    */
   startScan$(rootPath: string, options: ScanOptions): Observable<ScanResult>;
 
@@ -124,7 +124,7 @@ export interface NpkillInterface {
    * @param path Path to validate.
    * @returns Result of validation.
    */
-  isValidRootFolder(path: string): IsValidRootFolderResult;
+  validateRoot(path: string): ValidateRootResult;
 
   /**
    * Get the current version of npkill.

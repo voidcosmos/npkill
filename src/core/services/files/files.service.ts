@@ -11,7 +11,7 @@ import fs, { accessSync, Stats, statSync } from 'fs';
 import { access, lstat, opendir, readdir } from 'fs/promises';
 import { EMPTY, map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
-import { IsValidRootFolderResult } from '../../interfaces/npkill.interface.js';
+import { ValidateRootResult } from '../../interfaces/npkill.interface.js';
 import { compileExclusions, isExcludedDirectory } from './exclude-patterns.js';
 
 export abstract class FileService implements IFileService {
@@ -56,7 +56,7 @@ export abstract class FileService implements IFileService {
     this.fileWorkerService.stopScan();
   }
 
-  isValidRootFolder(path: string): IsValidRootFolderResult {
+  isValidRootFolder(path: string): ValidateRootResult {
     let stat: Stats;
     try {
       stat = statSync(path);
@@ -231,7 +231,7 @@ export abstract class FileService implements IFileService {
     }
 
     return {
-      timestamp: newestFile.modificationTime,
+      modificationTime: newestFile.modificationTime,
       name: basename(newestFile.path),
       path: newestFile.path,
     };

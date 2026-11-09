@@ -3,6 +3,7 @@ import type { Observable } from 'rxjs';
 import type {
   DeleteError,
   DeleteResult,
+  GetNewestFileResult,
   TargetDefinition,
   TargetRule,
   GetSizeResult,
@@ -11,6 +12,7 @@ import type {
   NpkillInterface,
   ScanOptions,
   ScanResult,
+  ValidateRootResult,
 } from '../../../.test-build/npkill-api/lib/index.js';
 
 type Equal<A, B> =
@@ -45,6 +47,15 @@ export type ScanOptionsHasNoSortBy = Expect<
 >;
 export type UseDefaultIgnoreIsAnOptionalSwitch = Expect<
   Equal<ScanOptions['useDefaultIgnore'], boolean | undefined>
+>;
+export type NewestFileCarriesItsModificationTime = Expect<
+  Equal<
+    GetNewestFileResult,
+    { path: string; name: string; modificationTime: number }
+  >
+>;
+export type ValidateRootReturnsAResult = Expect<
+  Equal<NpkillInterface['validateRoot'], (path: string) => ValidateRootResult>
 >;
 export type LogsArriveOneByOne = Expect<
   Equal<ReturnType<Npkill['getLogs$']>, Observable<LogEntry>>

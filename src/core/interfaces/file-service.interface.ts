@@ -2,7 +2,7 @@ import { FileWorkerService } from '../services/files/files.worker.service.js';
 import { GetNewestFileResult, RiskAnalysis } from '../interfaces/index.js';
 import { ScanOptions } from './target.interface.js';
 import { Observable } from 'rxjs';
-import { IsValidRootFolderResult } from './npkill.interface.js';
+import { ValidateRootResult } from './npkill.interface.js';
 
 /**
  * Core file system operations service for npkill.
@@ -40,7 +40,7 @@ export interface IFileService {
    * @param path Path to validate.
    * @returns Validation result with success status and error reason if invalid.
    */
-  isValidRootFolder(path: string): IsValidRootFolderResult;
+  isValidRootFolder(path: string): ValidateRootResult;
 
   /**
    * Analyzes a target path for potential deletion risks.

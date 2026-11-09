@@ -18,7 +18,7 @@ import {
 } from './interfaces/target.interface.js';
 import { OSServiceMap } from '../constants/os-service-map.constants.js';
 import {
-  IsValidRootFolderResult,
+  ValidateRootResult,
   NpkillInterface,
 } from './interfaces/npkill.interface.js';
 
@@ -127,7 +127,9 @@ export class Npkill implements NpkillInterface {
           if (!result) {
             return;
           }
-          this.logger.info(`Last mod. of ${absolutePath}: ${result.timestamp}`);
+          this.logger.info(
+            `Last mod. of ${absolutePath}: ${result.modificationTime}`,
+          );
         }),
       );
     });
@@ -187,7 +189,7 @@ export class Npkill implements NpkillInterface {
     this.services.fileService.stopScan();
   }
 
-  isValidRootFolder(path: string): IsValidRootFolderResult {
+  validateRoot(path: string): ValidateRootResult {
     return this.services.fileService.isValidRootFolder(path);
   }
 
@@ -299,7 +301,7 @@ function isValidDeleteOptions(options: unknown): boolean {
 
 function assertValidRootFolder(
   rootPath: string,
-  validation: IsValidRootFolderResult,
+  validation: ValidateRootResult,
 ): void {
   if (!validation.isValid) {
     throw new Error(`Cannot scan ${rootPath}. ${validation.invalidReason}`);

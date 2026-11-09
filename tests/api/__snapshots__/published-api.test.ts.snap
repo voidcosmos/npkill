@@ -8,7 +8,7 @@ exports[`npkill published API keeps the public declarations unchanged 1`] = `
     delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
     getLogs$(): Observable<LogEntry>;
     stopScan(): void;
-    isValidRootFolder(path: string): IsValidRootFolderResult;
+    validateRoot(path: string): ValidateRootResult;
     getVersion(): string;
 }
 
@@ -24,16 +24,11 @@ export interface DeleteOptions {
 export interface GetNewestFileResult {
     path: string;
     name: string;
-    timestamp: number;
+    modificationTime: number;
 }
 
 export interface GetSizeResult {
     size: number;
-}
-
-export interface IsValidRootFolderResult {
-    isValid: boolean;
-    invalidReason?: string;
 }
 
 export interface LogEntry {
@@ -49,7 +44,7 @@ export interface NpkillInterface {
     getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
     delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
     getLogs$(): Observable<LogEntry>;
-    isValidRootFolder(path: string): IsValidRootFolderResult;
+    validateRoot(path: string): ValidateRootResult;
     getVersion(): string;
 }
 
@@ -74,6 +69,11 @@ export interface TargetRule {
     readonly target: string;
     readonly nextTo?: readonly string[];
     readonly contains?: readonly string[];
+}
+
+export interface ValidateRootResult {
+    isValid: boolean;
+    invalidReason?: string;
 }
 
 export type DeleteResult = {

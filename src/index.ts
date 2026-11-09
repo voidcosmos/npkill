@@ -1,7 +1,7 @@
 export { Npkill } from './core/npkill.js';
 export type {
   NpkillInterface,
-  IsValidRootFolderResult,
+  ValidateRootResult,
 } from './core/interfaces/npkill.interface.js';
 export type { LogEntry } from './core/interfaces/logger-service.interface.js';
 export type {

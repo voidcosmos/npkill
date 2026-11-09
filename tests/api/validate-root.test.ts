@@ -20,9 +20,9 @@ afterEach(() => {
   removeTempDirs();
 });
 
-describe('isValidRootFolder', () => {
+describe('validateRoot', () => {
   it('accepts a readable directory', () => {
-    expect(createNpkill().isValidRootFolder(createTempDir())).toEqual({
+    expect(createNpkill().validateRoot(createTempDir())).toEqual({
       isValid: true,
     });
   });
@@ -30,28 +30,28 @@ describe('isValidRootFolder', () => {
   it('rejects a path that does not exist', () => {
     const missing = join(createTempDir(), 'missing');
 
-    expect(createNpkill().isValidRootFolder(missing)).toEqual(INVALID);
+    expect(createNpkill().validateRoot(missing)).toEqual(INVALID);
   });
 
   it('rejects a file', () => {
     const file = join(createTempDir(), 'package.json');
     writeFileSync(file, '{}');
 
-    expect(createNpkill().isValidRootFolder(file)).toEqual(INVALID);
+    expect(createNpkill().validateRoot(file)).toEqual(INVALID);
   });
 
   itWithUnixPermissions('rejects a directory it can enter but not read', () => {
     const folder = createTempDir();
     lockPermissions(folder, 0o311);
 
-    expect(createNpkill().isValidRootFolder(folder)).toEqual(INVALID);
+    expect(createNpkill().validateRoot(folder)).toEqual(INVALID);
   });
 
   itOnUnix('accepts a symlink to a directory', () => {
     const link = join(createTempDir(), 'projects');
     symlinkSync(createTempDir(), link, 'dir');
 
-    expect(createNpkill().isValidRootFolder(link)).toEqual({ isValid: true });
+    expect(createNpkill().validateRoot(link)).toEqual({ isValid: true });
   });
 
   itOnUnix('rejects a symlink to a file', () => {
@@ -60,13 +60,13 @@ describe('isValidRootFolder', () => {
     const link = join(createTempDir(), 'projects');
     symlinkSync(file, link);
 
-    expect(createNpkill().isValidRootFolder(link)).toEqual(INVALID);
+    expect(createNpkill().validateRoot(link)).toEqual(INVALID);
   });
 
   itWithUnixPermissions('rejects a directory it cannot enter', () => {
     const folder = createTempDir();
     lockPermissions(folder, 0o644);
 
-    expect(createNpkill().isValidRootFolder(folder)).toEqual(INVALID);
+    expect(createNpkill().validateRoot(folder)).toEqual(INVALID);
   });
 });

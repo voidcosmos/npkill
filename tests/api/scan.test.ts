@@ -152,11 +152,11 @@ describe('startScan$', () => {
       },
     ],
   ])(
-    'gives the reason of isValidRootFolder when the root %s',
+    'gives the reason of validateRoot when the root %s',
     async (_case, createRoot) => {
       const root = createRoot(createTempDir());
       const npkill = createNpkill();
-      const { invalidReason } = npkill.isValidRootFolder(root);
+      const { invalidReason } = npkill.validateRoot(root);
 
       const outcome = await observe(npkill.startScan$(root, NODE_MODULES));
 

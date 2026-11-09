@@ -41,7 +41,7 @@ describe('getNewestFile$', () => {
         {
           path: newestFile,
           name: 'parser.js',
-          timestamp: modifiedAt.getTime(),
+          modificationTime: modifiedAt.getTime(),
         },
       ],
       completed: true,

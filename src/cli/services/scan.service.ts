@@ -117,7 +117,9 @@ export class ScanService {
             ),
           );
 
-          result.modificationTime = newestFile ? newestFile.timestamp : 1;
+          result.modificationTime = newestFile
+            ? newestFile.modificationTime
+            : 1;
           return result;
         } catch {
           result.modificationTime = 1;

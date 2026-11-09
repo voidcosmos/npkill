@@ -141,7 +141,7 @@ describe('ScanService', () => {
   describe('calculateResultStats', () => {
     it('should calculate size and get modification time for a non-sensitive folder', async () => {
       const mockSize = 1024 * 1024 * 500; // 500 MB
-      const newestFile = { path: 'index.js', timestamp: 1672531200000 }; // Jan 1, 2023
+      const newestFile = { path: 'index.js', modificationTime: 1672531200000 }; // Jan 1, 2023
 
       mockNpkill.getSize$.mockReturnValue(of({ size: mockSize }));
       mockNpkill.getNewestFile$.mockReturnValue(of(newestFile));
@@ -156,7 +156,7 @@ describe('ScanService', () => {
         path.normalize('/test/root/project/'), // parent folder
       );
       expect(result.size).toBe(convertBytesToGb(mockSize));
-      expect(result.modificationTime).toBe(newestFile.timestamp);
+      expect(result.modificationTime).toBe(newestFile.modificationTime);
     });
 
     it('should NOT get modification time for a sensitive folder', async () => {

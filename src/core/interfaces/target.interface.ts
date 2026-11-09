@@ -71,7 +71,7 @@ export interface GetNewestFileResult {
   /** Name of the newest file. */
   name: string;
   /** Last modification of the file, in milliseconds since the Unix epoch. */
-  timestamp: number;
+  modificationTime: number;
 }
 
 /**

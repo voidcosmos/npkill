@@ -681,7 +681,7 @@ export class CliController {
   }
 
   private checkFileRequirements(): void {
-    const result = this.npkill.isValidRootFolder(this.config.folderRoot);
+    const result = this.npkill.validateRoot(this.config.folderRoot);
     if (!result.isValid) {
       const errorMessage =
         result.invalidReason || 'Root folder is not valid. Unknown reason';

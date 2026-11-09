@@ -133,7 +133,7 @@ describe('CliController test', () => {
   const npkillDeleteMock = jest.fn();
   const npkillMock: Npkill = {
     logger: loggerServiceMock,
-    isValidRootFolder: jest.fn().mockReturnValue({ isValid: true }),
+    validateRoot: jest.fn().mockReturnValue({ isValid: true }),
     delete$: npkillDeleteMock,
   } as unknown as Npkill;
   const profilesServiceMock = {
