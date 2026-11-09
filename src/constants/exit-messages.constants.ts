@@ -3,11 +3,12 @@ export const EXIT_MESSAGES = {
   verySmall: [
     'Cleaning up the crumbs.',
     'Every byte counts!',
-    "Micro-optimization is a passion, isn't it?",
     'Just a light dusting.',
-    'Saved enough space for... a text file.',
     'Brushed a few electrons off the floor.',
     'Tidying up the subatomic level.',
+    'Small cleanup, still a cleanup.',
+    'A little lighter than before.',
+    'Quick and tidy.',
     '            42.',
   ],
   small: [
@@ -18,13 +19,18 @@ export const EXIT_MESSAGES = {
     'Hygiene is important.',
     'Not heroic, but definitely helpful.',
     'Maintenance complete. Systems happy.',
+    'Clean disk, clear mind.',
+    'Your backups just got faster.',
+    'Less clutter, same projects.',
   ],
   medium: [
     'Wow! That was heavy.',
-    'Did you just delete half your projects?',
     'Your hard drive just sent you a thank you card.',
     'That feels SO good.',
     'Making room for GTA VI, are we?',
+    'Gigabytes, gone.',
+    'Your disk usage graph just fell off a cliff.',
+    'Spring cleaning, developer edition.',
   ],
   large: [
     '            42.',
@@ -35,5 +41,7 @@ export const EXIT_MESSAGES = {
     'Gravity on your desk just decreased.',
     'A digital extinction event.',
     "You just deleted a small country's worth of dependencies.",
+    'Heavier than a black hole. Not anymore.',
+    'That was not a cleanup, that was a renovation.',
   ],
 };

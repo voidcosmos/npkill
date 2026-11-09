@@ -24,9 +24,11 @@ export class GeneralUi extends BaseUi {
     let exitMessage = `         ${title}\n`;
     exitMessage += ` ${emoji} Space released: ${spaceSaved}\n`;
     exitMessage += pc.gray(` ${phrase}\n`);
-    exitMessage += pc.gray(` Like it? Give us a star\n`);
-    exitMessage += pc.blue(' https://github.com/voidcosmos/npkill');
-    exitMessage += '\n';
+    if (!isZero) {
+      exitMessage += pc.gray(` Like it? Give us a star\n`);
+      exitMessage += pc.blue(' https://github.com/voidcosmos/npkill');
+      exitMessage += '\n';
+    }
 
     this.print(exitMessage);
   }
