@@ -667,4 +667,18 @@ describe('CliController test', () => {
       expect(deleteResultSpy).toHaveBeenCalledWith(oldFolder);
     });
   });
+
+  it.each([
+    ['./projects/', './projects'],
+    ['../projects', '../projects'],
+  ])(
+    'accepts %s as a relative scan directory',
+    (directory, expectedFolderRoot) => {
+      mockParameters({ directory });
+
+      cliController.init();
+
+      expect(DEFAULT_CONFIG.folderRoot).toBe(expectedFolderRoot);
+    },
+  );
 });

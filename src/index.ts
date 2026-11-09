@@ -11,7 +11,7 @@ export type {
   GetNewestFileResult,
   GetSizeResult,
   RiskAnalysis,
-  ScanFoundTarget,
+  ScanResult,
   ScanOptions,
   TargetDefinition,
   TargetRule,

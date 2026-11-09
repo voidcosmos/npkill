@@ -1,3 +1,4 @@
+import { isAbsolute } from 'path';
 import { INpkillrcConfig } from '../../interfaces/npkillrc-config.interface.js';
 
 const VALID_SORT_OPTIONS = ['none', 'size', 'path', 'age'] as const;
@@ -27,6 +28,13 @@ export function validateRootDir(value: unknown): ValidationResult {
     return {
       isValid: false,
       error: 'rootDir cannot be an empty string.',
+    };
+  }
+
+  if (!isAbsolute(value)) {
+    return {
+      isValid: false,
+      error: 'rootDir must be an absolute path.',
     };
   }
 

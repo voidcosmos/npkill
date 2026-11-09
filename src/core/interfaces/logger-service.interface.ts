@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
  * Represents an individual entry in the log.
  */
 export interface LogEntry {
-  type: 'info' | 'warn' | 'error';
+  level: 'info' | 'warn' | 'error';
   timestamp: number;
   message: string;
 }

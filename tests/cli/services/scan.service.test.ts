@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { ScanService } from '../../../src/cli/services/scan.service.js';
-import { Npkill, ScanFoundTarget } from '../../../src/core/index.js';
+import { Npkill, ScanResult } from '../../../src/core/index.js';
 import {
   CliScanFoundTarget,
   IConfig,
@@ -42,14 +42,14 @@ describe('ScanService', () => {
     olderThan: 0,
   };
 
-  const mockScanFoundTarget: ScanFoundTarget = {
+  const mockScanFoundTarget: ScanResult = {
     path: '/test/root/project/node_modules',
     riskAnalysis: {
       isSensitive: false,
     },
   };
 
-  const mockSensitiveScanFoundTarget: ScanFoundTarget = {
+  const mockSensitiveScanFoundTarget: ScanResult = {
     path: '/test/root/.hidden/node_modules',
     riskAnalysis: {
       isSensitive: true,

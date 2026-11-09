@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import {
-  ScanFoundTarget,
+  ScanResult,
   GetNewestFileResult,
   GetSizeResult,
   ScanOptions,
@@ -58,10 +58,7 @@ export interface NpkillInterface {
    * Errors if the root is not a readable directory, with the same reason that
    * `isValidRootFolder` gives.
    */
-  startScan$(
-    rootPath: string,
-    options: ScanOptions,
-  ): Observable<ScanFoundTarget>;
+  startScan$(rootPath: string, options: ScanOptions): Observable<ScanResult>;
 
   /**
    * Stops the current scan if any and completes the observable returned by

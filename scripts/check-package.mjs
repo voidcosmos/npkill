@@ -24,13 +24,13 @@ const MODULE_SETTINGS = [
 ];
 
 const CONSUMER_SOURCE = `import { Npkill } from 'npkill';
-import type { ScanFoundTarget, TargetRule } from 'npkill';
+import type { ScanResult, TargetRule } from 'npkill';
 
 const rust: TargetRule = { target: 'target', nextTo: ['Cargo.toml'] };
 const paths: string[] = [];
 new Npkill()
   .startScan$('.', { targets: ['node_modules', rust] })
-  .subscribe((target: ScanFoundTarget) => paths.push(target.path));
+  .subscribe((target: ScanResult) => paths.push(target.path));
 `;
 
 const SCAN_SOURCE = `import { Npkill } from 'npkill';

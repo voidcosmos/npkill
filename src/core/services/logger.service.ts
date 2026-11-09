@@ -22,7 +22,7 @@ export class LoggerService implements ILoggerService {
 
   info(message: string): void {
     this.addToLog({
-      type: 'info',
+      level: 'info',
       timestamp: this.getTimestamp(),
       message,
     });
@@ -30,7 +30,7 @@ export class LoggerService implements ILoggerService {
 
   warn(message: string): void {
     this.addToLog({
-      type: 'warn',
+      level: 'warn',
       timestamp: this.getTimestamp(),
       message,
     });
@@ -38,7 +38,7 @@ export class LoggerService implements ILoggerService {
 
   error(message: string): void {
     this.addToLog({
-      type: 'error',
+      level: 'error',
       timestamp: this.getTimestamp(),
       message,
     });
@@ -49,7 +49,7 @@ export class LoggerService implements ILoggerService {
       return this.log;
     }
 
-    return this.log.filter((entry) => entry.type === type);
+    return this.log.filter((entry) => entry.level === type);
   }
 
   getEntries$(): Observable<LogEntry> {
@@ -71,7 +71,7 @@ export class LoggerService implements ILoggerService {
     const convertTime = (timestamp: number): number => timestamp;
 
     const content: string = this.log.reduce((log, actual) => {
-      const line = `[${convertTime(actual.timestamp)}](${actual.type}) ${
+      const line = `[${convertTime(actual.timestamp)}](${actual.level}) ${
         actual.message
       }\n`;
       return log + line;

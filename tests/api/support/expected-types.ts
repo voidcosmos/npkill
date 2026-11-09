@@ -10,6 +10,7 @@ import type {
   Npkill,
   NpkillInterface,
   ScanOptions,
+  ScanResult,
 } from '../../../.test-build/npkill-api/lib/index.js';
 
 type Equal<A, B> =
@@ -30,6 +31,9 @@ export type StartScanRequiresOptions = Expect<
     [rootPath: string, options: ScanOptions]
   >
 >;
+export type ScansEmitScanResults = Expect<
+  Equal<ReturnType<Npkill['startScan$']>, Observable<ScanResult>>
+>;
 export type GetSizeOnlyTakesAPath = Expect<
   Equal<Parameters<NpkillInterface['getSize$']>, [path: string]>
 >;
@@ -44,6 +48,12 @@ export type UseDefaultIgnoreIsAnOptionalSwitch = Expect<
 >;
 export type LogsArriveOneByOne = Expect<
   Equal<ReturnType<Npkill['getLogs$']>, Observable<LogEntry>>
+>;
+export type LogEntriesUseLevel = Expect<
+  Equal<
+    LogEntry,
+    { level: 'info' | 'warn' | 'error'; timestamp: number; message: string }
+  >
 >;
 export type TargetsAcceptReadonlyLists = Expect<
   Equal<ScanOptions['targets'], readonly TargetDefinition[]>

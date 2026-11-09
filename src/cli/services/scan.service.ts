@@ -2,7 +2,7 @@ import { Npkill } from '../../core/npkill.js';
 import {
   CliScanFoundTarget,
   IConfig,
-  ScanFoundTarget,
+  ScanResult,
   ScanOptions,
 } from '../interfaces/index.js';
 import {
@@ -48,7 +48,7 @@ export class ScanService {
     );
 
     return nonExcludedResults$.pipe(
-      map<ScanFoundTarget, CliScanFoundTarget>(({ path, riskAnalysis }) => ({
+      map<ScanResult, CliScanFoundTarget>(({ path, riskAnalysis }) => ({
         path,
         size: 0,
         modificationTime: -1,
@@ -136,7 +136,7 @@ export class ScanService {
   }
 
   private isExcludedDangerousResult(
-    scanResult: ScanFoundTarget,
+    scanResult: ScanResult,
     excludeSensitiveResults: boolean,
   ): boolean {
     return Boolean(

@@ -24,9 +24,6 @@ function validateTarget(target: unknown, path: string): ValidationResult {
   if (unknownProperty !== undefined) {
     return invalid(`${path}.${unknownProperty}`, 'unknown property');
   }
-  if (rule.nextTo === undefined && rule.contains === undefined) {
-    return invalid(path, 'needs nextTo or contains');
-  }
   return firstInvalid([
     validateName(rule.target, `${path}.target`),
     rule.nextTo === undefined

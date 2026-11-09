@@ -75,18 +75,6 @@ describe('ConfigService', () => {
         'must have a targets property',
       ],
       [
-        'a rule without conditions in a profile',
-        {
-          profiles: {
-            custom: {
-              description: 'Artifacts',
-              targets: ['node_modules', { target: 'target' }],
-            },
-          },
-        },
-        'profiles.custom.targets[1]: needs nextTo or contains',
-      ],
-      [
         'a rootDir that is not a string',
         { rootDir: 123 },
         'rootDir must be a string',
@@ -95,6 +83,26 @@ describe('ConfigService', () => {
         'an empty rootDir',
         { rootDir: '   ' },
         'rootDir cannot be an empty string',
+      ],
+      [
+        'a relative rootDir',
+        { rootDir: 'projects' },
+        'rootDir must be an absolute path',
+      ],
+      [
+        'a rootDir relative to cwd',
+        { rootDir: './projects' },
+        'rootDir must be an absolute path',
+      ],
+      [
+        'a rootDir relative to its parent',
+        { rootDir: '../projects' },
+        'rootDir must be an absolute path',
+      ],
+      [
+        'an unexpanded home rootDir',
+        { rootDir: '~/projects' },
+        'rootDir must be an absolute path',
       ],
       [
         'defaultProfiles that is not an array',
@@ -141,15 +149,29 @@ describe('ConfigService', () => {
       expect(result.error).toContain(expectedError);
     });
 
-    it('should load names and rules without losing conditions', () => {
+    it('should load names and rules with optional conditions', () => {
       const config = {
         profiles: {
           custom: {
             description: 'Artifacts',
-            targets: ['node_modules', cargoTarget, pythonEnvironment],
+            targets: [
+              'node_modules',
+              { target: 'target' },
+              cargoTarget,
+              pythonEnvironment,
+            ],
           },
         },
       };
+
+      const result = load(config);
+
+      expect(result.error).toBeUndefined();
+      expect(result.config).toEqual(config);
+    });
+
+    it('should accept an absolute rootDir', () => {
+      const config = { rootDir: join(tempDir, 'projects') };
 
       const result = load(config);
 

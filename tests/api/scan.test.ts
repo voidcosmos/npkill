@@ -3,7 +3,7 @@ import { symlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { tap } from 'rxjs';
 import type {
-  ScanFoundTarget,
+  ScanResult,
   ScanOptions,
   TargetDefinition,
 } from '../../src/index.js';
@@ -46,11 +46,6 @@ describe('startScan$', () => {
     [
       'a rule without a target',
       { targets: [{ nextTo: ['Cargo.toml'] }] },
-      'targets',
-    ],
-    [
-      'a rule without nextTo or contains',
-      { targets: [{ target: 'target' }] },
       'targets',
     ],
     [
@@ -252,7 +247,7 @@ describe('startScan$', () => {
       'deep/a/b/c/node_modules/pkg',
     ]);
     const npkill = createNpkill();
-    const values: ScanFoundTarget[] = [];
+    const values: ScanResult[] = [];
 
     await new Promise<void>((resolve) => {
       npkill.startScan$(root, NODE_MODULES).subscribe({

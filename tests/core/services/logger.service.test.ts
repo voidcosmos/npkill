@@ -37,7 +37,7 @@ describe('LoggerService', () => {
   });
 
   describe('add to log (info, error)', () => {
-    it('should add the message to the log with the correct type and timestamp', () => {
+    it('should add the message to the log with the correct level and timestamp', () => {
       expect(logger.get()).toEqual([]);
       logger.info('Sample message1');
       logger.error('Sample message2');
@@ -45,22 +45,22 @@ describe('LoggerService', () => {
       logger.info('Sample message4');
       expect(logger.get()).toEqual([
         {
-          type: 'info',
+          level: 'info',
           timestamp: fakeTimeEpox,
           message: 'Sample message1',
         },
         {
-          type: 'error',
+          level: 'error',
           timestamp: fakeTimeEpox,
           message: 'Sample message2',
         },
         {
-          type: 'error',
+          level: 'error',
           timestamp: fakeTimeEpox,
           message: 'Sample message3',
         },
         {
-          type: 'info',
+          level: 'info',
           timestamp: fakeTimeEpox,
           message: 'Sample message4',
         },
@@ -96,7 +96,7 @@ describe('LoggerService', () => {
       logger.error('');
       logger.info('');
 
-      expect(logger.get(type).map((entry) => entry.type)).toEqual(
+      expect(logger.get(type).map((entry) => entry.level)).toEqual(
         expectedTypes,
       );
     });

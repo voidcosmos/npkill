@@ -4,8 +4,8 @@
 export type TargetDefinition = string | TargetRule;
 
 /**
- * Finds a directory only when the listed entries exist around it. Rules with
- * the same target are alternatives.
+ * Finds a directory by name, optionally requiring entries around it.
+ * Rules with the same target are alternatives.
  */
 export interface TargetRule {
   /** Name of the target. */
@@ -29,7 +29,7 @@ export interface RiskAnalysis {
 /**
  * Represents a target found during the scan process.
  */
-export interface ScanFoundTarget {
+export interface ScanResult {
   /** Absolute path to the found target. */
   path: string;
   /** Optional risk analysis for the target. */

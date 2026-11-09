@@ -37,7 +37,7 @@ describe('getLogs$', () => {
     expect(outcome.values.length).toBeGreaterThan(0);
     outcome.values.forEach((entry) =>
       expect(entry).toEqual({
-        type: expect.stringMatching(/^(info|warn|error)$/),
+        level: expect.stringMatching(/^(info|warn|error)$/),
         timestamp: expect.any(Number),
         message: expect.any(String),
       }),

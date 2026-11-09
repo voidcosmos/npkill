@@ -9,7 +9,7 @@ import { StreamService } from './services/stream.service.js';
 import { ProfilesService } from './services/profiles.service.js';
 import { Services } from './interfaces/services.interface.js';
 import {
-  ScanFoundTarget,
+  ScanResult,
   GetNewestFileResult,
   GetSizeResult,
   ScanOptions,
@@ -53,10 +53,7 @@ export class Npkill implements NpkillInterface {
 
   private searchDuration = 0;
 
-  startScan$(
-    rootPath: string,
-    options: ScanOptions,
-  ): Observable<ScanFoundTarget> {
+  startScan$(rootPath: string, options: ScanOptions): Observable<ScanResult> {
     const { fileService } = this.services;
 
     return defer(() => {

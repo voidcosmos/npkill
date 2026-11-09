@@ -46,6 +46,18 @@ async function scan(
 }
 
 describe('scanning with rules', () => {
+  it('matches a rule without conditions by name', async () => {
+    const root = createTree([
+      'app/node_modules/nested/node_modules',
+      'other/node_modules',
+    ]);
+
+    expect(await scan(root, [{ target: 'node_modules' }])).toEqual([
+      'app/node_modules',
+      'other/node_modules',
+    ]);
+  });
+
   it('finds a directory only when its siblings and contents match', async () => {
     const root = createTree([
       'rust/target',
@@ -145,15 +157,21 @@ describe('scanning with rules', () => {
     },
   );
 
-  it('finds every directory with a name that is also listed alone', async () => {
-    const root = createTree(['rust/target', 'unrelated/target']);
-    writeFileSync(join(root, 'rust/Cargo.toml'), '');
+  it.each<[string, TargetDefinition]>([
+    ['a name', 'target'],
+    ['an unconditional rule', { target: 'target' }],
+  ])(
+    'finds every directory with a target also listed as %s',
+    async (_case, target) => {
+      const root = createTree(['rust/target', 'unrelated/target']);
+      writeFileSync(join(root, 'rust/Cargo.toml'), '');
 
-    expect(await scan(root, ['target', cargoTarget])).toEqual([
-      'rust/target',
-      'unrelated/target',
-    ]);
-  });
+      expect(await scan(root, [target, cargoTarget])).toEqual([
+        'rust/target',
+        'unrelated/target',
+      ]);
+    },
+  );
 
   it('explores rejected directories but not the ones it finds', async () => {
     const root = createTree([
