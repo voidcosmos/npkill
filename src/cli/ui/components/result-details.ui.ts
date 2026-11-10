@@ -6,7 +6,7 @@ import pc from 'picocolors';
 import { resolve } from 'node:path';
 import { CliScanFoundTarget } from '../../../cli/interfaces/stats.interface.js';
 import { formatSize } from '../../../utils/unit-conversions.js';
-import { RESULT_TYPE_INFO } from '../../../constants/index.js';
+import { findTargetInfo } from '../../../utils/find-target-info.js';
 import { IConfig } from '../../interfaces/config.interface.js';
 
 export class ResultDetailsUi extends BaseUi implements InteractiveUi {
@@ -170,8 +170,7 @@ export class ResultDetailsUi extends BaseUi implements InteractiveUi {
     });
 
     // Target details
-    const targetKey = targetName.toLowerCase();
-    const targetInfo: string = RESULT_TYPE_INFO[targetKey];
+    const targetInfo = findTargetInfo(targetName);
 
     if (targetInfo) {
       currentRow += 2;
