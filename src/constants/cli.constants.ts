@@ -22,7 +22,8 @@ export const OPTIONS: ICliOptions[] = [
   },
   {
     arg: ['-D', '--delete-all'],
-    description: 'Auto-delete all targets that are found.',
+    description:
+      'Auto-delete all targets that are found. Use it with --json or --json-stream and -y to delete without the interface.',
     name: 'delete-all',
   },
   {
@@ -38,7 +39,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-E', '--exclude'],
     description:
-      'Exclude directories from search (directory list must be inside double quotes "", each directory separated by "," ) Example: "ignore1,ignore2"',
+      'Exclude directories: name matches anywhere, ./path or path/subpath matches from the scan root, **/path matches anywhere, absolute path matches exactly. Separate multiple patterns with commas. On Unix, backslash escapes literal *, ?, and backslash.',
     name: 'exclude',
   },
   {
@@ -81,6 +82,12 @@ export const OPTIONS: ICliOptions[] = [
     name: 'exclude-sensitive',
   },
   {
+    arg: ['--no-ignore-default'],
+    description:
+      'Also look inside the folders skipped by default, like .git or .nvm.',
+    name: 'disable-default-ignore',
+  },
+  {
     arg: ['--dry-run'],
     description:
       'It does not delete anything (will simulate it with a random delay).',
@@ -99,7 +106,7 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['--no-size'],
     description:
-      'Skip size and age calculation. Useful for faster scanning and deletion when space info is not needed.',
+      'Skip size calculation. Useful for faster scanning and deletion when space info is not needed.',
     name: 'disable-size',
   },
   {

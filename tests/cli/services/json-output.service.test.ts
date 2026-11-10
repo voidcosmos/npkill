@@ -2,10 +2,23 @@ import { jest } from '@jest/globals';
 import { JsonOutputService } from '../../../src/cli/services/json-output.service.js';
 import { CliScanFoundTarget } from '../../../src/cli/interfaces/stats.interface.js';
 
+const makeResult = (
+  overrides: Partial<CliScanFoundTarget> = {},
+): CliScanFoundTarget => ({
+  path: '/test/node_modules',
+  size: 1,
+  modificationTime: 1640995200000,
+  status: 'live',
+  ...overrides,
+});
+
 describe('JsonOutputService', () => {
   let jsonOutputService: JsonOutputService;
   let mockStdout: any;
   let mockStderr: any;
+
+  const firstWrittenJson = (stream: { write: jest.Mock }) =>
+    JSON.parse(stream.write.mock.calls[0][0] as string);
 
   beforeEach(() => {
     mockStdout = {
@@ -17,90 +30,112 @@ describe('JsonOutputService', () => {
     jsonOutputService = new JsonOutputService(mockStdout, mockStderr);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe('initializeSession', () => {
-    it('should initialize session correctly', () => {
-      jsonOutputService.initializeSession();
-      expect(jsonOutputService.getResultsCount()).toBe(0);
-    });
-  });
-
   describe('processResult in stream mode', () => {
     it('should write stream result in correct format', () => {
-      const mockResult: CliScanFoundTarget = {
-        path: '/test/node_modules',
-        size: 1024,
-        modificationTime: 1640995200000,
-        status: 'live',
-        riskAnalysis: {
-          isSensitive: false,
-        },
-      };
-
-      jsonOutputService.initializeSession(true); // stream mode
-      jsonOutputService.processResult(mockResult);
+      jsonOutputService.initializeSession(true);
+      jsonOutputService.processResult(
+        makeResult({
+          size: 1024,
+          riskAnalysis: {
+            isSensitive: false,
+          },
+        }),
+      );
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
-      const writtenData = mockStdout.write.mock.calls[0][0];
-      const parsedData = JSON.parse(writtenData.trim());
-
-      expect(parsedData).toMatchObject({
+      expect(firstWrittenJson(mockStdout)).toEqual({
         version: 1,
         result: {
           path: '/test/node_modules',
           size: 1099511627776,
-          modificationTime: 1640995200000,
+          projectModificationTime: 1640995200000,
           riskAnalysis: {
             isSensitive: false,
           },
         },
       });
     });
+
+    it.each([-1, 1])(
+      'should output an unknown modification time (%p) as null',
+      (unknownModificationTime) => {
+        jsonOutputService.initializeSession(true);
+        jsonOutputService.processResult(
+          makeResult({ modificationTime: unknownModificationTime }),
+        );
+
+        expect(
+          firstWrittenJson(mockStdout).result.projectModificationTime,
+        ).toBeNull();
+      },
+    );
+
+    it('should output the size as null when it is not calculated', () => {
+      jsonOutputService.initializeSession(true, false);
+      jsonOutputService.processResult(makeResult({ size: 0 }));
+
+      expect(firstWrittenJson(mockStdout).result.size).toBeNull();
+    });
+
+    it('should include the deletion when the result was deleted', () => {
+      jsonOutputService.initializeSession(true);
+      jsonOutputService.processResult(makeResult(), {
+        path: '/test/node_modules',
+        success: false,
+        error: { message: 'Permission denied' },
+      });
+
+      expect(firstWrittenJson(mockStdout).result.deletion).toEqual({
+        success: false,
+        error: 'Permission denied',
+      });
+    });
+
+    it('should not include a deletion when nothing was deleted', () => {
+      jsonOutputService.initializeSession(true);
+      jsonOutputService.processResult(makeResult());
+
+      expect(firstWrittenJson(mockStdout).result).not.toHaveProperty(
+        'deletion',
+      );
+    });
   });
 
-  describe('processResult and completeScan in simple mode', () => {
+  describe.each<'completeScan' | 'handleShutdown'>([
+    'completeScan',
+    'handleShutdown',
+  ])('%s', (finishMethod) => {
     it('should collect results and output them in simple format', () => {
-      const mockResult1: CliScanFoundTarget = {
-        path: '/test/node_modules',
-        size: 1024,
-        modificationTime: 1640995200000,
-        status: 'live',
-      };
-
-      const mockResult2: CliScanFoundTarget = {
-        path: '/test2/node_modules',
-        size: 2048,
-        modificationTime: 1640995300000,
-        status: 'deleted',
-      };
-
-      jsonOutputService.initializeSession(false); // simple mode
-      jsonOutputService.processResult(mockResult1);
-      jsonOutputService.processResult(mockResult2);
+      jsonOutputService.initializeSession(false);
+      jsonOutputService.processResult(
+        makeResult({ size: 1024, modificationTime: 1640995200000 }),
+      );
+      jsonOutputService.processResult(
+        makeResult({
+          path: '/test2/node_modules',
+          size: 2048,
+          modificationTime: 1640995300000,
+          status: 'deleted',
+        }),
+      );
 
       expect(jsonOutputService.getResultsCount()).toBe(2);
 
-      jsonOutputService.completeScan();
+      jsonOutputService[finishMethod]();
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
-      const writtenData = mockStdout.write.mock.calls[0][0];
-      const parsedData = JSON.parse(writtenData.trim());
-
-      expect(parsedData).toMatchObject({
+      expect(firstWrittenJson(mockStdout)).toEqual({
         version: 1,
         results: [
           {
             path: '/test/node_modules',
             size: 1099511627776,
-            modificationTime: 1640995200000,
+            projectModificationTime: 1640995200000,
           },
           {
             path: '/test2/node_modules',
             size: 2199023255552,
-            modificationTime: 1640995300000,
+            projectModificationTime: 1640995300000,
           },
         ],
         meta: {
@@ -110,101 +145,66 @@ describe('JsonOutputService', () => {
       });
     });
 
-    it('should not output anything on completeScan in stream mode', () => {
-      const mockResult: CliScanFoundTarget = {
-        path: '/test/node_modules',
-        size: 1024,
-        modificationTime: 1640995200000,
-        status: 'live',
-      };
-
-      jsonOutputService.initializeSession(true); // stream mode
-      jsonOutputService.processResult(mockResult);
-      mockStdout.write.mockClear();
-
-      jsonOutputService.completeScan();
-
-      expect(mockStdout.write).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('writeError', () => {
-    it('should write error in correct format when given Error object', () => {
-      const error = new Error('Test error message');
-      jsonOutputService.writeError(error);
-
-      expect(mockStderr.write).toHaveBeenCalledTimes(1);
-      const writtenData = mockStderr.write.mock.calls[0][0];
-      const parsedData = JSON.parse(writtenData.trim());
-
-      expect(parsedData).toMatchObject({
-        version: 1,
-        error: true,
-        message: 'Test error message',
-        timestamp: expect.any(Number),
-      });
-    });
-
-    it('should write error in correct format when given string', () => {
-      const error = 'String error message';
-      jsonOutputService.writeError(error);
-
-      expect(mockStderr.write).toHaveBeenCalledTimes(1);
-      const writtenData = mockStderr.write.mock.calls[0][0];
-      const parsedData = JSON.parse(writtenData.trim());
-
-      expect(parsedData).toMatchObject({
-        version: 1,
-        error: true,
-        message: 'String error message',
-        timestamp: expect.any(Number),
-      });
-    });
-  });
-
-  describe('handleShutdown', () => {
-    it('should output collected results when shutdown is called in simple mode', () => {
-      const mockResult: CliScanFoundTarget = {
-        path: '/test/node_modules',
-        size: 1024,
-        modificationTime: 1640995200000,
-        status: 'live',
-      };
-
-      jsonOutputService.initializeSession(false); // simple mode
-      jsonOutputService.processResult(mockResult);
-      jsonOutputService.handleShutdown();
+    it('should output an empty result list when nothing was found', () => {
+      jsonOutputService.initializeSession(false);
+      jsonOutputService[finishMethod]();
 
       expect(mockStdout.write).toHaveBeenCalledTimes(1);
-      const writtenData = mockStdout.write.mock.calls[0][0];
-      const parsedData = JSON.parse(writtenData.trim());
-
-      expect(parsedData.results).toHaveLength(1);
-      expect(parsedData.results[0].path).toBe('/test/node_modules');
-    });
-
-    it('should not output anything when no results collected', () => {
-      jsonOutputService.initializeSession(false); // simple mode
-      jsonOutputService.handleShutdown();
-
-      expect(mockStdout.write).not.toHaveBeenCalled();
+      expect(firstWrittenJson(mockStdout)).toMatchObject({
+        version: 1,
+        results: [],
+        meta: { resultsCount: 0 },
+      });
     });
 
     it('should not output anything in stream mode', () => {
-      const mockResult: CliScanFoundTarget = {
-        path: '/test/node_modules',
-        size: 1024,
-        modificationTime: 1640995200000,
-        status: 'live',
-      };
+      jsonOutputService.initializeSession(true);
+      jsonOutputService.processResult(makeResult({ size: 1024 }));
+      mockStdout.write.mockClear();
 
-      jsonOutputService.initializeSession(true); // stream mode
-      jsonOutputService.processResult(mockResult); // This writes to stdout
-      mockStdout.write.mockClear(); // Clear the call from processResult
-
-      jsonOutputService.handleShutdown();
+      jsonOutputService[finishMethod]();
 
       expect(mockStdout.write).not.toHaveBeenCalled();
+    });
+  });
+
+  it('should wait for stdout and stderr to finish writing', async () => {
+    const onFlushed = jest.fn();
+    const flushing = jsonOutputService.flush().then(onFlushed);
+
+    expect(mockStdout.write).toHaveBeenCalledWith('', expect.any(Function));
+    expect(onFlushed).not.toHaveBeenCalled();
+
+    mockStdout.write.mock.calls[0][1]();
+    await Promise.resolve();
+
+    expect(mockStderr.write).toHaveBeenCalledWith('', expect.any(Function));
+    expect(onFlushed).not.toHaveBeenCalled();
+
+    mockStderr.write.mock.calls[0][1]();
+    await flushing;
+
+    expect(onFlushed).toHaveBeenCalledTimes(1);
+  });
+
+  describe('writeError', () => {
+    it.each([
+      ['an Error object', new Error('Test error message')],
+      ['a string', 'Test error message'],
+    ])('should write the error in correct format given %s', (_, error) => {
+      const before = Date.now();
+      jsonOutputService.writeError(error);
+      const after = Date.now();
+
+      expect(mockStderr.write).toHaveBeenCalledTimes(1);
+      const { timestamp, ...output } = firstWrittenJson(mockStderr);
+      expect(output).toEqual({
+        version: 1,
+        error: true,
+        message: 'Test error message',
+      });
+      expect(timestamp).toBeGreaterThanOrEqual(before);
+      expect(timestamp).toBeLessThanOrEqual(after);
     });
   });
 });

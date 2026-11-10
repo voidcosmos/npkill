@@ -14,7 +14,7 @@ export class UnixFilesService extends FileService {
 
   async delete(path: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      execFile('rm', ['-rf', path], (error) => {
+      execFile('rm', ['-rf', '--', path], (error) => {
         if (error) {
           reject(error);
           return;

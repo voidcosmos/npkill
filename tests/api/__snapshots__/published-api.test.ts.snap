@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`npkill published API keeps the public declarations unchanged 1`] = `
+"export declare class Npkill implements NpkillInterface {
+    startScan$(rootPath: string, options: ScanOptions): Observable<ScanResult>;
+    getSize$(path: string): Observable<GetSizeResult>;
+    getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
+    delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
+    getLogs$(): Observable<LogEntry>;
+    stopScan(): void;
+    validateRoot(path: string): ValidateRootResult;
+    getVersion(): string;
+}
+
+export interface DeleteError {
+    message: string;
+    code?: string;
+}
+
+export interface DeleteOptions {
+    dryRun?: boolean;
+}
+
+export interface GetNewestFileResult {
+    path: string;
+    name: string;
+    modificationTime: number;
+}
+
+export interface GetSizeResult {
+    size: number;
+}
+
+export interface LogEntry {
+    level: 'info' | 'warn' | 'error';
+    timestamp: number;
+    message: string;
+}
+
+export interface NpkillInterface {
+    startScan$(rootPath: string, options: ScanOptions): Observable<ScanResult>;
+    stopScan(): void;
+    getSize$(path: string): Observable<GetSizeResult>;
+    getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
+    delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
+    getLogs$(): Observable<LogEntry>;
+    validateRoot(path: string): ValidateRootResult;
+    getVersion(): string;
+}
+
+export interface RiskAnalysis {
+    isSensitive: boolean;
+    reason?: string;
+}
+
+export interface ScanOptions {
+    targets: readonly TargetDefinition[];
+    exclude?: string[];
+    useDefaultIgnore?: boolean;
+    performRiskAnalysis?: boolean;
+}
+
+export interface ScanResult {
+    path: string;
+    riskAnalysis?: RiskAnalysis;
+}
+
+export interface TargetRule {
+    readonly target: string;
+    readonly nextTo?: readonly string[];
+    readonly contains?: readonly string[];
+}
+
+export interface ValidateRootResult {
+    isValid: boolean;
+    invalidReason?: string;
+}
+
+export type DeleteResult = {
+    path: string;
+    success: true;
+} | {
+    path: string;
+    success: false;
+    error: DeleteError;
+};
+
+export type TargetDefinition = string | TargetRule;"
+`;

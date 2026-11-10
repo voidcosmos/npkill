@@ -1,146 +1,176 @@
-/* eslint-disable quotes */
 import { Profile } from '../interfaces/profile.interface.js';
+import { TargetRule } from '../interfaces/target.interface.js';
 
 export const DEFAULT_PROFILE = 'node';
 
+const GRADLE_BUILD_OUTPUTS: TargetRule[] = [
+  { target: 'build', nextTo: ['build.gradle'] },
+  { target: 'build', nextTo: ['build.gradle.kts'] },
+];
+
 export const BASE_PROFILES: { [profileName: string]: Profile } = {
   node: {
-    description:
-      'All the usual suspects related with the node/web/javascript dev toolchain: node_modules, caches, build artifacts, and assorted JavaScript junk. Safe to clean and your disk will thank you.',
+    description: 'Node.js dependencies and generated artifacts.',
     targets: [
       'node_modules',
-      '.npm',
-      '.pnpm-store',
-      '.next',
-      '.nuxt',
       '.angular',
-      '.svelte-kit',
-      '.vite',
-      '.nx',
-      '.turbo',
-      '.parcel-cache',
-      '.rpt2_cache',
-      '.eslintcache',
-      '.esbuild',
-      '.cache',
-      '.rollup.cache',
-      'storybook-static',
-      'coverage',
-      '.nyc_output',
-      '.jest',
-      'gatsby_cache',
-      '.docusaurus',
-      '.swc',
-      '.stylelintcache',
-      'deno_cache',
+      { target: '.nx', nextTo: ['nx.json'] },
+      { target: '.next', nextTo: ['package.json'] },
+      { target: '.nuxt', nextTo: ['package.json'] },
+      { target: '.output', contains: ['nitro.json'] },
+      { target: '.svelte-kit', nextTo: ['package.json'] },
+      { target: '.vite', contains: ['deps'] },
+      { target: '.turbo', nextTo: ['turbo.json'] },
+      { target: '.turbo', nextTo: ['turbo.jsonc'] },
+      { target: '.parcel-cache', nextTo: ['package.json'] },
+      {
+        target: 'storybook-static',
+        nextTo: ['package.json', '.storybook'],
+        contains: ['index.html', 'iframe.html'],
+      },
+      { target: '.docusaurus', contains: ['DONT-EDIT-THIS-FOLDER'] },
+      { target: 'coverage', contains: ['coverage-final.json'] },
+      { target: 'coverage', contains: ['lcov.info'] },
+      { target: 'coverage', contains: ['clover.xml'] },
     ],
   },
   python: {
-    description:
-      "The usual Python leftovers — caches, virtual environments, and test artifacts. Safe to clear once you've closed your IDE and virtualenvs.",
+    description: 'Python caches and virtual environments.',
     targets: [
       '__pycache__',
-      '.pytest_cache',
-      '.mypy_cache',
-      '.ruff_cache',
-      '.tox',
-      '.nox',
-      '.pytype',
-      '.pyre',
-      'htmlcov',
-      '.venv',
-      'venv',
-    ],
-  },
-  'data-science': {
-    description:
-      'Jupyter checkpoints, virtualenvs, MLflow runs, and experiment outputs. Great for learning, terrible for disk space.',
-    targets: [
-      '.ipynb_checkpoints',
-      '__pycache__',
-      '.venv',
-      'venv',
-      'outputs',
-      '.dvc',
-      '.mlruns',
+      { target: '.pytest_cache', contains: ['CACHEDIR.TAG'] },
+      { target: '.mypy_cache', contains: ['CACHEDIR.TAG'] },
+      { target: '.ruff_cache', contains: ['CACHEDIR.TAG'] },
+      { target: '.tox', nextTo: ['tox.ini'] },
+      { target: '.tox', nextTo: ['tox.toml'] },
+      { target: '.tox', nextTo: ['pyproject.toml'] },
+      { target: '.tox', nextTo: ['setup.cfg'] },
+      { target: '.nox', nextTo: ['noxfile.py'] },
+      { target: '.venv', contains: ['pyvenv.cfg'] },
+      { target: 'venv', contains: ['pyvenv.cfg'] },
+      { target: 'env', contains: ['pyvenv.cfg'] },
     ],
   },
   java: {
-    description: 'Build outputs and Gradle junk.',
-    targets: ['target', '.gradle', 'out'],
+    description:
+      'Maven and Gradle build outputs and project-local Gradle caches.',
+    targets: [
+      { target: 'target', nextTo: ['pom.xml'] },
+      ...GRADLE_BUILD_OUTPUTS,
+      { target: '.gradle', nextTo: ['settings.gradle'] },
+      { target: '.gradle', nextTo: ['settings.gradle.kts'] },
+      { target: '.gradle', nextTo: ['build.gradle'] },
+      { target: '.gradle', nextTo: ['build.gradle.kts'] },
+    ],
   },
   android: {
-    description:
-      "Native build caches and intermediate files from Android Studio. Deleting won't hurt, but expect a rebuild marathon next time.",
-    targets: ['.cxx', 'externalNativeBuild'],
-  },
-  swift: {
-    description:
-      "Xcode's playground leftovers and Swift package builds. Heavy, harmless, and happy to go.",
-    targets: ['DerivedData', '.swiftpm'],
+    description: 'Android build outputs and native build intermediates.',
+    targets: [
+      ...GRADLE_BUILD_OUTPUTS,
+      { target: '.cxx', nextTo: ['build.gradle'] },
+      { target: '.cxx', nextTo: ['build.gradle.kts'] },
+    ],
   },
   dotnet: {
-    description:
-      "Compilation artifacts and Visual Studio cache folders. Disposable once you're done building or testing.",
-    targets: ['obj', 'TestResults', '.vs'],
+    description: 'NuGet-backed .NET build intermediates.',
+    targets: [{ target: 'obj', contains: ['project.assets.json'] }],
   },
   rust: {
-    description:
-      'Cargo build targets. Huge, regenerable, and surprisingly clingy, your disk will appreciate the reset.',
-    targets: ['target'],
-  },
-  ruby: {
-    description: 'Bundler caches and dependency leftovers.',
-    targets: ['.bundle'],
+    description: 'Cargo build outputs in the workspace root.',
+    targets: [{ target: 'target', nextTo: ['Cargo.toml'] }],
   },
   elixir: {
-    description:
-      'Mix build folders, dependencies, and coverage reports. Easy to regenerate, safe to purge.',
-    targets: ['_build', 'deps', 'cover'],
+    description: 'Mix build outputs, dependencies and ElixirLS caches.',
+    targets: [
+      { target: '_build', nextTo: ['mix.exs'] },
+      { target: 'deps', nextTo: ['mix.exs'] },
+      '.elixir_ls',
+    ],
   },
   haskell: {
-    description:
-      "GHC and Stack build outputs. A collection of intermediate binaries you definitely don't need anymore.",
-    targets: ['dist-newstyle', '.stack-work'],
+    description: 'Cabal and Stack build artifacts.',
+    targets: [{ target: 'dist-newstyle', contains: ['cache'] }, '.stack-work'],
   },
   scala: {
-    description: 'Bloop, Metals, and build outputs from Scala projects.',
-    targets: ['.bloop', '.metals', 'target'],
+    description: 'sbt build outputs and Bloop and Metals caches.',
+    targets: [
+      { target: 'target', nextTo: ['build.sbt'] },
+      { target: 'target', nextTo: ['build.properties'] },
+      { target: '.bloop', nextTo: ['build.sbt'] },
+      { target: '.metals', nextTo: ['build.sbt'] },
+    ],
   },
   cpp: {
-    description:
-      'CMake build directories and temporary artifacts. Rebuilds take time, but space is priceless.',
-    targets: ['CMakeFiles', 'cmake-build-debug', 'cmake-build-release'],
+    description: 'CMake intermediates and CLion build directories.',
+    targets: [
+      { target: 'CMakeFiles', nextTo: ['CMakeCache.txt'] },
+      { target: 'CMakeFiles', nextTo: ['cmake_install.cmake'] },
+      { target: 'cmake-build-debug', contains: ['CMakeCache.txt'] },
+      { target: 'cmake-build-release', contains: ['CMakeCache.txt'] },
+    ],
   },
   unity: {
     description:
-      "Unity's cache and build artifacts. Expect longer load times next launch but it can save tons of space on unused projects.",
-    targets: ['Library', 'Temp', 'Obj'],
+      'Unity asset cache. Close the editor first and expect a full reimport.',
+    targets: [{ target: 'Library', nextTo: ['Assets', 'ProjectSettings'] }],
   },
   unreal: {
     description:
-      'Intermediate and binary build caches. Safe to clean. Unreal will (happily?) recompile.',
-    targets: ['Intermediate', 'DerivedDataCache', 'Binaries'],
+      'Unreal Engine intermediates and derived data cache. Close the editor first.',
+    targets: [
+      { target: 'Intermediate', nextTo: ['Config', 'Content'] },
+      { target: 'DerivedDataCache', nextTo: ['Config', 'Content'] },
+    ],
   },
   godot: {
     description:
-      'Editor caches and import data. Godot can recreate these in a blink.',
-    targets: ['.import', '.godot'],
-  },
-  infra: {
-    description:
-      'Leftovers from deployment tools like Serverless, Vercel, Netlify, and Terraform.',
+      'Godot import caches and local editor state. Close the editor first.',
     targets: [
-      '.serverless',
-      '.vercel',
-      '.netlify',
-      '.terraform',
-      '.sass-cache',
-      '.cpcache',
-      'elm_stuff',
-      'nimcache',
-      'deno_cache',
+      { target: '.import', nextTo: ['project.godot'] },
+      { target: '.godot', nextTo: ['project.godot'] },
     ],
+  },
+  clojure: {
+    description: 'Clojure CLI classpath caches.',
+    targets: [{ target: '.cpcache', nextTo: ['deps.edn'] }],
+  },
+  elm: {
+    description: 'Elm build artifacts.',
+    targets: [{ target: 'elm-stuff', nextTo: ['elm.json'] }],
+  },
+  php: {
+    description: 'Composer dependencies.',
+    targets: [
+      {
+        target: 'vendor',
+        nextTo: ['composer.json'],
+        contains: ['autoload.php'],
+      },
+    ],
+  },
+  dart: {
+    description: 'Dart and Flutter tool caches and build outputs.',
+    targets: [
+      { target: '.dart_tool', nextTo: ['pubspec.yaml'] },
+      { target: 'build', nextTo: ['pubspec.yaml'] },
+    ],
+  },
+  swift: {
+    description: 'Swift Package Manager build outputs.',
+    targets: [{ target: '.build', nextTo: ['Package.swift'] }],
+  },
+  zig: {
+    description: 'Zig caches and build outputs.',
+    targets: [
+      { target: '.zig-cache', nextTo: ['build.zig'] },
+      { target: 'zig-cache', nextTo: ['build.zig'] },
+      { target: 'zig-out', nextTo: ['build.zig'] },
+    ],
+  },
+  terraform: {
+    description:
+      'Terraform providers and modules. Needs terraform init again and resets the selected workspace.',
+    targets: [{ target: '.terraform', nextTo: ['.terraform.lock.hcl'] }],
   },
 };
 
@@ -150,11 +180,22 @@ const ALL_TARGETS = [
   ),
 ];
 
-export const DEFAULT_PROFILES: { [profileName: string]: Profile } = {
-  ...BASE_PROFILES,
-  all: {
-    targets: ALL_TARGETS,
-    description:
-      'Includes all targets listed above. Not recommended, as it mixes unrelated ecosystems and may remove context-specific data (a good recipe for chaos if used recklessly).',
-  },
-};
+export const DEFAULT_PROFILES: Readonly<Record<string, Profile>> =
+  freezeProfiles({
+    ...BASE_PROFILES,
+    all: {
+      targets: ALL_TARGETS,
+      description:
+        'All the profiles above together. Review results before deleting.',
+    },
+  });
+
+function freezeProfiles(
+  profiles: Record<string, Profile>,
+): Readonly<Record<string, Profile>> {
+  Object.values(profiles).forEach((profile) => {
+    Object.freeze(profile.targets);
+    Object.freeze(profile);
+  });
+  return Object.freeze(profiles);
+}

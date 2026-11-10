@@ -1,8 +1,3 @@
-/* eslint-disable promise/valid-params */
-/* eslint-disable promise/catch-or-return */
-/* eslint-disable promise/no-callback-in-promise */
-/* eslint-disable promise/always-return */
-
 import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 
@@ -37,54 +32,50 @@ describe('Http Service', () => {
   describe('#get', () => {
     beforeEach(() => {
       statusCodeMock = 200;
+      eventEmitter.removeAllListeners();
+      eventEmitter2.removeAllListeners();
     });
 
-    it('should reject if a error ocurr', (done) => {
+    it('should reject if a error ocurr', async () => {
       const errorMsg = 'test error';
-      httpsService
-        .getJson('http://sampleUrl')
-        .then()
-        .catch((error: Error) => {
-          expect(error.message).toBe(errorMsg);
-          done();
-        });
+      const request = httpsService.getJson('http://sampleUrl');
+
       eventEmitter.emit('error', new Error(errorMsg));
+
+      await expect(request).rejects.toThrow(errorMsg);
     });
 
-    it('should reject if the code of the response indicate error (101)', (done) => {
-      statusCodeMock = 101;
-      httpsService
-        .getJson('http://sampleUrl')
-        .then()
-        .catch(() => {
-          done();
-        });
-    });
+    it.each([101, 404])(
+      'should reject if the code of the response indicate error (%p)',
+      async (statusCode) => {
+        statusCodeMock = statusCode;
 
-    it('should reject if the code of the response indicate error (404)', (done) => {
-      statusCodeMock = 404;
-      httpsService
-        .getJson('http://sampleUrl')
-        .then()
-        .catch(() => {
-          done();
-        });
-    });
+        await expect(
+          httpsService.getJson('http://sampleUrl'),
+        ).rejects.toThrow();
+      },
+    );
 
-    it('should resolve with all chunks of data on end', (done) => {
+    it('should resolve with all chunks of data on end', async () => {
       const chunks = ['{"key1"', ':"test","ke', 'y2":"p', 'assed"}'];
-      const expected = {
-        key1: 'test',
-        key2: 'passed',
-      };
-
-      httpsService.getJson('http://sampleUrl').then((data) => {
-        expect(data).toEqual(expected);
-        done();
-      });
+      const request = httpsService.getJson('http://sampleUrl');
 
       chunks.forEach((chunk) => eventEmitter2.emit('data', chunk));
       eventEmitter2.emit('end');
+
+      await expect(request).resolves.toEqual({
+        key1: 'test',
+        key2: 'passed',
+      });
+    });
+
+    it('should reject if the body is not valid JSON', async () => {
+      const request = httpsService.getJson('http://sampleUrl');
+
+      eventEmitter2.emit('data', '<html>Rate limited</html>');
+      eventEmitter2.emit('end');
+
+      await expect(request).rejects.toThrow(SyntaxError);
     });
   });
 });

@@ -1,7 +1,7 @@
-import { FormattedSize } from 'src/utils/unit-conversions.js';
-import { ScanFoundTarget } from '../../core/interfaces/index.js';
+import { FormattedSize } from '../../utils/unit-conversions.js';
+import { ScanResult } from '../../core/interfaces/index.js';
 
-export interface CliScanFoundTarget extends ScanFoundTarget {
+export interface CliScanFoundTarget extends ScanResult {
   size: number;
   modificationTime: number;
   status: 'live' | 'deleting' | 'error-deleting' | 'deleted';

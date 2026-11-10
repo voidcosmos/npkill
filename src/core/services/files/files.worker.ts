@@ -1,18 +1,21 @@
-import { Dir, Dirent, Stats } from 'fs';
-import { lstat, opendir, readdir, stat } from 'fs/promises';
+import { constants, Stats } from 'fs';
+import { access, lstat, readdir } from 'fs/promises';
 import EventEmitter from 'events';
 import {
   WorkerMessage,
-  WorkerScanOptions,
+  WorkerScanRequest,
   WorkerSizeResult,
 } from './files.worker.service.js';
 import { join } from 'path';
 import { MessagePort, parentPort } from 'node:worker_threads';
-import { EVENTS, MAX_PROCS } from '../../../constants/workers.constants.js';
-import { GLOBAL_IGNORE } from '../../constants/global-ignored.constants.js';
+import {
+  EVENTS,
+  MAX_SIZE_PROCS,
+} from '../../../constants/workers.constants.js';
+import { ScanWalker } from './scan-walker.js';
+import { SharedScan } from './shared-scan.js';
 
 enum ETaskOperation {
-  explore,
   getSize,
   getSizeChild,
 }
@@ -28,14 +31,13 @@ interface SizeCollector {
 interface Task {
   operation: ETaskOperation;
   path: string;
-  scanId?: number;
   sizeRequestId?: number;
   sizeCollector?: SizeCollector;
 }
 
 (() => {
   let id = 0;
-  let fileWalker: FileWalker;
+  let sizeCalculator: SizeCalculator;
   let tunnel: MessagePort;
 
   if (parentPort === null) {
@@ -46,9 +48,9 @@ interface Task {
     if (message?.type === EVENTS.startup) {
       id = message.value.id;
       tunnel = message.value.channel;
-      fileWalker = new FileWalker();
+      sizeCalculator = new SizeCalculator();
       initTunnelListeners();
-      initFileWalkerListeners();
+      initSizeCalculatorListeners();
       notifyWorkerReady();
     }
   });
@@ -62,20 +64,12 @@ interface Task {
 
   function initTunnelListeners(): void {
     tunnel.on('message', (message: WorkerMessage) => {
-      if (message?.type === EVENTS.exploreConfig) {
-        fileWalker.setSearchConfig(message.value);
-      }
-
-      if (message?.type === EVENTS.explore) {
-        fileWalker.enqueueTask({
-          operation: ETaskOperation.explore,
-          path: message.value.path,
-          scanId: message.value.scanId,
-        });
+      if (message?.type === EVENTS.startScan) {
+        void startScan(message.value);
       }
 
       if (message?.type === EVENTS.getSize) {
-        fileWalker.enqueueTask(
+        sizeCalculator.enqueueTask(
           {
             operation: ETaskOperation.getSize,
             path: message.value.path,
@@ -84,22 +78,29 @@ interface Task {
           true,
         );
       }
-
-      if (message?.type === EVENTS.stop) {
-        fileWalker.stop();
-      }
     });
   }
 
-  function initFileWalkerListeners(): void {
-    fileWalker.events.on('newResult', ({ results, scanId }) => {
+  async function startScan({
+    scanId,
+    buffer,
+    options,
+  }: WorkerScanRequest): Promise<void> {
+    const scan = new SharedScan(buffer);
+    const walker = new ScanWalker(scan, options, (results) =>
       tunnel.postMessage({
         type: EVENTS.scanResult,
-        value: { results, workerId: id, scanId },
-      });
-    });
+        value: { results, scanId },
+      }),
+    );
+    await walker.run();
+    if (scan.isFinished()) {
+      tunnel.postMessage({ type: EVENTS.scanFinished, value: { scanId } });
+    }
+  }
 
-    fileWalker.events.on('sizeResult', (result: WorkerSizeResult) => {
+  function initSizeCalculatorListeners(): void {
+    sizeCalculator.events.on('sizeResult', (result: WorkerSizeResult) => {
       tunnel.postMessage({
         type: EVENTS.GetSizeResult,
         value: {
@@ -111,27 +112,11 @@ interface Task {
   }
 })();
 
-class FileWalker {
+class SizeCalculator {
   readonly events = new EventEmitter();
-  private searchConfig: WorkerScanOptions = {
-    rootPath: '',
-    targets: [''],
-    exclude: [],
-  };
-
   private taskQueue: Task[] = [];
   private completedTasks = 0;
   private procs = 0;
-
-  setSearchConfig(params: WorkerScanOptions): void {
-    this.searchConfig = params;
-  }
-
-  stop(): void {
-    this.taskQueue = this.taskQueue.filter(
-      (task) => task.operation !== ETaskOperation.explore,
-    );
-  }
 
   enqueueTask(task: Task, priorize: boolean = false): void {
     if (priorize) {
@@ -141,39 +126,6 @@ class FileWalker {
     }
 
     this.processQueue();
-  }
-
-  private async run(path: string, scanId?: number): Promise<void> {
-    this.updateProcs(1);
-
-    try {
-      const dir = await opendir(path);
-      await this.analizeDir(path, dir, scanId);
-    } catch {
-      this.completeTask();
-      this.events.emit('newResult', { results: [], scanId });
-    }
-  }
-
-  private async analizeDir(
-    path: string,
-    dir: Dir,
-    scanId?: number,
-  ): Promise<void> {
-    const results = [];
-    let entry: Dirent | null = null;
-
-    while ((entry = await dir.read().catch(() => null)) != null) {
-      this.newDirEntry(path, entry, results);
-    }
-
-    await dir.close();
-    this.completeTask();
-    this.events.emit('newResult', { results, scanId });
-
-    if (this.taskQueue.length === 0 && this.procs === 0) {
-      this.completeAll();
-    }
   }
 
   private async runGetSize(
@@ -191,11 +143,12 @@ class FileWalker {
     };
 
     try {
-      const stats = await stat(path);
+      const stats = await lstat(path);
       if (!stats.isDirectory()) {
         emitResult(this.getDiskUsage(stats));
         return;
       }
+      await access(path, constants.R_OK | constants.X_OK);
 
       this.enqueueTask({
         operation: ETaskOperation.getSizeChild,
@@ -245,7 +198,8 @@ class FileWalker {
                 currentLevelSize += 4096; // General directory size
                 directoriesToProcess.push(fullPath);
               } else {
-                currentLevelSize += this.getDiskUsage(await lstat(fullPath));
+                const stats = await lstat(fullPath);
+                currentLevelSize += this.getDiskUsage(stats);
               }
             } catch {
               // Ignore permissions errors.
@@ -282,44 +236,6 @@ class FileWalker {
     return typeof stats.blocks === 'number' ? stats.blocks * 512 : stats.size;
   }
 
-  private newDirEntry(
-    path: string,
-    entry: Dirent,
-    results: { path: string; isTarget: boolean }[],
-  ): void {
-    if (entry.isSymbolicLink() || !entry.isDirectory()) {
-      return;
-    }
-
-    const isTarget = this.isTarget(entry.name);
-
-    if (GLOBAL_IGNORE.has(entry.name) && !isTarget) {
-      return;
-    }
-
-    const subpath = join(path, entry.name);
-
-    if (this.isExcluded(subpath)) {
-      return;
-    }
-
-    results.push({
-      path: subpath,
-      isTarget,
-    });
-  }
-
-  private isExcluded(path: string): boolean {
-    if (this.searchConfig.exclude == null) {
-      return false;
-    }
-    return this.searchConfig.exclude.some((ex) => path.includes(ex));
-  }
-
-  private isTarget(path: string): boolean {
-    return this.searchConfig.targets.includes(path);
-  }
-
   private completeTask(): void {
     this.updateProcs(-1);
     this.processQueue();
@@ -331,18 +247,13 @@ class FileWalker {
   }
 
   private processQueue(): void {
-    while (this.procs < MAX_PROCS && this.taskQueue.length > 0) {
+    while (this.procs < MAX_SIZE_PROCS && this.taskQueue.length > 0) {
       const task = this.taskQueue.shift();
       if (!task?.path) {
         continue;
       }
 
       switch (task.operation) {
-        case ETaskOperation.explore:
-          this.run(task.path, task.scanId).catch(() => {
-            this.completeTask();
-          });
-          break;
         case ETaskOperation.getSize:
           this.runGetSize(task.path, task.sizeRequestId).catch(() => {
             // If runGetSize fails, we need to emit a size of 0
@@ -373,10 +284,6 @@ class FileWalker {
           break;
       }
     }
-  }
-
-  private completeAll(): void {
-    // Any future action.
   }
 
   /*  get stats(): WorkerStats {

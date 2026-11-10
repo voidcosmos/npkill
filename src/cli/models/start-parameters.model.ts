@@ -1,8 +1,17 @@
 export class StartParameters {
   private values: Record<string, string | boolean> = {};
+  private unknownOptions: string[] = [];
 
   add(key: string, value: string | boolean): void {
     this.values[key] = value;
+  }
+
+  addUnknownOption(option: string): void {
+    this.unknownOptions.push(option);
+  }
+
+  getUnknownOptions(): string[] {
+    return [...this.unknownOptions];
   }
 
   isTrue(key: string): boolean {

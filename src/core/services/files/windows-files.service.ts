@@ -1,7 +1,7 @@
 import { Subject, Observable } from 'rxjs';
 import { FileService } from './files.service.js';
 import { FileWorkerService } from './files.worker.service.js';
-import { ScanOptions } from '@core/index.js';
+import { ScanOptions } from '../../index.js';
 import { StreamService } from '../stream.service.js';
 import { rm } from 'fs/promises';
 

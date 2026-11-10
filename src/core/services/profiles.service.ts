@@ -1,5 +1,9 @@
-import { DEFAULT_PROFILES } from '../constants/profiles.constants.js';
+import {
+  BASE_PROFILES,
+  DEFAULT_PROFILES,
+} from '../constants/profiles.constants.js';
 import { Profile } from '../interfaces/profile.interface.js';
+import { TargetDefinition } from '../interfaces/target.interface.js';
 
 export type ProfileFilterType = 'base' | 'user' | 'all';
 
@@ -32,8 +36,20 @@ export class ProfilesService {
         return DEFAULT_PROFILES;
       case 'user':
         return this.userDefinedProfiles;
-      case 'all':
-        return { ...DEFAULT_PROFILES, ...this.userDefinedProfiles };
+      case 'all': {
+        const profiles = { ...DEFAULT_PROFILES, ...this.userDefinedProfiles };
+        profiles.all = {
+          ...DEFAULT_PROFILES.all,
+          targets: [
+            ...new Set(
+              Object.keys(BASE_PROFILES).flatMap(
+                (name) => profiles[name].targets,
+              ),
+            ),
+          ],
+        };
+        return profiles;
+      }
       default:
         return DEFAULT_PROFILES;
     }
@@ -46,7 +62,15 @@ export class ProfilesService {
    * @returns The profile if found, undefined otherwise
    */
   getProfileByName(name: string): Profile | undefined {
-    return this.userDefinedProfiles[name] || DEFAULT_PROFILES[name];
+    if (name === 'all') {
+      return this.getProfiles().all;
+    }
+    if (Object.hasOwn(this.userDefinedProfiles, name)) {
+      return this.userDefinedProfiles[name];
+    }
+    return Object.hasOwn(DEFAULT_PROFILES, name)
+      ? DEFAULT_PROFILES[name]
+      : undefined;
   }
 
   /**
@@ -55,24 +79,28 @@ export class ProfilesService {
    * @returns true if the profile exists, false otherwise
    */
   hasProfile(name: string): boolean {
-    return this.getProfileByName(name) !== undefined;
+    return (
+      Object.hasOwn(this.userDefinedProfiles, name) ||
+      Object.hasOwn(DEFAULT_PROFILES, name)
+    );
   }
 
   /**
    * Gets the targets from multiple profiles by their names.
    * Combines targets from all specified profiles, removing duplicates.
    * @param profileNames Array of profile names to get targets from
-   * @returns Array of unique target directory names
+   * @returns Array of unique target definitions
    */
-  getTargetsFromProfiles(profileNames: string[]): string[] {
-    const targets = new Set<string>();
+  getTargetsFromProfiles(profileNames: string[]): TargetDefinition[] {
+    const targets = new Set<TargetDefinition>();
 
     for (const name of profileNames) {
       const profile = this.getProfileByName(name);
-      if (profile) {
-        for (const target of profile.targets) {
-          targets.add(target);
-        }
+      if (!profile) {
+        throw new Error(`Unknown profile "${name}".`);
+      }
+      for (const target of profile.targets) {
+        targets.add(target);
       }
     }
 

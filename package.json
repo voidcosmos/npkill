@@ -1,9 +1,16 @@
 {
   "name": "npkill",
   "version": "0.12.2",
-  "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
-  "exports": "./lib/index.js",
+  "description": "Easily find and remove old and heavy node_modules, build artifacts and caches to free up disk space.",
   "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
   "engines": {
     "node": ">=20.19.0"
   },
@@ -11,7 +18,7 @@
     "access": "public"
   },
   "bin": {
-    "npkill": "lib/index.js"
+    "npkill": "lib/cli.js"
   },
   "author": "Nya Garcia & Juan Torres",
   "repository": {
@@ -20,28 +27,39 @@
   },
   "license": "MIT",
   "keywords": [
+    "npkill",
+    "node_modules",
     "cli",
+    "tui",
+    "interactive",
+    "clean",
+    "cleanup",
+    "cleaner",
+    "delete",
+    "remove",
+    "find",
+    "disk space",
     "free up space",
+    "disk usage",
+    "cache",
+    "build artifacts",
     "npm",
     "node",
-    "modules",
-    "clean",
-    "tool",
-    "delete",
-    "find",
-    "interactive"
+    "developer tools"
   ],
   "files": [
     "lib/**/*"
   ],
   "scripts": {
-    "build": "tsc",
-    "start": "node -r tsconfig-paths/register --loader ts-node/esm --no-warnings ./src/index.ts",
-    "test": "node --experimental-vm-modules --experimental-modules node_modules/jest/bin/jest.js",
+    "build": "rimraf lib && tsc",
+    "check:package": "npm run build && node scripts/check-package.mjs",
+    "start": "node --loader ts-node/esm --no-warnings ./src/cli.ts",
+    "test": "node --experimental-vm-modules --disable-warning=ExperimentalWarning node_modules/jest/bin/jest.js",
     "test:watch": "npm run test -- --watch",
+    "typecheck": "tsc -p tests/tsconfig.json",
     "test:mutant": "stryker run",
     "release": "npm run build && np",
-    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/index.ts",
+    "debug": "TS_NODE_FILES=true node --inspect -r ts-node/register ./src/cli.ts",
     "prepare": "husky install",
     "format": "prettier --write .",
     "lint": "eslint"

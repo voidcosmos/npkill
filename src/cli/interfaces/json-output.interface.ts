@@ -4,8 +4,22 @@ export interface JsonOutputBase {
   version: number;
 }
 
-export interface JsonCliScanFoundTarget
-  extends Omit<CliScanFoundTarget, 'status'> {}
+export interface JsonCliScanFoundTarget extends Omit<
+  CliScanFoundTarget,
+  'status' | 'size' | 'modificationTime'
+> {
+  /** Bytes, or null when the size is not calculated. */
+  size: number | null;
+  /** Latest observed project file modification in milliseconds, or null when unknown. */
+  projectModificationTime: number | null;
+  /** Only present when --delete-all is used. */
+  deletion?: JsonDeletion;
+}
+
+export interface JsonDeletion {
+  success: boolean;
+  error?: string;
+}
 
 /**
  * JSON output format for streaming mode (--json-stream).

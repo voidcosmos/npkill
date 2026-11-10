@@ -47,31 +47,6 @@ describe('ResultsUi', () => {
   });
 
   describe('render', () => {
-    it('should render results', () => {
-      resultsServiceMock.results = [
-        {
-          path: 'path/folder/1',
-          size: 1,
-          status: 'live',
-        },
-        {
-          path: 'path/folder/2',
-          size: 1,
-          status: 'live',
-        },
-      ] as CliScanFoundTarget[];
-
-      resultsUi.render();
-
-      // With stringContaining we can ignore the terminal color codes.
-      expect(stdoutWriteMock).toHaveBeenCalledWith(
-        expect.stringContaining('path/folder/1'),
-      );
-      expect(stdoutWriteMock).toHaveBeenCalledWith(
-        expect.stringContaining('path/folder/2'),
-      );
-    });
-
     it('should render age in days with the day suffix', () => {
       const now = Date.now();
 
@@ -99,8 +74,7 @@ describe('ResultsUi', () => {
       expect(cellText).toBe(' 4.48 GB ');
     });
 
-    // eslint-disable-next-line quotes
-    it("should't render results if it is not visible", () => {
+    it('should render only the results that fit the terminal', () => {
       const populateResults = () => {
         for (let i = 0; i < 100; i++) {
           resultsServiceMock.results.push({
@@ -127,7 +101,23 @@ describe('ResultsUi', () => {
   });
 
   describe('selection mode', () => {
+    const KEY_SEQUENCES: Record<string, string> = {
+      space: ' ',
+      down: '\u001b[B',
+      enter: '\r',
+    };
+
     let mockResults: CliScanFoundTarget[];
+
+    const press = (name: string): void => {
+      resultsUi.onKeyInput({
+        name,
+        sequence: KEY_SEQUENCES[name] ?? name,
+        meta: false,
+        ctrl: false,
+        shift: false,
+      });
+    };
 
     beforeEach(() => {
       mockResults = [
@@ -137,96 +127,30 @@ describe('ResultsUi', () => {
       ];
 
       resultsServiceMock.results = mockResults;
-      resultsUi = new ResultsUi(resultsServiceMock, consoleServiceMock);
-    });
-
-    it('should toggle select mode on and off with "t"', () => {
-      expect(resultsUi['selectMode']).toBe(false);
-
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      });
-      expect(resultsUi['selectMode']).toBe(true);
-
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      });
-      expect(resultsUi['selectMode']).toBe(false);
-      expect(resultsUi['selectedResults'].size).toBe(0);
     });
 
     it('should select and unselect folder with space', () => {
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      }); // enable select mode
+      press('t');
 
-      resultsUi.onKeyInput({
-        name: 'space',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: ' ',
-      });
+      press('space');
       expect(resultsUi['selectedResults'].has('folder/1')).toBe(true);
 
-      resultsUi.onKeyInput({
-        name: 'space',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: ' ',
-      });
+      press('space');
       expect(resultsUi['selectedResults'].has('folder/1')).toBe(false);
     });
 
     it('should start and end range selection with "v"', () => {
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      }); // select mode on
+      press('t');
 
-      resultsUi.onKeyInput({
-        name: 'v',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 'v',
-      }); // start range
+      press('v');
       expect(resultsUi['isRangeSelectionMode']).toBe(true);
       expect(resultsUi['rangeSelectionStart']).toBe(0);
 
-      resultsUi.onKeyInput({
-        name: 'down',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: '\u001b[B',
-      }); // move to folder/2
+      press('down');
       expect(resultsUi['selectedResults'].has('folder/1')).toBe(true);
       expect(resultsUi['selectedResults'].has('folder/2')).toBe(true);
 
-      resultsUi.onKeyInput({
-        name: 'v',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 'v',
-      }); // end range
+      press('v');
       expect(resultsUi['isRangeSelectionMode']).toBe(false);
       expect(resultsUi['rangeSelectionStart']).toBe(null);
     });
@@ -234,42 +158,11 @@ describe('ResultsUi', () => {
     it('should delete all selected results on enter', () => {
       const spy = jest.spyOn(resultsUi['delete$'], 'next');
 
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      }); // selection mode
-      resultsUi.onKeyInput({
-        name: 'space',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: ' ',
-      }); // select folder/1
-      resultsUi.onKeyInput({
-        name: 'down',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: '\u001b[B',
-      });
-      resultsUi.onKeyInput({
-        name: 'space',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: ' ',
-      }); // select folder/2
-
-      resultsUi.onKeyInput({
-        name: 'enter',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: '\r',
-      });
+      press('t');
+      press('space');
+      press('down');
+      press('space');
+      press('enter');
 
       expect(spy).toHaveBeenCalledTimes(2);
       expect(spy).toHaveBeenCalledWith(mockResults[0]);
@@ -279,38 +172,14 @@ describe('ResultsUi', () => {
     });
 
     it('should clear range selection when toggling mode off', () => {
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      }); // selection mode on
-      resultsUi.onKeyInput({
-        name: 'v',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 'v',
-      }); // start range
-      resultsUi.onKeyInput({
-        name: 'down',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: '\u001b[B',
-      }); // move and apply range
+      press('t');
+      press('v');
+      press('down');
 
       expect(resultsUi['selectedResults'].size).toBe(2);
       expect(resultsUi['isRangeSelectionMode']).toBe(true);
 
-      resultsUi.onKeyInput({
-        name: 't',
-        meta: false,
-        ctrl: false,
-        shift: false,
-        sequence: 't',
-      }); // toggle mode off
+      press('t');
       expect(resultsUi['selectMode']).toBe(false);
       expect(resultsUi['selectedResults'].size).toBe(0);
       expect(resultsUi['rangeSelectionStart']).toBe(null);

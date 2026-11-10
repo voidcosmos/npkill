@@ -13,6 +13,7 @@ import {
   ValidationResult,
 } from './property-validators.js';
 import { validateProfiles } from './profile-validator.js';
+import { DEFAULT_PROFILES } from '../../constants/profiles.constants.js';
 
 export function validateConfig(config: INpkillrcConfig): ValidationResult {
   // Validate that config is an object
@@ -59,6 +60,18 @@ export function validateConfig(config: INpkillrcConfig): ValidationResult {
     if (!validator.result.isValid) {
       return validator.result;
     }
+  }
+
+  const missingProfile = config.defaultProfiles?.find(
+    (name) =>
+      !Object.hasOwn(DEFAULT_PROFILES, name) &&
+      !Object.hasOwn(config.profiles ?? {}, name),
+  );
+  if (missingProfile !== undefined) {
+    return {
+      isValid: false,
+      error: `defaultProfiles: unknown profile "${missingProfile}".`,
+    };
   }
 
   return { isValid: true };

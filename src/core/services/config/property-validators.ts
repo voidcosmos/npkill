@@ -1,3 +1,4 @@
+import { isAbsolute } from 'path';
 import { INpkillrcConfig } from '../../interfaces/npkillrc-config.interface.js';
 
 const VALID_SORT_OPTIONS = ['none', 'size', 'path', 'age'] as const;
@@ -27,6 +28,13 @@ export function validateRootDir(value: unknown): ValidationResult {
     return {
       isValid: false,
       error: 'rootDir cannot be an empty string.',
+    };
+  }
+
+  if (!isAbsolute(value)) {
+    return {
+      isValid: false,
+      error: 'rootDir must be an absolute path.',
     };
   }
 
@@ -134,6 +142,13 @@ export function validateDefaultProfiles(value: unknown): ValidationResult {
     return {
       isValid: false,
       error: 'All defaultProfiles items must be strings.',
+    };
+  }
+
+  if (value.length === 0) {
+    return {
+      isValid: false,
+      error: 'defaultProfiles must not be empty.',
     };
   }
 

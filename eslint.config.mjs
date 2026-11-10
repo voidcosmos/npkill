@@ -11,11 +11,12 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       'lib/**',
+      '.test-build/**',
       'dist/**',
       'build/**',
       '**/*.min.js',
       '.stryker-tmp/**',
-      'src/index.ts',
+      'src/cli.ts',
     ],
   },
   eslint.configs.recommended,

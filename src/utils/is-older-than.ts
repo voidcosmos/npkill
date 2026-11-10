@@ -1,3 +1,5 @@
+import { isModificationTimeKnown } from './is-modification-time-known.js';
+
 const MILLISECONDS_PER_DAY = 86400000;
 
 /**
@@ -13,7 +15,7 @@ export function isOlderThan(
   days: number,
   now: number = Date.now(),
 ): boolean {
-  if (modificationTime <= 1) {
+  if (!isModificationTimeKnown(modificationTime)) {
     return false;
   }
 

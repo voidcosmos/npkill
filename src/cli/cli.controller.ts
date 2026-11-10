@@ -11,7 +11,12 @@ import {
 } from '../constants/index.js';
 import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
-import { IConfig, CliScanFoundTarget, IKeyPress } from './interfaces/index.js';
+import {
+  IConfig,
+  CliScanFoundTarget,
+  DeleteResult,
+  IKeyPress,
+} from './interfaces/index.js';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';
 import { delay, filter, mergeMap, tap } from 'rxjs/operators';
 
@@ -36,12 +41,12 @@ import { UiService } from './services/ui.service.js';
 import _dirname from '../dirname.js';
 import pc from 'picocolors';
 import { homedir } from 'os';
-import path from 'path';
 import openExplorer from 'open-file-explorer';
 import { Npkill, ConfigService, ProfilesService } from '../core/index.js';
 import { LoggerService } from '../core/services/logger.service.js';
 import { ScanStatus } from '../core/interfaces/search-status.model.js';
 import { isSafeToDelete } from '../utils/is-safe-to-delete.js';
+import { targetNames } from '../core/services/targets/index.js';
 import { getFileContent } from '../utils/get-file-content.js';
 import { isOlderThan } from '../utils/is-older-than.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
@@ -53,6 +58,8 @@ export class CliController {
 
   private searchStart: number;
   private searchDuration: number;
+  private isScreenPrepared = false;
+  private failedJsonDeletions = 0;
 
   private uiHeader: HeaderUi;
   private uiGeneral: GeneralUi;
@@ -157,7 +164,7 @@ export class CliController {
     this.uiService.add(this.uiWarning);
 
     // Set Events
-    this.uiResults.delete$.subscribe((result) => this.deleteTarget(result));
+    this.uiResults.delete$.subscribe((result) => this.deleteResult(result));
     this.uiResults.showErrors$.subscribe(() => this.showErrorPopup(true));
     this.uiLogs.close$.subscribe(() => this.showErrorPopup(false));
     this.uiResults.openFolder$.subscribe((path) => openExplorer(path));
@@ -352,6 +359,11 @@ export class CliController {
 
   private parseArguments(): void {
     const options = this.consoleService.getParameters(process.argv);
+    const unknownOptions = options.getUnknownOptions();
+    if (unknownOptions.length > 0) {
+      this.invalidOptions(unknownOptions);
+    }
+
     if (options.isTrue('help')) {
       this.showHelp();
       this.exitGracefully();
@@ -391,7 +403,9 @@ export class CliController {
             const isDefault = defaultProfiles.includes(name);
             const entry =
               ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} ${pc.cyan('(user-defined)')} - ${profile.description}\n` +
-              pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+              pc.gray(
+                ` ${targetNames(profile.targets).join(pc.italic(','))}\n\n`,
+              );
             return acc + entry;
           },
           '',
@@ -403,7 +417,9 @@ export class CliController {
           const isDefault = defaultProfiles.includes(name);
           const entry =
             ` ${pc.green(name)}${isDefault ? pc.italic(pc.magenta(' (default)')) : ''} - ${profile.description}\n` +
-            pc.gray(` ${profile.targets.join(pc.italic(','))}\n\n`);
+            pc.gray(
+              ` ${targetNames(profile.targets).join(pc.italic(','))}\n\n`,
+            );
           return acc + entry;
         },
         '',
@@ -418,7 +434,7 @@ export class CliController {
         // TODO mejorar mensaje e incluir tip buscar lista targets de un profile.
         console.log('--delete-all only can be used with --targets.');
         console.log(
-          'You can copy all targets from a profile with `npkill --profiles`.',
+          'To use profiles, run npkill without --delete-all and pick the results.',
         );
         this.exitWithError();
       }
@@ -435,12 +451,10 @@ export class CliController {
     const exclude = options.getString('exclude');
 
     if (exclude !== undefined && exclude !== '') {
-      console.log('EXCLUDE', exclude);
       const userExcludeList = this.consoleService
         .splitData(this.consoleService.replaceString(exclude, '"', ''), ',')
         .map((path) => path.trim())
-        .filter(Boolean)
-        .map(path.normalize);
+        .filter(Boolean);
 
       // Add custom filters to the default exclude list.
       this.config.exclude = [...this.config.exclude, ...userExcludeList];
@@ -509,7 +523,7 @@ export class CliController {
         const targets =
           this.profilesService.getTargetsFromProfiles(selectedProfiles);
         this.logger.info(
-          `Using profiles ${selectedProfiles.join(', ')} | With targets ${targets.join(', ')}`,
+          `Using profiles ${selectedProfiles.join(', ')} | With targets ${targetNames(targets).join(', ')}`,
         );
         this.config.profiles = selectedProfiles;
         this.config.targets = targets;
@@ -522,6 +536,10 @@ export class CliController {
     }
     if (options.isTrue('exclude-sensitive')) {
       this.config.excludeSensitiveResults = true;
+    }
+
+    if (options.isTrue('disable-default-ignore')) {
+      this.config.disableDefaultIgnore = true;
     }
 
     if (options.isTrue('dry-run')) {
@@ -556,21 +574,24 @@ export class CliController {
     if (options.isTrue('older-than')) {
       const olderThan = options.getString('older-than');
       if (!/^\d+$/.test(olderThan) || Number(olderThan) <= 0) {
-        this.uiService.print(ERROR_MSG.INVALID_OLDER_THAN);
-        this.logger.error(ERROR_MSG.INVALID_OLDER_THAN);
+        this.printError(ERROR_MSG.INVALID_OLDER_THAN);
         this.exitWithError();
       }
       this.config.olderThan = Number(olderThan);
     }
 
     if (this.config.olderThan > 0 && this.config.disableAge) {
-      this.uiService.print(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
-      this.logger.error(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
+      this.printError(ERROR_MSG.CANT_USE_OLDER_THAN_WITHOUT_AGE);
       this.exitWithError();
     }
 
     if (this.config.jsonStream && this.config.jsonSimple) {
-      this.logger.error(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
+      this.printError(ERROR_MSG.CANT_USE_BOTH_JSON_OPTIONS);
+      this.exitWithError();
+    }
+
+    if (this.config.deleteAll && this.isJsonOutput() && !this.config.yes) {
+      this.printError(ERROR_MSG.DELETE_ALL_NEEDS_YES);
       this.exitWithError();
     }
 
@@ -595,8 +616,14 @@ export class CliController {
   }
 
   private invalidSortParam(): void {
-    this.uiService.print(INFO_MSGS.NO_VALID_SORT_NAME);
-    this.logger.error(INFO_MSGS.NO_VALID_SORT_NAME);
+    this.printError(INFO_MSGS.NO_VALID_SORT_NAME);
+    this.exitWithError();
+  }
+
+  private invalidOptions(unknownOptions: string[]): void {
+    this.printError(
+      `${ERROR_MSG.UNKNOWN_OPTIONS} ${unknownOptions.join(', ')}\n${ERROR_MSG.SEE_HELP}`,
+    );
     this.exitWithError();
   }
 
@@ -605,7 +632,7 @@ export class CliController {
   }
 
   private showProgramVersion(): void {
-    this.uiService.print('v' + this.getVersion());
+    this.uiService.print('v' + this.getVersion() + '\n');
   }
 
   private isValidColor(color: string): boolean {
@@ -621,8 +648,7 @@ export class CliController {
   }
 
   private invalidSizeUnitParam(): void {
-    this.uiService.print(INFO_MSGS.NO_VALID_SIZE_UNIT);
-    this.logger.error(INFO_MSGS.NO_VALID_SIZE_UNIT);
+    this.printError(INFO_MSGS.NO_VALID_SIZE_UNIT);
     this.exitWithError();
   }
 
@@ -634,6 +660,7 @@ export class CliController {
   }
 
   private prepareScreen(): void {
+    this.isScreenPrepared = true;
     this.uiService.setRawMode();
     // this.uiService.prepareUi();
     this.uiService.setCursorVisible(false);
@@ -648,19 +675,17 @@ export class CliController {
 
   private checkScreenRequirements(): void {
     if (this.isTerminalTooSmall()) {
-      this.uiService.print(INFO_MSGS.MIN_CLI_CLOMUNS);
-      this.logger.error(INFO_MSGS.MIN_CLI_CLOMUNS);
+      this.printError(INFO_MSGS.MIN_CLI_CLOMUNS);
       this.exitWithError();
     }
   }
 
   private checkFileRequirements(): void {
-    const result = this.npkill.isValidRootFolder(this.config.folderRoot);
+    const result = this.npkill.validateRoot(this.config.folderRoot);
     if (!result.isValid) {
       const errorMessage =
         result.invalidReason || 'Root folder is not valid. Unknown reason';
-      this.uiService.print(errorMessage);
-      this.logger.error(errorMessage);
+      this.printError(errorMessage);
       this.exitWithError();
     }
   }
@@ -703,7 +728,7 @@ export class CliController {
       if (key['name'] !== '') {
         this.keyPress(key);
       } else {
-        throw new Error('Invalid key: ' + JSON.stringify(key));
+        this.logger.error('Invalid key: ' + JSON.stringify(key));
       }
     });
 
@@ -712,13 +737,13 @@ export class CliController {
       this.uiService.renderAll();
     });
 
-    process.on('uncaughtException', (error: Error) => {
-      this.newError(error.message);
-    });
+    process.on('uncaughtException', (error: Error) =>
+      this.exitWithFatalError(error),
+    );
 
-    process.on('unhandledRejection', (error: Error) => {
-      this.newError(error.stack ?? error.message);
-    });
+    process.on('unhandledRejection', (error: Error) =>
+      this.exitWithFatalError(error),
+    );
   }
 
   private keyPress(key: IKeyPress): void {
@@ -739,9 +764,7 @@ export class CliController {
   private scan(): void {
     this.initializeScan();
 
-    const shouldOutputInJson = this.config.jsonSimple || this.config.jsonStream;
-
-    if (shouldOutputInJson) {
+    if (this.isJsonOutput()) {
       this.scanInJson();
     } else {
       this.scanInUiMode();
@@ -756,28 +779,66 @@ export class CliController {
 
   private scanInJson(): void {
     const isStreamMode = this.config.jsonStream;
-    this.jsonOutputService.initializeSession(isStreamMode);
+    this.jsonOutputService.initializeSession(
+      isStreamMode,
+      !this.config.disableSize,
+    );
 
-    this.scanService
+    this.scanSubscription = this.scanService
       .scan(this.config)
       .pipe(
         mergeMap(
           (result) =>
             this.scanService.calculateResultStats(result, {
+              disableSize: this.config.disableSize,
+              disableAge: this.config.disableAge,
               getModificationTimeForSensitiveResults: true,
             }),
           10, // Limit to 10 concurrent stat calculations at a time
         ),
         filter((result) => this.passesAgeFilter(result)),
-        tap((result) => this.jsonOutputService.processResult(result)),
+        mergeMap((result) => this.outputJsonResult(result), 10),
       )
       .subscribe({
-        error: (error) => this.jsonOutputService.writeError(error),
+        error: (error) => {
+          this.jsonOutputService.writeError(error);
+          void this.exitAfterJsonOutput(1);
+        },
         complete: () => {
           this.jsonOutputService.completeScan();
-          this.exitGracefully();
+          void this.exitAfterJsonOutput(this.failedJsonDeletions > 0 ? 1 : 0);
         },
       });
+  }
+
+  private async outputJsonResult(result: CliScanFoundTarget): Promise<void> {
+    const deletion = this.config.deleteAll
+      ? await this.deleteForJsonOutput(result)
+      : undefined;
+    this.jsonOutputService.processResult(result, deletion);
+  }
+
+  private async deleteForJsonOutput(
+    result: CliScanFoundTarget,
+  ): Promise<DeleteResult> {
+    const deletion = isSafeToDelete(result.path, this.config.targets)
+      ? await firstValueFrom(
+          this.npkill.delete$(result.path, { dryRun: this.config.dryRun }),
+        )
+      : {
+          path: result.path,
+          success: false,
+          error: { message: `Target not safe to delete: ${result.path}` },
+        };
+
+    if (!deletion.success) {
+      this.failedJsonDeletions++;
+    }
+    return deletion;
+  }
+
+  private isJsonOutput(): boolean {
+    return this.config.jsonSimple || this.config.jsonStream;
   }
 
   private scanSubscription: Subscription | null = null;
@@ -789,6 +850,7 @@ export class CliController {
 
     this.uiStatus.reset();
     this.uiStatus.start();
+    this.uiResults.startSearch();
     this.searchStart = Date.now();
 
     const scan$ = this.scanService
@@ -809,15 +871,19 @@ export class CliController {
       )
       .subscribe({
         next: () => this.printResultsSection(),
-        error: (error) => this.newError(error),
+        error: (error: Error) => this.exitWithScanError(error),
         complete: () => this.completeSearch(),
       });
   }
 
   private setupJsonModeSignalHandlers(): void {
     const gracefulShutdown = () => {
+      if (this.scanSubscription?.closed) {
+        return;
+      }
+      this.scanSubscription?.unsubscribe();
       this.jsonOutputService.handleShutdown();
-      this.exitGracefully();
+      void this.exitAfterJsonOutput(0);
     };
 
     process.on('SIGINT', gracefulShutdown);
@@ -835,7 +901,7 @@ export class CliController {
     this.addResultToUi(result);
 
     if (this.config.disableSize && this.config.deleteAll) {
-      this.deleteTarget(result);
+      this.deleteResult(result);
     }
 
     this.uiResults.render();
@@ -852,7 +918,7 @@ export class CliController {
     this.finishResultStats();
 
     if (this.config.deleteAll && passesAgeFilter) {
-      this.deleteTarget(result);
+      this.deleteResult(result);
     }
   }
 
@@ -901,6 +967,15 @@ export class CliController {
     return ctrl && name === 'c';
   }
 
+  private async exitAfterJsonOutput(exitCode: number): Promise<void> {
+    await this.jsonOutputService.flush();
+    if (exitCode === 0) {
+      this.exitGracefully();
+    } else {
+      this.exitWithError();
+    }
+  }
+
   private exitWithError(): void {
     this.resetConsoleState();
     const logPath = this.logger.getSuggestLogFilePath();
@@ -932,10 +1007,34 @@ export class CliController {
     process.exit(0);
   }
 
+  private exitWithFatalError(error: Error): void {
+    this.logger.error(error.stack ?? error.message);
+    this.resetConsoleState();
+    this.uiService.print(`${ERROR_MSG.UNEXPECTED_ERROR} ${error.message}\n`);
+    this.exitWithError();
+  }
+
+  private exitWithScanError(error: Error): void {
+    this.resetConsoleState();
+    this.uiService.clear();
+    this.printError(error.message);
+    this.exitWithError();
+  }
+
   private resetConsoleState(): void {
+    if (!this.isScreenPrepared) {
+      return;
+    }
+
+    this.isScreenPrepared = false;
     this.uiService.print('\n');
     this.uiService.setRawMode(false);
     this.uiService.setCursorVisible(true);
+  }
+
+  private printError(message: string): void {
+    this.uiService.print(message + '\n');
+    this.logger.error(message);
   }
 
   private async printExitMessage(): Promise<void> {
@@ -943,22 +1042,22 @@ export class CliController {
     await new GeneralUi().printExitMessage({ stats });
   }
 
-  private deleteTarget(target: CliScanFoundTarget): void {
-    if (target.status === 'deleted' || target.status === 'deleting') {
+  private deleteResult(result: CliScanFoundTarget): void {
+    if (result.status === 'deleted' || result.status === 'deleting') {
       return;
     }
 
-    if (!isSafeToDelete(target.path, this.config.targets)) {
-      this.newError(`Target not safe to delete: ${String(target.path)}`);
+    if (!isSafeToDelete(result.path, this.config.targets)) {
+      this.newError(`Target not safe to delete: ${String(result.path)}`);
       return;
     }
 
-    target.status = 'deleting';
+    result.status = 'deleting';
     this.searchStatus.pendingDeletions++;
     this.uiStatus.render();
     this.printResultsSection();
 
-    const deletion$ = this.npkill.delete$(String(target.path), {
+    const deletion$ = this.npkill.delete$(String(result.path), {
       dryRun: this.config.dryRun,
     });
     const simulatedDeletionMs = Math.floor(Math.random() * 4000 + 200);
@@ -968,21 +1067,21 @@ export class CliController {
         ? deletion$.pipe(delay(simulatedDeletionMs))
         : deletion$,
     )
-      .then((result) => {
-        if (!result.success) {
+      .then((deletion) => {
+        if (!deletion.success) {
           throw new Error(
-            result.error?.message ?? `Could not delete ${target.path}`,
+            deletion.error?.message ?? `Could not delete ${result.path}`,
           );
         }
-        target.status = 'deleted';
+        result.status = 'deleted';
         this.searchStatus.pendingDeletions--;
         this.uiStats.render();
         this.uiStatus.render();
         this.printResultsSection();
-        return target;
+        return result;
       })
       .catch((e) => {
-        target.status = 'error-deleting';
+        result.status = 'error-deleting';
         this.searchStatus.pendingDeletions--;
         this.uiStatus.render();
         this.printResultsSection();

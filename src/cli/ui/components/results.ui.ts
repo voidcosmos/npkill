@@ -94,6 +94,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private openFolder(): void {
     const result = this.results[this.resultIndex];
+    if (!result) {
+      return;
+    }
     const parentPath = resolve(result.path, '..');
     this.openFolder$.next(parentPath);
   }
@@ -325,6 +328,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
     if (!this.haveResultsAfterCompleted) {
       this.noResults();
+      this.flush();
       return;
     }
 
@@ -383,6 +387,10 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     }
   }
 
+  startSearch(): void {
+    this.haveResultsAfterCompleted = true;
+  }
+
   completeSearch(): void {
     if (this.resultsService.results.length === 0) {
       this.haveResultsAfterCompleted = false;
@@ -408,10 +416,7 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
   }
 
   private noResults(): void {
-    const targetColored: string = pc.yellowBright(
-      this.config.targets.join(', '),
-    );
-    const message = `No ${targetColored} found!`;
+    const message = 'No results found!';
     this.printAt(message, {
       x: Math.floor(this.terminal.columns / 2 - message.length / 2),
       y: MARGINS.ROW_RESULTS_START + 2,
@@ -613,14 +618,14 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
     this.previousIndex = this.resultIndex;
     this.resultIndex += index;
 
-    // Upper limit
-    if (this.isCursorInLowerLimit()) {
-      this.resultIndex = 0;
-    }
-
     // Lower limit
     if (this.isCursorInUpperLimit()) {
       this.resultIndex = this.results.length - 1;
+    }
+
+    // Upper limit
+    if (this.isCursorInLowerLimit()) {
+      this.resultIndex = 0;
     }
 
     this.fitScroll();
@@ -761,6 +766,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   private delete(): void {
     const result = this.results[this.resultIndex];
+    if (!result) {
+      return;
+    }
     this.delete$.next(result);
   }
 

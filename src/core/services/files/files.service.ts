@@ -1,4 +1,4 @@
-import path from 'path';
+import path, { basename, join } from 'path';
 import os from 'os';
 import {
   ScanOptions,
@@ -6,12 +6,13 @@ import {
   IFileStat,
   GetNewestFileResult,
   RiskAnalysis,
-} from '@core/index.js';
+} from '../../index.js';
 import fs, { accessSync, Stats, statSync } from 'fs';
-import { readdir, stat } from 'fs/promises';
-import { map, Observable, Subject } from 'rxjs';
+import { access, lstat, opendir, readdir } from 'fs/promises';
+import { EMPTY, map, Observable, Subject } from 'rxjs';
 import { FileWorkerService } from './files.worker.service.js';
-import { IsValidRootFolderResult } from '@core/interfaces/npkill.interface.js';
+import { ValidateRootResult } from '../../interfaces/npkill.interface.js';
+import { compileExclusions, isExcludedDirectory } from './exclude-patterns.js';
 
 export abstract class FileService implements IFileService {
   public fileWorkerService: FileWorkerService;
@@ -23,6 +24,11 @@ export abstract class FileService implements IFileService {
   abstract delete(path: string): Promise<boolean>;
 
   listDir(path: string, params: ScanOptions): Observable<string> {
+    const exclusions = compileExclusions(path, params.exclude);
+    if (isExcludedDirectory(path, exclusions)) {
+      return EMPTY;
+    }
+
     return new Observable<string>((subscriber) => {
       const stream$ = new Subject<string>();
       const subscription = stream$.subscribe(subscriber);
@@ -30,6 +36,7 @@ export abstract class FileService implements IFileService {
         rootPath: path,
         targets: params.targets,
         exclude: params.exclude,
+        useDefaultIgnore: params.useDefaultIgnore,
       });
 
       return () => {
@@ -49,7 +56,7 @@ export abstract class FileService implements IFileService {
     this.fileWorkerService.stopScan();
   }
 
-  isValidRootFolder(path: string): IsValidRootFolderResult {
+  isValidRootFolder(path: string): ValidateRootResult {
     let stat: Stats;
     try {
       stat = statSync(path);
@@ -65,7 +72,7 @@ export abstract class FileService implements IFileService {
     }
 
     try {
-      accessSync(path, fs.constants.R_OK);
+      accessSync(path, fs.constants.R_OK | fs.constants.X_OK);
     } catch {
       return {
         isValid: false,
@@ -103,6 +110,9 @@ export abstract class FileService implements IFileService {
       return normalized;
     };
 
+    const withoutTrailingSlashes = (p: string): string =>
+      p.replace(/(.)\/+$/, '$1');
+
     const normalizedPath = normalizePath(absolutePath);
     const normalizedOriginal = normalizePath(originalPath);
 
@@ -115,7 +125,7 @@ export abstract class FileService implements IFileService {
       // Normalize the home path. If it's already absolute, just normalize separators.
       // Only use path.resolve() if it's a relative path to avoid cross-platform issues.
       const homeAbsolute = path.isAbsolute(home) ? home : path.resolve(home);
-      normalizedHome = normalizePath(homeAbsolute);
+      normalizedHome = withoutTrailingSlashes(normalizePath(homeAbsolute));
       isInHome =
         normalizedPath === normalizedHome ||
         normalizedPath.startsWith(normalizedHome + '/');
@@ -137,6 +147,13 @@ export abstract class FileService implements IFileService {
         return {
           isSensitive: true,
           reason: 'User data folder (~/.local/share)',
+        };
+      }
+
+      if (rel === 'library' || rel.startsWith('library/')) {
+        return {
+          isSensitive: true,
+          reason: 'macOS user library (~/Library)',
         };
       }
 
@@ -203,6 +220,7 @@ export abstract class FileService implements IFileService {
   async getRecentModificationInDir(
     path: string,
   ): Promise<GetNewestFileResult | null> {
+    await assertReadableDirectory(path);
     const files = await this.getFileStatsInDir(path);
     const sorted = files.sort(
       (a, b) => b.modificationTime - a.modificationTime,
@@ -213,8 +231,8 @@ export abstract class FileService implements IFileService {
     }
 
     return {
-      timestamp: newestFile.modificationTime,
-      name: newestFile.path.split('/').pop() || '',
+      modificationTime: newestFile.modificationTime,
+      name: basename(newestFile.path),
       path: newestFile.path,
     };
   }
@@ -228,6 +246,10 @@ export abstract class FileService implements IFileService {
       const items = await readdir(dirname, { withFileTypes: true });
 
       for (const item of items) {
+        if (item.isSymbolicLink()) {
+          continue;
+        }
+
         if (item.isDirectory()) {
           const itemNameLowerCase = item.name.toLowerCase();
           if (ignoredFolders.includes(itemNameLowerCase)) {
@@ -235,18 +257,18 @@ export abstract class FileService implements IFileService {
           }
           files = [
             ...files,
-            ...(await this.getFileStatsInDir(`${dirname}/${item.name}`).catch(
+            ...(await this.getFileStatsInDir(join(dirname, item.name)).catch(
               () => [],
             )),
           ];
         } else {
           try {
-            const path = `${dirname}/${item.name}`;
-            const fileStat = await stat(path);
+            const path = join(dirname, item.name);
+            const fileStat = await lstat(path);
 
             files.push({ path, modificationTime: fileStat.mtime.getTime() });
           } catch {
-            // Skip files that can't be accessed (e.g., permission denied, broken symlinks)
+            // Skip files that can't be accessed (e.g., permission denied)
             continue;
           }
         }
@@ -258,4 +280,10 @@ export abstract class FileService implements IFileService {
 
     return files;
   }
+}
+
+async function assertReadableDirectory(path: string): Promise<void> {
+  const dir = await opendir(path);
+  await dir.close();
+  await access(path, fs.constants.R_OK | fs.constants.X_OK);
 }

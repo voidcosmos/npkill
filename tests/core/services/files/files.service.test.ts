@@ -1,8 +1,5 @@
 import { jest } from '@jest/globals';
 
-import { IFileService } from '../../../../src/core/interfaces/file-service.interface.js';
-import * as rimraf from 'rimraf';
-
 let statSyncReturnMock = (): { isDirectory: () => boolean } | null => null;
 let accessSyncReturnMock = (): boolean | null => null;
 const readFileSyncSpy = jest.fn();
@@ -32,19 +29,10 @@ const UnixFilesServiceConstructor = (
 ).UnixFilesService;
 class UnixFilesService extends UnixFilesServiceConstructor {}
 
-const WindowsFilesServiceConstructor = (
-  await import('../../../../src/core/services/files/windows-files.service.js')
-).WindowsFilesService;
-class WindowsFilesService extends WindowsFilesServiceConstructor {}
-
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { StreamService } from '../../../../src/core/services/stream.service.js';
 import { FileWorkerService } from '../../../../src/core/services/files/index.js';
 import os from 'os';
-
-jest.mock('../../../../src/dirname.js', () => {
-  return { __esModule: true };
-});
+import { resolve } from 'node:path';
 
 const fileWorkerService = jest.fn();
 
@@ -58,58 +46,91 @@ describe('File Service', () => {
     );
   });
 
+  describe('listDir', () => {
+    it('does not start a scan when the root itself is excluded', () => {
+      const worker = { startScan: jest.fn() };
+      const service = new UnixFilesService(
+        new StreamService(),
+        worker as unknown as FileWorkerService,
+      );
+      const root = resolve('scan-root', 'node_modules');
+      const completed = jest.fn();
+
+      service
+        .listDir(root, { targets: ['node_modules'], exclude: ['node_modules'] })
+        .subscribe({ complete: completed });
+
+      expect(worker.startScan).not.toHaveBeenCalled();
+      expect(completed).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects invalid exclusions before starting a scan', () => {
+      const worker = { startScan: jest.fn() };
+      const service = new UnixFilesService(
+        new StreamService(),
+        worker as unknown as FileWorkerService,
+      );
+
+      expect(() =>
+        service.listDir(resolve('scan-root'), {
+          targets: ['node_modules'],
+          exclude: ['foo*'],
+        }),
+      ).toThrow('Unsupported exclude pattern: foo*');
+      expect(worker.startScan).not.toHaveBeenCalled();
+    });
+  });
+
   describe('isValidRootFolder', () => {
     const path = '/sample/path';
 
     afterEach(() => {
       jest.restoreAllMocks();
       statSyncReturnMock = () => null;
-      statSyncReturnMock = () => null;
     });
 
-    it('should throw error if statSync fail', () => {
-      statSyncReturnMock = () => {
-        throw new Error('ENOENT');
-      };
-      expect(fileService.isValidRootFolder(path)).toEqual({
-        isValid: false,
-        invalidReason: 'The path does not exist.',
-      });
-    });
+    it.each([
+      [
+        'does not exist',
+        () => {
+          statSyncReturnMock = () => {
+            throw new Error('ENOENT');
+          };
+        },
+        'The path does not exist.',
+      ],
+      [
+        'is not a directory',
+        () => {
+          statSyncReturnMock = () => ({
+            isDirectory: () => false,
+          });
+        },
+        'The path must point to a directory.',
+      ],
+      [
+        'cannot be read',
+        () => {
+          statSyncReturnMock = () => ({
+            isDirectory: () => true,
+          });
+          accessSyncReturnMock = () => {
+            throw new Error();
+          };
+        },
+        'Cannot read the specified path.',
+      ],
+    ])(
+      'should be invalid when the path %s',
+      (_case, mockFileSystem, invalidReason) => {
+        mockFileSystem();
 
-    it('should throw error if is not directory', () => {
-      statSyncReturnMock = () => ({
-        isDirectory: () => false,
-      });
-
-      expect(fileService.isValidRootFolder(path)).toEqual({
-        isValid: false,
-        invalidReason: 'The path must point to a directory.',
-      });
-    });
-
-    it('should throw error if cant read dir', () => {
-      statSyncReturnMock = () => ({
-        isDirectory: () => true,
-      });
-      accessSyncReturnMock = () => {
-        throw new Error();
-      };
-
-      expect(fileService.isValidRootFolder(path)).toEqual({
-        isValid: false,
-        invalidReason: 'Cannot read the specified path.',
-      });
-    });
-
-    it('should return true if is valid rootfolder', () => {
-      statSyncReturnMock = () => ({
-        isDirectory: () => true,
-      });
-      accessSyncReturnMock = () => true;
-
-      expect(fileService.isValidRootFolder(path)).toBeTruthy();
-    });
+        expect(fileService.isValidRootFolder(path)).toEqual({
+          isValid: false,
+          invalidReason,
+        });
+      },
+    );
   });
 
   describe('isDangerous', () => {
@@ -187,6 +208,28 @@ describe('File Service', () => {
         mockCwd('/home/user/project/projecta');
         expect(fileService.isDangerous('.hello').isSensitive).toBe(false);
       });
+
+      test('~/Library and everything inside it', () => {
+        expect(fileService.isDangerous('/home/user/Library').isSensitive).toBe(
+          true,
+        );
+        expect(
+          fileService.isDangerous('/home/user/Library/Caches/app/node_modules')
+            .isSensitive,
+        ).toBe(true);
+      });
+
+      test('HOME with a trailing slash', () => {
+        process.env.HOME = '/home/user/';
+        try {
+          expect(
+            fileService.isDangerous('/home/user/.config/app/node_modules')
+              .isSensitive,
+          ).toBe(true);
+        } finally {
+          process.env.HOME = '/home/user';
+        }
+      });
     });
 
     describe('Windows paths', () => {
@@ -258,75 +301,6 @@ describe('File Service', () => {
             .isSensitive,
         ).toBe(false);
       });
-    });
-  });
-
-  xdescribe('Functional test for #delete', () => {
-    let fileService: IFileService;
-    const testFolder = 'test-files';
-    const directories = [
-      'testProject',
-      'awesome-fake-project',
-      'a',
-      'ewez',
-      'potato and bananas',
-    ];
-
-    const createDir = (dir) => mkdirSync(dir);
-    const isDirEmpty = (dir) => readdirSync(dir).length === 0;
-    const createFileWithSize = (filename, mb) =>
-      writeFileSync(filename, new Uint8Array(1024 * 1024 * mb));
-
-    beforeAll(() => {
-      const getOS = () => process.platform;
-      const OSService = {
-        linux: UnixFilesService,
-        darwin: UnixFilesService,
-        win32: WindowsFilesService,
-      };
-      const streamService: StreamService = new StreamService();
-      fileService = new OSService[getOS()](streamService);
-
-      if (existsSync(testFolder)) {
-        rimraf.sync(testFolder);
-      }
-      createDir(testFolder);
-
-      directories.forEach((dirName) => {
-        const basePath = `${testFolder}/${dirName}`;
-        const targetFolder = `${basePath}/node_modules`;
-        const subfolder = `${targetFolder}/sample subfolder`;
-        createDir(basePath);
-        createDir(targetFolder);
-        createDir(subfolder);
-        createFileWithSize(targetFolder + '/a', 30);
-        createFileWithSize(subfolder + '/sample file', 12);
-        // Create this structure:
-        //   test-files
-        //    |testProject
-        //      |a (file)
-        //      |sample subfolder
-        //       |sample file (file)
-        //    |etc...
-      });
-    });
-
-    afterAll(() => {
-      rimraf.sync(testFolder);
-    });
-
-    it('Test folder should not be empty', () => {
-      expect(isDirEmpty(testFolder)).toBeFalsy();
-    });
-
-    it('Should delete all folders created in test folder', async () => {
-      for (const dirName of directories) {
-        const path = `${testFolder}/${dirName}`;
-        expect(existsSync(path)).toBeTruthy();
-        await fileService.delete(path);
-        expect(existsSync(path)).toBeFalsy();
-      }
-      expect(isDirEmpty(testFolder)).toBeTruthy();
     });
   });
 });

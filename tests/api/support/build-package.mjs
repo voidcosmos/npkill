@@ -13,7 +13,7 @@ import { join } from 'node:path';
 
 export default function buildPackage(_globalConfig, projectConfig) {
   const { rootDir } = projectConfig;
-  const packageDir = join(rootDir, 'node_modules', '.cache', 'npkill-api');
+  const packageDir = join(rootDir, '.test-build', 'npkill-api');
   const stampFile = join(packageDir, 'source-stamp');
   const sourceStamp = String(newestSourceChange(rootDir));
 

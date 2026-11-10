@@ -154,14 +154,15 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 
 ## :wrench: Options
 
+<!-- prettier-ignore -->
 | ARGUMENT                | DESCRIPTION                                                                                                                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.                                        |
 | --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                                                  |
 | -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                                                             |
-| -D, --delete-all        | Automatically delete all folders that are found. Suggested to be used together with `-x`. Add `-y` and `--json` or `--json-stream` to delete without the interface.                                          |
+| -D, --delete-all        | Automatically delete all folders that are found. Requires `--targets`. Suggested to be used together with `-x`. Add `-y` and `--json` or `--json-stream` to delete without the interface. |
 | -e, --hide-errors       | Hide errors if any                                                                                                                                                                                           |
-| -E, --exclude           | Exclude directories from search. Each directory separated by ','. By default, [some directories](https://github.com/voidcosmos/npkill/blob/main/src/core/constants/global-ignored.constants.ts) are ignored. |
+| -E, --exclude           | Skip matching directories and their contents. Separate patterns with commas. Relative paths start at the scan root (`-d` if set); matches use whole directory names.<br>• `name`: any depth<br>• `./name`: directly below the scan root<br>• `parent/name`: that path below the scan root<br>• `**/parent/name`: that path at any depth<br>• `/absolute/path`: exactly that directory (Windows drive and UNC paths also work).<br>Only `**/` acts as a wildcard; unescaped `*` and `?` are rejected. On Unix, quote patterns and use `\*` or `\?` for literal characters (`\\` for a literal backslash). A trailing slash is optional. By default, [some directories](https://github.com/voidcosmos/npkill/blob/main/src/core/constants/global-ignored.constants.ts) are ignored. |
 | -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                                                   |
 | --size-unit             | Set the unit for displaying folder sizes. _(Available: **auto**, mb, gb)_. With auto, sizes < 1024MB are shown in MB (rounded), larger sizes in GB (with decimals).                                          |
 | -h, --help, ?           | Show help page                                                                                                                                                                                               |
@@ -221,7 +222,7 @@ npkill -d ~/projects --older-than 90 --delete-all --targets node_modules
 - Automatically delete all node-related leftovers that have sneaked into your backups:
 
 ```bash
-npkill -d ~/backups/ --delete-all
+npkill -d ~/backups/ --delete-all --targets node_modules
 ```
 
 <a name="json-output"></a>

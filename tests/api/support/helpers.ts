@@ -4,6 +4,7 @@ import {
   chmodSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -20,11 +21,15 @@ interface Outcome<T> {
 export const itWithUnixPermissions =
   process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
 
+export const itOnUnix = process.platform === 'win32' ? it.skip : it;
+
+export const OBSERVE_TIMEOUT_MS = 2500;
 const temporaryDirs: string[] = [];
 const lockedPaths: string[] = [];
 
 export function createTempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'npkill-api-'));
+  // On macOS tmpdir() is behind a symlink and process.cwd() returns the real path.
+  const dir = mkdtempSync(join(realpathSync.native(tmpdir()), 'npkill-api-'));
   temporaryDirs.push(dir);
   return dir;
 }
@@ -62,13 +67,26 @@ export function relativePaths(
     .sort();
 }
 
+export async function inDirectory<T>(
+  dir: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  const originalCwd = process.cwd();
+  process.chdir(dir);
+  try {
+    return await action();
+  } finally {
+    process.chdir(originalCwd);
+  }
+}
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function observe<T>(
   source$: Observable<T>,
-  timeoutMs: number,
+  timeoutMs = OBSERVE_TIMEOUT_MS,
 ): Promise<Outcome<T>> {
   return new Promise((resolve) => {
     const outcome: Outcome<T> = {

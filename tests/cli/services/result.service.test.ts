@@ -1,54 +1,32 @@
 import { CliScanFoundTarget } from '../../../src/cli/interfaces/stats.interface.js';
 import { ResultsService } from '../../../src/cli/services/results.service.js';
 
+const makeResult = (
+  path: string,
+  size: number,
+  status: CliScanFoundTarget['status'] = 'live',
+): CliScanFoundTarget => ({ path, size, status, modificationTime: 0 });
+
+const pathsOf = (results: CliScanFoundTarget[]): string[] =>
+  results.map((result) => result.path);
+
 describe('Result Service', () => {
-  let resultService;
+  let resultService: ResultsService;
   beforeEach(() => {
     resultService = new ResultsService();
   });
 
   describe('#addResult', () => {
-    it('should add folder if that is the first', () => {
-      const newResult: CliScanFoundTarget = {
-        path: 'path',
-        size: 5,
-        status: 'live',
-        modificationTime: 0,
-        riskAnalysis: { isSensitive: false },
-      };
-      const resultExpected = [newResult];
-      resultService.addResult(newResult);
-      expect(resultService.results).toMatchObject(resultExpected);
-    });
     it('should add results', () => {
-      const newResults: CliScanFoundTarget[] = [
-        {
-          path: 'path',
-          size: 1,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'path2',
-          size: 2,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'path3',
-          size: 3,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
+      const newResults = [
+        makeResult('path', 1),
+        makeResult('path2', 2, 'deleted'),
+        makeResult('path3', 3),
       ];
 
-      const resultExpected = newResults;
-
       newResults.forEach((result) => resultService.addResult(result));
-      expect(resultService.results).toMatchObject(resultExpected);
+
+      expect(resultService.results).toEqual(newResults);
     });
   });
 
@@ -56,206 +34,67 @@ describe('Result Service', () => {
     let mockResults: CliScanFoundTarget[];
     beforeEach(() => {
       mockResults = [
-        {
-          path: 'pathd',
-          size: 5,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'patha',
-          size: 6,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathc',
-          size: 16,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathcc',
-          size: 0,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathb',
-          size: 3,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathz',
-          size: 8,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
+        makeResult('pathd', 5),
+        makeResult('patha', 6),
+        makeResult('pathc', 16),
+        makeResult('pathcc', 0, 'deleted'),
+        makeResult('pathb', 3, 'deleted'),
+        makeResult('pathz', 8),
       ];
 
       resultService.results = [...mockResults];
     });
 
     it('should sort by path', () => {
-      const expectResult = [
-        {
-          path: 'patha',
-          size: 6,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathb',
-          size: 3,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathc',
-          size: 16,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathcc',
-          size: 0,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathd',
-          size: 5,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathz',
-          size: 8,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-      ];
-
       resultService.sortResults('path');
-      expect(resultService.results).toMatchObject(expectResult);
+
+      expect(pathsOf(resultService.results)).toEqual([
+        'patha',
+        'pathb',
+        'pathc',
+        'pathcc',
+        'pathd',
+        'pathz',
+      ]);
     });
+
     it('should sort by size', () => {
-      const expectResult = [
-        {
-          path: 'pathc',
-          size: 16,
-          status: 'live',
-        },
-        {
-          path: 'pathz',
-          size: 8,
-          status: 'live',
-        },
-        {
-          path: 'patha',
-          size: 6,
-          status: 'live',
-        },
-        {
-          path: 'pathd',
-          size: 5,
-          status: 'live',
-        },
-        {
-          path: 'pathb',
-          size: 3,
-          status: 'deleted',
-        },
-        {
-          path: 'pathcc',
-          size: 0,
-          status: 'deleted',
-        },
-      ];
-
       resultService.sortResults('size');
-      expect(resultService.results).toMatchObject(expectResult);
-    });
-    it('should not sort if method dont exist', () => {
-      const expectResult = mockResults;
 
+      expect(pathsOf(resultService.results)).toEqual([
+        'pathc',
+        'pathz',
+        'patha',
+        'pathd',
+        'pathb',
+        'pathcc',
+      ]);
+    });
+
+    it('should not sort if method dont exist', () => {
       resultService.sortResults('color');
-      expect(resultService.results).toMatchObject(expectResult);
+
+      expect(resultService.results).toEqual(mockResults);
     });
   });
 
   describe('#getStats', () => {
-    let mockResults: CliScanFoundTarget[];
-    beforeEach(() => {
-      mockResults = [
-        {
-          path: 'pathd',
-          size: 5,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'patha',
-          size: 6,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathc',
-          size: 16,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathcc',
-          size: 0,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathb',
-          size: 3,
-          status: 'deleted',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
-        {
-          path: 'pathz',
-          size: 8,
-          status: 'live',
-          modificationTime: 0,
-          riskAnalysis: { isSensitive: false },
-        },
+    it('should get stats of results', () => {
+      resultService.results = [
+        makeResult('pathd', 5),
+        makeResult('patha', 6, 'deleted'),
+        makeResult('pathc', 16),
+        makeResult('pathcc', 0, 'deleted'),
+        makeResult('pathb', 3, 'deleted'),
+        makeResult('pathz', 8),
       ];
 
-      resultService.results = [...mockResults];
-    });
+      const stats = resultService.getStats();
 
-    it('should get stats of results', () => {
-      const expectResult = {
+      expect(stats).toMatchObject({
         spaceReleased: { text: '9.00 GB' },
         totalSpace: { text: '38.00 GB' },
-      };
-
-      const stats = resultService.getStats();
-      expect(stats).toMatchObject(expectResult);
+      });
     });
   });
 });

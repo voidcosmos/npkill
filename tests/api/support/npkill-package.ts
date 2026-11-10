@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import type * as NpkillApi from '../../../src/index.js';
 
 export const PACKAGE_DIR = fileURLToPath(
-  new URL('../../../node_modules/.cache/npkill-api/', import.meta.url),
+  new URL('../../../.test-build/npkill-api/', import.meta.url),
 );
 
 const { Npkill } = (await import(

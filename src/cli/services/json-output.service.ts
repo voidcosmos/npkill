@@ -1,47 +1,65 @@
 import { CliScanFoundTarget } from '../interfaces/stats.interface.js';
+import { DeleteResult } from '../../core/interfaces/target.interface.js';
 import {
   JsonStreamOutput,
   JsonSimpleOutput,
   JsonErrorOutput,
   JsonCliScanFoundTarget,
+  JsonDeletion,
 } from '../interfaces/json-output.interface.js';
 import { convertGbToBytes } from '../../utils/unit-conversions.js';
+import { isModificationTimeKnown } from '../../utils/is-modification-time-known.js';
 
 export class JsonOutputService {
   private readonly OUTPUT_VERSION = 1;
   private results: JsonCliScanFoundTarget[] = [];
   private scanStartTime: number = 0;
   private isStreamMode: boolean = false;
+  private measuresSize: boolean = true;
 
   constructor(
     private readonly stdout: NodeJS.WriteStream = process.stdout,
     private readonly stderr: NodeJS.WriteStream = process.stderr,
   ) {}
 
-  initializeSession(streamMode: boolean = false): void {
+  initializeSession(
+    streamMode: boolean = false,
+    measuresSize: boolean = true,
+  ): void {
     this.results = [];
     this.scanStartTime = Date.now();
     this.isStreamMode = streamMode;
+    this.measuresSize = measuresSize;
   }
 
-  processResult(result: CliScanFoundTarget): void {
+  processResult(result: CliScanFoundTarget, deletion?: DeleteResult): void {
+    const output = this.sanitizeResultForOutput(result, deletion);
     if (this.isStreamMode) {
-      this.writeStreamResult(result);
+      this.writeStreamResult(output);
     } else {
-      this.addResult(result);
+      this.results.push(output);
     }
   }
 
   completeScan(): void {
-    if (!this.isStreamMode && this.results.length > 0) {
+    if (!this.isStreamMode) {
       this.writeSimpleResults();
     }
   }
 
-  private writeStreamResult(result: CliScanFoundTarget): void {
+  async flush(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.stdout.write('', () => resolve());
+    });
+    await new Promise<void>((resolve) => {
+      this.stderr.write('', () => resolve());
+    });
+  }
+
+  private writeStreamResult(result: JsonCliScanFoundTarget): void {
     const output: JsonStreamOutput = {
       version: this.OUTPUT_VERSION,
-      result: this.sanitizeResultForOutput(result),
+      result,
     };
 
     try {
@@ -53,10 +71,6 @@ export class JsonOutputService {
           : 'Unknown JSON serialization error';
       this.writeError(`Failed to serialize result to JSON: ${errorMessage}`);
     }
-  }
-
-  private addResult(result: CliScanFoundTarget): void {
-    this.results.push(this.sanitizeResultForOutput(result));
   }
 
   private writeSimpleResults(): void {
@@ -87,7 +101,7 @@ export class JsonOutputService {
       version: this.OUTPUT_VERSION,
       error: true,
       message: errorMessage,
-      timestamp: new Date().getDate(),
+      timestamp: Date.now(),
     };
 
     this.stderr.write(JSON.stringify(errorOutput) + '\n');
@@ -98,24 +112,34 @@ export class JsonOutputService {
   }
 
   handleShutdown(): void {
-    if (!this.isStreamMode && this.results.length > 0) {
+    if (!this.isStreamMode) {
       this.writeSimpleResults();
     }
   }
 
   private sanitizeResultForOutput(
     result: CliScanFoundTarget,
+    deletion?: DeleteResult,
   ): JsonCliScanFoundTarget {
     return {
       path: result.path,
-      size: convertGbToBytes(result.size),
-      modificationTime: result.modificationTime,
+      size: this.measuresSize ? convertGbToBytes(result.size) : null,
+      projectModificationTime: isModificationTimeKnown(result.modificationTime)
+        ? result.modificationTime
+        : null,
       riskAnalysis: result.riskAnalysis
         ? {
             isSensitive: result.riskAnalysis.isSensitive,
             reason: result.riskAnalysis.reason,
           }
         : undefined,
+      ...(deletion ? { deletion: this.toJsonDeletion(deletion) } : {}),
     };
+  }
+
+  private toJsonDeletion(deletion: DeleteResult): JsonDeletion {
+    return deletion.success
+      ? { success: true }
+      : { success: false, error: deletion.error?.message };
   }
 }

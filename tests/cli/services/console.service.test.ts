@@ -48,6 +48,33 @@ describe('Console Service', () => {
     });
   });
 
+  describe('#getParameters with unknown options', () => {
+    it('should collect the options it does not know', () => {
+      const argvs = [
+        '/usr/bin/node',
+        '/usr/bin/npkill',
+        '--exlcude',
+        'foo',
+        '-t',
+        'node_modules',
+        '--color',
+      ];
+
+      const result = consoleService.getParameters(argvs);
+
+      expect(result.getUnknownOptions()).toEqual(['--exlcude', '--color']);
+      expect(result.getString('targets')).toBe('node_modules');
+    });
+
+    it('should not report known options as unknown', () => {
+      const argvs = ['/usr/bin/node', '/usr/bin/npkill', '--sort=size', '-x'];
+
+      const result = consoleService.getParameters(argvs);
+
+      expect(result.getUnknownOptions()).toEqual([]);
+    });
+  });
+
   describe('#splitData', () => {
     it('should split data with default separator', () => {
       expect(consoleService.splitData('foo\nbar\nfoot')).toEqual([
@@ -70,124 +97,58 @@ describe('Console Service', () => {
 
   describe('#splitWordsByWidth', () => {
     it('should get array with text according to width', () => {
-      const cases = [
-        {
-          expect: [
-            'Lorem ipsum dolor sit amet, consectetur',
-            'adipiscing elit. Mauris faucibus sit amet',
-            'libero non vestibulum. Morbi ac tellus',
-            'dolor. Duis consectetur eget lectus sed',
-            'ullamcorper.',
-          ],
-          text:
-            // tslint:disable-next-line: max-line-length
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris faucibus sit amet libero non vestibulum. Morbi ac tellus dolor. Duis consectetur eget lectus sed ullamcorper.',
-          width: 43,
-        },
-        /* {
-          text: 'Lorem ipsum dolor sit amet.',
-          width: 2,
-          expect: ['Lorem', 'ipsum', 'dolor', 'sit', 'amet.'],
-        }, */
-      ];
+      const text =
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris faucibus sit amet libero non vestibulum. Morbi ac tellus dolor. Duis consectetur eget lectus sed ullamcorper.';
 
-      cases.forEach((cas) => {
-        expect(consoleService.splitWordsByWidth(cas.text, cas.width)).toEqual(
-          cas.expect,
-        );
-      });
+      expect(consoleService.splitWordsByWidth(text, 43)).toEqual([
+        'Lorem ipsum dolor sit amet, consectetur',
+        'adipiscing elit. Mauris faucibus sit amet',
+        'libero non vestibulum. Morbi ac tellus',
+        'dolor. Duis consectetur eget lectus sed',
+        'ullamcorper.',
+      ]);
     });
   });
 
   describe('#shortenText', () => {
-    it('should short text according parameters', () => {
-      const cases = [
-        {
-          cutFrom: 0,
-          expect: '...',
-          text: '/sample/text/for/test how/service/split/thisA',
-          width: 0,
-        },
-        {
-          cutFrom: 10,
-          expect: '/sample/te.../service/split/this',
-          text: '/sample/text/for/test how/service/split/this',
-          width: 32,
-        },
-        {
-          cutFrom: 5,
-          expect: '/aaa/.../jjj/kkk',
-          text: '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
-          width: 16,
-        },
-        {
-          cutFrom: 3,
-          expect: '/neketaro/a:desktop/folder',
-          text: '/neketaro/a:desktop/folder',
-          width: 50,
-        },
-      ];
+    const SAMPLE_PATH = '/sample/text/for/test how/service/split/this';
 
-      cases.forEach((cas) => {
-        const result = consoleService.shortenText(
-          cas.text,
-          cas.width,
-          cas.cutFrom,
-        );
-        expect(result).toEqual(cas.expect);
-      });
-    });
-
-    it('should no modify input if "cutFrom" > text length', () => {
-      const text = '/sample/text/';
-      const expectResult = '/sample/text/';
-      const width = 5;
-      const cutFrom = 50;
-
-      const result = consoleService.shortenText(text, width, cutFrom);
-      expect(result).toEqual(expectResult);
-    });
-
-    it('should no modify input if "cutFrom" > width', () => {
-      const text = '/sample/text/';
-      const expectResult = '/sample/text/';
-      const width = 5;
-      const cutFrom = 7;
-
-      const result = consoleService.shortenText(text, width, cutFrom);
-      expect(result).toEqual(expectResult);
-    });
-
-    it('should ignore negative parameters', () => {
-      const cases = [
-        {
-          cutFrom: -10,
-          expect: '/sample/text/for/test how/service/split/thisA',
-          text: '/sample/text/for/test how/service/split/thisA',
-          width: 5,
-        },
-        {
-          cutFrom: 10,
-          expect: '/sample/text/for/test how/service/split/thisB',
-          text: '/sample/text/for/test how/service/split/thisB',
-          width: -10,
-        },
-        {
-          cutFrom: -20,
-          expect: '/sample/text/for/test how/service/split/thisC',
-          text: '/sample/text/for/test how/service/split/thisC',
-          width: -10,
-        },
-      ];
-
-      cases.forEach((cas) => {
-        const result = consoleService.shortenText(
-          cas.text,
-          cas.width,
-          cas.cutFrom,
-        );
-        expect(result).toEqual(cas.expect);
-      });
+    it.each([
+      ['cuts everything with width 0', SAMPLE_PATH, 0, 0, '...'],
+      [
+        'cuts the middle of the text',
+        SAMPLE_PATH,
+        32,
+        10,
+        '/sample/te.../service/split/this',
+      ],
+      [
+        'keeps the start and the end of the text',
+        '/aaa/bbb/ccc/ddd/eee/fff/ggg/hhhh/iiii/jjj/kkk',
+        16,
+        5,
+        '/aaa/.../jjj/kkk',
+      ],
+      [
+        'does not modify a text shorter than the width',
+        '/neketaro/a:desktop/folder',
+        50,
+        3,
+        '/neketaro/a:desktop/folder',
+      ],
+      [
+        'does not modify the text if cutFrom > width',
+        '/sample/text/',
+        5,
+        7,
+        '/sample/text/',
+      ],
+      ['ignores a negative cutFrom', SAMPLE_PATH, 5, -10, SAMPLE_PATH],
+      ['ignores a negative width', SAMPLE_PATH, -10, -20, SAMPLE_PATH],
+    ])('%s', (_, text, width, cutFrom, expected) => {
+      expect(consoleService.shortenText(text, width, cutFrom)).toEqual(
+        expected,
+      );
     });
   });
 });

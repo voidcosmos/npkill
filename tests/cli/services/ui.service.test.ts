@@ -1,14 +1,9 @@
 import { jest } from '@jest/globals';
 import { UiService } from '../../../src/cli/services/ui.service.js';
 
-jest.mock('../../../src/dirname.js', () => {
-  return {};
-});
-
 describe('UiService', () => {
   let uiService: UiService;
   let stdinMock: any;
-  let stdoutMock: any;
 
   beforeEach(() => {
     stdinMock = {
@@ -17,27 +12,13 @@ describe('UiService', () => {
       resume: jest.fn(),
       on: jest.fn(),
     };
-    stdoutMock = {
-      write: jest.fn(),
-    };
 
-    // Mock process.stdout and process.stdin
     Object.defineProperty(process, 'stdin', {
       value: stdinMock,
       configurable: true,
     });
-    Object.defineProperty(process, 'stdout', {
-      value: stdoutMock,
-      configurable: true,
-    });
 
     uiService = new UiService();
-    // Inject the mocked stdin into the service instance as it's assigned in the property declaration
-    uiService.stdin = stdinMock;
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   describe('setRawMode', () => {

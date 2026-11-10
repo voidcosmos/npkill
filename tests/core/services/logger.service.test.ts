@@ -31,12 +31,13 @@ describe('LoggerService', () => {
   const fakeTimeEpox = fakeTime.getTime();
 
   beforeEach(() => {
+    jest.clearAllMocks();
     logger = new LoggerService();
     jest.useFakeTimers().setSystemTime(fakeTime);
   });
 
   describe('add to log (info, error)', () => {
-    it('should add the message to the log with the correct type and timestamp', () => {
+    it('should add the message to the log with the correct level and timestamp', () => {
       expect(logger.get()).toEqual([]);
       logger.info('Sample message1');
       logger.error('Sample message2');
@@ -44,22 +45,22 @@ describe('LoggerService', () => {
       logger.info('Sample message4');
       expect(logger.get()).toEqual([
         {
-          type: 'info',
+          level: 'info',
           timestamp: fakeTimeEpox,
           message: 'Sample message1',
         },
         {
-          type: 'error',
+          level: 'error',
           timestamp: fakeTimeEpox,
           message: 'Sample message2',
         },
         {
-          type: 'error',
+          level: 'error',
           timestamp: fakeTimeEpox,
           message: 'Sample message3',
         },
         {
-          type: 'info',
+          level: 'info',
           timestamp: fakeTimeEpox,
           message: 'Sample message4',
         },
@@ -85,36 +86,19 @@ describe('LoggerService', () => {
   });
 
   describe('get', () => {
-    it('should get "all" logs (by default or explicit)', () => {
-      expect(logger.get()).toEqual([]);
+    it.each<[string, 'all' | 'info' | 'error' | undefined, string[]]>([
+      ['all logs by default', undefined, ['info', 'error', 'info']],
+      ['all logs', 'all', ['info', 'error', 'info']],
+      ['info logs', 'info', ['info', 'info']],
+      ['error logs', 'error', ['error']],
+    ])('should get %s', (_case, type, expectedTypes) => {
       logger.info('');
       logger.error('');
       logger.info('');
 
-      const expected = ['info', 'error', 'info'];
-
-      expect(logger.get().map((entry) => entry.type)).toEqual(expected);
-      expect(logger.get('all').map((entry) => entry.type)).toEqual(expected);
-    });
-
-    it('should get "info" logs', () => {
-      logger.info('');
-      logger.error('');
-      logger.info('');
-
-      const expected = ['info', 'info'];
-
-      expect(logger.get('info').map((entry) => entry.type)).toEqual(expected);
-    });
-
-    it('should get "error" logs', () => {
-      logger.info('');
-      logger.error('');
-      logger.info('');
-
-      const expected = ['error'];
-
-      expect(logger.get('error').map((entry) => entry.type)).toEqual(expected);
+      expect(logger.get(type).map((entry) => entry.level)).toEqual(
+        expectedTypes,
+      );
     });
   });
 

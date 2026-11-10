@@ -41,4 +41,9 @@ export const ERROR_MSG = {
     'Invalid --older-than value. It must be a positive whole number of days (e.g. --older-than 90).',
   CANT_USE_OLDER_THAN_WITHOUT_AGE:
     '--older-than needs the age of each result, so it cannot be used with --no-age or --no-stats.',
+  DELETE_ALL_NEEDS_YES:
+    '--delete-all cannot ask for confirmation with --json or --json-stream. Add -y to delete the results.',
+  UNKNOWN_OPTIONS: 'Unknown options:',
+  SEE_HELP: 'Run npkill --help to see the available options.',
+  UNEXPECTED_ERROR: 'npkill stopped because of an unexpected error:',
 };

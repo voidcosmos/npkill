@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import {
-  ScanFoundTarget,
+  ScanResult,
   GetNewestFileResult,
   GetSizeResult,
   ScanOptions,
@@ -14,7 +14,7 @@ export type ProfileFilterType = 'base' | 'user' | 'all';
 /**
  * Result of validating a root folder path.
  */
-export interface IsValidRootFolderResult {
+export interface ValidateRootResult {
   /** Whether the folder is valid as a root. */
   isValid: boolean;
   /** Reason for invalidity, if not valid. */
@@ -28,6 +28,13 @@ export interface IsValidRootFolderResult {
  *
  * Every observable is cold: nothing happens until you subscribe, and each
  * subscription runs the operation again.
+ *
+ * Relative paths are resolved against the current working directory, and
+ * every path that npkill returns is absolute. Error messages are meant for
+ * people and can change in any version.
+ *
+ * New members can be added in minor versions, so implementing this interface
+ * outside npkill is not covered by semver.
  */
 export interface NpkillInterface {
   /**
@@ -36,14 +43,22 @@ export interface NpkillInterface {
    * Only one scan can run at a time on each instance. Subscribing to a second
    * scan while the first one is running emits an error. Use another instance
    * to run scans in parallel. Unsubscribing stops the scan.
+   *
+   * The scan does not look inside the targets it finds, does not follow the
+   * symlinks below the root and skips some folders that rarely hold projects,
+   * like `.git` or `.nvm`, unless their name is a target or
+   * `options.useDefaultIgnore` is false. Names are compared exactly, case
+   * included.
    * @param rootPath Root directory to scan from.
-   * @param options Scan options. `targets` must be a non-empty array of names.
+   * @param options Scan options. `targets` must be a non-empty array of names
+   * or rules.
+   * Names with `* ? [ ] { } / \` are rejected because those characters are
+   * reserved for patterns.
    * @returns Observable that emits the results that are found in real time.
+   * Errors if the root is not a readable directory, with the same reason that
+   * `validateRoot` gives.
    */
-  startScan$(
-    rootPath: string,
-    options: ScanOptions,
-  ): Observable<ScanFoundTarget>;
+  startScan$(rootPath: string, options: ScanOptions): Observable<ScanResult>;
 
   /**
    * Stops the current scan if any and completes the observable returned by
@@ -53,50 +68,63 @@ export interface NpkillInterface {
 
   /**
    * Returns the space used on disk by a directory and all its contents, or by
-   * a single file.
+   * a single file. A symlink given as the path is measured itself, the same
+   * way `delete$` deletes the link and not what it points to. Symlinks inside
+   * a directory are not counted.
+   *
+   * The size is an estimate: each file counts its allocated blocks, each
+   * subfolder counts 4096 bytes and a file with several hard links is counted
+   * once for each link.
    * @param path Path to the directory or file.
    * @returns Observable that outputs the size in bytes. Errors if the path
-   * does not exist or cannot be read.
+   * does not exist or cannot be read, or if measuring takes too long.
    */
   getSize$(path: string): Observable<GetSizeResult>;
 
   /**
    * Retrieves the most recently modified file (the one with the latest
    * modification timestamp) within a given directory and its subdirectories,
-   * recursively. Folders named `node_modules`, `.git`, `coverage` and `dist`
-   * are not inspected.
+   * recursively. Folders named `node_modules`, `.git`, `coverage` and `dist`,
+   * in any case, are not inspected, and that list can grow in minor versions.
+   * Symlinks inside the directory are ignored, but a symlink given as the path
+   * is followed.
    * @param path Path to the directory.
-   * @returns Observable that outputs a value with the result of the
-   * operation. May return null if no files exist or the most recent file
-   * cannot be determined.
+   * @returns Observable that outputs the newest file, or null if the
+   * directory has no files. Errors if the path does not exist, is not a
+   * directory or cannot be read.
    */
   getNewestFile$(path: string): Observable<GetNewestFileResult | null>;
 
   /**
-   * Deletes the specified path and everything inside it. Deleting a path that
-   * does not exist succeeds.
+   * Deletes the specified path and everything inside it, like `rm -rf`. Like
+   * `rm`, it refuses `.`, `..` and filesystem roots. Apart from that, it does
+   * not check that the path is a target found by a scan. A symlink is
+   * deleted itself, never what it points to. Deleting a path that does not
+   * exist succeeds.
    * @param path Path to delete.
-   * @param options Optional delete options.
+   * @param options Optional delete options. Unknown options are rejected.
    * @returns Observable emitting the delete result. A deletion that fails
-   * emits a result with `success: false` and the error. An empty path errors.
+   * emits a result with `success: false` and the error. An empty or refused
+   * path and invalid options error.
    */
   delete$(path: string, options?: DeleteOptions): Observable<DeleteResult>;
 
   /**
-   * Gets the log entries generated by npkill: the ones already written and
-   * then each new one as it happens.
-   * @returns Observable emitting one log entry at a time.
+   * Gets the log entries generated by npkill: the recent ones already written
+   * and then each new one as it happens. Old entries can be dropped and new
+   * entry types can appear in minor versions.
+   * @returns Observable emitting one log entry at a time. It never completes.
    */
   getLogs$(): Observable<LogEntry>;
 
   /**
    * Checks if a given route has problems initiating a scan. Validates that the
-   * path belongs to a directory, that the directory exists and that there are
-   * no permissions issues.
+   * path belongs to a directory, that the directory exists and that it can be
+   * read and entered.
    * @param path Path to validate.
    * @returns Result of validation.
    */
-  isValidRootFolder(path: string): IsValidRootFolderResult;
+  validateRoot(path: string): ValidateRootResult;
 
   /**
    * Get the current version of npkill.
