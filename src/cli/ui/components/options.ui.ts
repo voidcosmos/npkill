@@ -4,13 +4,15 @@ import { IKeyPress } from '../../interfaces/key-press.interface.js';
 import { Subject } from 'rxjs';
 import pc from 'picocolors';
 import path from 'path';
-import { existsSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import { IConfig } from '../../../cli/interfaces/config.interface.js';
 import { OPTIONS_HINTS_BY_TYPE } from '../../../constants/options.constants.js';
 import {
   targetName,
   targetNames,
+  validateTargets,
 } from '../../../core/services/targets/index.js';
+import { compileExclusions } from '../../../core/services/files/exclude-patterns.js';
 
 type OptionType = 'checkbox' | 'dropdown' | 'input';
 
@@ -92,7 +94,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         type: 'dropdown',
         key: 'sizeUnit',
         value: this.config.sizeUnit,
-        options: ['auto', 'MB', 'GB'],
+        options: ['auto', 'mb', 'gb'],
       },
       {
         label: 'Cwd',
@@ -186,13 +188,16 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
             );
             return existing.length ? existing : [name];
           });
-          this.config.targets = targets;
-          this.emitConfigChange('targets', targets);
-        } else {
+          if (validateTargets(targets, 'targets').isValid) {
+            this.config.targets = targets;
+            this.emitConfigChange('targets', targets);
+            opt.value = this.editBuffer;
+          }
+        } else if (this.isValidExclude(arrValue)) {
           this.config.exclude = arrValue;
           this.emitConfigChange('exclude', arrValue);
+          opt.value = this.editBuffer;
         }
-        opt.value = this.editBuffer;
       } else {
         const key = opt.key as keyof Pick<
           IConfig,
@@ -205,7 +210,7 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
 
         if (key === 'folderRoot') {
           const newPath = path.resolve(newValue as string);
-          if (existsSync(newPath)) {
+          if (existsSync(newPath) && statSync(newPath).isDirectory()) {
             this.config[key] = newPath;
             opt.value = newPath;
             this.emitConfigChange(opt.key, newPath);
@@ -227,6 +232,15 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
     } else if (sequence && sequence.length === 1) {
       this.editBuffer += sequence;
       this.render();
+    }
+  }
+
+  private isValidExclude(patterns: string[]): boolean {
+    try {
+      compileExclusions(this.config.folderRoot, patterns);
+      return true;
+    } catch {
+      return false;
     }
   }
 
