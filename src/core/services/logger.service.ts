@@ -77,8 +77,12 @@ export class LoggerService implements ILoggerService {
       return log + line;
     }, '');
 
-    this.rotateLogFile(path);
-    writeFileSync(path, content);
+    try {
+      this.rotateLogFile(path);
+      writeFileSync(path, content);
+    } catch {
+      // The log file is optional and should not stop npkill.
+    }
   }
 
   getSuggestLogFilePath(): string {
