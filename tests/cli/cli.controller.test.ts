@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { StartParameters } from '../../src/cli/models/start-parameters.model.js';
-import { NEVER, of, Subject, throwError } from 'rxjs';
+import { NEVER, of, Subject, Subscription, throwError } from 'rxjs';
 import {
   ConfigService,
   DeleteResult,
@@ -125,9 +125,11 @@ describe('CliController test', () => {
   };
 
   const jsonOutputServiceMock = {
+    flush: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     initializeSession: jest.fn(),
     writeError: jest.fn(),
     completeScan: jest.fn(),
+    handleShutdown: jest.fn(),
     processResult: jest.fn(),
   };
 
@@ -522,6 +524,50 @@ describe('CliController test', () => {
   });
 
   describe('exiting', () => {
+    it.each([
+      { exitCode: 0, method: 'exitGracefully' },
+      { exitCode: 1, method: 'exitWithError' },
+    ])(
+      'Should flush JSON output before exiting with $exitCode',
+      async ({ exitCode, method }) => {
+        let finishFlush: () => void = () => {};
+        jsonOutputServiceMock.flush.mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              finishFlush = resolve;
+            }),
+        );
+        const exitSpy = spyMethod(method);
+
+        const exiting = cliController.exitAfterJsonOutput(exitCode);
+
+        expect(exitSpy).not.toHaveBeenCalled();
+        finishFlush();
+        await exiting;
+        expect(exitSpy).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it.each(['SIGINT', 'SIGTERM'] as const)(
+      'Should stop the scan and flush JSON once on %s',
+      (signal) => {
+        cliController.scanSubscription = new Subscription();
+        const exitSpy = spyMethod('exitAfterJsonOutput');
+        cliController.setupJsonModeSignalHandlers();
+        const shutdown = process.listeners(signal).at(-1)!;
+        process.removeListener('SIGINT', shutdown);
+        process.removeListener('SIGTERM', shutdown);
+
+        shutdown(signal);
+        shutdown(signal);
+
+        expect(cliController.scanSubscription.closed).toBe(true);
+        expect(jsonOutputServiceMock.handleShutdown).toHaveBeenCalledTimes(1);
+        expect(exitSpy).toHaveBeenCalledTimes(1);
+        expect(exitSpy).toHaveBeenCalledWith(0);
+      },
+    );
+
     it('Should not write terminal escape codes when the interactive ui never started', () => {
       expect(() => cliController.exitGracefully()).toThrow('process.exit: 0');
 
@@ -547,13 +593,14 @@ describe('CliController test', () => {
       expect(uiServiceMock.print).toHaveBeenCalledWith('v1.0.0\n');
     });
 
-    it('Should exit with an error when a JSON scan fails', () => {
+    it('Should exit with an error when a JSON scan fails', async () => {
       scanServiceMock.scan.mockReturnValue(
         throwError(() => new Error('Cannot scan /missing')),
       );
       const exitWithErrorSpy = spyMethod('exitWithError');
 
       cliController.scanInJson();
+      await new Promise((resolve) => setImmediate(resolve));
 
       expect(jsonOutputServiceMock.writeError).toHaveBeenCalled();
       expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);

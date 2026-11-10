@@ -784,7 +784,7 @@ export class CliController {
       !this.config.disableSize,
     );
 
-    this.scanService
+    this.scanSubscription = this.scanService
       .scan(this.config)
       .pipe(
         mergeMap(
@@ -802,15 +802,11 @@ export class CliController {
       .subscribe({
         error: (error) => {
           this.jsonOutputService.writeError(error);
-          this.exitWithError();
+          void this.exitAfterJsonOutput(1);
         },
         complete: () => {
           this.jsonOutputService.completeScan();
-          if (this.failedJsonDeletions > 0) {
-            this.exitWithError();
-          } else {
-            this.exitGracefully();
-          }
+          void this.exitAfterJsonOutput(this.failedJsonDeletions > 0 ? 1 : 0);
         },
       });
   }
@@ -882,8 +878,12 @@ export class CliController {
 
   private setupJsonModeSignalHandlers(): void {
     const gracefulShutdown = () => {
+      if (this.scanSubscription?.closed) {
+        return;
+      }
+      this.scanSubscription?.unsubscribe();
       this.jsonOutputService.handleShutdown();
-      this.exitGracefully();
+      void this.exitAfterJsonOutput(0);
     };
 
     process.on('SIGINT', gracefulShutdown);
@@ -965,6 +965,15 @@ export class CliController {
 
   private isQuitKey(ctrl: boolean, name: string): boolean {
     return ctrl && name === 'c';
+  }
+
+  private async exitAfterJsonOutput(exitCode: number): Promise<void> {
+    await this.jsonOutputService.flush();
+    if (exitCode === 0) {
+      this.exitGracefully();
+    } else {
+      this.exitWithError();
+    }
   }
 
   private exitWithError(): void {

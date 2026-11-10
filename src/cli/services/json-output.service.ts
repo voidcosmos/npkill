@@ -47,6 +47,15 @@ export class JsonOutputService {
     }
   }
 
+  async flush(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.stdout.write('', () => resolve());
+    });
+    await new Promise<void>((resolve) => {
+      this.stderr.write('', () => resolve());
+    });
+  }
+
   private writeStreamResult(result: JsonCliScanFoundTarget): void {
     const output: JsonStreamOutput = {
       version: this.OUTPUT_VERSION,

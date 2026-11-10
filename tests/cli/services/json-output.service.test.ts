@@ -168,6 +168,25 @@ describe('JsonOutputService', () => {
     });
   });
 
+  it('should wait for stdout and stderr to finish writing', async () => {
+    const onFlushed = jest.fn();
+    const flushing = jsonOutputService.flush().then(onFlushed);
+
+    expect(mockStdout.write).toHaveBeenCalledWith('', expect.any(Function));
+    expect(onFlushed).not.toHaveBeenCalled();
+
+    mockStdout.write.mock.calls[0][1]();
+    await Promise.resolve();
+
+    expect(mockStderr.write).toHaveBeenCalledWith('', expect.any(Function));
+    expect(onFlushed).not.toHaveBeenCalled();
+
+    mockStderr.write.mock.calls[0][1]();
+    await flushing;
+
+    expect(onFlushed).toHaveBeenCalledTimes(1);
+  });
+
   describe('writeError', () => {
     it.each([
       ['an Error object', new Error('Test error message')],
