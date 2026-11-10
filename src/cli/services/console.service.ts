@@ -88,7 +88,15 @@ export class ConsoleService {
    *  method convert the second to first.
    */
   private normalizeParams(argvs: string[]): string[] {
-    return argvs.join('=').split('=');
+    return argvs.flatMap((argv) => this.splitOptionAssignment(argv));
+  }
+
+  private splitOptionAssignment(argv: string): string[] {
+    const equalsIndex = argv.indexOf('=');
+    if (!this.isArgOption(argv) || equalsIndex === -1) {
+      return [argv];
+    }
+    return [argv.slice(0, equalsIndex), argv.slice(equalsIndex + 1)];
   }
 
   private isValidShortenParams(

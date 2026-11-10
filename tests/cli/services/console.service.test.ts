@@ -46,6 +46,21 @@ describe('Console Service', () => {
       expect(result.getString('sort-by')).toBe('size');
       expect(result.isTrue('exclude-sensitive')).toBeFalsy();
     });
+
+    it('should keep the equals signs inside a value', () => {
+      const argvs = [
+        '/usr/bin/node',
+        '/usr/bin/npkill',
+        '-d',
+        '/projects/a=b',
+        '--exclude=x=y',
+      ];
+
+      const result = consoleService.getParameters(argvs);
+
+      expect(result.getString('directory')).toBe('/projects/a=b');
+      expect(result.getString('exclude')).toBe('x=y');
+    });
   });
 
   describe('#getParameters with unknown options', () => {
