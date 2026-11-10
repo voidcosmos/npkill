@@ -158,9 +158,9 @@ Define custom profiles to use with `-p` or `--profiles`. Each target is a folder
 
 ```json
 "profiles": {
-  "zig": {
-    "description": "Zig build outputs",
-    "targets": ["zig-cache", { "target": "zig-out", "nextTo": ["build.zig"] }]
+  "ocaml": {
+    "description": "OCaml build outputs and local switches",
+    "targets": ["_opam", { "target": "_build", "nextTo": ["dune-project"] }]
   }
 }
 ```
