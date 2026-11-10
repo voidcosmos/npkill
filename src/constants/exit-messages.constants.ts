@@ -1,5 +1,11 @@
+/* eslint-disable quotes */
 export const EXIT_MESSAGES = {
-  none: ['Thanks for using npkill!'],
+  none: [
+    'Thanks for using npkill!',
+    'Nothing deleted, nothing broken.',
+    'Just looking around. Fair enough.',
+    'See you after the next npm install.',
+  ],
   verySmall: [
     'Cleaning up the crumbs.',
     'Every byte counts!',
@@ -9,6 +15,9 @@ export const EXIT_MESSAGES = {
     'Small cleanup, still a cleanup.',
     'A little lighter than before.',
     'Quick and tidy.',
+    'Small win. Still a win.',
+    'Tiny, but it adds up.',
+    'Dust removed.',
     '            42.',
   ],
   small: [
@@ -22,6 +31,9 @@ export const EXIT_MESSAGES = {
     'Clean disk, clear mind.',
     'Your backups just got faster.',
     'Less clutter, same projects.',
+    'Fewer files for your antivirus to scan.',
+    'Your file indexer says thanks.',
+    'That was worth the keystrokes.',
   ],
   medium: [
     'Wow! That was heavy.',
@@ -31,6 +43,9 @@ export const EXIT_MESSAGES = {
     'Gigabytes, gone.',
     'Your disk usage graph just fell off a cliff.',
     'Spring cleaning, developer edition.',
+    'Thousands of files, gone in seconds.',
+    'Enough room for a few more side projects.',
+    'Your disk just lost some serious weight.',
   ],
   large: [
     '            42.',
@@ -43,5 +58,10 @@ export const EXIT_MESSAGES = {
     "You just deleted a small country's worth of dependencies.",
     'Heavier than a black hole. Not anymore.',
     'That was not a cleanup, that was a renovation.',
+    'Houston, we have space.',
+    'One small keypress for you, one giant leap for your disk.',
+    'That was the heaviest object in the universe.',
+    'Free space: now visible from orbit.',
+    'Achievement unlocked: Digital Minimalism.',
   ],
 };
