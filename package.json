@@ -1,7 +1,7 @@
 {
   "name": "npkill",
   "version": "0.12.2",
-  "description": "List any node_modules directories in your system, as well as the space they take up. You can then select which ones you want to erase to free up space.",
+  "description": "Easily find and remove old and heavy node_modules, build artifacts and caches to free up disk space.",
   "type": "module",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -27,16 +27,25 @@
   },
   "license": "MIT",
   "keywords": [
+    "npkill",
+    "node_modules",
     "cli",
+    "tui",
+    "interactive",
+    "clean",
+    "cleanup",
+    "cleaner",
+    "delete",
+    "remove",
+    "find",
+    "disk space",
     "free up space",
+    "disk usage",
+    "cache",
+    "build artifacts",
     "npm",
     "node",
-    "modules",
-    "clean",
-    "tool",
-    "delete",
-    "find",
-    "interactive"
+    "developer tools"
   ],
   "files": [
     "lib/**/*"
