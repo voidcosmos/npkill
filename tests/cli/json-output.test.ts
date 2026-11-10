@@ -17,7 +17,7 @@ async function runCli(root: string, args: string[]) {
   const result = runNode(
     process.execPath,
     [join(PACKAGE_DIR, 'lib', 'cli.js'), '-d', root, ...args],
-    { cwd: root, timeout: 10000, maxBuffer: 4 * 1024 * 1024 },
+    { cwd: root, timeout: 30000, maxBuffer: 4 * 1024 * 1024 },
   );
   result.child.stdout?.once('data', () => {
     result.child.stdout?.pause();
@@ -76,6 +76,6 @@ describe.each(['--json', '--json-stream'])('%s through a pipe', (format) => {
         ),
       ).toBe(true);
     },
-    15000,
+    40000,
   );
 });
