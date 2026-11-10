@@ -67,7 +67,11 @@ function packPackage() {
 
 function checkInstalledBin(tarball) {
   const prefix = join(workDir, 'global');
-  run('npm', ['install', '--global', '--prefix', prefix, tarball], workDir);
+  run(
+    'npm',
+    ['install', '--global', '--legacy-peer-deps', '--prefix', prefix, tarball],
+    workDir,
+  );
 
   const bin = IS_WINDOWS
     ? join(prefix, 'npkill.cmd')

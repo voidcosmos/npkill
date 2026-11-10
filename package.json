@@ -67,7 +67,8 @@
   "dependencies": {
     "ansi-escapes": "7.3.0",
     "open-file-explorer": "1.0.2",
-    "picocolors": "1.1.1"
+    "picocolors": "1.1.1",
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "21.2.4",
@@ -93,9 +94,6 @@
     "ts-node": "10.9.2",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.0"
-  },
-  "peerDependencies": {
-    "rxjs": "^7.8.2"
   },
   "overrides": {
     "tmp": "0.2.7",
