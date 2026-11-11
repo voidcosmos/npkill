@@ -17,7 +17,7 @@ export const INFO_MSGS = {
   NO_VALID_SIZE_UNIT: 'Invalid size-unit option. Available: auto | mb | gb',
   STARTING: 'Initializing ',
   SEARCHING: 'Searching ',
-  CALCULATING_STATS: 'Calculating stats ',
+  CALCULATING_STATS: 'Analyzing ',
   FATAL_ERROR: 'Fatal error ',
   SEARCH_COMPLETED: 'Search completed ',
   SPACE_RELEASED: 'Space saved: ',

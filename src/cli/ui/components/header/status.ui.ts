@@ -1,18 +1,18 @@
 import { BaseUi } from '../../base.ui.js';
 import pc from 'picocolors';
-import { SpinnerService } from '../../../services/spinner.service.js';
 import { interval, Subject, takeUntil } from 'rxjs';
 import { INFO_MSGS } from '../../../../constants/messages.constants.js';
-import {
-  SPINNERS,
-  SPINNER_INTERVAL,
-} from '../../../../constants/spinner.constants.js';
+import { SPINNER_INTERVAL } from '../../../../constants/spinner.constants.js';
 import { UI_POSITIONS } from '../../../../constants/main.constants.js';
 import { ScanStatus } from '../../../../core/interfaces/search-status.model.js';
 import {
   BAR_PARTS,
   BAR_WIDTH,
 } from '../../../../constants/status.constants.js';
+import {
+  PendingStarsLoader,
+  SonarTrailLoader,
+} from './loaders/braille-loaders.js';
 
 export class StatusUi extends BaseUi {
   private text = '';
@@ -21,6 +21,8 @@ export class StatusUi extends BaseUi {
   private showProgressBar = true;
   private pendingTasksPosition = { ...UI_POSITIONS.PENDING_TASKS };
   private searchEnd$ = new Subject();
+  private searchTrail = new SonarTrailLoader();
+  private pendingStars = new PendingStarsLoader();
   private readonly SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
@@ -28,17 +30,15 @@ export class StatusUi extends BaseUi {
     finished: () => this.continueFinishing(),
   };
 
-  constructor(
-    private readonly spinnerService: SpinnerService,
-    private readonly searchStatus: ScanStatus,
-  ) {
+  constructor(private readonly searchStatus: ScanStatus) {
     super();
   }
 
   start(): void {
     this.barClosing = false;
     this.showProgressBar = true;
-    this.spinnerService.setSpinner(SPINNERS.W10);
+    this.searchTrail = new SonarTrailLoader();
+    this.pendingStars = new PendingStarsLoader();
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.searchEnd$))
       .subscribe(() => {
@@ -78,13 +78,19 @@ export class StatusUi extends BaseUi {
   }
 
   render(): void {
-    this.printAt(this.text + '      ', UI_POSITIONS.STATUS);
+    this.printAt(this.padToBarWidth(this.text), UI_POSITIONS.STATUS);
 
     if (this.showProgressBar) {
       this.renderProgressBar();
     }
 
     this.renderPendingTasks();
+  }
+
+  private padToBarWidth(text: string): string {
+    // eslint-disable-next-line no-control-regex
+    const visibleLength = text.replace(/\x1b\[[0-9;]*m/g, '').length;
+    return text + ' '.repeat(Math.max(0, BAR_WIDTH - visibleLength));
   }
 
   private renderPendingTasks(): void {
@@ -239,7 +245,9 @@ export class StatusUi extends BaseUi {
   }
 
   private continueSearching(): void {
-    this.text = INFO_MSGS.SEARCHING + this.spinnerService.nextFrame();
+    this.text =
+      INFO_MSGS.SEARCHING +
+      this.searchTrail.nextFrame(this.searchStatus.resultsFound);
     this.render();
   }
 
@@ -251,7 +259,9 @@ export class StatusUi extends BaseUi {
   }
 
   private continueFinishing(): void {
-    this.text = INFO_MSGS.CALCULATING_STATS + this.spinnerService.nextFrame();
+    this.text =
+      INFO_MSGS.CALCULATING_STATS +
+      this.pendingStars.nextFrame(this.searchStatus.pendingStatsCalculation);
     this.render();
   }
 }

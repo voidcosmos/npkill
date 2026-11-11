@@ -145,7 +145,7 @@ export class CliController {
     this.uiService.add(this.uiResults);
     this.uiStats = new StatsUi(this.config, this.resultsService, this.logger);
     this.uiService.add(this.uiStats);
-    this.uiStatus = new StatusUi(this.spinnerService, this.searchStatus);
+    this.uiStatus = new StatusUi(this.searchStatus);
     this.uiService.add(this.uiStatus);
     this.uiGeneral = new GeneralUi();
     this.uiService.add(this.uiGeneral);
