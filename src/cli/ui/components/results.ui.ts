@@ -324,15 +324,15 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
       return;
     }
 
-    this.clear();
-
     if (!this.haveResultsAfterCompleted) {
+      this.clearRowsFrom(MARGINS.ROW_RESULTS_START);
       this.noResults();
       this.flush();
       return;
     }
 
     this.printResults();
+    this.clearRowsBelowResults();
 
     const tagStartXPosition = 16;
     // 14 for the selection counter, 56 for the instruction message
@@ -382,7 +382,16 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   clear(): void {
     this.resetBufferState();
-    for (let row = MARGINS.ROW_RESULTS_START; row < this.terminal.rows; row++) {
+    this.clearRowsFrom(MARGINS.ROW_RESULTS_START);
+  }
+
+  private clearRowsBelowResults(): void {
+    const visibleResultsCount = this.getVisibleResults().length;
+    this.clearRowsFrom(MARGINS.ROW_RESULTS_START + visibleResultsCount);
+  }
+
+  private clearRowsFrom(firstRow: number): void {
+    for (let row = firstRow; row < this.terminal.rows; row++) {
       this.clearLine(row);
     }
   }

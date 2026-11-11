@@ -927,7 +927,6 @@ export class CliController {
 
     if (this.config.sortBy === 'path') {
       this.resultsService.sortResults(this.config.sortBy);
-      this.uiResults.clear();
     }
   }
 
@@ -947,7 +946,6 @@ export class CliController {
       this.config.sortBy === 'size' || this.config.sortBy === 'age';
     if (needSort) {
       this.resultsService.sortResults(this.config.sortBy);
-      this.uiResults.clear();
     }
     this.uiStats.render();
     this.printResultsSection();

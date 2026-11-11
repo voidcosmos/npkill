@@ -1,5 +1,5 @@
 import ansiEscapes from 'ansi-escapes';
-import { Position, BaseUi } from '../ui/index.js';
+import { Position, BaseUi, HeavyUi } from '../ui/index.js';
 
 export class UiService {
   stdin: NodeJS.ReadStream = process.stdin;
@@ -51,6 +51,15 @@ export class UiService {
 
   clear(): void {
     this.print(ansiEscapes.clearTerminal);
+    this.resetHeavyUiBuffers();
+  }
+
+  private resetHeavyUiBuffers(): void {
+    this.uiComponents.forEach((component) => {
+      if (component instanceof HeavyUi) {
+        component.resetBufferState();
+      }
+    });
   }
 
   print(text: string): void {
