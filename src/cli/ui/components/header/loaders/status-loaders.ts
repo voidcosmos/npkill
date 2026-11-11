@@ -1,8 +1,13 @@
 import pc from 'picocolors';
+import isUnicodeSupported from 'is-unicode-supported';
 import { BAR_WIDTH } from '../../../../../constants/status.constants.js';
 import { INFO_MSGS } from '../../../../../constants/messages.constants.js';
 
 type Rgb = [number, number, number];
+
+export interface StatusLoader {
+  nextFrame(count: number): string;
+}
 
 interface Dot {
   color: Rgb;
@@ -34,8 +39,11 @@ const BACKGROUND: Rgb = [18, 18, 22];
 const WHITE: Rgb = [255, 255, 255];
 const STAR_COLOR: Rgb = [170, 185, 230];
 
-const TRAIL_CELLS = BAR_WIDTH - INFO_MSGS.SEARCHING.length;
-const TRAIL_DOT_COLUMNS = TRAIL_CELLS * 2;
+const SEARCH_CELLS = BAR_WIDTH - INFO_MSGS.SEARCHING.length;
+const PENDING_CELLS = BAR_WIDTH - INFO_MSGS.CALCULATING_STATS.length;
+const DOT_STEP_TICKS = 2;
+
+const TRAIL_DOT_COLUMNS = SEARCH_CELLS * 2;
 const TRAIL_LENGTH = 10;
 const TRAIL_PAUSE_TICKS = 8;
 const TRAIL_CYCLE_TICKS = TRAIL_DOT_COLUMNS + TRAIL_LENGTH + TRAIL_PAUSE_TICKS;
@@ -49,15 +57,42 @@ const MARK_FLASH_TICKS = 4;
 const MARK_RESTING_BRIGHTNESS = 0.5;
 const MAX_NEW_MARKS_PER_TICK = 6;
 
-const STARS_CELLS = BAR_WIDTH - INFO_MSGS.CALCULATING_STATS.length;
-const STARS_DOT_COLUMNS = STARS_CELLS * 2;
+const STARS_DOT_COLUMNS = PENDING_CELLS * 2;
 const MAX_STARS = Math.round(STARS_DOT_COLUMNS * DOT_ROWS * 0.32);
 const STAR_FADE_TICKS = 4;
 const TWINKLE_SPEED = 0.25;
 const TWINKLE_BASE = 0.7;
 const TWINKLE_AMPLITUDE = 0.3;
 
-export class SonarTrailLoader {
+export function createSearchLoader(): StatusLoader {
+  return isUnicodeSupported()
+    ? new SonarTrailLoader()
+    : new SweepingDotsLoader(SEARCH_CELLS);
+}
+
+export function createPendingLoader(): StatusLoader {
+  return isUnicodeSupported()
+    ? new PendingStarsLoader()
+    : new SweepingDotsLoader(PENDING_CELLS);
+}
+
+class SweepingDotsLoader implements StatusLoader {
+  private tick = -1;
+
+  constructor(private readonly cells: number) {}
+
+  nextFrame(): string {
+    this.tick++;
+    const step = Math.floor(this.tick / DOT_STEP_TICKS) % (this.cells * 2);
+    if (step < this.cells) {
+      return '.'.repeat(step + 1);
+    }
+    const erasedDots = step - this.cells + 1;
+    return ' '.repeat(erasedDots) + '.'.repeat(this.cells - erasedDots);
+  }
+}
+
+class SonarTrailLoader implements StatusLoader {
   private tick = -1;
   private seenResults = 0;
   private readonly marks = new Map<number, Mark>();
@@ -68,7 +103,7 @@ export class SonarTrailLoader {
     this.addMarks(resultsFound - this.seenResults, head);
     this.seenResults = resultsFound;
     this.decayMarks(head);
-    const canvas = new BrailleCanvas(TRAIL_CELLS);
+    const canvas = new BrailleCanvas(SEARCH_CELLS);
     this.marks.forEach((mark, position) => drawMark(canvas, position, mark));
     drawTrail(canvas, head);
     return canvas.render();
@@ -95,7 +130,7 @@ export class SonarTrailLoader {
   }
 }
 
-export class PendingStarsLoader {
+class PendingStarsLoader implements StatusLoader {
   private tick = -1;
   private initialPending: number | null = null;
   private stars = createStars();
@@ -104,8 +139,8 @@ export class PendingStarsLoader {
     this.tick++;
     this.initialPending ??= pending;
     this.ageFadingStars();
-    this.fadeExcessStar(pending);
-    const canvas = new BrailleCanvas(STARS_CELLS);
+    this.fadeExcessStar(visibleCount(MAX_STARS, pending, this.initialPending));
+    const canvas = new BrailleCanvas(PENDING_CELLS);
     this.stars.forEach((star) => this.drawStar(canvas, star));
     return canvas.render();
   }
@@ -121,19 +156,12 @@ export class PendingStarsLoader {
     );
   }
 
-  private fadeExcessStar(pending: number): void {
+  private fadeExcessStar(target: number): void {
     const shiningStars = this.stars.filter((star) => star.fadingAge === null);
-    if (shiningStars.length > this.targetStars(pending)) {
+    if (shiningStars.length > target) {
       const randomIndex = Math.floor(Math.random() * shiningStars.length);
       shiningStars[randomIndex].fadingAge = 0;
     }
-  }
-
-  private targetStars(pending: number): number {
-    if (!this.initialPending) {
-      return 0;
-    }
-    return Math.ceil(MAX_STARS * Math.min(1, pending / this.initialPending));
   }
 
   private drawStar(canvas: BrailleCanvas, star: Star): void {
@@ -197,6 +225,17 @@ class BrailleCanvas {
     const intensity = quantize(brightest.intensity);
     return paint(glyph, mix(BACKGROUND, brightest.color, intensity));
   }
+}
+
+function visibleCount(
+  total: number,
+  pending: number,
+  initialPending: number,
+): number {
+  if (initialPending === 0) {
+    return 0;
+  }
+  return Math.ceil(total * Math.min(1, pending / initialPending));
 }
 
 function drawMark(

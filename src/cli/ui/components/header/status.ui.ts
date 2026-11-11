@@ -10,9 +10,9 @@ import {
   BAR_WIDTH,
 } from '../../../../constants/status.constants.js';
 import {
-  PendingStarsLoader,
-  SonarTrailLoader,
-} from './loaders/braille-loaders.js';
+  createPendingLoader,
+  createSearchLoader,
+} from './loaders/status-loaders.js';
 
 export class StatusUi extends BaseUi {
   private text = '';
@@ -21,8 +21,8 @@ export class StatusUi extends BaseUi {
   private showProgressBar = true;
   private pendingTasksPosition = { ...UI_POSITIONS.PENDING_TASKS };
   private searchEnd$ = new Subject();
-  private searchTrail = new SonarTrailLoader();
-  private pendingStars = new PendingStarsLoader();
+  private searchLoader = createSearchLoader();
+  private pendingLoader = createPendingLoader();
   private readonly SEARCH_STATES = {
     stopped: () => this.startingSearch(),
     scanning: () => this.continueSearching(),
@@ -37,8 +37,8 @@ export class StatusUi extends BaseUi {
   start(): void {
     this.barClosing = false;
     this.showProgressBar = true;
-    this.searchTrail = new SonarTrailLoader();
-    this.pendingStars = new PendingStarsLoader();
+    this.searchLoader = createSearchLoader();
+    this.pendingLoader = createPendingLoader();
     interval(SPINNER_INTERVAL)
       .pipe(takeUntil(this.searchEnd$))
       .subscribe(() => {
@@ -247,7 +247,7 @@ export class StatusUi extends BaseUi {
   private continueSearching(): void {
     this.text =
       INFO_MSGS.SEARCHING +
-      this.searchTrail.nextFrame(this.searchStatus.resultsFound);
+      this.searchLoader.nextFrame(this.searchStatus.resultsFound);
     this.render();
   }
 
@@ -261,7 +261,7 @@ export class StatusUi extends BaseUi {
   private continueFinishing(): void {
     this.text =
       INFO_MSGS.CALCULATING_STATS +
-      this.pendingStars.nextFrame(this.searchStatus.pendingStatsCalculation);
+      this.pendingLoader.nextFrame(this.searchStatus.pendingStatsCalculation);
     this.render();
   }
 }

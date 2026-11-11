@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "ansi-escapes": "7.3.0",
+    "is-unicode-supported": "2.1.0",
     "open-file-explorer": "1.0.2",
     "picocolors": "1.1.1",
     "rxjs": "7.8.2"
