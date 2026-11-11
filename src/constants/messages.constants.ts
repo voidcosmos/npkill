@@ -13,7 +13,6 @@ export const INFO_MSGS = {
   MIN_CLI_CLOMUNS:
     'Oh no! The terminal is too narrow. Please, ' +
     'enlarge it (This will be fixed in future versions. Disclose the inconveniences)',
-  NEW_UPDATE_FOUND: 'New version found! npm i -g npkill for update.',
   NO_VALID_SORT_NAME: 'Invalid sort option. Available: path | size | age',
   NO_VALID_SIZE_UNIT: 'Invalid size-unit option. Available: auto | mb | gb',
   STARTING: 'Initializing ',
@@ -34,7 +33,6 @@ export const INFO_MSGS = {
 
 export const ERROR_MSG = {
   CANT_DELETE: 'The target cannot be deleted. Do you have permission?',
-  CANT_GET_REMOTE_VERSION: 'Couldnt check for updates',
   CANT_USE_BOTH_JSON_OPTIONS:
     'Cannot use both --json and --json-stream options simultaneously.',
   INVALID_OLDER_THAN:

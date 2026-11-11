@@ -3,7 +3,6 @@ import { TargetDefinition } from '../../core/interfaces/target.interface.js';
 export interface IConfig {
   profiles: string[];
   folderRoot: string;
-  checkUpdates: boolean;
   deleteAll: boolean;
   sizeUnit: 'auto' | 'mb' | 'gb';
   maxSimultaneousSearch: number;

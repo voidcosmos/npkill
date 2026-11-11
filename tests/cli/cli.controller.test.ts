@@ -11,7 +11,6 @@ import { LoggerService } from '../../src/core/services/logger.service.js';
 import { ResultsService } from '../../src/cli/services/results.service.js';
 import { SpinnerService } from '../../src/cli/services/spinner.service.js';
 import { ConsoleService } from '../../src/cli/services/console.service.js';
-import { UpdateService } from '../../src/cli/services/update.service.js';
 import { UiService } from '../../src/cli/services/ui.service.js';
 import { ScanService } from '../../src/cli/services/scan.service.js';
 import {
@@ -94,7 +93,6 @@ describe('CliController test', () => {
   let cliController;
 
   const spinnerServiceMock = jest.fn();
-  const updateServiceMock = jest.fn();
   const resultServiceMock = jest.fn();
   const searchStatusMock = jest.fn();
   const loggerServiceMock: Partial<LoggerService> = {
@@ -154,7 +152,6 @@ describe('CliController test', () => {
   let showHelpSpy;
   let setupEventsListenerSpy;
   let scanSpy;
-  let checkVersionSpy;
   ///////////////////////////////////
 
   const mockParameters = (parameters: object) => {
@@ -189,7 +186,6 @@ describe('CliController test', () => {
       resultServiceMock as unknown as ResultsService,
       spinnerServiceMock as unknown as SpinnerService,
       consoleServiceMock as unknown as ConsoleService,
-      updateServiceMock as unknown as UpdateService,
       uiServiceMock as unknown as UiService,
       scanServiceMock as unknown as ScanService,
       jsonOutputServiceMock as unknown as JsonOutputService,
@@ -209,9 +205,6 @@ describe('CliController test', () => {
       .spyOn(cliController, 'setupEventsListener')
       .mockImplementation(() => ({}));
     scanSpy = jest.spyOn(cliController, 'scan').mockImplementation(() => ({}));
-    checkVersionSpy = jest
-      .spyOn(cliController, 'checkVersion')
-      .mockImplementation(() => ({}));
   });
 
   afterEach(() => {
@@ -224,7 +217,6 @@ describe('CliController test', () => {
     expect(showHelpSpy).toHaveBeenCalledTimes(0);
     expect(setupEventsListenerSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledTimes(1);
-    expect(checkVersionSpy).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -240,13 +232,6 @@ describe('CliController test', () => {
       expect(methodSpy).toHaveBeenCalledTimes(1);
     },
   );
-
-  it('#checkVersionn should not be called if --no-check-updates is given', () => {
-    mockParameters({ 'no-check-updates': true });
-    const functionSpy = spyMethod('checkVersion');
-    cliController.init();
-    expect(functionSpy).toHaveBeenCalledTimes(0);
-  });
 
   it('preserves exclusion prefixes when parsing CLI arguments', () => {
     mockParameters({

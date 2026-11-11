@@ -60,11 +60,6 @@ export const OPTIONS: ICliOptions[] = [
     name: 'help',
   },
   {
-    arg: ['-nu', '--no-check-update'],
-    description: 'Dont check for updates on startup.',
-    name: 'no-check-updates',
-  },
-  {
     arg: ['-s', '--sort'],
     description:
       'Sort results by: size, path or age (last time the most recent file was modified in the workspace)',

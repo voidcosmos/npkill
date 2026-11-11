@@ -263,7 +263,6 @@ describe('ConfigService', () => {
         sizeUnit: 'auto',
         excludeSensitiveResults: false,
         dryRun: false,
-        checkUpdates: true,
         defaultProfiles: ['node', 'frontend'],
         profiles: {
           frontend: {

@@ -2,13 +2,8 @@ import {
   ConsoleService,
   ResultsService,
   SpinnerService,
-  UpdateService,
 } from './services/index.js';
-import {
-  DEFAULT_CONFIG,
-  MIN_CLI_COLUMNS_SIZE,
-  UI_POSITIONS,
-} from '../constants/index.js';
+import { DEFAULT_CONFIG, MIN_CLI_COLUMNS_SIZE } from '../constants/index.js';
 import { DEFAULT_PROFILE } from '../core/constants/profiles.constants.js';
 import { ERROR_MSG, INFO_MSGS } from '../constants/messages.constants.js';
 import {
@@ -78,7 +73,6 @@ export class CliController {
     private readonly resultsService: ResultsService,
     private readonly spinnerService: SpinnerService,
     private readonly consoleService: ConsoleService,
-    private readonly updateService: UpdateService,
     private readonly uiService: UiService,
     private readonly scanService: ScanService,
     private readonly jsonOutputService: JsonOutputService,
@@ -116,9 +110,6 @@ export class CliController {
     this.consoleService.startListenKeyEvents();
     this.prepareScreen();
     this.setupEventsListener();
-    if (this.config.checkUpdates) {
-      this.checkVersion();
-    }
 
     if (this.config.deleteAll && !this.config.yes) {
       this.showDeleteAllWarning();
@@ -333,9 +324,6 @@ export class CliController {
     if (result.config.dryRun !== undefined) {
       this.config.dryRun = result.config.dryRun;
     }
-    if (result.config.checkUpdates !== undefined) {
-      this.config.checkUpdates = result.config.checkUpdates;
-    }
 
     const userProfiles = this.configService.getUserDefinedProfiles(
       result.config,
@@ -482,9 +470,6 @@ export class CliController {
         this.invalidSizeUnitParam();
         return;
       }
-    }
-    if (options.isTrue('no-check-updates')) {
-      this.config.checkUpdates = false;
     }
 
     if (!options.isTrue('targets')) {
@@ -688,31 +673,6 @@ export class CliController {
       this.printError(errorMessage);
       this.exitWithError();
     }
-  }
-
-  private checkVersion(): void {
-    this.logger.info('Checking updates...');
-    this.updateService
-      .isUpdated(this.getVersion())
-      .then((isUpdated: boolean) => {
-        if (!isUpdated) {
-          this.showUpdateMessage();
-          this.logger.info('New version found!');
-        } else {
-          this.logger.info('Npkill is update');
-        }
-        return isUpdated;
-      })
-      .catch((err: Error) => {
-        const errorMessage =
-          ERROR_MSG.CANT_GET_REMOTE_VERSION + ': ' + err.message;
-        this.newError(errorMessage);
-      });
-  }
-
-  private showUpdateMessage(): void {
-    const message = pc.magenta(INFO_MSGS.NEW_UPDATE_FOUND);
-    this.uiService.printAt(message, UI_POSITIONS.NEW_UPDATE_FOUND);
   }
 
   private isTerminalTooSmall(): boolean {

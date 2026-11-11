@@ -1,10 +1,8 @@
 import {
   ConsoleService,
-  HttpsService,
   JsonOutputService,
   ResultsService,
   SpinnerService,
-  UpdateService,
 } from './cli/services/index.js';
 
 import { CliController } from './cli/cli.controller.js';
@@ -34,7 +32,6 @@ export default (): void => {
     resultsService,
     new SpinnerService(),
     new ConsoleService(),
-    new UpdateService(new HttpsService()),
     new UiService(),
     new ScanService(npkill),
     jsonOutputService,

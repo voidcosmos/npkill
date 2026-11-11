@@ -47,12 +47,6 @@ export interface INpkillrcConfig {
   dryRun?: boolean;
 
   /**
-   * Check for npkill updates on startup.
-   * @default true
-   */
-  checkUpdates?: boolean;
-
-  /**
    * Profiles to use.
    * @example ["node", "python"]
    * @default ["node"]
@@ -104,7 +98,6 @@ export const VALID_NPKILLRC_PROPERTIES = [
   'sizeUnit',
   'excludeSensitiveResults',
   'dryRun',
-  'checkUpdates',
   'defaultProfiles',
   'profiles',
 ] as const satisfies readonly (keyof INpkillrcConfig)[];

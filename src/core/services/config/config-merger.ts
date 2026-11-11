@@ -71,11 +71,6 @@ export function applyFileConfigProperties(
     mergeProperty(merged, 'dryRun', fileConfig.dryRun);
   }
 
-  // checkUpdates
-  if (isDefined(fileConfig.checkUpdates)) {
-    mergeProperty(merged, 'checkUpdates', fileConfig.checkUpdates);
-  }
-
   // defaultProfiles
   if (isDefined(fileConfig.defaultProfiles)) {
     mergeProperty(merged, 'defaultProfiles', fileConfig.defaultProfiles);

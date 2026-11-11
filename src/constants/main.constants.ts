@@ -11,7 +11,6 @@ export const OVERFLOW_CUT_FROM = 11;
 export const DEFAULT_CONFIG: IConfig = {
   profiles: [DEFAULT_PROFILE],
   folderRoot: '',
-  checkUpdates: true,
   deleteAll: false,
   dryRun: false,
   exclude: [],
@@ -48,7 +47,6 @@ export const UI_POSITIONS = {
   INITIAL: { x: 0, y: 0 },
   VERSION: { x: 30, y: 5 },
   DRY_RUN_NOTICE: { x: 1, y: 6 },
-  NEW_UPDATE_FOUND: { x: 42, y: 0 },
   SPACE_RELEASED: { x: 43, y: 3 },
   STATUS: { x: 43, y: 4 },
   STATUS_BAR: { x: 43, y: 5 },

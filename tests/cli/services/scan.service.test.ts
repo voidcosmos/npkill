@@ -27,7 +27,6 @@ describe('ScanService', () => {
     sortBy: 'size',
     excludeSensitiveResults: false,
     disableDefaultIgnore: false,
-    checkUpdates: false,
     deleteAll: false,
     sizeUnit: 'auto',
     maxSimultaneousSearch: 0,

@@ -13,7 +13,6 @@ You can customize the behavior of npkill through the config file (`.npkillrc` by
   - [sizeUnit](#sizeunit)
   - [excludeSensitiveResults](#excludeSensitiveResults)
   - [dryRun](#dryrun)
-  - [checkUpdates](#checkupdates)
   - [defaultProfiles](#defaultProfiles)
   - [profiles](#profiles)
 - [Error Handling](#error-handling)
@@ -45,7 +44,6 @@ npkill --config /path/to/your/config.json
   "sizeUnit": "auto",
   "excludeSensitiveResults": true,
   "dryRun": false,
-  "checkUpdates": true,
   "defaultProfiles": ["node", "rust"]
 }
 ```
@@ -125,17 +123,6 @@ When true, deletions are simulated (nothing is actually deleted).
 
 ```json
 "dryRun": false
-```
-
-### checkUpdates
-
-**Type:** `boolean`  
-**Default:** `true`
-
-Check for updates on startup.
-
-```json
-"checkUpdates": true
 ```
 
 ### defaultProfiles

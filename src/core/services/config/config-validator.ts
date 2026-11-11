@@ -45,10 +45,6 @@ export function validateConfig(config: INpkillrcConfig): ValidationResult {
     },
     { name: 'dryRun', result: validateBoolean(config.dryRun, 'dryRun') },
     {
-      name: 'checkUpdates',
-      result: validateBoolean(config.checkUpdates, 'checkUpdates'),
-    },
-    {
       name: 'defaultProfiles',
       result: validateDefaultProfiles(config.defaultProfiles),
     },
