@@ -33,7 +33,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'shortcuts',
     title: 'Quick Reference',
-    icon: '⌨️',
+    icon: '📖',
     content: [
       pc.cyan(pc.bold('Navigation')),
       `  ${pc.green('↑/↓ or j/k')}       Move cursor.`,
@@ -95,7 +95,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'warnings',
     title: 'Warnings',
-    icon: '⚠️',
+    icon: '🚨',
     content: [
       pc.bold(pc.yellow('Important: Not all results are safe to delete!')),
       '',
@@ -255,7 +255,7 @@ export const HELP_SECTIONS: HelpSection[] = [
   {
     id: 'about',
     title: 'About',
-    icon: 'ℹ️',
+    icon: '💬',
     content: [
       pc.bold('About npkill'),
       '',
