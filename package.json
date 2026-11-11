@@ -1,6 +1,6 @@
 {
   "name": "npkill",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "Easily find and remove old and heavy node_modules, build artifacts and caches to free up disk space.",
   "type": "module",
   "main": "./lib/index.js",
