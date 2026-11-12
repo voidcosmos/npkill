@@ -398,6 +398,9 @@ export class ResultsUi extends HeavyUi implements InteractiveUi {
 
   startSearch(): void {
     this.haveResultsAfterCompleted = true;
+    this.selectedResults.clear();
+    this.rangeSelectionStart = null;
+    this.isRangeSelectionMode = false;
   }
 
   completeSearch(): void {
