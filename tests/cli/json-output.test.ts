@@ -50,6 +50,8 @@ describe.each(['--json', '--json-stream'])('%s through a pipe', (format) => {
         '--targets',
         'node_modules',
         '--no-stats',
+        // On Windows tmpdir() is inside AppData\Local, which is sensitive.
+        '--include-sensitive',
         format,
         ...(deleteAll ? ['-D', '-y'] : []),
       ]);
