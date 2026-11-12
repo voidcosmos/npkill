@@ -1,12 +1,5 @@
 <p align="center">
   <img src="./docs/npkill-1.0-banner.webp" width="960" alt="npkill 1.0. Because the problem is modern development." />
-</p>
-
-<p align="center">
-  <strong>Easily find and remove old and heavy node_modules.</strong> And everything else you don’t need.
-</p>
-
-<p align="center">
   <img src="/docs/npkill-demo-1.0.0.gif" width="904" alt="npkill demo GIF" />
 </p>
 
