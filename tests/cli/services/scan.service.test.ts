@@ -25,7 +25,7 @@ describe('ScanService', () => {
     targets: ['node_modules'],
     exclude: ['/test/root/excluded'],
     sortBy: 'size',
-    excludeSensitiveResults: false,
+    includeSensitiveResults: true,
     disableDefaultIgnore: false,
     deleteAll: false,
     sizeUnit: 'auto',
@@ -117,18 +117,18 @@ describe('ScanService', () => {
     });
 
     it.each([
-      [true, [mockScanFoundTarget.path]],
-      [false, [mockScanFoundTarget.path, mockSensitiveScanFoundTarget.path]],
+      [false, [mockScanFoundTarget.path]],
+      [true, [mockScanFoundTarget.path, mockSensitiveScanFoundTarget.path]],
     ])(
-      'should keep the right results when excludeSensitiveResults is %s',
-      async (excludeSensitiveResults, expectedPaths) => {
+      'should keep the right results when includeSensitiveResults is %s',
+      async (includeSensitiveResults, expectedPaths) => {
         mockNpkill.startScan$.mockReturnValue(
           of(mockScanFoundTarget, mockSensitiveScanFoundTarget),
         );
 
         const results = await lastValueFrom(
           scanService
-            .scan({ ...mockConfig, excludeSensitiveResults })
+            .scan({ ...mockConfig, includeSensitiveResults })
             .pipe(toArray()),
         );
 

@@ -192,7 +192,7 @@ export class CliController {
       if (
         configChanges.targets ||
         configChanges.folderRoot ||
-        Object.keys(configChanges).includes('excludeSensitiveResults') ||
+        Object.keys(configChanges).includes('includeSensitiveResults') ||
         configChanges.exclude
       ) {
         this.scan();
@@ -317,9 +317,9 @@ export class CliController {
     if (result.config.sizeUnit !== undefined) {
       this.config.sizeUnit = result.config.sizeUnit;
     }
-    if (result.config.excludeSensitiveResults !== undefined) {
-      this.config.excludeSensitiveResults =
-        result.config.excludeSensitiveResults;
+    if (result.config.includeSensitiveResults !== undefined) {
+      this.config.includeSensitiveResults =
+        result.config.includeSensitiveResults;
     }
     if (result.config.dryRun !== undefined) {
       this.config.dryRun = result.config.dryRun;
@@ -519,8 +519,8 @@ export class CliController {
       this.config.targets = options.getString('targets').split(',');
       this.config.profiles = [];
     }
-    if (options.isTrue('exclude-sensitive')) {
-      this.config.excludeSensitiveResults = true;
+    if (options.isTrue('include-sensitive')) {
+      this.config.includeSensitiveResults = true;
     }
 
     if (options.isTrue('disable-default-ignore')) {

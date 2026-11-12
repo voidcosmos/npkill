@@ -34,10 +34,10 @@ export interface INpkillrcConfig {
   sizeUnit?: 'auto' | 'mb' | 'gb';
 
   /**
-   * Exclude sensitive results.
+   * Include sensitive results.
    * @default false
    */
-  excludeSensitiveResults?: boolean;
+  includeSensitiveResults?: boolean;
 
   /**
    * Enable dry-run mode by default.
@@ -96,7 +96,7 @@ export const VALID_NPKILLRC_PROPERTIES = [
   'exclude',
   'sortBy',
   'sizeUnit',
-  'excludeSensitiveResults',
+  'includeSensitiveResults',
   'dryRun',
   'defaultProfiles',
   'profiles',

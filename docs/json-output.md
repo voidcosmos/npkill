@@ -32,7 +32,7 @@ There is no final completion record or metadata line. Wait for the command to ex
 
 ## Deleting Without the Interface
 
-Add `--delete-all` (`-D`) to delete every result before it is printed. It only works together with `--targets`, and in JSON mode it also needs `-y` because there is no way to confirm it. `--older-than`, `--exclude` and `--exclude-sensitive` are applied before deleting.
+Add `--delete-all` (`-D`) to delete every result before it is printed. It only works together with `--targets`, and in JSON mode it also needs `-y` because there is no way to confirm it. `--older-than` and `--exclude` are applied before deleting.
 
 ```bash
 npkill -t node_modules --older-than 30 -D -y --json

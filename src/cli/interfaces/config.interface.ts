@@ -10,7 +10,7 @@ export interface IConfig {
   sortBy: string;
   targets: TargetDefinition[];
   exclude: string[];
-  excludeSensitiveResults: boolean;
+  includeSensitiveResults: boolean;
   disableDefaultIgnore: boolean;
   dryRun: boolean;
   yes: boolean;

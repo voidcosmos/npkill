@@ -43,7 +43,7 @@ export class ScanService {
     const nonExcludedResults$ = results$.pipe(
       filter(
         (path) =>
-          !this.isExcludedDangerousResult(path, config.excludeSensitiveResults),
+          !this.isExcludedDangerousResult(path, config.includeSensitiveResults),
       ),
     );
 
@@ -139,10 +139,10 @@ export class ScanService {
 
   private isExcludedDangerousResult(
     scanResult: ScanResult,
-    excludeSensitiveResults: boolean,
+    includeSensitiveResults: boolean,
   ): boolean {
     return Boolean(
-      excludeSensitiveResults && scanResult.riskAnalysis?.isSensitive,
+      !includeSensitiveResults && scanResult.riskAnalysis?.isSensitive,
     );
   }
 }

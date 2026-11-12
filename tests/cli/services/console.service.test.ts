@@ -18,7 +18,7 @@ describe('Console Service', () => {
         'lala',
         'random text',
         '-f',
-        '--exclude-sensitive',
+        '--include-sensitive',
       ];
 
       const result = consoleService.getParameters(argvs);
@@ -29,7 +29,7 @@ describe('Console Service', () => {
       expect(result.isTrue('lala')).toBeFalsy();
       expect(result.isTrue('inexistent')).toBeFalsy();
       expect(result.isTrue('full-scan')).not.toBeFalsy();
-      expect(result.isTrue('exclude-sensitive')).toBeTruthy();
+      expect(result.isTrue('include-sensitive')).toBeTruthy();
     });
     it('should get valid parameters 2', () => {
       const argvs = [
@@ -44,7 +44,7 @@ describe('Console Service', () => {
       expect(result.isTrue('help')).toBeFalsy();
       expect(result.isTrue('full-scan')).not.toBeFalsy();
       expect(result.getString('sort-by')).toBe('size');
-      expect(result.isTrue('exclude-sensitive')).toBeFalsy();
+      expect(result.isTrue('include-sensitive')).toBeFalsy();
     });
 
     it('should keep the equals signs inside a value', () => {
@@ -82,7 +82,7 @@ describe('Console Service', () => {
     });
 
     it('should not report known options as unknown', () => {
-      const argvs = ['/usr/bin/node', '/usr/bin/npkill', '--sort=size', '-x'];
+      const argvs = ['/usr/bin/node', '/usr/bin/npkill', '--sort=size', '-y'];
 
       const result = consoleService.getParameters(argvs);
 

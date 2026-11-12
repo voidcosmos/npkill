@@ -37,10 +37,10 @@ export function validateConfig(config: INpkillrcConfig): ValidationResult {
     { name: 'sortBy', result: validateSortBy(config.sortBy) },
     { name: 'sizeUnit', result: validateSizeUnit(config.sizeUnit) },
     {
-      name: 'excludeSensitiveResults',
+      name: 'includeSensitiveResults',
       result: validateBoolean(
-        config.excludeSensitiveResults,
-        'excludeSensitiveResults',
+        config.includeSensitiveResults,
+        'includeSensitiveResults',
       ),
     },
     { name: 'dryRun', result: validateBoolean(config.dryRun, 'dryRun') },

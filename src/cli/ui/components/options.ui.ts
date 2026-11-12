@@ -65,8 +65,8 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
       {
         label: 'Sensitive results',
         type: 'checkbox',
-        key: 'excludeSensitiveResults',
-        value: !this.config.excludeSensitiveResults,
+        key: 'includeSensitiveResults',
+        value: this.config.includeSensitiveResults,
       },
       {
         label: 'Sort by',
@@ -133,11 +133,8 @@ export class OptionsUi extends BaseUi implements InteractiveUi {
         }[keyof IConfig]
       >;
 
-      const valueToSave =
-        key === 'excludeSensitiveResults' ? !opt.value : opt.value;
-
-      this.config[key] = !!valueToSave;
-      this.emitConfigChange(opt.key, valueToSave);
+      this.config[key] = !!opt.value;
+      this.emitConfigChange(opt.key, opt.value);
       this.render();
     } else if (opt.type === 'dropdown') {
       const key = opt.key as keyof Pick<

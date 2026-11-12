@@ -261,7 +261,7 @@ describe('ConfigService', () => {
         exclude: ['.git', 'important-project'],
         sortBy: 'age',
         sizeUnit: 'auto',
-        excludeSensitiveResults: false,
+        includeSensitiveResults: true,
         dryRun: false,
         defaultProfiles: ['node', 'frontend'],
         profiles: {

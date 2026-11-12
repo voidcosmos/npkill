@@ -72,9 +72,10 @@ export const OPTIONS: ICliOptions[] = [
     name: 'targets',
   },
   {
-    arg: ['-x', '--exclude-sensitive'],
-    description: 'Exclude sensitive directories.',
-    name: 'exclude-sensitive',
+    arg: ['--include-sensitive'],
+    description:
+      'Show sensitive results too, like the dependencies some applications need to work. They are hidden by default.',
+    name: 'include-sensitive',
   },
   {
     arg: ['--no-ignore-default'],
