@@ -447,6 +447,27 @@ describe('CliController test', () => {
 
         expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
       });
+
+      it.each(['jsonSimple', 'jsonStream'] as const)(
+        'Should keep the JSON output when %s is also given',
+        async (jsonOption) => {
+          DEFAULT_CONFIG[jsonOption] = true;
+          const deletion = { path: target.path, success: true };
+          npkillDeleteMock.mockReturnValueOnce(of(deletion));
+          spyMethod('exitGracefully');
+
+          await scanWithoutUi();
+
+          expect(jsonOutputServiceMock.processResult).toHaveBeenCalledWith(
+            target,
+            deletion,
+          );
+          expect(
+            textOutputServiceMock.initializeSession,
+          ).not.toHaveBeenCalled();
+          expect(textOutputServiceMock.processResult).not.toHaveBeenCalled();
+        },
+      );
     });
   });
 

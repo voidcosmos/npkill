@@ -153,7 +153,7 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.                                        |
 | --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                                                  |
 | -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                                                             |
-| -D, --delete-all        | Automatically delete all folders that are found. Requires `--targets`. Add `-y` to delete without the interface (see [Delete without the interface](#delete-without-ui)). |
+| -D, --delete-all        | Automatically delete all folders that are found. Requires `--targets`. Add `-y` to delete without the interface (see [Examples](#examples)). |
 | -e, --hide-errors       | Hide errors if any                                                                                                                                                                                           |
 | -E, --exclude           | Skip matching directories and their contents. Separate patterns with commas. Relative paths start at the scan root (`-d` if set); matches use whole directory names.<br>• `name`: any depth<br>• `./name`: directly below the scan root<br>• `parent/name`: that path below the scan root<br>• `**/parent/name`: that path at any depth<br>• `/absolute/path`: exactly that directory (Windows drive and UNC paths also work).<br>Only `**/` acts as a wildcard; unescaped `*` and `?` are rejected. On Unix, quote patterns and use `\*` or `\?` for literal characters (`\\` for a literal backslash). A trailing slash is optional. By default, [some directories](https://github.com/voidcosmos/npkill/blob/main/src/core/constants/global-ignored.constants.ts) are ignored. |
 | -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                                                   |
@@ -216,8 +216,6 @@ npkill -d ~/projects --older-than 90 --delete-all --targets node_modules
 ```bash
 npkill -d ~/backups/ --delete-all --targets node_modules
 ```
-
-<a name="delete-without-ui"></a>
 
 - Delete without the interface (for scripts and CI): add `-y` to `--delete-all`:
 
