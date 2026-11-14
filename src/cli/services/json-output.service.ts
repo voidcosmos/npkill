@@ -9,8 +9,9 @@ import {
 } from '../interfaces/json-output.interface.js';
 import { convertGbToBytes } from '../../utils/unit-conversions.js';
 import { isModificationTimeKnown } from '../../utils/is-modification-time-known.js';
+import { NoUiOutput } from '../interfaces/no-ui-output.interface.js';
 
-export class JsonOutputService {
+export class JsonOutputService implements NoUiOutput {
   private readonly OUTPUT_VERSION = 1;
   private results: JsonCliScanFoundTarget[] = [];
   private scanStartTime: number = 0;

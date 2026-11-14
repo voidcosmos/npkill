@@ -47,6 +47,8 @@ import { isOlderThan } from '../utils/is-older-than.js';
 import { ResultDetailsUi } from './ui/components/result-details.ui.js';
 import { ScanService } from './services/scan.service.js';
 import { JsonOutputService } from './services/json-output.service.js';
+import { TextOutputService } from './services/text-output.service.js';
+import { NoUiOutput } from './interfaces/no-ui-output.interface.js';
 
 export class CliController {
   private readonly config: IConfig = DEFAULT_CONFIG;
@@ -54,7 +56,7 @@ export class CliController {
   private searchStart: number;
   private searchDuration: number;
   private isScreenPrepared = false;
-  private failedJsonDeletions = 0;
+  private failedDeletions = 0;
 
   private uiHeader: HeaderUi;
   private uiGeneral: GeneralUi;
@@ -78,6 +80,7 @@ export class CliController {
     private readonly jsonOutputService: JsonOutputService,
     private readonly profilesService: ProfilesService,
     private readonly configService: ConfigService,
+    private readonly textOutputService: TextOutputService,
   ) {}
 
   init(): void {
@@ -88,14 +91,21 @@ export class CliController {
 
     if (this.config.jsonStream) {
       this.logger.info('JSON stream mode enabled.');
-      this.setupJsonModeSignalHandlers();
+      this.setupNoUiSignalHandlers();
       this.scan();
       return;
     }
 
     if (this.config.jsonSimple) {
       this.logger.info('JSON simple mode enabled.');
-      this.setupJsonModeSignalHandlers();
+      this.setupNoUiSignalHandlers();
+      this.scan();
+      return;
+    }
+
+    if (this.isTextOutput()) {
+      this.logger.info('Delete all without interface (text output).');
+      this.setupNoUiSignalHandlers();
       this.scan();
       return;
     }
@@ -724,8 +734,8 @@ export class CliController {
   private scan(): void {
     this.initializeScan();
 
-    if (this.isJsonOutput()) {
-      this.scanInJson();
+    if (this.isJsonOutput() || this.isTextOutput()) {
+      this.scanWithoutUi();
     } else {
       this.scanInUiMode();
     }
@@ -737,12 +747,19 @@ export class CliController {
     this.resultsService.setSizeUnit(this.config.sizeUnit);
   }
 
-  private scanInJson(): void {
-    const isStreamMode = this.config.jsonStream;
-    this.jsonOutputService.initializeSession(
-      isStreamMode,
-      !this.config.disableSize,
-    );
+  private scanWithoutUi(): void {
+    if (this.isJsonOutput()) {
+      this.jsonOutputService.initializeSession(
+        this.config.jsonStream,
+        !this.config.disableSize,
+      );
+    } else {
+      this.textOutputService.initializeSession({
+        sizeUnit: this.config.sizeUnit,
+        measuresSize: !this.config.disableSize,
+        dryRun: this.config.dryRun,
+      });
+    }
 
     this.scanSubscription = this.scanService
       .scan(this.config)
@@ -757,28 +774,30 @@ export class CliController {
           10, // Limit to 10 concurrent stat calculations at a time
         ),
         filter((result) => this.passesAgeFilter(result)),
-        mergeMap((result) => this.outputJsonResult(result), 10),
+        mergeMap((result) => this.outputResultWithoutUi(result), 10),
       )
       .subscribe({
         error: (error) => {
-          this.jsonOutputService.writeError(error);
-          void this.exitAfterJsonOutput(1);
+          this.getNoUiOutput().writeError(error);
+          void this.exitAfterNoUiOutput(1);
         },
         complete: () => {
-          this.jsonOutputService.completeScan();
-          void this.exitAfterJsonOutput(this.failedJsonDeletions > 0 ? 1 : 0);
+          this.getNoUiOutput().completeScan();
+          void this.exitAfterNoUiOutput(this.failedDeletions > 0 ? 1 : 0);
         },
       });
   }
 
-  private async outputJsonResult(result: CliScanFoundTarget): Promise<void> {
+  private async outputResultWithoutUi(
+    result: CliScanFoundTarget,
+  ): Promise<void> {
     const deletion = this.config.deleteAll
-      ? await this.deleteForJsonOutput(result)
+      ? await this.deleteWithoutUi(result)
       : undefined;
-    this.jsonOutputService.processResult(result, deletion);
+    this.getNoUiOutput().processResult(result, deletion);
   }
 
-  private async deleteForJsonOutput(
+  private async deleteWithoutUi(
     result: CliScanFoundTarget,
   ): Promise<DeleteResult> {
     const deletion = isSafeToDelete(result.path, this.config.targets)
@@ -792,13 +811,24 @@ export class CliController {
         };
 
     if (!deletion.success) {
-      this.failedJsonDeletions++;
+      this.failedDeletions++;
     }
     return deletion;
   }
 
   private isJsonOutput(): boolean {
     return this.config.jsonSimple || this.config.jsonStream;
+  }
+
+  /** `--delete-all -y` without JSON: delete everything and print plain text. */
+  private isTextOutput(): boolean {
+    return this.config.deleteAll && this.config.yes && !this.isJsonOutput();
+  }
+
+  private getNoUiOutput(): NoUiOutput {
+    return this.isJsonOutput()
+      ? this.jsonOutputService
+      : this.textOutputService;
   }
 
   private scanSubscription: Subscription | null = null;
@@ -836,14 +866,14 @@ export class CliController {
       });
   }
 
-  private setupJsonModeSignalHandlers(): void {
+  private setupNoUiSignalHandlers(): void {
     const gracefulShutdown = () => {
       if (this.scanSubscription?.closed) {
         return;
       }
       this.scanSubscription?.unsubscribe();
-      this.jsonOutputService.handleShutdown();
-      void this.exitAfterJsonOutput(0);
+      this.getNoUiOutput().handleShutdown();
+      void this.exitAfterNoUiOutput(0);
     };
 
     process.on('SIGINT', gracefulShutdown);
@@ -925,8 +955,8 @@ export class CliController {
     return ctrl && name === 'c';
   }
 
-  private async exitAfterJsonOutput(exitCode: number): Promise<void> {
-    await this.jsonOutputService.flush();
+  private async exitAfterNoUiOutput(exitCode: number): Promise<void> {
+    await this.getNoUiOutput().flush();
     if (exitCode === 0) {
       this.exitGracefully();
     } else {

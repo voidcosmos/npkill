@@ -18,6 +18,7 @@ import {
   INFO_MSGS,
 } from '../../src/constants/messages.constants.js';
 import { JsonOutputService } from '../../src/cli/services/json-output.service.js';
+import { TextOutputService } from '../../src/cli/services/text-output.service.js';
 import { ProfilesService } from '../../src/core/services/profiles.service.js';
 import { DEFAULT_CONFIG } from '../../src/constants/main.constants.js';
 
@@ -131,6 +132,15 @@ describe('CliController test', () => {
     processResult: jest.fn(),
   };
 
+  const textOutputServiceMock = {
+    flush: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    initializeSession: jest.fn(),
+    writeError: jest.fn(),
+    completeScan: jest.fn(),
+    handleShutdown: jest.fn(),
+    processResult: jest.fn(),
+  };
+
   const npkillDeleteMock = jest.fn();
   const npkillMock: Npkill = {
     logger: loggerServiceMock,
@@ -191,6 +201,7 @@ describe('CliController test', () => {
       jsonOutputServiceMock as unknown as JsonOutputService,
       profilesServiceMock as unknown as ProfilesService,
       configServiceMock as unknown as ConfigService,
+      textOutputServiceMock as unknown as TextOutputService,
     );
 
     Object.defineProperty(process.stdout, 'columns', {
@@ -352,6 +363,93 @@ describe('CliController test', () => {
     });
   });
 
+  describe('--delete-all -y without JSON', () => {
+    it('Should delete without starting the interface', () => {
+      mockParameters({
+        'delete-all': true,
+        targets: 'node_modules',
+        yes: true,
+      });
+      const setupNoUiSignalsSpy = spyMethod('setupNoUiSignalHandlers');
+
+      cliController.init();
+
+      expect(setupNoUiSignalsSpy).toHaveBeenCalledTimes(1);
+      expect(scanSpy).toHaveBeenCalledTimes(1);
+      expect(setupEventsListenerSpy).not.toHaveBeenCalled();
+      expect(uiServiceMock.setRawMode).not.toHaveBeenCalled();
+      expect(setDeleteAllWarningVisibilityMock).not.toHaveBeenCalled();
+    });
+
+    it('Should still use the interface when -y is given without --delete-all', () => {
+      mockParameters({ targets: 'node_modules', yes: true });
+      const setupNoUiSignalsSpy = spyMethod('setupNoUiSignalHandlers');
+
+      cliController.init();
+
+      expect(setupNoUiSignalsSpy).not.toHaveBeenCalled();
+      expect(setupEventsListenerSpy).toHaveBeenCalledTimes(1);
+    });
+
+    describe('scanning', () => {
+      const target = {
+        path: '/my/project/node_modules',
+        size: 1,
+        modificationTime: 1640995200000,
+        status: 'live',
+      };
+
+      const scanWithoutUi = async () => {
+        cliController.scanWithoutUi();
+        await new Promise((resolve) => setImmediate(resolve));
+      };
+
+      beforeEach(() => {
+        DEFAULT_CONFIG.targets = ['node_modules'];
+        DEFAULT_CONFIG.deleteAll = true;
+        DEFAULT_CONFIG.yes = true;
+        scanServiceMock.scan.mockReturnValue(of(target));
+        scanServiceMock.calculateResultStats.mockReturnValue(of(target));
+      });
+
+      it('Should delete each result and report it as text', async () => {
+        const deletion = { path: target.path, success: true };
+        npkillDeleteMock.mockReturnValueOnce(of(deletion));
+        const exitGracefullySpy = spyMethod('exitGracefully');
+
+        await scanWithoutUi();
+
+        expect(textOutputServiceMock.initializeSession).toHaveBeenCalledWith({
+          sizeUnit: 'auto',
+          measuresSize: true,
+          dryRun: false,
+        });
+        expect(textOutputServiceMock.processResult).toHaveBeenCalledWith(
+          target,
+          deletion,
+        );
+        expect(textOutputServiceMock.completeScan).toHaveBeenCalledTimes(1);
+        expect(jsonOutputServiceMock.processResult).not.toHaveBeenCalled();
+        expect(exitGracefullySpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('Should exit with an error when a deletion fails', async () => {
+        npkillDeleteMock.mockReturnValueOnce(
+          of({
+            path: target.path,
+            success: false,
+            error: { message: 'Permission denied' },
+          }),
+        );
+        const exitWithErrorSpy = spyMethod('exitWithError');
+
+        await scanWithoutUi();
+
+        expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
   describe('--dry-run', () => {
     let testTarget: DeleteResult;
 
@@ -415,7 +513,7 @@ describe('CliController test', () => {
       { option: 'jsonSimple', flag: '--json' },
     ])('Should enable JSON mode when $flag is provided', ({ option }) => {
       mockParameters({ [option]: true });
-      const setupJsonSignalsSpy = spyMethod('setupJsonModeSignalHandlers');
+      const setupJsonSignalsSpy = spyMethod('setupNoUiSignalHandlers');
 
       cliController.init();
 
@@ -432,8 +530,8 @@ describe('CliController test', () => {
       status: 'live',
     };
 
-    const scanInJson = async () => {
-      cliController.scanInJson();
+    const scanWithoutUi = async () => {
+      cliController.scanWithoutUi();
       await new Promise((resolve) => setImmediate(resolve));
     };
 
@@ -450,7 +548,7 @@ describe('CliController test', () => {
       npkillDeleteMock.mockReturnValueOnce(of(deletion));
       const exitGracefullySpy = spyMethod('exitGracefully');
 
-      await scanInJson();
+      await scanWithoutUi();
 
       expect(npkillDeleteMock).toHaveBeenCalledWith(target.path, {
         dryRun: false,
@@ -473,7 +571,7 @@ describe('CliController test', () => {
       );
       const exitWithErrorSpy = spyMethod('exitWithError');
 
-      await scanInJson();
+      await scanWithoutUi();
 
       expect(exitWithErrorSpy).toHaveBeenCalledTimes(1);
     });
@@ -483,7 +581,7 @@ describe('CliController test', () => {
       DEFAULT_CONFIG.disableAge = true;
       spyMethod('exitGracefully');
 
-      await scanInJson();
+      await scanWithoutUi();
 
       expect(jsonOutputServiceMock.initializeSession).toHaveBeenCalledWith(
         false,
@@ -498,7 +596,7 @@ describe('CliController test', () => {
     it('Should not delete anything without --delete-all', async () => {
       spyMethod('exitGracefully');
 
-      await scanInJson();
+      await scanWithoutUi();
 
       expect(npkillDeleteMock).not.toHaveBeenCalled();
       expect(jsonOutputServiceMock.processResult).toHaveBeenCalledWith(
@@ -515,6 +613,7 @@ describe('CliController test', () => {
     ])(
       'Should flush JSON output before exiting with $exitCode',
       async ({ exitCode, method }) => {
+        DEFAULT_CONFIG.jsonSimple = true;
         let finishFlush: () => void = () => {};
         jsonOutputServiceMock.flush.mockImplementationOnce(
           () =>
@@ -524,7 +623,7 @@ describe('CliController test', () => {
         );
         const exitSpy = spyMethod(method);
 
-        const exiting = cliController.exitAfterJsonOutput(exitCode);
+        const exiting = cliController.exitAfterNoUiOutput(exitCode);
 
         expect(exitSpy).not.toHaveBeenCalled();
         finishFlush();
@@ -536,9 +635,10 @@ describe('CliController test', () => {
     it.each(['SIGINT', 'SIGTERM'] as const)(
       'Should stop the scan and flush JSON once on %s',
       (signal) => {
+        DEFAULT_CONFIG.jsonSimple = true;
         cliController.scanSubscription = new Subscription();
-        const exitSpy = spyMethod('exitAfterJsonOutput');
-        cliController.setupJsonModeSignalHandlers();
+        const exitSpy = spyMethod('exitAfterNoUiOutput');
+        cliController.setupNoUiSignalHandlers();
         const shutdown = process.listeners(signal).at(-1)!;
         process.removeListener('SIGINT', shutdown);
         process.removeListener('SIGTERM', shutdown);
@@ -579,12 +679,13 @@ describe('CliController test', () => {
     });
 
     it('Should exit with an error when a JSON scan fails', async () => {
+      DEFAULT_CONFIG.jsonSimple = true;
       scanServiceMock.scan.mockReturnValue(
         throwError(() => new Error('Cannot scan /missing')),
       );
       const exitWithErrorSpy = spyMethod('exitWithError');
 
-      cliController.scanInJson();
+      cliController.scanWithoutUi();
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(jsonOutputServiceMock.writeError).toHaveBeenCalled();
