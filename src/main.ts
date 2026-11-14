@@ -3,6 +3,7 @@ import {
   JsonOutputService,
   ResultsService,
   SpinnerService,
+  TextOutputService,
 } from './cli/services/index.js';
 
 import { CliController } from './cli/cli.controller.js';
@@ -37,6 +38,7 @@ export default (): void => {
     jsonOutputService,
     new ProfilesService(),
     configService,
+    new TextOutputService(stdOut, process.stderr),
   );
 
   cli.init();

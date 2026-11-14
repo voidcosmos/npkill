@@ -153,7 +153,7 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | -p, --profiles          | Allows you to select the [profile](./docs/profiles.md) (set of targets) to use. If no option is specified, the available ones will be listed _(**node** by default)_.                                        |
 | --config                | Path to a custom .npkillrc configuration file. By default, npkill looks first for `./.npkillrc` and then for `~/.npkillrc`.                                                                                  |
 | -d, --directory         | Set the directory from which to begin searching. By default, starting-point is .                                                                                                                             |
-| -D, --delete-all        | Automatically delete all folders that are found. Requires `--targets`. Add `-y` and `--json` or `--json-stream` to delete without the interface. |
+| -D, --delete-all        | Automatically delete all folders that are found. Requires `--targets`. Add `-y` to delete without the interface (see [Examples](#examples)). |
 | -e, --hide-errors       | Hide errors if any                                                                                                                                                                                           |
 | -E, --exclude           | Skip matching directories and their contents. Separate patterns with commas. Relative paths start at the scan root (`-d` if set); matches use whole directory names.<br>• `name`: any depth<br>• `./name`: directly below the scan root<br>• `parent/name`: that path below the scan root<br>• `**/parent/name`: that path at any depth<br>• `/absolute/path`: exactly that directory (Windows drive and UNC paths also work).<br>Only `**/` acts as a wildcard; unescaped `*` and `?` are rejected. On Unix, quote patterns and use `\*` or `\?` for literal characters (`\\` for a literal backslash). A trailing slash is optional. By default, [some directories](https://github.com/voidcosmos/npkill/blob/main/src/core/constants/global-ignored.constants.ts) are ignored. |
 | -f, --full              | Start searching from the home of the user (example: "/home/user" in linux)                                                                                                                                   |
@@ -164,7 +164,7 @@ You can read all the details in the [`.npkillrc documentation`](./docs/npkillrc.
 | -t, --targets           | Disable profiles feature and specify the name of the directories you want to search for. You can define multiple targets separating with comma. Ej. `-t node_modules,.cache`.                                |
 | --include-sensitive     | Show sensitive results too, like the dependencies some applications need to work. They are hidden by default.                                                                                                |
 | --no-ignore-default     | Also look inside the folders skipped by default, like `.git` or `.nvm`.                                                                                                                                      |
-| -y                      | Avoid displaying a warning when executing --delete-all.                                                                                                                                                      |
+| -y                      | With `--delete-all`: skip the confirmation and delete without the interface. Prints each deleted folder and a summary, then exits (code 1 if any deletion fails). |
 | --dry-run               | It does not delete anything (will simulate it with a random delay).                                                                                                                                          |
 | --json                  | Output results in JSON format at the end of the scan. Useful for automation and scripting.                                                                                                                   |
 | --json-stream           | Output results in streaming JSON format (one JSON object per line as results are found). Useful for real-time processing.                                                                                    |
@@ -216,6 +216,17 @@ npkill -d ~/projects --older-than 90 --delete-all --targets node_modules
 ```bash
 npkill -d ~/backups/ --delete-all --targets node_modules
 ```
+
+- Delete without the interface (for scripts and CI): add `-y` to `--delete-all`:
+
+```bash
+npkill -d ~/projects --targets node_modules -D -y
+# Deleted /home/user/projects/app/node_modules (312 MB)
+# Deleted /home/user/projects/api/node_modules (128 MB)
+# Done: deleted 2 folders, freed 440 MB.
+```
+
+Failed deletions are printed to stderr and make npkill exit with code 1. Use `--dry-run` to see what would be deleted, or `--json` / `--json-stream` for machine-readable output.
 
 <a name="json-output"></a>
 

@@ -23,12 +23,13 @@ export const OPTIONS: ICliOptions[] = [
   {
     arg: ['-D', '--delete-all'],
     description:
-      'Auto-delete all targets that are found. Use it with --json or --json-stream and -y to delete without the interface.',
+      'Auto-delete all targets that are found. Requires --targets. Add -y to delete without the interface.',
     name: 'delete-all',
   },
   {
     arg: ['-y'],
-    description: 'Avoid displaying a warning when executing --delete-all.',
+    description:
+      'Skip the --delete-all confirmation and delete without the interface: prints each deleted folder and a summary, then exits. Exits with code 1 if any deletion fails.',
     name: 'yes',
   },
   {
