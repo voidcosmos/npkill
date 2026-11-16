@@ -28,7 +28,7 @@ export const INFO_MSGS = {
     '    delete dependencies needed by some applications.\n' +
     '    Recommended to preview with --dry-run.\n\n' +
     '                 Press y to continue.\n\n' +
-    '           pass -y to not show this next time',
+    '   pass -y to skip this and delete without the interface',
 };
 
 export const ERROR_MSG = {
