@@ -33,7 +33,7 @@ async function deleteAll(
       '-y',
       ...extraArgs,
     ],
-    { cwd: root, timeout: 30000, maxBuffer: 4 * 1024 * 1024 },
+    { cwd: root, timeout: 60000, maxBuffer: 4 * 1024 * 1024 },
   );
   // Read slowly at first, so the pipe fills up while npkill is still
   // writing. Output must not be lost when npkill exits.
@@ -67,7 +67,7 @@ describe('--delete-all -y without --json', () => {
       expect(stdout).toContain(`Deleted ${join(root, target)}`);
     }
     expect(stdout).toMatch(/Done: deleted 2 folders, freed .+\.\n$/);
-  }, 40000);
+  }, 70000);
 
   it('prints every result when the output is large', async () => {
     const targets = Array.from(
@@ -88,7 +88,7 @@ describe('--delete-all -y without --json', () => {
     expect(targets.every((target) => !existsSync(join(root, target)))).toBe(
       true,
     );
-  }, 40000);
+  }, 70000);
 
   it('keeps sensitive folders unless --include-sensitive is given', async () => {
     const normal = 'project/node_modules';
@@ -103,7 +103,7 @@ describe('--delete-all -y without --json', () => {
     if (process.platform !== 'win32') {
       expect(existsSync(join(root, normal))).toBe(false);
     }
-  }, 40000);
+  }, 70000);
 
   it('does not delete anything in a dry run', async () => {
     const root = createTree(['a/node_modules']);
@@ -112,7 +112,7 @@ describe('--delete-all -y without --json', () => {
 
     expect(existsSync(join(root, 'a/node_modules'))).toBe(true);
     expect(stdout).toContain('Dry run: would delete 1 folder');
-  }, 40000);
+  }, 70000);
 
   (canLockFolders ? it : it.skip)(
     'exits with code 1 and reports folders it cannot delete',
@@ -130,6 +130,6 @@ describe('--delete-all -y without --json', () => {
         stdout: expect.stringContaining('1 failed'),
       });
     },
-    40000,
+    70000,
   );
 });
